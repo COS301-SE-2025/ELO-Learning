@@ -7,13 +7,10 @@
 ELO Learning is a groundbreaking platform aimed at transforming the way students engage with math practice through gamified, adaptive learning experiences. This tender document outlines how our team intends to bring this vision to life by leveraging modern technologies, scalable design and dynamic problem-matching algorithms. We provide a detailed overview of our development strategy, technical architecture, and the innovative features that will ensure ELO Learning is not only engaging and effective but also poised for future growth into additional subjects and markets.
 
 ## Meet team Zero Day
-
 <div>
     <div>
-        <div style="display: flex; align-items: center;">
-            <div style="background-color: white; width: 150px; height: 150px; margin: 1%;">
-                <img href="https://drive.usercontent.google.com/download?id=14trGyA_GNdHA36T-yoSg_Ianw4H0e9l_" width="100">
-            </div>
+        <div>
+            <img src="https://drive.usercontent.google.com/download?id=14trGyA_GNdHA36T-yoSg_Ianw4H0e9l_" width="100">
             <div>
                 <h3>RM (Rene) Brancon</h3>
                 <p><strong>Role:</strong></p>
@@ -31,10 +28,8 @@ ELO Learning is a groundbreaking platform aimed at transforming the way students
     </div>
     <hr />
     <div>
-        <div style="display: flex; align-items: center;">
-            <div style="background-color: white; width: 150px; height: 150px; margin: 1%;">
-                <img href="https://drive.usercontent.google.com/download?id=1CePa51kdvYnBW7AZQxLU8yizqgTkFYu-" width="100">
-            </div>
+        <div>
+            <img src="https://drive.usercontent.google.com/download?id=1CePa51kdvYnBW7AZQxLU8yizqgTkFYu-" width="100">
             <div>
                 <h3>NF (Nigel) Mofati</h3>
                 <p><strong>Role:</strong></p>
@@ -55,10 +50,8 @@ ELO Learning is a groundbreaking platform aimed at transforming the way students
     </div>
     <hr />
     <div>
-        <div style="display: flex; align-items: center;">
-            <div style="background-color: white; width: 150px; height: 150px; margin: 1%;">
-                <img href="https://drive.usercontent.google.com/download?id=1U6gmGbgkZKEXS-4erkPCsHQqmvqxoAQm" width="100">
-            </div>
+        <div>
+            <img src="https://drive.usercontent.google.com/download?id=1U6gmGbgkZKEXS-4erkPCsHQqmvqxoAQm" width="100">
             <div>
                 <h3>TM (Tukelo) Mokwena</h3>
                 <p><strong>Role:</strong></p>
@@ -80,9 +73,7 @@ ELO Learning is a groundbreaking platform aimed at transforming the way students
     <hr />
     <div>
         <div>
-            <div>
-                <img href="https://drive.usercontent.google.com/download?id=1gVaSDowIS0rH0ev11NmCJ9aXlaZ4e492" width="100px">
-            </div>
+            <img src="https://drive.usercontent.google.com/download?id=1gVaSDowIS0rH0ev11NmCJ9aXlaZ4e492" width="100px">
             <div>
                  <h3>S (Saskia) Steyn</h3>
                 <p><strong>Role:</strong></p>
@@ -100,10 +91,8 @@ ELO Learning is a groundbreaking platform aimed at transforming the way students
     </div>
     <hr />
     <div>
-        <div style="display: flex; align-items: center;">
-            <div style="background-color: white; width: 150px; height: 150px; margin: 1%;">
-                <img href="https://drive.usercontent.google.com/download?id=11fdU2RYdRiOZO7lqRh8sUOC7OuFKHX3z" width="100">
-            </div>
+        <div>
+            <img src="https://drive.usercontent.google.com/download?id=11fdU2RYdRiOZO7lqRh8sUOC7OuFKHX3z" width="100">
             <div>
                  <h3>NG (Ntokozo) Tonga</h3>
                 <p><strong>Role:</strong></p>

@@ -77,10 +77,11 @@ ELO Learning is a groundbreaking platform aimed at transforming the way students
             Also experienced in trading, he brings analytical thinking and risk assessment to both tech and teamwork. His diverse interests and adaptable mindset make him a versatile asset to any project.
         </p>
     </div>
+    <hr />
     <div>
-        <div style="display: flex; align-items: center;">
-            <div style="background-color: white; width: 150px; height: 150px; margin: 1%;">
-                <img href="https://drive.usercontent.google.com/download?id=1gVaSDowIS0rH0ev11NmCJ9aXlaZ4e492" width="100">
+        <div>
+            <div>
+                <img href="https://drive.usercontent.google.com/download?id=1gVaSDowIS0rH0ev11NmCJ9aXlaZ4e492" width="100px">
             </div>
             <div>
                  <h3>S (Saskia) Steyn</h3>

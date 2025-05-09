@@ -6,7 +6,7 @@
 
 ELO Learning is a groundbreaking platform aimed at transforming the way students engage with math practice through gamified, adaptive learning experiences. This tender document outlines how our team intends to bring this vision to life by leveraging modern technologies, scalable design and dynamic problem-matching algorithms. We provide a detailed overview of our development strategy, technical architecture, and the innovative features that will ensure ELO Learning is not only engaging and effective but also poised for future growth into additional subjects and markets.
 
-## Zero Day Team Members
+## Meet team Zero Day
 
 <div>
     <div>

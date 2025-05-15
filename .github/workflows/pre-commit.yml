@@ -1,0 +1,26 @@
+# .github/workflows/pre-commit.yml
+name: Pre-commit Checks
+
+on:
+  push:
+    branches: [development]
+  pull_request:
+    branches: [development]
+
+jobs:
+  pre-commit:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18
+
+      - name: Install pre-commit
+        run: npm install -g pre-commit
+
+      - name: Run pre-commit on all files
+        run: pre-commit run --all-files

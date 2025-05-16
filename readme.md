@@ -62,7 +62,7 @@ ELO Learning is a groundbreaking platform aimed at transforming the way students
         <div>
             <table style="width: 100%; border-collapse: collapse;">
                 <tr>
-                    <td style="width: 400px; vertical-align: center; text-align: center;">
+                    <td style="width: 500px; vertical-align: center; text-align: center;">
                         <div>
                             <img src="https://drive.usercontent.google.com/download?id=14trGyA_GNdHA36T-yoSg_Ianw4H0e9l_" width="150">
                             <div class="info">
@@ -93,7 +93,7 @@ ELO Learning is a groundbreaking platform aimed at transforming the way students
         <div>
             <table style="width: 100%; border-collapse: collapse;">
                 <tr>
-                    <td style="width: 400px; vertical-align: center; text-align: center;">
+                    <td style="width: 500px; vertical-align: center; text-align: center;">
                         <div>
                             <img src="https://drive.usercontent.google.com/download?id=1CePa51kdvYnBW7AZQxLU8yizqgTkFYu-" width="150">
                             <div class="info">
@@ -126,7 +126,7 @@ ELO Learning is a groundbreaking platform aimed at transforming the way students
         <div>
             <table style="width: 100%; border-collapse: collapse;">
                 <tr>
-                    <td style="width: 400px; vertical-align: center; text-align: center;">
+                    <td style="width: 500px; vertical-align: center; text-align: center;">
                         <div>
                             <img src="https://drive.usercontent.google.com/download?id=1U6gmGbgkZKEXS-4erkPCsHQqmvqxoAQm" width="150">
                             <div class="info">
@@ -159,7 +159,7 @@ ELO Learning is a groundbreaking platform aimed at transforming the way students
         <div>
             <table style="width: 100%; border-collapse: collapse;">
                     <tr>
-                        <td style="width: 400px; vertical-align: center; text-align: center;">
+                        <td style="width: 500px; vertical-align: center; text-align: center;">
                             <div>
                                 <img src="https://drive.usercontent.google.com/download?id=1gVaSDowIS0rH0ev11NmCJ9aXlaZ4e492" width="150">
                                 <div class="info">
@@ -189,7 +189,7 @@ ELO Learning is a groundbreaking platform aimed at transforming the way students
         <div>
             <table style="width: 100%; border-collapse: collapse;">
                     <tr>
-                        <td style="width: 400px; vertical-align: center; text-align: center;">
+                        <td style="width: 500px; vertical-align: center; text-align: center;">
                             <div>
                                 <img src="https://drive.usercontent.google.com/download?id=11fdU2RYdRiOZO7lqRh8sUOC7OuFKHX3z" width="150">
                                 <div class="info">

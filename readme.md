@@ -2,6 +2,7 @@
     <h1>ELO Learning</h1>
     <img src="https://drive.usercontent.google.com/download?id=1zazGq71UACnS8KEjIlrJ34Ms2zmbrmqC" width="300"/>
 </div>
+
 [![Issue Tracking](https://img.shields.io/badge/Issue_Tracking-GitHub_Issues-yellow)](https://github.com/COS301-SE-2025/ELO-Learning/issues)
 [![Build Status](https://img.shields.io/badge/Build_Status-GitHub_Actions-brightgreen)](https://github.com/COS301-SE-2025/ELO-Learning/actions/workflows/linter.yml)
 ![Uptime Robot status](https://img.shields.io/uptimerobot/status/m797015486-75c486778a8f87b141372bd7)

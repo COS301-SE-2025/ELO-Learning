@@ -1,12 +1,10 @@
 <div align="center">
     <h1>ELO Learning</h1>
-    <img src="https://drive.usercontent.google.com/download?id=1zazGq71UACnS8KEjIlrJ34Ms2zmbrmqC" width="150"/>
-    <div>
-        [![Issue Tracking](https://img.shields.io/badge/Issue_Tracking-GitHub_Issues-yellow)](https://github.com/COS301-SE-2025/ELO-Learning/issues)
-        [![Build Status](https://img.shields.io/badge/Build_Status-GitHub_Actions-brightgreen)](https://github.com/COS301-SE-2025/ELO-Learning/actions/workflows/linter.yml)
-        ![Uptime Robot status](https://img.shields.io/uptimerobot/status/m797015486-75c486778a8f87b141372bd7)
-    </div>
+    <img src="https://drive.usercontent.google.com/download?id=1zazGq71UACnS8KEjIlrJ34Ms2zmbrmqC" width="300"/>
 </div>
+[![Issue Tracking](https://img.shields.io/badge/Issue_Tracking-GitHub_Issues-yellow)](https://github.com/COS301-SE-2025/ELO-Learning/issues)
+[![Build Status](https://img.shields.io/badge/Build_Status-GitHub_Actions-brightgreen)](https://github.com/COS301-SE-2025/ELO-Learning/actions/workflows/linter.yml)
+![Uptime Robot status](https://img.shields.io/uptimerobot/status/m797015486-75c486778a8f87b141372bd7)
 
 ## 📄 Description
 
@@ -63,7 +61,7 @@ ELO Learning is a groundbreaking platform aimed at transforming the way students
         <div>
             <table style="width: 100%; border-collapse: collapse;">
                 <tr>
-                    <td style="width: 300px; vertical-align: top; text-align: center;">
+                    <td style="width: 400px; vertical-align: center; text-align: center;">
                         <div>
                             <img src="https://drive.usercontent.google.com/download?id=14trGyA_GNdHA36T-yoSg_Ianw4H0e9l_" width="150">
                             <div class="info">
@@ -72,7 +70,7 @@ ELO Learning is a groundbreaking platform aimed at transforming the way students
                             </div>
                         </div>
                     </td>
-                    <td style="vertical-align: top;">
+                    <td style="vertical-align: center;">
                         <div>
                             <p>
                                 Reneiloe is a detail-oriented full-stack developer who loves solving complex problems and bringing abstract ideas to life. She's currently completing a BSc in Computer Science and has built collaborative apps, responsive sites, and client-focused tools that deliver real impact.
@@ -94,7 +92,7 @@ ELO Learning is a groundbreaking platform aimed at transforming the way students
         <div>
             <table style="width: 100%; border-collapse: collapse;">
                 <tr>
-                    <td style="width: 300px; vertical-align: top; text-align: center;">
+                    <td style="width: 400px; vertical-align: center; text-align: center;">
                         <div>
                             <img src="https://drive.usercontent.google.com/download?id=1CePa51kdvYnBW7AZQxLU8yizqgTkFYu-" width="150">
                             <div class="info">
@@ -127,7 +125,7 @@ ELO Learning is a groundbreaking platform aimed at transforming the way students
         <div>
             <table style="width: 100%; border-collapse: collapse;">
                 <tr>
-                    <td style="width: 300px; vertical-align: top; text-align: center;">
+                    <td style="width: 400px; vertical-align: center; text-align: center;">
                         <div>
                             <img src="https://drive.usercontent.google.com/download?id=1U6gmGbgkZKEXS-4erkPCsHQqmvqxoAQm" width="150">
                             <div class="info">
@@ -160,7 +158,7 @@ ELO Learning is a groundbreaking platform aimed at transforming the way students
         <div>
             <table style="width: 100%; border-collapse: collapse;">
                     <tr>
-                        <td style="width: 300px; vertical-align: top; text-align: center;">
+                        <td style="width: 400px; vertical-align: center; text-align: center;">
                             <div>
                                 <img src="https://drive.usercontent.google.com/download?id=1gVaSDowIS0rH0ev11NmCJ9aXlaZ4e492" width="150">
                                 <div class="info">
@@ -190,7 +188,7 @@ ELO Learning is a groundbreaking platform aimed at transforming the way students
         <div>
             <table style="width: 100%; border-collapse: collapse;">
                     <tr>
-                        <td style="width: 300px; vertical-align: top; text-align: center;">
+                        <td style="width: 400px; vertical-align: center; text-align: center;">
                             <div>
                                 <img src="https://drive.usercontent.google.com/download?id=11fdU2RYdRiOZO7lqRh8sUOC7OuFKHX3z" width="150">
                                 <div class="info">
@@ -225,5 +223,5 @@ ELO Learning is a groundbreaking platform aimed at transforming the way students
 
 <div align="center">
     <h3>zeroday0d4y@gmail.com</h3>
-    <img src="https://drive.usercontent.google.com/download?id=1Py1pypOH4mMxOnsg2kw2PCKg340RuPTJ" width="200px"/>
+    <img src="https://drive.usercontent.google.com/download?id=1Py1pypOH4mMxOnsg2kw2PCKg340RuPTJ" width="300px"/>
 </div>

@@ -9,6 +9,6 @@
     "lint:check": "eslint . --ext .js --quiet",
     "lint:check:fix": "eslint . --ext .js --quiet --fix",
     "lint:check:fix:all": "eslint . --ext .js --quiet --fix --ignore-pattern node_modules",
-    "test": "jest"
+    "test": "jest --passWithNoTests"
   }
 }

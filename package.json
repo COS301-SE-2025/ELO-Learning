@@ -1,5 +1,8 @@
 {
   "devDependencies": {
     "eslint": "^9.27.0"
+  },
+  "scripts": {
+    "lint": "eslint . --ext .js"
   }
 }

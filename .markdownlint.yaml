@@ -1,0 +1,4 @@
+MD013: false # Disable line length rule
+MD033: false # Allow inline HTML
+MD041: false # Don't require top-level heading
+MD045: false # Disable alt text rule

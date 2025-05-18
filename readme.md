@@ -3,6 +3,7 @@
 </div>
 
 ## Description
+
 ELO Learning is an innovative educational app designed to make learning mathematics engaging and enjoyable. Rather than grouping students strictly by age, ELO Learning focuses on individual skill development, offering a personalized learning experience that adapts to each learner's unique abilities.
 
 The platform encourages growth through competitive, skill-based challenges—such as ranked matches against peers—and a dynamic reward system that motivates progress. By breaking down traditional educational silos, ELO Learning empowers students to advance at their own pace and unlock their full potential.
@@ -50,7 +51,7 @@ The platform encourages growth through competitive, skill-based challenges—suc
                             <h3>NF (Nigel) Mofati</h3>
                             <p><strong>Role:</strong></p>
                             <div>
-                                <a href="https://github.com/brogrammer012" target="_blank"><img width="45" style="margin: 1%;" src="https://skillicons.dev/icons?i=github" alt="GitHub"></a><a href="https://www.linkedin.com/in/nigel-mofati/" target="_blank"><img width="45" style="margin: 1%;" src="https://skillicons.dev/icons?i=linkedin" alt="LinkedIn"></a> 
+                                <a href="https://github.com/brogrammer012" target="_blank"><img width="45" style="margin: 1%;" src="https://skillicons.dev/icons?i=github" alt="GitHub"></a><a href="https://www.linkedin.com/in/nigel-mofati/" target="_blank"><img width="45" style="margin: 1%;" src="https://skillicons.dev/icons?i=linkedin" alt="LinkedIn"></a>
                             </div>
                         </div>
                     </td>
@@ -80,7 +81,7 @@ The platform encourages growth through competitive, skill-based challenges—suc
                             <h3>TM (Tukelo) Mokwena</h3>
                             <p><strong>Role:</strong></p>
                             <div>
-                                <a href="https://github.com/Crispykitty" target="_blank"><img width="45" style="margin: 1%;" src="https://skillicons.dev/icons?i=github" alt="GitHub"></a><a href="http://www.linkedin.com/in/tukelo-mafotha-mokwena-b576ba351" target="_blank"><img width="45" style="margin: 1%;" src="https://skillicons.dev/icons?i=linkedin" alt="LinkedIn"></a> 
+                                <a href="https://github.com/Crispykitty" target="_blank"><img width="45" style="margin: 1%;" src="https://skillicons.dev/icons?i=github" alt="GitHub"></a><a href="http://www.linkedin.com/in/tukelo-mafotha-mokwena-b576ba351" target="_blank"><img width="45" style="margin: 1%;" src="https://skillicons.dev/icons?i=linkedin" alt="LinkedIn"></a>
                             </div>
                         </div>
                     </td>
@@ -110,7 +111,7 @@ The platform encourages growth through competitive, skill-based challenges—suc
                                 <h3>S (Saskia) Steyn</h3>
                                 <p><strong>Role:</strong></p>
                                 <div>
-                                    <a href="https://github.com/SaskiaSteyn" target="_blank"><img width="45" style="margin: 1%;" src="https://skillicons.dev/icons?i=github" alt="GitHub"></a><a href="https://www.linkedin.com/in/saskia-steyn-056a39213/" target="_blank"><img width="45" style="margin: 1%;" src="https://skillicons.dev/icons?i=linkedin" alt="LinkedIn"></a> 
+                                    <a href="https://github.com/SaskiaSteyn" target="_blank"><img width="45" style="margin: 1%;" src="https://skillicons.dev/icons?i=github" alt="GitHub"></a><a href="https://www.linkedin.com/in/saskia-steyn-056a39213/" target="_blank"><img width="45" style="margin: 1%;" src="https://skillicons.dev/icons?i=linkedin" alt="LinkedIn"></a>
                                 </div>
                             </div>
                         </td>
@@ -137,7 +138,7 @@ The platform encourages growth through competitive, skill-based challenges—suc
                                 <h3>NG (Ntokozo) Tonga</h3>
                                 <p><strong>Role:</strong></p>
                                 <div>
-                                    <a href="https://github.com/Ntokozo254" target="_blank"><img width="45" style="margin: 1%;" src="https://skillicons.dev/icons?i=github" alt="GitHub"></a><a href="https://www.linkedin.com/in/ntokozo-tonga-5978b4271/" target="_blank"><img width="45" style="margin: 1%;" src="https://skillicons.dev/icons?i=linkedin" alt="LinkedIn"></a> 
+                                    <a href="https://github.com/Ntokozo254" target="_blank"><img width="45" style="margin: 1%;" src="https://skillicons.dev/icons?i=github" alt="GitHub"></a><a href="https://www.linkedin.com/in/ntokozo-tonga-5978b4271/" target="_blank"><img width="45" style="margin: 1%;" src="https://skillicons.dev/icons?i=linkedin" alt="LinkedIn"></a>
                                 </div>
                             </div>
                         </td>

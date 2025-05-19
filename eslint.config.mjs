@@ -1,14 +1,16 @@
-// eslint.config.js
+import prettierConfig from 'eslint-config-prettier';
+
 export default [
   {
-    files: ["**/*.js"],
+    files: ['**/*.js'],
     languageOptions: {
       ecmaVersion: 2021,
-      sourceType: "module",
+      sourceType: 'module',
     },
     rules: {
-      semi: ["error", "always"],
-      quotes: ["error", "single"],
+      semi: ['error', 'always'],
+      quotes: ['error', 'single'],
     },
   },
+  prettierConfig,
 ];

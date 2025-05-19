@@ -29,7 +29,7 @@ ELO Learning is a groundbreaking platform aimed at transforming the way students
 
 <details>
   <summary>
-    User Stories 
+    User Stories
   </summary>
   - [Use Case Diagrams] (#)
 </details>
@@ -115,7 +115,7 @@ ELO Learning is a groundbreaking platform aimed at transforming the way students
                             </p>
                         </div>
                         <div>
-                            <a href="https://github.com/brogrammer012" target="_blank"><img width="45" style="margin: 1%;" src="https://skillicons.dev/icons?i=github" alt="GitHub"></a><a href="https://www.linkedin.com/in/nigel-mofati/" target="_blank"><img width="45" style="margin: 1%;" src="https://skillicons.dev/icons?i=linkedin" alt="LinkedIn"></a> 
+                            <a href="https://github.com/brogrammer012" target="_blank"><img width="45" style="margin: 1%;" src="https://skillicons.dev/icons?i=github" alt="GitHub"></a><a href="https://www.linkedin.com/in/nigel-mofati/" target="_blank"><img width="45" style="margin: 1%;" src="https://skillicons.dev/icons?i=linkedin" alt="LinkedIn"></a>
                         </div>
                     </td>
                 </tr>
@@ -148,7 +148,7 @@ ELO Learning is a groundbreaking platform aimed at transforming the way students
                             </p>
                         </div>
                         <div>
-                            <a href="https://github.com/Crispykitty" target="_blank"><img width="45" style="margin: 1%;" src="https://skillicons.dev/icons?i=github" alt="GitHub"></a><a href="http://www.linkedin.com/in/tukelo-mafotha-mokwena-b576ba351" target="_blank"><img width="45" style="margin: 1%;" src="https://skillicons.dev/icons?i=linkedin" alt="LinkedIn"></a> 
+                            <a href="https://github.com/Crispykitty" target="_blank"><img width="45" style="margin: 1%;" src="https://skillicons.dev/icons?i=github" alt="GitHub"></a><a href="http://www.linkedin.com/in/tukelo-mafotha-mokwena-b576ba351" target="_blank"><img width="45" style="margin: 1%;" src="https://skillicons.dev/icons?i=linkedin" alt="LinkedIn"></a>
                         </div>
                     </td>
                 </tr>
@@ -178,12 +178,12 @@ ELO Learning is a groundbreaking platform aimed at transforming the way students
                                 </p>
                             </div>
                             <div>
-                                <a href="https://github.com/SaskiaSteyn" target="_blank"><img width="45" style="margin: 1%;" src="https://skillicons.dev/icons?i=github" alt="GitHub"></a><a href="https://www.linkedin.com/in/saskia-steyn-056a39213/" target="_blank"><img width="45" style="margin: 1%;" src="https://skillicons.dev/icons?i=linkedin" alt="LinkedIn"></a> 
+                                <a href="https://github.com/SaskiaSteyn" target="_blank"><img width="45" style="margin: 1%;" src="https://skillicons.dev/icons?i=github" alt="GitHub"></a><a href="https://www.linkedin.com/in/saskia-steyn-056a39213/" target="_blank"><img width="45" style="margin: 1%;" src="https://skillicons.dev/icons?i=linkedin" alt="LinkedIn"></a>
                             </div>
                         </td>
                     </tr>
             </table>
-        </div>      
+        </div>
     </div>
     <div>
         <div>
@@ -211,7 +211,7 @@ ELO Learning is a groundbreaking platform aimed at transforming the way students
                                 </p>
                             </div>
                             <div>
-                                <a href="https://github.com/Ntokozo254" target="_blank"><img width="45" style="margin: 1%;" src="https://skillicons.dev/icons?i=github" alt="GitHub"></a><a href="https://www.linkedin.com/in/ntokozo-tonga-5978b4271/" target="_blank"><img width="45" style="margin: 1%;" src="https://skillicons.dev/icons?i=linkedin" alt="LinkedIn"></a> 
+                                <a href="https://github.com/Ntokozo254" target="_blank"><img width="45" style="margin: 1%;" src="https://skillicons.dev/icons?i=github" alt="GitHub"></a><a href="https://www.linkedin.com/in/ntokozo-tonga-5978b4271/" target="_blank"><img width="45" style="margin: 1%;" src="https://skillicons.dev/icons?i=linkedin" alt="LinkedIn"></a>
                             </div>
                         </td>
                     </tr>

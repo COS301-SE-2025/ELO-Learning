@@ -1,4 +1,3 @@
-# .github/workflows/pre-commit.yml
 name: Pre-commit Checks
 
 on:
@@ -6,6 +5,8 @@ on:
     branches: [development]
   pull_request:
     branches: [development]
+    paths-ignore:
+      - readme.md
 
 jobs:
   pre-commit:

@@ -3,5 +3,3 @@
 node_modules
 node_modules/
 .vscode/
-frontend/yarn.lock
-frontend/package-lock.json

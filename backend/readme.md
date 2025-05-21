@@ -6,6 +6,7 @@ This backend module connects to Supabase for handling user data, questions, answ
 
 ## 📁 Folder Structure
 
+```plaintext
 📁 backend/
 ├── .env
 ├── .gitignore
@@ -17,6 +18,7 @@ This backend module connects to Supabase for handling user data, questions, answ
 ├── database/
 ├── src/
 └── test/
+```
 
 ---
 

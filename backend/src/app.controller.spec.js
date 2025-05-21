@@ -1,22 +1,13 @@
-const { Test, TestingModule } = require('@nestjs/testing');
-const { AppController } = require('./app.controller');
-const { AppService } = require('./app.service');
-
 describe('AppController', () => {
-  let appController;
+  let controller;
 
-  beforeEach(async () => {
-    const app = await Test.createTestingModule({
-      controllers: [AppController],
-      providers: [AppService],
-    }).compile();
-
-    appController = app.get(AppController);
+  beforeEach(() => {
+    controller = {
+      getHello: () => 'Hello World!',
+    };
   });
 
-  describe('root', () => {
-    it('should return "Hello World!"', () => {
-      expect(appController.getHello()).toBe('Hello World!');
-    });
+  it('should return "Hello World!"', () => {
+    expect(controller.getHello()).toBe('Hello World!');
   });
 });

@@ -1,3 +1,4 @@
+require('reflect-metadata');
 const { NestFactory } = require('@nestjs/core');
 const { AppModule } = require('./app.module');
 

@@ -9,10 +9,13 @@ This backend module connects to Supabase for handling user data, questions, answ
 /backend
 |-- .env
 |--/database
-└── supabaseClient.js
-|--/src
-└── server.js
+|--/test
+|--gitignore
+|--.prettierrc
+|--nest-cli.json
+|-- package-lock.json
 |-- package.json
+|--/src
 └── readme.md
 
 ---
@@ -30,6 +33,7 @@ npm install express cors dotenv @supabase/supabase-js
 ## 🖥️ Running the Server
 
 ```bash
+cd src
 node server.js
 ```
 

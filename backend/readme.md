@@ -6,17 +6,17 @@ This backend module connects to Supabase for handling user data, questions, answ
 
 ## 📁 Folder Structure
 
-/backend
-|-- .env
-|--/database
-|--/test
-|--gitignore
-|--.prettierrc
-|--nest-cli.json
-|-- package-lock.json
-|-- package.json
-|--/src
-└── readme.md
+📁 backend/
+├── .env
+├── .gitignore
+├── .prettierrc
+├── nest-cli.json
+├── package.json
+├── package-lock.json
+├── readme.md
+├── database/
+├── src/
+└── test/
 
 ---
 

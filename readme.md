@@ -81,8 +81,8 @@ ELO Learning is a groundbreaking platform aimed at transforming the way students
                             </p>
                         </div>
                         <div>
-                            <a href="https://github.com/ReneiloeMBrancon" target="_blank"><img width="45" style="margin: 1%;" src="https://skillicons.dev/icons?i=github" alt="GitHub"></a>
-                            <a href="https://www.linkedin.com/in/reneiloe-brancon-a68316257" target="_blank"><img width="45" style="margin: 1%;" src="https://skillicons.dev/icons?i=linkedin" alt="LinkedIn"></a>
+                            <a href="https://github.com/ReneiloeMBrancon"><img src="https://img.shields.io/badge/GitHub-100000?style=for-the-badge&logo=github&logoColor=white" /></a>
+                            <a href="https://www.linkedin.com/in/reneiloe-brancon-a68316257"><img src="https://img.shields.io/badge/LinkedIn-0077B5?style=for-the-badge&logo=linkedin&logoColor=white" /></a>
                         </div>
                     </td>
                 </tr>
@@ -115,7 +115,8 @@ ELO Learning is a groundbreaking platform aimed at transforming the way students
                             </p>
                         </div>
                         <div>
-                            <a href="https://github.com/brogrammer012" target="_blank"><img width="45" style="margin: 1%;" src="https://skillicons.dev/icons?i=github" alt="GitHub"></a><a href="https://www.linkedin.com/in/nigel-mofati/" target="_blank"><img width="45" style="margin: 1%;" src="https://skillicons.dev/icons?i=linkedin" alt="LinkedIn"></a>
+                            <a href="https://github.com/brogrammer012"><img src="https://img.shields.io/badge/GitHub-100000?style=for-the-badge&logo=github&logoColor=white" /></a>
+                            <a href="https://www.linkedin.com/in/nigel-mofati/"><img src="https://img.shields.io/badge/LinkedIn-0077B5?style=for-the-badge&logo=linkedin&logoColor=white" /></a>
                         </div>
                     </td>
                 </tr>
@@ -148,7 +149,8 @@ ELO Learning is a groundbreaking platform aimed at transforming the way students
                             </p>
                         </div>
                         <div>
-                            <a href="https://github.com/Crispykitty" target="_blank"><img width="45" style="margin: 1%;" src="https://skillicons.dev/icons?i=github" alt="GitHub"></a><a href="http://www.linkedin.com/in/tukelo-mafotha-mokwena-b576ba351" target="_blank"><img width="45" style="margin: 1%;" src="https://skillicons.dev/icons?i=linkedin" alt="LinkedIn"></a>
+                            <a href="https://github.com/Crispykitty"><img src="https://img.shields.io/badge/GitHub-100000?style=for-the-badge&logo=github&logoColor=white" /></a>
+                            <a href="http://www.linkedin.com/in/tukelo-mafotha-mokwena-b576ba351"><img src="https://img.shields.io/badge/LinkedIn-0077B5?style=for-the-badge&logo=linkedin&logoColor=white" /></a>
                         </div>
                     </td>
                 </tr>
@@ -178,7 +180,8 @@ ELO Learning is a groundbreaking platform aimed at transforming the way students
                                 </p>
                             </div>
                             <div>
-                                <a href="https://github.com/SaskiaSteyn" target="_blank"><img width="45" style="margin: 1%;" src="https://skillicons.dev/icons?i=github" alt="GitHub"></a><a href="https://www.linkedin.com/in/saskia-steyn-056a39213/" target="_blank"><img width="45" style="margin: 1%;" src="https://skillicons.dev/icons?i=linkedin" alt="LinkedIn"></a>
+                                <a href="https://github.com/SaskiaSteyn"><img src="https://img.shields.io/badge/GitHub-100000?style=for-the-badge&logo=github&logoColor=white" /></a>
+                                <a href="https://www.linkedin.com/in/saskia-steyn-056a39213/"><img src="https://img.shields.io/badge/LinkedIn-0077B5?style=for-the-badge&logo=linkedin&logoColor=white" /></a>
                             </div>
                         </td>
                     </tr>
@@ -211,7 +214,8 @@ ELO Learning is a groundbreaking platform aimed at transforming the way students
                                 </p>
                             </div>
                             <div>
-                                <a href="https://github.com/Ntokozo254" target="_blank"><img width="45" style="margin: 1%;" src="https://skillicons.dev/icons?i=github" alt="GitHub"></a><a href="https://www.linkedin.com/in/ntokozo-tonga-5978b4271/" target="_blank"><img width="45" style="margin: 1%;" src="https://skillicons.dev/icons?i=linkedin" alt="LinkedIn"></a>
+                                <a href="https://github.com/Ntokozo254"><img src="https://img.shields.io/badge/GitHub-100000?style=for-the-badge&logo=github&logoColor=white" /></a>
+                                <a href="https://www.linkedin.com/in/ntokozo-tonga-5978b4271/"><img src="https://img.shields.io/badge/LinkedIn-0077B5?style=for-the-badge&logo=linkedin&logoColor=white" /></a>
                             </div>
                         </td>
                     </tr>

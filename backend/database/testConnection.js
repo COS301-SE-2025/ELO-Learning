@@ -1,10 +1,5 @@
 import 'dotenv/config';
-import { createClient } from '@supabase/supabase-js';
-
-// Replace with your actual project details
-const supabaseUrl = process.env.SUPABASE_URL;
-const supabaseKey = process.env.SUPABASE_KEY;
-const supabase = createClient(supabaseUrl, supabaseKey);
+import { supabase } from './supabaseClient.js';
 
 async function testConnection() {
   const { data, error } = await supabase

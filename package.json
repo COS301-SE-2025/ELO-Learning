@@ -1,5 +1,8 @@
 {
   "devDependencies": {
+    "@babel/eslint-parser": "^7.27.1",
+    "@babel/plugin-proposal-decorators": "^7.27.1",
+    "@babel/preset-env": "^7.27.2",
     "@types/jest": "^29.5.14",
     "eslint": "^9.27.0",
     "eslint-config-prettier": "^10.1.5",

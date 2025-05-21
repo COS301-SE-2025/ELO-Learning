@@ -8,8 +8,10 @@ This backend module connects to Supabase for handling user data, questions, answ
 
 /backend
 |-- .env
-|-- server.js
-|-- supabaseClient.js
+|--/database
+└── supabaseClient.js
+|--/src
+└── server.js
 |-- package.json
 └── readme.md
 

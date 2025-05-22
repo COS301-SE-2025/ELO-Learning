@@ -30,6 +30,25 @@ async function testQ_A() {
   } else {
     console.log('Answers: ', answerData);
   }
+  let correct;
+
+  for (let i = 0; i < answerData.length; i++) {
+    if (answerData[i].isCorrect === true) {
+      correct = answerData[i].answer_text;
+      break;
+    }
+  }
+
+  if (correct) {
+    console.log(
+      '✅ The correct answer for the question:',
+      questionsData[0].questionText,
+      'is :',
+      correct,
+    );
+  } else {
+    console.log('❌ No correct answer marked.');
+  }
 }
 
 testQ_A();

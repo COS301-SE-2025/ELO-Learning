@@ -122,3 +122,49 @@ app.post('/user/:id/xp', async (req, res) => {
 
   res.status(200).json(data);
 });
+
+// Return all questions: (works)
+app.get('/questions', async (req, res) => {
+  try {
+    const { data, error } = await supabase
+      .from('Questions')
+      .select('Q_id, topic, difficulty, level, questionText, xpGain');
+
+    if (error) {
+      console.error('Error fetching questions:', error.message);
+      return res.status(500).json({ error: 'Failed to fetch questions' });
+    }
+
+    res.status(200).json({ questions: data });
+  } catch (err) {
+    console.error('Unexpected error:', err);
+    res.status(500).json({ error: 'Unexpected server error' });
+  }
+});
+
+// Return all questions for given level: (works)
+app.get('/question/:level', async (req, res) => {
+  const { level } = req.params;
+
+  const authHeader = req.headers.authorization;
+  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    return res.status(401).json({ error: "You are unauthorized to make this request." });
+  }
+
+  const { data, error } = await supabase
+    .from('Questions')
+    .select('Q_id, topic, difficulty, level, questionText, xpGain')
+    .eq('level', level);
+
+  if (error) {
+    console.error('Error fetching questions:', error.message);
+    return res.status(500).json({ error: 'Failed to fetch questions' });
+  }
+
+  if (!data || data.length === 0) {
+    return res.status(404).json({ error: "Level doesn’t exist" });
+  }
+
+  res.status(200).json({ questions: data });
+});
+

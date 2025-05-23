@@ -238,3 +238,32 @@ app.get('/questions/level/topic', async (req, res) => {
   res.status(200).json({ questions: data });
 });
 
+// Check submitted answer for correctness: (this does not work, waiting on contract confirmation - blockr)
+app.post('/question/:id/answer', async (req, res) => {
+  const { id } = req.params;
+  const { question } = req.body;
+
+  if (!question || !Array.isArray(question) || question.length === 0 || !question[0].answer) {
+    return res.status(400).json({ error: "Invalid or missing question answer" });
+  }
+
+  const userAnswer = question[0].answer;
+
+  const { data, error } = await supabase
+    .from('Answers') 
+    .select('answer_text')
+    .eq('question_id', id)
+    .single(); //if no match is found
+
+  if (error) {
+    console.error('Error fetching correct answer:', error.message);
+    //we experinced an error
+    return res.status(500).json({ error: 'Failed to fetch correct answer' });
+  }
+
+  const isCorrect = data.answerText.trim().toLowerCase() === userAnswer.trim().toLowerCase();
+
+  res.status(200).json({
+    result: isCorrect
+  });
+});

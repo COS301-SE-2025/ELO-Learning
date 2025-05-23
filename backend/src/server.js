@@ -89,3 +89,36 @@ app.get('/users/:id/achievements', async (req, res) => {
 
   res.status(200).json({ achievements: data });
 });
+
+// Update a user's XP: (works)
+app.post('/user/:id/xp', async (req, res) => {
+  const { id } = req.params;
+  const { xp } = req.body;
+
+
+  const authHeader = req.headers.authorization;
+  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    return res.status(401).json({ error: "You are unauthorized to make this request." });
+  }
+
+  if (typeof xp !== 'number') {
+    return res.status(400).json({ error: "XP must be a number." });
+  }
+
+  const { data, error } = await supabase
+    .from('Users')
+    .update({ xp })
+    .eq('id', id)
+    .select()
+    .single();
+
+  if (error) {
+    if (error.code === 'PGRST116') {
+      return res.status(404).json({ error: "User doesn't exist" });
+    }
+    console.error('Error updating XP:', error.message);
+    return res.status(500).json({ error: 'Failed to update XP' });
+  }
+
+  res.status(200).json(data);
+});

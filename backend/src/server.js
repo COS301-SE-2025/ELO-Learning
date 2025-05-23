@@ -168,3 +168,29 @@ app.get('/question/:level', async (req, res) => {
   res.status(200).json({ questions: data });
 });
 
+// Return the answer to a specific question
+app.get('/question/:id/answer', async (req, res) => {
+  const { id } = req.params;
+
+  const authHeader = req.headers.authorization;
+  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    return res.status(401).json({ error: "You are unauthorized to make this request." });
+  }
+
+
+  const { data, error } = await supabase
+    .from('Answers') 
+    .select('*')     // Ask group what we want to display, just answer or all details?
+    .eq('question_id', id);
+
+  if (error) {
+    console.error('Error fetching answer:', error.message);
+    return res.status(500).json({ error: 'Failed to fetch answer' });
+  }
+
+  if (!data || data.length === 0) {
+    return res.status(404).json({ error: "Question doesn't exist" });
+  }
+
+  res.status(200).json({ answer: data });
+});

@@ -215,3 +215,26 @@ app.get('/questions/topic', async (req, res) => {
 
   res.status(200).json({ questions: data });
 });
+
+// Return questions filtered by level and topic: (works)
+app.get('/questions/level/topic', async (req, res) => {
+  const { level, topic } = req.query;
+
+  if (!level || !topic) {
+    return res.status(400).json({ error: "Missing level or topic parameter" });
+  }
+
+  const { data, error } = await supabase
+    .from('Questions') 
+    .select('Q_id, topic, difficulty, level, questionText, xpGain')
+    .eq('level', level)
+    .eq('topic', topic);
+
+  if (error) {
+    console.error('Error fetching questions by level and topic:', error.message);
+    return res.status(500).json({ error: 'Failed to fetch questions' });
+  }
+
+  res.status(200).json({ questions: data });
+});
+

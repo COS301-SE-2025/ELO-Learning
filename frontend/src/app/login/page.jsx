@@ -1,7 +1,7 @@
 export default function Page() {
   return (
     <div>
-      <p>This is the where the leader board will go</p>
+      <p>Login page</p>
     </div>
   );
 }

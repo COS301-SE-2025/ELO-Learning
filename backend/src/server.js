@@ -19,12 +19,13 @@ app.get('/', (req, res) => {
   res.send('API is running successfully!');
 });
 
+//GET /users Endpoint: works.
 app.get('/users', async (req, res) => {
   const { data, error } = await supabase
     .from('Users')
     .select('id,name,surname,username,email,currentLevel,joinDate,xp');
   if (error) {
-    console.error('❌ Error fetching users:', error.message);
+    console.error('Error fetching users:', error.message);
     return res.status(500).json({ error: 'Failed to fetch users' });
   }
   res.status(200).json(data);
@@ -32,5 +33,59 @@ app.get('/users', async (req, res) => {
 
 // Start server
 app.listen(PORT, () => {
-  console.log(`✅ Server is running on http://localhost:${PORT}`);
+  console.log(`Server is running on http://localhost:${PORT}`);
+});
+
+// Return specific user: (works)
+app.get('/user/:id', async (req, res) => {
+  const { id } = req.params;
+
+  // Check for Authorization header (mock for now)
+  const authHeader = req.headers.authorization;
+  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    return res.status(401).json({ error: "You are unauthorized to make this request." });
+  }
+
+  // Fetch user from Supabase
+  const { data, error } = await supabase
+    .from('Users')
+    .select('id,name,surname,username,email,currentLevel,joinDate,xp')
+    .eq('id', id)
+    .single(); 
+
+  if (error) {
+    if (error.code === 'PGRST116') {
+      return res.status(404).json({ error: "User doesn't exist" });
+    }
+    console.error('Error fetching user:', error.message);
+    return res.status(500).json({ error: 'Failed to fetch user' });
+  }
+
+  res.status(200).json(data);
+});
+
+// Return user's achievements: ( to work once tables are there)
+app.get('/users/:id/achievements', async (req, res) => {
+  const { id } = req.params;
+
+  const authHeader = req.headers.authorization;
+  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    return res.status(401).json({ error: "You are unauthorized to make this request." });
+  }
+
+  const { data, error } = await supabase
+    .from('Achievements') 
+    .select('*')
+    .eq('user_id', id); 
+
+  if (error) {
+    console.error('Error fetching achievements:', error.message);
+    return res.status(500).json({ error: 'Failed to fetch achievements' });
+  }
+
+  if (data.length === 0) {
+    return res.status(404).json({ error: "User doesn't exist or has no achievements" });
+  }
+
+  res.status(200).json({ achievements: data });
 });

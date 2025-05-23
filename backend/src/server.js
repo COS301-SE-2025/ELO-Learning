@@ -194,3 +194,24 @@ app.get('/question/:id/answer', async (req, res) => {
 
   res.status(200).json({ answer: data });
 });
+
+// Return all questions for a specific topic: (works)
+app.get('/questions/topic', async (req, res) => {
+  const { topic } = req.query;
+
+  if (!topic) {
+    return res.status(400).json({ error: "Missing topic parameter" });
+  }
+
+  const { data, error } = await supabase
+    .from('Questions') 
+    .select('Q_id, topic, difficulty, level, questionText, xpGain')
+    .eq('topic', topic);
+
+  if (error) {
+    console.error('Error fetching questions by topic:', error.message);
+    return res.status(500).json({ error: 'Failed to fetch questions' });
+  }
+
+  res.status(200).json({ questions: data });
+});

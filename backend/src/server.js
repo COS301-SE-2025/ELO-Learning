@@ -31,11 +31,6 @@ app.get('/users', async (req, res) => {
   res.status(200).json(data);
 });
 
-// Start server
-app.listen(PORT, () => {
-  console.log(`Server is running on http://localhost:${PORT}`);
-});
-
 // Return specific user: (works)
 app.get('/user/:id', async (req, res) => {
   const { id } = req.params;
@@ -43,7 +38,9 @@ app.get('/user/:id', async (req, res) => {
   // Check for Authorization header (mock for now)
   const authHeader = req.headers.authorization;
   if (!authHeader || !authHeader.startsWith('Bearer ')) {
-    return res.status(401).json({ error: "You are unauthorized to make this request." });
+    return res
+      .status(401)
+      .json({ error: 'You are unauthorized to make this request.' });
   }
 
   // Fetch user from Supabase
@@ -51,7 +48,7 @@ app.get('/user/:id', async (req, res) => {
     .from('Users')
     .select('id,name,surname,username,email,currentLevel,joinDate,xp')
     .eq('id', id)
-    .single(); 
+    .single();
 
   if (error) {
     if (error.code === 'PGRST116') {
@@ -64,19 +61,21 @@ app.get('/user/:id', async (req, res) => {
   res.status(200).json(data);
 });
 
-// Return user's achievements: ( to work once tables are there)
+// Return user's achievements: (works)
 app.get('/users/:id/achievements', async (req, res) => {
   const { id } = req.params;
 
   const authHeader = req.headers.authorization;
   if (!authHeader || !authHeader.startsWith('Bearer ')) {
-    return res.status(401).json({ error: "You are unauthorized to make this request." });
+    return res
+      .status(401)
+      .json({ error: 'You are unauthorized to make this request.' });
   }
 
   const { data, error } = await supabase
-    .from('Achievements') 
+    .from('Achievements')
     .select('*')
-    .eq('user_id', id); 
+    .eq('user_id', id);
 
   if (error) {
     console.error('Error fetching achievements:', error.message);
@@ -84,7 +83,9 @@ app.get('/users/:id/achievements', async (req, res) => {
   }
 
   if (data.length === 0) {
-    return res.status(404).json({ error: "User doesn't exist or has no achievements" });
+    return res
+      .status(404)
+      .json({ error: "User doesn't exist or has no achievements" });
   }
 
   res.status(200).json({ achievements: data });
@@ -95,14 +96,15 @@ app.post('/user/:id/xp', async (req, res) => {
   const { id } = req.params;
   const { xp } = req.body;
 
-
   const authHeader = req.headers.authorization;
   if (!authHeader || !authHeader.startsWith('Bearer ')) {
-    return res.status(401).json({ error: "You are unauthorized to make this request." });
+    return res
+      .status(401)
+      .json({ error: 'You are unauthorized to make this request.' });
   }
 
   if (typeof xp !== 'number') {
-    return res.status(400).json({ error: "XP must be a number." });
+    return res.status(400).json({ error: 'XP must be a number.' });
   }
 
   const { data, error } = await supabase
@@ -148,7 +150,9 @@ app.get('/question/:level', async (req, res) => {
 
   const authHeader = req.headers.authorization;
   if (!authHeader || !authHeader.startsWith('Bearer ')) {
-    return res.status(401).json({ error: "You are unauthorized to make this request." });
+    return res
+      .status(401)
+      .json({ error: 'You are unauthorized to make this request.' });
   }
 
   const { data, error } = await supabase
@@ -162,26 +166,28 @@ app.get('/question/:level', async (req, res) => {
   }
 
   if (!data || data.length === 0) {
-    return res.status(404).json({ error: "Level doesn’t exist" });
+    return res.status(404).json({ error: 'Level doesn’t exist' });
   }
 
   res.status(200).json({ questions: data });
 });
 
-// Return the answer to a specific question
+// Return the answer to a specific question (works)
 app.get('/question/:id/answer', async (req, res) => {
   const { id } = req.params;
 
   const authHeader = req.headers.authorization;
   if (!authHeader || !authHeader.startsWith('Bearer ')) {
-    return res.status(401).json({ error: "You are unauthorized to make this request." });
+    return res
+      .status(401)
+      .json({ error: 'You are unauthorized to make this request.' });
   }
 
-
   const { data, error } = await supabase
-    .from('Answers') 
-    .select('*')     // Ask group what we want to display, just answer or all details?
-    .eq('question_id', id);
+    .from('Answers')
+    .select('*') // Ask group what we want to display, just answer or all details?
+    .eq('question_id', id)
+    .eq('isCorrect', true);
 
   if (error) {
     console.error('Error fetching answer:', error.message);
@@ -200,11 +206,11 @@ app.get('/questions/topic', async (req, res) => {
   const { topic } = req.query;
 
   if (!topic) {
-    return res.status(400).json({ error: "Missing topic parameter" });
+    return res.status(400).json({ error: 'Missing topic parameter' });
   }
 
   const { data, error } = await supabase
-    .from('Questions') 
+    .from('Questions')
     .select('Q_id, topic, difficulty, level, questionText, xpGain')
     .eq('topic', topic);
 
@@ -221,17 +227,20 @@ app.get('/questions/level/topic', async (req, res) => {
   const { level, topic } = req.query;
 
   if (!level || !topic) {
-    return res.status(400).json({ error: "Missing level or topic parameter" });
+    return res.status(400).json({ error: 'Missing level or topic parameter' });
   }
 
   const { data, error } = await supabase
-    .from('Questions') 
+    .from('Questions')
     .select('Q_id, topic, difficulty, level, questionText, xpGain')
     .eq('level', level)
     .eq('topic', topic);
 
   if (error) {
-    console.error('Error fetching questions by level and topic:', error.message);
+    console.error(
+      'Error fetching questions by level and topic:',
+      error.message,
+    );
     return res.status(500).json({ error: 'Failed to fetch questions' });
   }
 
@@ -243,14 +252,21 @@ app.post('/question/:id/answer', async (req, res) => {
   const { id } = req.params;
   const { question } = req.body;
 
-  if (!question || !Array.isArray(question) || question.length === 0 || !question[0].answer) {
-    return res.status(400).json({ error: "Invalid or missing question answer" });
+  if (
+    !question ||
+    !Array.isArray(question) ||
+    question.length === 0 ||
+    !question[0].answer
+  ) {
+    return res
+      .status(400)
+      .json({ error: 'Invalid or missing question answer' });
   }
 
   const userAnswer = question[0].answer;
 
   const { data, error } = await supabase
-    .from('Answers') 
+    .from('Answers')
     .select('answer_text')
     .eq('question_id', id)
     .single(); //if no match is found
@@ -261,9 +277,15 @@ app.post('/question/:id/answer', async (req, res) => {
     return res.status(500).json({ error: 'Failed to fetch correct answer' });
   }
 
-  const isCorrect = data.answerText.trim().toLowerCase() === userAnswer.trim().toLowerCase();
+  const isCorrect =
+    data.answerText.trim().toLowerCase() === userAnswer.trim().toLowerCase();
 
   res.status(200).json({
-    result: isCorrect
+    result: isCorrect,
   });
+});
+
+// Start server
+app.listen(PORT, () => {
+  console.log(`Server is running on http://localhost:${PORT}`);
 });

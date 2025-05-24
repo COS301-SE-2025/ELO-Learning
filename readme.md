@@ -57,6 +57,24 @@ The platform encourages growth through competitive, skill-based challenges—suc
   - [Technology Requirements] (#)
 </details>
 
+## 👾 Tech Stack
+
+**Frontend**: 
+
+[![My Skills](https://skillicons.dev/icons?i=react,next,cypress&perline=3)](https://skillicons.dev)
+
+**Backend:**
+
+[![My Skills](https://skillicons.dev/icons?i=javascript,express,nodejs,jest,postman)](https://skillicons.dev)
+
+**Database:**
+
+[![My Skills](https://skillicons.dev/icons?i=postgres,supabase&perline=3)](https://skillicons.dev)
+
+**Version Control & Testing, Package Management, & Deployment:**
+
+[![My Skills](https://skillicons.dev/icons?i=github,githubactions,yarn,npm,docker)](https://skillicons.dev)
+
 ## 👥 Meet team Zero Day
 
 <div>

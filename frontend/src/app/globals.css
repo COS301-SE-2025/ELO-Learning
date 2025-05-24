@@ -16,6 +16,7 @@
   --chalk-dust: #e8e8e8;
   --white: #ffffff;
   --black: #000000;
+  --grey: #808080;
 }
 
 @theme inline {
@@ -97,6 +98,11 @@ textarea:focus-visible {
   border-left: var(--form-outline) 1px solid;
   border-right: var(--form-outline) 1px solid;
   border-radius: 0px 0px 5px 5px;
+}
+
+.single_form_input {
+  border: var(--form-outline) 1px solid;
+  border-radius: 5px;
 }
 
 .btn-link {
@@ -182,6 +188,19 @@ textarea:focus-visible {
 
 .disclaimer {
   font-size: 16px;
+}
+
+/* Progress bar styling */
+
+.progress-filled {
+  background-color: var(--vector-violet);
+  border-radius: 0px 3.40282e38px 3.40282e38px 0px;
+}
+
+.progress-bar {
+  background-color: var(--grey);
+  height: 15px;
+  margin: 0% 0% 0% 3%;
 }
 
 @media only screen and (max-width: 600px) {

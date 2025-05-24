@@ -9,7 +9,9 @@
 
 ## 📄 Description
 
-ELO Learning is a groundbreaking platform aimed at transforming the way students engage with math practice through gamified, adaptive learning experiences. This tender document outlines how our team intends to bring this vision to life by leveraging modern technologies, scalable design and dynamic problem-matching algorithms. We provide a detailed overview of our development strategy, technical architecture, and the innovative features that will ensure ELO Learning is not only engaging and effective but also poised for future growth into additional subjects and markets.
+ELO Learning is an innovative educational app designed to make learning mathematics engaging and enjoyable. Rather than grouping students strictly by age, ELO Learning focuses on individual skill development, offering a personalized learning experience that adapts to each learner's unique abilities.
+
+The platform encourages growth through competitive, skill-based challenges—such as ranked matches against peers—and a dynamic reward system that motivates progress. By breaking down traditional educational silos, ELO Learning empowers students to advance at their own pace and unlock their full potential.
 
 ## 📁 Documentation
 

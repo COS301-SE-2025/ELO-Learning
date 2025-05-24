@@ -47,102 +47,139 @@ You should see:
 
 ## 🔁 API Endpoints
 
-GET/
+### ✅ Health Check
 
+**GET /**
 Returns:
 
 ```bash
-"API is running 🎉"
+"API is running successfully!"
 ```
 
-### 👤 Get All Users
+---
 
-GET /users
+## 👤 User Endpoints
 
+### 🔍 Get All Users
+
+**GET /users**
 Returns:
 
 ```json
 [
-    {
-        "id": 2,
-        "name": "Alice",
-        "surname": "Johnson",
-        "username": "alicej",
-        "email": "alice@example.com",
-        "currentLevel": 2,
-        "joinDate": "2024-09-15",
-        "xp": 150.5
-    },
-    {
-        "id": 3,
-        "name": "Bob",
-        "surname": "Smith",
-        "username": "bobsmith",
-        "email": "bob@example.com",
-        "currentLevel": 5,
-        "joinDate": "2024-10-01",
-        "xp": 300
-    },
-    {
-        "id": 4,
-        "name": "Charlie",
-        "surname": "Lee",
-        "username": "charlielee",
-        "email": "charlie@example.com",
-        "currentLevel": 1,
-        "joinDate": "2024-11-20",
-        "xp": 75
-    },
-    {
-        "id": 5,
-        "name": "Alice",
-        "surname": "Walker",
-        "username": "alicew",
-        "email": "alice@example.com",
-        "currentLevel": 1,
-        "joinDate": "2024-01-10",
-        "xp": 120.5
-    },
-    {
-        "id": 6,
-        "name": "Bob",
-        "surname": "Smith",
-        "username": "bobsmith",
-        "email": "bob@example.com",
-        "currentLevel": 2,
-        "joinDate": "2024-01-12",
-        "xp": 230
-    },
-    {
-        "id": 7,
-        "name": "Carol",
-        "surname": "Nguyen",
-        "username": "caroln",
-        "email": "carol@example.com",
-        "currentLevel": 1,
-        "joinDate": "2024-01-14",
-        "xp": 180
-    },
-    {
-        "id": 8,
-        "name": "David",
-        "surname": "Jones",
-        "username": "davidj",
-        "email": "david@example.com",
-        "currentLevel": 3,
-        "joinDate": "2024-01-16",
-        "xp": 310.2
-    },
-    {
-        "id": 9,
-        "name": "Ella",
-        "surname": "Martinez",
-        "username": "ellam",
-        "email": "ella@example.com",
-        "currentLevel": 2,
-        "joinDate": "2024-01-18",
-        "xp": 150.8
-    },
+  {
+    "id": 2,
+    "name": "Alice",
+    "surname": "Johnson",
+    "username": "alicej",
+    "email": "alice@example.com",
+    "currentLevel": 2,
+    "joinDate": "2024-09-15",
+    "xp": 150.5
+  },
   ...
 ]
 ```
+
+### 🔍 Get User by ID (with Auth)
+
+**GET /user/\:id**
+Headers:
+
+```plaintext
+Authorization: Bearer <token>
+```
+
+Returns user with the given ID or error if not authorized or not found.
+
+---
+
+### 🏆 Get User Achievements
+
+**GET /users/\:id/achievements**
+Headers:
+
+```plaintext
+Authorization: Bearer <token>
+```
+
+Returns achievements of the user with the given ID.
+
+---
+
+### ✏️ Update User XP
+
+**POST /user/\:id/xp**
+Headers:
+
+```plaintext
+Authorization: Bearer <token>
+```
+
+Body:
+
+```json
+{
+  "xp": 200.5
+}
+```
+
+Updates the XP of the specified user.
+
+---
+
+## ❓ Question Endpoints
+
+### 📋 Get All Questions
+
+**GET /questions**
+Returns a list of all questions.
+
+---
+
+### 🎯 Get Questions by Level (with Auth)
+
+**GET /question/\:level**
+Headers:
+
+```plaintext
+Authorization: Bearer <token>
+```
+
+Returns questions for a specific level.
+
+---
+
+### ✅ Get Correct Answer to Question (with Auth)
+
+**GET /question/\:id/answer**
+Headers:
+
+```plaintext
+Authorization: Bearer <token>
+```
+
+Returns the correct answer for the specified question ID.
+
+---
+
+### 🗂️ Get Questions by Topic
+
+**GET /questions/topic?topic=topicName**
+Query Parameters:
+
+- `topic` (required): The topic to filter by.
+
+Returns questions matching the topic.
+
+---
+
+### 🔍 Get Questions by Level and Topic
+
+**GET /questions/level/topic?level=number\&topic=topicName**
+Query Parameters:
+
+- `level` (required): Level number
+- `topic` (required): Topic name
+
+Returns questions matching both level and topic.

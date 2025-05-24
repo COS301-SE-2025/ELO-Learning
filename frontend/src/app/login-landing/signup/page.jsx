@@ -1,7 +1,7 @@
 export default function Page() {
   return (
     <div>
-      <p>signup comes here</p>
+      <p>What is your name?</p>
     </div>
   );
 }

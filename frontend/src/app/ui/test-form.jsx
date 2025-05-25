@@ -5,25 +5,25 @@ export default function TestForm() {
   const [formData, setFormData] = useState({
     username: '',
     email: '',
-    message: ''
+    message: '',
   });
 
   const [submitStatus, setSubmitStatus] = useState('');
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      [name]: value
+      [name]: value,
     }));
   };
 
   const onSubmit = (e) => {
     e.preventDefault();
-    
+
     // Use the utility function for testing
     const result = handleFormSubmit('testForm', formData);
-    
+
     if (result.success) {
       setSubmitStatus('Form submitted successfully!');
       // Reset form after successful submission
@@ -44,12 +44,12 @@ export default function TestForm() {
   return (
     <div className="max-w-md mx-auto p-6 bg-white rounded-lg shadow-md">
       <h2 className="text-2xl font-bold mb-4 text-gray-800">Test Form</h2>
-      
+
       {submitStatus && (
-        <div 
+        <div
           className={`mb-4 p-3 rounded ${
-            submitStatus.includes('success') 
-              ? 'bg-green-100 text-green-700' 
+            submitStatus.includes('success')
+              ? 'bg-green-100 text-green-700'
               : 'bg-blue-100 text-blue-700'
           }`}
           data-testid="status-message"
@@ -60,8 +60,8 @@ export default function TestForm() {
 
       <form onSubmit={onSubmit} data-testid="test-form">
         <div className="mb-4">
-          <label 
-            htmlFor="username" 
+          <label
+            htmlFor="username"
             className="block text-sm font-medium text-gray-700 mb-2"
           >
             Username
@@ -79,8 +79,8 @@ export default function TestForm() {
         </div>
 
         <div className="mb-4">
-          <label 
-            htmlFor="email" 
+          <label
+            htmlFor="email"
             className="block text-sm font-medium text-gray-700 mb-2"
           >
             Email
@@ -98,8 +98,8 @@ export default function TestForm() {
         </div>
 
         <div className="mb-6">
-          <label 
-            htmlFor="message" 
+          <label
+            htmlFor="message"
             className="block text-sm font-medium text-gray-700 mb-2"
           >
             Message
@@ -124,7 +124,7 @@ export default function TestForm() {
           >
             Submit
           </button>
-          
+
           <button
             type="button"
             onClick={handleResetClick}

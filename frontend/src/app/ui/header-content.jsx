@@ -2,12 +2,12 @@ import clsx from 'clsx';
 
 // Simple, reliable icon components using Unicode symbols
 const HeartIcon = ({ size = 24 }) => (
-  <span 
-    style={{ 
-      fontSize: `${size}px`, 
+  <span
+    style={{
+      fontSize: `${size}px`,
       color: '#ef4444', // red color
       display: 'inline-block',
-      lineHeight: 1
+      lineHeight: 1,
     }}
   >
     ♥
@@ -15,12 +15,12 @@ const HeartIcon = ({ size = 24 }) => (
 );
 
 const FlameIcon = ({ size = 24 }) => (
-  <span 
-    style={{ 
-      fontSize: `${size}px`, 
+  <span
+    style={{
+      fontSize: `${size}px`,
       color: '#f97316', // orange color
       display: 'inline-block',
-      lineHeight: 1
+      lineHeight: 1,
     }}
   >
     🔥
@@ -28,12 +28,12 @@ const FlameIcon = ({ size = 24 }) => (
 );
 
 const ShieldIcon = ({ size = 24 }) => (
-  <span 
-    style={{ 
-      fontSize: `${size}px`, 
+  <span
+    style={{
+      fontSize: `${size}px`,
       color: '#3b82f6', // blue color
       display: 'inline-block',
-      lineHeight: 1
+      lineHeight: 1,
     }}
   >
     🛡️
@@ -41,12 +41,12 @@ const ShieldIcon = ({ size = 24 }) => (
 );
 
 const GaugeIcon = ({ size = 24 }) => (
-  <span 
-    style={{ 
-      fontSize: `${size}px`, 
+  <span
+    style={{
+      fontSize: `${size}px`,
       color: '#eab308', // yellow color
       display: 'inline-block',
-      lineHeight: 1
+      lineHeight: 1,
     }}
   >
     ⚡

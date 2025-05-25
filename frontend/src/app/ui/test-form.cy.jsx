@@ -36,8 +36,8 @@ describe('<TestForm />', () => {
       {
         username: 'testuser',
         email: 'test@example.com',
-        message: 'This is a test message'
-      }
+        message: 'This is a test message',
+      },
     );
 
     // Verify success message appears
@@ -60,7 +60,10 @@ describe('<TestForm />', () => {
     cy.get('[data-testid="reset-button"]').click();
 
     // Verify console log was called for button click
-    cy.get('@consoleLog').should('have.been.calledWith', 'Button "resetButton" clicked');
+    cy.get('@consoleLog').should(
+      'have.been.calledWith',
+      'Button "resetButton" clicked',
+    );
 
     // Verify fields are cleared
     cy.get('[data-testid="username-input"]').should('have.value', '');
@@ -78,7 +81,7 @@ describe('<TestForm />', () => {
     cy.window().then((win) => {
       let eventReceived = false;
       let receivedData = null;
-      
+
       // Listen for the custom event
       win.addEventListener('formSubmitted', (event) => {
         eventReceived = true;
@@ -113,12 +116,18 @@ describe('<TestForm />', () => {
     cy.get('[data-testid="username-input"]').type('john_doe');
     cy.get('[data-testid="email-input"]').type('john@example.com');
     cy.get('[data-testid="message-input"]').type('Hello, this is a test!');
-    
+
     // Submit and verify
     cy.get('[data-testid="submit-button"]').click();
-    cy.get('[data-testid="status-message"]').should('contain.text', 'successfully');
-    
+    cy.get('[data-testid="status-message"]').should(
+      'contain.text',
+      'successfully',
+    );
+
     // Wait for form to reset automatically
-    cy.get('[data-testid="username-input"]', { timeout: 3000 }).should('have.value', '');
+    cy.get('[data-testid="username-input"]', { timeout: 3000 }).should(
+      'have.value',
+      '',
+    );
   });
 });

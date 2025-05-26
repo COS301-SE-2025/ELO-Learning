@@ -1,6 +1,6 @@
 import ProgressBar from '@/app/ui/progress-bar';
 import Link from 'next/link';
-import { LuX } from 'react-icons/lu';
+import { X } from 'lucide-react';
 
 const currentStep = 5;
 const totalSteps = 6;
@@ -11,7 +11,7 @@ export default function Page() {
       <div>
         <div className="flex flex-row items-center justify-between w-full px-4 py-2">
           <Link href="/login-landing">
-            <LuX size={24} />
+            <X size={24} />
           </Link>
           <div className="flex-1 ml-4">
             <ProgressBar progress={currentStep / totalSteps} />

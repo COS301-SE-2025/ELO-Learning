@@ -1,9 +1,8 @@
 import ProgressBar from '@/app/ui/progress-bar';
 import Link from 'next/link';
-// import { FaGoogle } from 'react-icons/fa';
 import { X } from 'lucide-react';
 
-const currentStep = 1;
+const currentStep = 5;
 const totalSteps = 6;
 
 export default function Page() {
@@ -20,21 +19,16 @@ export default function Page() {
         </div>
         {/* A form to input a name and email */}
         <div>
-          <p>What is your name?</p>
+          <p>What is your email?</p>
           <form className="m-10 mb-0">
             <div className="flex flex-col items-center w-full gap-4">
               <input
-                type="text"
-                placeholder="Name"
-                className="input-field md:w-1/2 top_form_input"
-              />
-              <input
-                type="text"
-                placeholder="Surname"
-                className="input-field md:w-1/2 bottom_form_input"
+                type="email"
+                placeholder="Email"
+                className="input-field md:w-1/2 single_form_input"
               />
               <div className="break_small"></div>
-              <Link href="/login-landing/signup/username">
+              <Link href="/login-landing/signup/password">
                 <button className="main-button px-2 py-8">Continue</button>
               </Link>
             </div>
@@ -43,10 +37,6 @@ export default function Page() {
       </div>
       {/* Disclaimer is now spaced above the bottom */}
       <div className="mb-8 px-4 text-center">
-        <div className="google-button flex items-center justify-around gap-10">
-          {/* <FaGoogle size={24} /> */}
-          <p>Sign in with Google</p>
-        </div>
         <p className="disclaimer">
           Your data isn't shared with any third parties. View our terms and
           privacy policy here.

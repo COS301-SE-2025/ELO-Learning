@@ -1,25 +1,14 @@
-# Step 1: Build stage
-FROM node:18 AS builder
+FROM node:20
 
-WORKDIR /app
+WORKDIR /frontend
 
-COPY frontend/package*.json ./
-RUN yarn install --frozen-lockfile
+COPY . . 
 
-COPY frontend/ .
+ENV PORT=8080
+
+RUN yarn 
 RUN yarn build
 
-
-# Step 2: Production runtime
-FROM node:18 AS runner
-
-WORKDIR /app
-
-COPY --from=builder /app ./
-
-RUN yarn install --frozen-lockfile --ignore-optional --production
+CMD ["yarn", "run", "dev"]
 
 EXPOSE 8080
-
-# Serve the production build
-CMD ["yarn", "start"]

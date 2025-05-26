@@ -1,22 +1,16 @@
 'use client';
 
 import clsx from 'clsx';
+import { Calculator, House, Swords, Timer, User } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import {
-  LuCalculator,
-  LuHouse,
-  LuSwords,
-  LuTimer,
-  LuUser,
-} from 'react-icons/lu';
 
 const links = [
-  { name: 'Home', href: '/dashboard', icon: LuHouse },
-  { name: 'Practice', href: '/practice', icon: LuCalculator },
-  { name: 'Match', href: '/match', icon: LuSwords },
-  { name: 'Timed', href: '/timed', icon: LuTimer },
-  { name: 'Profile', href: '/profile', icon: LuUser },
+  { name: 'Home', href: '/dashboard', icon: House },
+  { name: 'Practice', href: '/practice', icon: Calculator },
+  { name: 'Match', href: '/match', icon: Swords },
+  { name: 'Timed', href: '/timed', icon: Timer },
+  { name: 'Profile', href: '/profile', icon: User },
 ];
 
 export default function NavLinks() {

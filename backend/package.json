@@ -2,6 +2,14 @@
   "name": "backend",
   "version": "1.0.0",
   "type": "module",
+  "jest": {
+    "preset": "ts-jest/presets/default-esm",
+    "testEnvironment": "node",
+    "extensionsToTreatAsEsm": [
+      ".js"
+    ],
+    "transform": {}
+  },
   "main": "testConnection.js",
   "scripts": {
     "test": "jest"

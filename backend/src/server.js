@@ -253,11 +253,14 @@ app.get('/questions/level/topic', async (req, res) => {
 // });
 
 // Only start the server if not testing - changed you may consult Monica
+
 if (process.env.NODE_ENV !== 'test') {
   app.listen(PORT, () => {
     console.log(`Server is running on http://localhost:${PORT}`);
   });
 }
 
+
 // for Jest + Supertest
 export default app;
+

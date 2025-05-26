@@ -12,7 +12,7 @@ export default function Layout({ children }) {
         <div className="w-full flex-none md:w-64">
           <NavBar />
         </div>
-        <div className="main-content flex-grow p-6 md:overflow-y-auto md:p-12">
+        <div className="main-content flex-grow md:overflow-y-auto">
           {children}
         </div>
       </div>

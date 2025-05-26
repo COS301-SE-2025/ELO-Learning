@@ -1,4 +1,4 @@
-import '../styles/layout.css';
+import '../styles/dashboard.css';
 import Header from '../ui/header';
 import NavBar from '../ui/nav-bar';
 

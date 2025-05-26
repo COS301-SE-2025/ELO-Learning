@@ -148,7 +148,7 @@ textarea:focus-visible {
   font-size: 16px;
   width: 500px;
   padding: 3%;
-  margin: 1.5%;
+  margin: 1.5% 0%;
   border: var(--main-button-stroke) 1px solid;
   box-shadow: 2px 2px 0px 0px var(--main-button-stroke);
   border-radius: 5px;
@@ -201,6 +201,10 @@ textarea:focus-visible {
   background-color: var(--grey);
   height: 15px;
   margin: 0% 0% 0% 3%;
+}
+
+.header_styling {
+  background-color: var(--background);
 }
 
 @media only screen and (max-width: 600px) {

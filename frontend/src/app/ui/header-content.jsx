@@ -3,7 +3,7 @@ import { Flame, Gauge, Heart, Shield } from 'lucide-react';
 
 export default function HeaderContent() {
   return (
-    <div className="fixed top-0 left-0 w-full z-50 bg-white flex flex-col px-3 py-4 md:static md:h-full md:w-auto md:px-2">
+    <div className="fixed top-0 left-0 w-full z-50 flex flex-col px-3 py-4 md:static md:h-full md:w-auto md:px-2">
       <div
         className={clsx(
           'flex h-[48px] grow items-center justify-center gap-6 rounded-md p-3 text-sm font-medium md:flex-none md:justify-start md:p-2 md:px-3',

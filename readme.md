@@ -59,7 +59,7 @@ The platform encourages growth through competitive, skill-based challenges—suc
 
 ## 👾 Tech Stack
 
-**Frontend**: 
+**Frontend**:
 
 [![My Skills](https://skillicons.dev/icons?i=react,next,cypress&perline=3)](https://skillicons.dev)
 

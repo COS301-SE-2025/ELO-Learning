@@ -1,0 +1,59 @@
+@import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;700&display=swap');
+
+:root {
+  --background: #ffffff;
+  --foreground: #171717;
+  --vector-violet: #7d32ce;
+  --vector-violet-light: #9a3cff;
+  --eigen-purple: #421e68;
+  --midnight-theorem: #1d1a34;
+  --blueprint-blue: #4d5ded;
+  --blueprint-blue-light: #8793ff;
+  --radical-rose: #ff6e99;
+  --chalk-dust: #e8e8e8;
+  --white: #ffffff;
+  --black: #000000;
+  --grey: #808080;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+  --main-button-color: var(--vector-violet);
+  --main-button-stroke: var(--eigen-purple);
+  --font-color: var(--black);
+  --form-outline: var(--midnight-theorem);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: #1d1a34;
+    --foreground: #ededed;
+    --font-color: #ffffff;
+    --form-outline: var(--chalk-dust);
+  }
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: 'Nunito', Arial, Helvetica, sans-serif;
+  font-weight: 500;
+}
+
+a {
+  padding: 0%;
+  margin: 0%;
+  text-decoration: none;
+  color: var(--font-color);
+}
+
+.nav-link-item {
+  padding: 0% 5%;
+}
+
+.header_styling {
+  background-color: var(--background);
+}

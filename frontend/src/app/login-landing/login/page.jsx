@@ -1,6 +1,6 @@
+import { X } from 'lucide-react';
 import Link from 'next/link';
-import { FaGoogle } from 'react-icons/fa';
-import { LuX } from 'react-icons/lu';
+// import { FaGoogle } from 'react-icons/fa';
 
 export default function Page() {
   return (
@@ -8,7 +8,7 @@ export default function Page() {
       <div>
         <div className="flex flex-row items-center justify-between w-full px-4 py-2">
           <Link href="/login-landing">
-            <LuX size={24} />
+            <X size={24} />
           </Link>
           <p className="form_heading mx-auto absolute left-1/2 transform -translate-x-1/2 font-(1000)">
             Enter your information
@@ -37,7 +37,7 @@ export default function Page() {
       {/* Disclaimer is now spaced above the bottom */}
       <div className="mb-8 px-4 text-center">
         <div className="google-button flex items-center justify-around gap-10">
-          <FaGoogle size={24} />
+          {/* <FaGoogle size={24} /> */}
           <p>Sign in with Google</p>
         </div>
         <p className="disclaimer">

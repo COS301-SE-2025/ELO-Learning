@@ -1,7 +1,7 @@
 import ProgressBar from '@/app/ui/progress-bar';
 import Link from 'next/link';
-import { FaGoogle } from 'react-icons/fa';
-import { LuX } from 'react-icons/lu';
+// import { FaGoogle } from 'react-icons/fa';
+import { X } from 'lucide-react';
 
 const currentStep = 1;
 const totalSteps = 6;
@@ -12,7 +12,7 @@ export default function Page() {
       <div>
         <div className="flex flex-row items-center justify-between w-full px-4 py-2">
           <Link href="/login-landing">
-            <LuX size={24} />
+            <X size={24} />
           </Link>
           <div className="flex-1 ml-4">
             <ProgressBar progress={currentStep / totalSteps} />
@@ -44,7 +44,7 @@ export default function Page() {
       {/* Disclaimer is now spaced above the bottom */}
       <div className="mb-8 px-4 text-center">
         <div className="google-button flex items-center justify-around gap-10">
-          <FaGoogle size={24} />
+          {/* <FaGoogle size={24} /> */}
           <p>Sign in with Google</p>
         </div>
         <p className="disclaimer">

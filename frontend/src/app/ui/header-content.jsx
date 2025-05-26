@@ -1,28 +1,28 @@
 import clsx from 'clsx';
-import { LuFlame, LuGauge, LuHeart, LuShield } from 'react-icons/lu';
+import { Flame, Gauge, Heart, Shield } from 'lucide-react';
 
 export default function HeaderContent() {
   return (
-    <div className="fixed top-0 left-0 w-full z-50 bg-white flex flex-col px-3 py-4 md:static md:h-full md:w-auto md:px-2">
+    <div className="fixed top-0 left-0 w-full z-50 flex flex-col px-3 py-4 md:static md:h-full md:w-auto md:px-2">
       <div
         className={clsx(
           'flex h-[48px] grow items-center justify-center gap-6 rounded-md p-3 text-sm font-medium md:flex-none md:justify-start md:p-2 md:px-3',
         )}
       >
         <div className="flex items-center gap-2">
-          <LuHeart size={24} />
+          <Heart size={24} />
           <p>5</p>
         </div>
         <div className="flex items-center gap-2">
-          <LuFlame size={24} />
+          <Flame size={24} />
           <p>3</p>
         </div>
         <div className="flex items-center gap-2">
-          <LuShield size={24} />
+          <Shield size={24} />
           <p>300xp</p>
         </div>
         <div className="flex items-center gap-2">
-          <LuGauge size={24} />
+          <Gauge size={24} />
           <p>75%</p>
         </div>
       </div>

@@ -4,7 +4,6 @@ import { jest } from '@jest/globals';
 
 jest.setTimeout(20000); // for slow tests
 
-
 // Adjust this ID to match a real test user in our DB
 const testUserId = 2;
 
@@ -53,7 +52,6 @@ describe('User Endpoints', () => {
 
     expect([200, 404, 401]).toContain(res.statusCode);
   });
-  
 });
 
 describe('User Endpoints', () => {

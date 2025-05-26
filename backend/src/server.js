@@ -260,7 +260,5 @@ if (process.env.NODE_ENV !== 'test') {
   });
 }
 
-
 // for Jest + Supertest
 export default app;
-

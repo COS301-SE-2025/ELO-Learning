@@ -2,11 +2,11 @@ FROM node:20
 
 WORKDIR /frontend
 
-COPY . . 
+COPY . .
 
 ENV PORT=8080
 
-RUN yarn 
+RUN yarn
 RUN yarn build
 
 CMD ["yarn", "run", "dev"]

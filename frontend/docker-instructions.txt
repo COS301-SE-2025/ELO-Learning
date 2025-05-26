@@ -1,10 +1,10 @@
-Creating the image: 
-docker build -t frontend .  
+Creating the image:
+docker build -t frontend .
 
-Running the docker image: 
+Running the docker image:
 docker run --name frontend -p 8080:8080 frontend
 
-Stopping the image: 
+Stopping the image:
 docker stop frontend
 
 

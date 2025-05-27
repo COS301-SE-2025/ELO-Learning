@@ -1,4 +1,3 @@
-# .github/workflows/lint-and-test.yml
 name: Lint and Test
 
 on:
@@ -19,11 +18,24 @@ jobs:
         with:
           node-version: 18
 
-      - name: Install dependencies
+      - name: Install root dependencies
         run: npm install
+
+      - name: Install backend dependencies
+        run: npm install
+        working-directory: ./backend
 
       - name: Run ESLint
         run: npm run lint
 
-      # - name: Run Tests
-      #   run: npm run test
+      - name: Run Tests
+        run: node --experimental-vm-modules node_modules/jest/bin/jest.js
+        working-directory: ./backend
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
+
+      - name: Upload coverage reports to Codecov
+        uses: codecov/codecov-action@v5
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}

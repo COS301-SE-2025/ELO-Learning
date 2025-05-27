@@ -57,6 +57,13 @@ The platform encourages growth through competitive, skill-based challenges—suc
   - [Technology Requirements] (#)
 </details>
 
+<details>
+    <summary>
+        ELO Learning Project Board
+    </summary>
+    <a href="https://github.com/orgs/COS301-SE-2025/projects/120">Project Board</a>
+</details>
+
 ## 👾 Tech Stack
 
 **Frontend**:

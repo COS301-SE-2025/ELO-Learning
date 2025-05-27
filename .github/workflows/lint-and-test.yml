@@ -24,6 +24,7 @@ jobs:
 
       - name: Run ESLint
         run: npm run lint
-
-      # - name: Run Tests
-      #   run: npm run test
+        
+      - name: Run Tests
+        run: node --experimental-vm-modules node_modules/jest/bin/jest.js
+        working-directory: ./backend

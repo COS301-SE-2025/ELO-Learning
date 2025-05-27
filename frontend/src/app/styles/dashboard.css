@@ -3,6 +3,7 @@
 @media only screen and (max-width: 600px) {
   .main-content {
     position: relative;
-    top: 5%;
+    top: 2%;
+    margin-bottom: 35%;
   }
 }

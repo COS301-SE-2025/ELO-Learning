@@ -39,3 +39,28 @@ jobs:
         uses: codecov/codecov-action@v5
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
+
+  frontend-cypress-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Install root dependencies
+        run: npm install
+      - name: Install frontend dependencies
+        uses: actions/setup-node@v4
+        with:
+          node-version: 23
+          cache: 'yarn'
+          cache-dependency-path: frontend/yarn.lock
+
+      # Install npm dependencies, cache them correctly
+      # and run all Cypress tests
+      - name: Cypress Tests
+        uses: cypress-io/github-action@v6
+        with:
+          install-command: yarn --silent
+          build: yarn build
+          start: yarn run dev
+          working-directory: ./frontend
+        timeout-minutes: 2

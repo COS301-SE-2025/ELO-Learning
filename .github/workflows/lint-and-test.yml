@@ -31,6 +31,9 @@ jobs:
       - name: Run Tests
         run: node --experimental-vm-modules node_modules/jest/bin/jest.js
         working-directory: ./backend
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
 
       - name: Upload coverage reports to Codecov
         uses: codecov/codecov-action@v5

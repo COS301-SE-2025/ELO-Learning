@@ -3,6 +3,8 @@ import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import { supabase } from '../database/supabaseClient.js';
+import bcrypt from 'bcrypt';
+import jwt from 'jsonwebtoken';
 
 // Load environment variables
 dotenv.config();
@@ -245,6 +247,47 @@ app.get('/questions/level/topic', async (req, res) => {
   }
 
   res.status(200).json({ questions: data });
+});
+
+// Register new user
+app.post('/register', async (req, res) => {
+  const { name, surname, username, email, password } = req.body; //need to add handling for joinDate, xp and currentLevel
+
+  if (!name || !surname || !username || !email || !password) {
+    return res.status(400).json({ error: 'All fields are required' });
+  }
+
+  // Check if user already exists
+  const { data: existingUser, error: fetchError } = await supabase
+    .from('Users')
+    .select('id')
+    .eq('email', email)
+    .maybeSingle();
+
+  if (fetchError) {
+    console.error('Error checking existing user:', fetchError.message);
+    return res.status(500).json({ error: 'Internal server error' });
+  }
+
+  if (existingUser) {
+    return res.status(409).json({ error: 'Email already registered' });
+  }
+
+  // Hash password
+  const hashedPassword = await bcrypt.hash(password, 10);
+
+  const { data, error } = await supabase
+    .from('Users')
+    .insert([{ name, surname, username, email, password: hashedPassword }])
+    .select()
+    .single();
+
+  if (error) {
+    console.error('Error registering user:', error.message);
+    return res.status(500).json({ error: 'Failed to register user' });
+  }
+
+  res.status(201).json({ message: 'User registered successfully', user: data });
 });
 
 // Start server

@@ -290,6 +290,55 @@ app.post('/register', async (req, res) => {
   res.status(201).json({ message: 'User registered successfully', user: data });
 });
 
+// Login user
+app.post('/login', async (req, res) => {
+  const { email, password } = req.body;
+
+  if (!email || !password) {
+    return res.status(400).json({ error: 'Email and password are required' });
+  }
+
+  // Fetch user by email
+  const { data: user, error: fetchError } = await supabase
+    .from('Users')
+    .select('id,name,surname,username,email,password')
+    .eq('email', email)
+    .single();
+
+  if (fetchError || !user) {
+    console.error('Error fetching user:', fetchError?.message);
+    return res.status(401).json({ error: 'Invalid email or password' });
+  }
+
+  // Verify password
+  const isPasswordValid = await bcrypt.compare(password, user.password);
+  if (!isPasswordValid) {
+    return res.status(401).json({ error: 'Invalid email or password' });
+  }
+
+  // Generate JWT token
+  const token = jwt.sign(
+    { id: user.id, email: user.email },
+    process.env.JWT_SECRET,
+    { expiresIn: '1h' },
+  );
+
+  res.status(200).json({
+    message: 'Login successful',
+    token,
+    user: {
+      id: user.id,
+      name: user.name,
+      surname: user.surname,
+      username: user.username,
+      email: user.email,
+      currentLevel: user.currentLevel || 1, // Default to level 1 if not set
+      joinDate: user.joinDate || new Date().toISOString(), // Default to current date if not set
+      xp: user.xp || 0, // Default to 0 XP if not set
+    },
+  });
+});
+
 // Start server
 // app.listen(PORT, () => {
 //   console.log(`Server is running on http://localhost:${PORT}`);

@@ -75,7 +75,9 @@ export default function SubCategories() {
           key={idx}
         >
           <div
-            className={`flex items-center justify-center min-w-16 min-h-16 w-16 h-16 flex-shrink-0 rounded mr-4 text-white text-2xl font-bold ${colors[idx % colors.length]}`}
+            className={`flex items-center justify-center min-w-16 min-h-16 w-16 h-16 flex-shrink-0 rounded mr-4 text-white text-2xl font-bold ${
+              colors[idx % colors.length]
+            }`}
           >
             {sub.title.charAt(0)}
           </div>

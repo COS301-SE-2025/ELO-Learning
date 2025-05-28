@@ -26,6 +26,7 @@
   --font-color: var(--black);
   --form-outline: var(--midnight-theorem);
   --sub-category-color: var(--vector-violet-light);
+  --sub-category-hover-color: var(--blueprint-blue-light);
 }
 
 @media (prefers-color-scheme: dark) {
@@ -35,6 +36,7 @@
     --font-color: #ffffff;
     --form-outline: var(--chalk-dust);
     --sub-category-color: var(--eigen-purple);
+    --sub-category-hover-color: var(--blueprint-blue);
   }
 }
 
@@ -61,7 +63,17 @@ a {
 }
 
 .sub_categories {
-  margin: 5% 0%;
+  margin: 2% 0%;
   border-radius: 5px;
   background-color: var(--sub-category-color);
+}
+
+.sub_categories:hover {
+  background-color: var(--sub-category-hover-color);
+}
+
+@media only screen and (max-width: 600px) {
+  .sub_categories {
+    margin: 5% 0%;
+  }
 }

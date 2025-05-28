@@ -19,7 +19,7 @@ The platform encourages growth through competitive, skill-based challenges—suc
   <summary>
     Services Requirement Specification (SRS)
   </summary>
-  - <a href="[https://github.com/orgs/COS301-SE-2025/projects/120](https://docs.google.com/document/d/1mucPjnS9raDPziTZLBBJaGlGvEBkxai2qoeAnJ0Ysa4/edit?usp=sharing)">Project Board</a> (#)
+  - <a href="[https://docs.google.com/document/d/1mucPjnS9raDPziTZLBBJaGlGvEBkxai2qoeAnJ0Ysa4/edit?usp=sharing]">Services Requirement Specification (SRS)</a> (#)
 </details>
 
 <details>

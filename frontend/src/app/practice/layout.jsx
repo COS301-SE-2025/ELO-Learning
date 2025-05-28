@@ -1,3 +1,4 @@
+import Link from 'next/link';
 import '../styles/dashboard.css';
 import Header from '../ui/header';
 import NavBar from '../ui/nav-bar';
@@ -12,9 +13,11 @@ export default function Layout({ children }) {
         <div className="w-full flex-none md:w-64">
           <NavBar />
         </div>
-        <div className="main-content flex-grow p-6 md:overflow-y-auto md:p-12">
-          {children}
-        </div>
+        <Link href="/question-templates/multiple-choice/q1">
+          <div className="main-content flex-grow p-6 md:overflow-y-auto md:p-12">
+            {children}
+          </div>
+        </Link>
       </div>
     </div>
   );

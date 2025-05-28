@@ -19,7 +19,7 @@ The platform encourages growth through competitive, skill-based challenges—suc
   <summary>
     Services Requirement Specification (SRS)
   </summary>
-  - <a href="[https://docs.google.com/document/d/1mucPjnS9raDPziTZLBBJaGlGvEBkxai2qoeAnJ0Ysa4/edit?usp=sharing]">Services Requirement Specification (SRS)</a> (#)
+  - <a href="https://docs.google.com/document/d/1mucPjnS9raDPziTZLBBJaGlGvEBkxai2qoeAnJ0Ysa4/edit?usp=sharing">Services Requirement Specification (SRS)</a> (#)
 </details>
 
 <details>

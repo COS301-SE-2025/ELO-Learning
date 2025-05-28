@@ -31,13 +31,6 @@ The platform encourages growth through competitive, skill-based challenges—suc
 
 <details>
   <summary>
-    User Stories
-  </summary>
-  - [Use Case Diagrams] (#)
-</details>
-
-<details>
-  <summary>
     Architectural Requirements
   </summary>
   <a href="https://docs.google.com/document/d/1xdGqOoLsAz72sCGqKvzmkCbCI1pfcCCaEVDiZFA88Zo/edit?usp=sharing">Architectural Requirements</a>
@@ -48,13 +41,6 @@ The platform encourages growth through competitive, skill-based challenges—suc
     Service Contracts
   </summary>
   <a href="https://docs.google.com/document/d/1SXkf3Jrm87EWsAGJYcIpyP3F58__FTMo9zLXIschNY8/edit?usp=sharing">Service Contracts</a>
-</details>
-
-<details>
-  <summary>
-    Technology Requirements
-  </summary>
-  - [Technology Requirements] (#)
 </details>
 
 <details>

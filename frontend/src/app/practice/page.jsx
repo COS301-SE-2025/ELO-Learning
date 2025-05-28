@@ -1,3 +1,13 @@
+import SubCategories from '@/app/ui/subcategories';
 export default function Page() {
-  return <p>This is the where the practice dashboard will be</p>;
+  return (
+    <div>
+      <h1 className="text-3xl text-center py-10 md:py-5">
+        Practice some maths!
+      </h1>
+      <div className="w-full">
+        <SubCategories />
+      </div>
+    </div>
+  );
 }

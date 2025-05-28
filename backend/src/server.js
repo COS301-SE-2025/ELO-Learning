@@ -3,6 +3,8 @@ import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import { supabase } from '../database/supabaseClient.js';
+import bcrypt from 'bcrypt';
+import jwt from 'jsonwebtoken';
 
 // Load environment variables
 dotenv.config();
@@ -245,6 +247,96 @@ app.get('/questions/level/topic', async (req, res) => {
   }
 
   res.status(200).json({ questions: data });
+});
+
+// Register new user
+app.post('/register', async (req, res) => {
+  const { name, surname, username, email, password } = req.body; //need to add handling for joinDate, xp and currentLevel
+
+  if (!name || !surname || !username || !email || !password) {
+    return res.status(400).json({ error: 'All fields are required' });
+  }
+
+  // Check if user already exists
+  const { data: existingUser, error: fetchError } = await supabase
+    .from('Users')
+    .select('id')
+    .eq('email', email)
+    .maybeSingle();
+
+  if (fetchError) {
+    console.error('Error checking existing user:', fetchError.message);
+    return res.status(500).json({ error: 'Internal server error' });
+  }
+
+  if (existingUser) {
+    return res.status(409).json({ error: 'Email already registered' });
+  }
+
+  // Hash password
+  const hashedPassword = await bcrypt.hash(password, 10);
+
+  const { data, error } = await supabase
+    .from('Users')
+    .insert([{ name, surname, username, email, password: hashedPassword }])
+    .select()
+    .single();
+
+  if (error) {
+    console.error('Error registering user:', error.message);
+    return res.status(500).json({ error: 'Failed to register user' });
+  }
+
+  res.status(201).json({ message: 'User registered successfully', user: data });
+});
+
+// Login user
+app.post('/login', async (req, res) => {
+  const { email, password } = req.body;
+
+  if (!email || !password) {
+    return res.status(400).json({ error: 'Email and password are required' });
+  }
+
+  // Fetch user by email
+  const { data: user, error: fetchError } = await supabase
+    .from('Users')
+    .select('id,name,surname,username,email,password')
+    .eq('email', email)
+    .single();
+
+  if (fetchError || !user) {
+    console.error('Error fetching user:', fetchError?.message);
+    return res.status(401).json({ error: 'Invalid email or password' });
+  }
+
+  // Verify password
+  const isPasswordValid = await bcrypt.compare(password, user.password);
+  if (!isPasswordValid) {
+    return res.status(401).json({ error: 'Invalid email or password' });
+  }
+
+  // Generate JWT token
+  const token = jwt.sign(
+    { id: user.id, email: user.email },
+    process.env.JWT_SECRET,
+    { expiresIn: '1h' },
+  );
+
+  res.status(200).json({
+    message: 'Login successful',
+    token,
+    user: {
+      id: user.id,
+      name: user.name,
+      surname: user.surname,
+      username: user.username,
+      email: user.email,
+      currentLevel: user.currentLevel || 1, // Default to level 1 if not set
+      joinDate: user.joinDate || new Date().toISOString(), // Default to current date if not set
+      xp: user.xp || 0, // Default to 0 XP if not set
+    },
+  });
 });
 
 // Start server

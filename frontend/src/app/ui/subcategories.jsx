@@ -68,7 +68,7 @@ const colors = [
 
 export default function SubCategories() {
   return (
-    <div>
+    <div className="p-5">
       {subcategories.map((sub, idx) => (
         <div
           className="sub_categories flex flex-row items-center w-full p-4 gap-2"

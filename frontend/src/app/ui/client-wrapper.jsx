@@ -5,6 +5,7 @@ import ProgressBar from '@/app/ui/progress-bar';
 import QuestionTemplate from '@/app/ui/question-template';
 import { Heart, X } from 'lucide-react';
 import Link from 'next/link';
+import { redirect } from 'next/navigation';
 import { useEffect, useState } from 'react';
 
 export default function ClientWrapper({ questions }) {
@@ -32,6 +33,11 @@ export default function ClientWrapper({ questions }) {
     setIsDisabled(true);
     setSelectedAnswer(null);
     setIsSelectedAnswerCorrect(false);
+
+    if (currentStep === allQuestions.length - 1) {
+      redirect('/dashboard');
+    }
+
     setCurrQuestion(allQuestions[currentStep]);
     setCurrAnswers(allQuestions[currentStep].answers || []);
   };

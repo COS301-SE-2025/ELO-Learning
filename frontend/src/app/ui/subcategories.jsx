@@ -1,3 +1,4 @@
+import Link from 'next/link';
 const subcategories = [
   {
     title: 'Statistics',
@@ -75,17 +76,19 @@ export default function SubCategories() {
           key={idx}
         >
           <div
-            className={`flex items-center justify-center min-w-16 min-h-16 w-16 h-16 flex-shrink-0 rounded mr-4 text-white text-2xl font-bold ${
+            className={`flex items-center justify-center min-w-16 min-h-16 w-16 h-16 flex-shrink-0 rounded mr-4 text-2xl font-bold ${
               colors[idx % colors.length]
             }`}
           >
             {sub.title.charAt(0)}
           </div>
-          <div>
-            <h2 className="text-xl font-bold">{sub.title}</h2>
-            <p className="text-sm">{sub.description}</p>
-          </div>
-          <p className="text-lg ml-auto">{sub.completion}%</p>
+          <Link href="/question-templates/multiple-choice/q1">
+            <div>
+              <h2 className="text-xl font-bold">{sub.title}</h2>
+              <p className="text-sm">{sub.description}</p>
+            </div>
+            <p className="text-lg ml-auto">{sub.completion}%</p>
+          </Link>
         </div>
       ))}
     </div>

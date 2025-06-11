@@ -9,7 +9,7 @@ const links = [
   { name: 'Home', href: '/dashboard', icon: House },
   { name: 'Practice', href: '/practice', icon: Calculator },
   { name: 'Match', href: '/match', icon: Swords },
-  { name: 'Timed', href: '/timed', icon: Timer },
+  { name: 'Timed', href: '/single-player', icon: Timer },
   { name: 'Profile', href: '/profile', icon: User },
 ];
 

@@ -19,42 +19,28 @@ The platform encourages growth through competitive, skill-based challenges—suc
   <summary>
     Services Requirement Specification (SRS)
   </summary>
-  - [SRS Document] (#)
+  <a href="https://docs.google.com/document/d/1mucPjnS9raDPziTZLBBJaGlGvEBkxai2qoeAnJ0Ysa4/edit?usp=sharing">Services Requirement Specification (SRS)</a>
 </details>
 
 <details>
   <summary>
     Domain Model
   </summary>
-  - [Domain Model] (#)
-</details>
-
-<details>
-  <summary>
-    User Stories
-  </summary>
-  - [Use Case Diagrams] (#)
+  <a href="https://drive.google.com/file/d/1eqc1UJakTQlBp5AYYW4u8XJU-QDGhuS1/view?usp=drive_link">Domain Model</a>
 </details>
 
 <details>
   <summary>
     Architectural Requirements
   </summary>
-  - [Architectural Requirements] (#)
+  <a href="https://docs.google.com/document/d/1xdGqOoLsAz72sCGqKvzmkCbCI1pfcCCaEVDiZFA88Zo/edit?usp=sharing">Architectural Requirements</a>
 </details>
 
 <details>
   <summary>
     Service Contracts
   </summary>
-  - [Service Contracts] (#)
-</details>
-
-<details>
-  <summary>
-    Technology Requirements
-  </summary>
-  - [Technology Requirements] (#)
+  <a href="https://docs.google.com/document/d/1SXkf3Jrm87EWsAGJYcIpyP3F58__FTMo9zLXIschNY8/edit?usp=sharing">Service Contracts</a>
 </details>
 
 <details>

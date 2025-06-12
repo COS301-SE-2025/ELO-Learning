@@ -26,7 +26,7 @@ function calculateGateKeepingComponent() {
   return beta * (remainingXP / nextLevelXP);
 }
 
-async function calculateXP() {
+async function calculateSinglePlayerXP() {
   const timeReward = calculateTimeReward();
   const levelReward = calculateLevelReward();
   const gatekeeper = calculateGateKeepingComponent();
@@ -40,4 +40,4 @@ async function calculateXP() {
   return XP;
 }
 
-calculateXP().then((xp) => console.log('XP Earned:', xp));
+calculateSinglePlayerXP().then((xp) => console.log('XP Earned:', xp));

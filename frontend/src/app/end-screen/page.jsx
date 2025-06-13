@@ -41,6 +41,7 @@ export default function Page() {
           <button className="main-button w-full uppercase">
             View the memo
           </button>
+
           <Link className="btn-link" href="/dashboard">
             <button className="secondary-button w-full uppercase">
               Claim xp

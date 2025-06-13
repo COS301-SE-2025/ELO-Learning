@@ -188,7 +188,7 @@ app.get('/practice', async (req, res) => {
 });
 
 // Return specific question by ID (ADD THIS NEW ROUTE)
-app.get('/questions/:id', async (req, res) => {
+app.get('/questionsById/:id', async (req, res) => {
   const { id } = req.params;
 
   try {

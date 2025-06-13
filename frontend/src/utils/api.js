@@ -39,7 +39,7 @@ export const getAllQuestions = async () => {
 
 export const getQuestionById = async (id) => {
   try {
-    const response = await fetch(`${API_BASE_URL}/questions/${id}`, {
+    const response = await fetch(`${API_BASE_URL}/questionsById/${id}`, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',

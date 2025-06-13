@@ -1,11 +1,11 @@
+import { jest } from '@jest/globals';
 import request from 'supertest';
 import app from '../src/server.js';
-import { jest } from '@jest/globals';
 
 jest.setTimeout(20000); // for slow tests
 
 // Test data - adjust these to match your actual database
-const testLevel = 1;
+const testLevel = 4;
 const testTopic = 'Statistics';
 const testQuestionId = 22; // Make sure this exists in your Questions table
 

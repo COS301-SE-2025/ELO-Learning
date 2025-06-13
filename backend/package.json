@@ -4,7 +4,7 @@
   "type": "module",
   "main": "testConnection.js",
   "scripts": {
-    "test": "jest"
+    "test": "node --experimental-vm-modules node_modules/.bin/jest"
   },
   "keywords": [],
   "author": "",
@@ -13,9 +13,11 @@
   "dependencies": {
     "@paralleldrive/cuid2": "^2.2.2",
     "@supabase/supabase-js": "^2.49.7",
+    "bcrypt": "^6.0.0",
     "cors": "^2.8.5",
     "dotenv": "^16.5.0",
     "express": "^5.1.0",
+    "jsonwebtoken": "^9.0.2",
     "python": "^0.0.4"
   },
   "devDependencies": {

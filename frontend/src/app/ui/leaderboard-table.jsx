@@ -32,7 +32,7 @@ const leaderboardData = [
 
 export default function LeaderboardTable() {
   return (
-    <div className="border rounded-lg p-4 mx-4 md:mx-30">
+    <div className="border rounded-lg p-4 mx-4 md:mx-0">
       <table className="table-auto w-full text-center">
         <thead>
           <tr>
@@ -45,10 +45,10 @@ export default function LeaderboardTable() {
         <tbody>
           {leaderboardData.map((entry) => (
             <tr key={entry.pos}>
-              <td className=" p-2">{entry.pos}</td>
+              <td className="p-2">{entry.pos}</td>
               <td className="p-2">
                 <span
-                  className={`inline-flex items-center justify-center rounded-full w-8 h-8 text-white font-bold text-lg ${getColor(
+                  className={`inline-flex items-center justify-center rounded-full w-8 h-8 font-bold text-lg ${getColor(
                     entry.user,
                   )}`}
                 >

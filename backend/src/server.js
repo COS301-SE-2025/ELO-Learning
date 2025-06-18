@@ -1,7 +1,9 @@
 // server.js
-import express from 'express';
+import bcrypt from 'bcrypt';
 import cors from 'cors';
 import dotenv from 'dotenv';
+import express from 'express';
+import jwt from 'jsonwebtoken';
 import { supabase } from '../database/supabaseClient.js';
 
 // Load environment variables
@@ -144,6 +146,74 @@ app.get('/questions', async (req, res) => {
   }
 });
 
+//return 10 questions for practice
+//also get all the answers for those questions
+app.get('/practice', async (req, res) => {
+  try {
+    const { data, error } = await supabase
+      .from('Questions')
+      .select('*')
+      .limit(10);
+
+    for (const question of data) {
+      const { data, error } = await supabase
+        .from('Answers')
+        .select('*')
+        .eq('question_id', question.Q_id);
+      if (error) {
+        console.error(
+          'Error fetching practice questions:',
+          error.message,
+          question,
+        );
+        return res
+          .status(500)
+          .json({ error: 'Failed to fetch practice questions' });
+      }
+      question.answers = data;
+    }
+
+    if (error) {
+      console.error('Error fetching practice questions:', error.message);
+      return res
+        .status(500)
+        .json({ error: 'Failed to fetch practice questions' });
+    }
+
+    res.status(200).json({ questions: data });
+  } catch (err) {
+    console.error('Unexpected error:', err);
+    res.status(500).json({ error: 'Unexpected server error' });
+  }
+});
+
+// Return specific question by ID (ADD THIS NEW ROUTE)
+app.get('/questionsById/:id', async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    const { data, error } = await supabase
+      .from('Questions')
+      .select('*')
+      .eq('Q_id', id)
+      .single();
+
+    if (error) {
+      console.error('Error fetching question:', error.message);
+      return res.status(500).json({ error: 'Failed to fetch question' });
+    }
+
+    if (!data) {
+      return res.status(404).json({ error: 'Question not found' });
+    }
+
+    res.status(200).json({ question: data });
+  } catch (err) {
+    console.error('Unexpected error:', err);
+    res.status(500).json({ error: 'Unexpected server error' });
+  }
+});
+
 // Return all questions for given level: (works)
 app.get('/question/:level', async (req, res) => {
   const { level } = req.params;
@@ -201,6 +271,28 @@ app.get('/question/:id/answer', async (req, res) => {
   res.status(200).json({ answer: data });
 });
 
+//Return all answers to a specific question
+app.get('/answers/:id', async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    const { data, error } = await supabase
+      .from('Answers')
+      .select('*')
+      .eq('question_id', id);
+
+    if (error) {
+      console.error('Error fetching answers:', error.message);
+      return res.status(500).json({ error: 'Failed to fetch answers' });
+    }
+
+    res.status(200).json({ answer: data });
+  } catch (err) {
+    console.error('Unexpected error:', err);
+    res.status(500).json({ error: 'Unexpected server error' });
+  }
+});
+
 // Return all questions for a specific topic: (works)
 app.get('/questions/topic', async (req, res) => {
   const { topic } = req.query;
@@ -245,6 +337,96 @@ app.get('/questions/level/topic', async (req, res) => {
   }
 
   res.status(200).json({ questions: data });
+});
+
+// Register new user
+app.post('/register', async (req, res) => {
+  const { name, surname, username, email, password } = req.body; //need to add handling for joinDate, xp and currentLevel
+
+  if (!name || !surname || !username || !email || !password) {
+    return res.status(400).json({ error: 'All fields are required' });
+  }
+
+  // Check if user already exists
+  const { data: existingUser, error: fetchError } = await supabase
+    .from('Users')
+    .select('id')
+    .eq('email', email)
+    .maybeSingle();
+
+  if (fetchError) {
+    console.error('Error checking existing user:', fetchError.message);
+    return res.status(500).json({ error: 'Internal server error' });
+  }
+
+  if (existingUser) {
+    return res.status(409).json({ error: 'Email already registered' });
+  }
+
+  // Hash password
+  const hashedPassword = await bcrypt.hash(password, 10);
+
+  const { data, error } = await supabase
+    .from('Users')
+    .insert([{ name, surname, username, email, password: hashedPassword }])
+    .select()
+    .single();
+
+  if (error) {
+    console.error('Error registering user:', error.message);
+    return res.status(500).json({ error: 'Failed to register user' });
+  }
+
+  res.status(201).json({ message: 'User registered successfully', user: data });
+});
+
+// Login user
+app.post('/login', async (req, res) => {
+  const { email, password } = req.body;
+
+  if (!email || !password) {
+    return res.status(400).json({ error: 'Email and password are required' });
+  }
+
+  // Fetch user by email
+  const { data: user, error: fetchError } = await supabase
+    .from('Users')
+    .select('id,name,surname,username,email,password')
+    .eq('email', email)
+    .single();
+
+  if (fetchError || !user) {
+    console.error('Error fetching user:', fetchError?.message);
+    return res.status(401).json({ error: 'Invalid email or password' });
+  }
+
+  // Verify password
+  const isPasswordValid = await bcrypt.compare(password, user.password);
+  if (!isPasswordValid) {
+    return res.status(401).json({ error: 'Invalid email or password' });
+  }
+
+  // Generate JWT token
+  const token = jwt.sign(
+    { id: user.id, email: user.email },
+    process.env.JWT_SECRET,
+    { expiresIn: '1h' },
+  );
+
+  res.status(200).json({
+    message: 'Login successful',
+    token,
+    user: {
+      id: user.id,
+      name: user.name,
+      surname: user.surname,
+      username: user.username,
+      email: user.email,
+      currentLevel: user.currentLevel || 1, // Default to level 1 if not set
+      joinDate: user.joinDate || new Date().toISOString(), // Default to current date if not set
+      xp: user.xp || 0, // Default to 0 XP if not set
+    },
+  });
 });
 
 // Start server

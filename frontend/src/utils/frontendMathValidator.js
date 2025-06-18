@@ -13,7 +13,7 @@ class FrontendMathValidator {
       epsilon: 1e-10,
       matrix: 'Matrix',
       number: 'number',
-      precision: 64
+      precision: 64,
     });
   }
 
@@ -26,9 +26,12 @@ class FrontendMathValidator {
   validateAnswer(studentAnswer, correctAnswer) {
     try {
       // Basic input validation
-      if (!studentAnswer || !correctAnswer || 
-          typeof studentAnswer !== 'string' || 
-          typeof correctAnswer !== 'string') {
+      if (
+        !studentAnswer ||
+        !correctAnswer ||
+        typeof studentAnswer !== 'string' ||
+        typeof correctAnswer !== 'string'
+      ) {
         return false;
       }
 
@@ -37,10 +40,11 @@ class FrontendMathValidator {
       const normalizedCorrect = this.normalizeExpression(correctAnswer);
 
       // Try different validation approaches
-      return this.checkExactMatch(normalizedStudent, normalizedCorrect) ||
-             this.checkNumericalEquality(normalizedStudent, normalizedCorrect) ||
-             this.checkAlgebraicEquivalence(normalizedStudent, normalizedCorrect);
-
+      return (
+        this.checkExactMatch(normalizedStudent, normalizedCorrect) ||
+        this.checkNumericalEquality(normalizedStudent, normalizedCorrect) ||
+        this.checkAlgebraicEquivalence(normalizedStudent, normalizedCorrect)
+      );
     } catch (error) {
       console.warn('Math validation error:', error);
       return false;
@@ -56,12 +60,14 @@ class FrontendMathValidator {
   quickValidate(studentAnswer, correctAnswer) {
     try {
       if (!studentAnswer?.trim()) return false;
-      
+
       const normalized1 = this.normalizeExpression(studentAnswer);
       const normalized2 = this.normalizeExpression(correctAnswer);
-      
-      return this.checkExactMatch(normalized1, normalized2) || 
-             this.checkNumericalEquality(normalized1, normalized2);
+
+      return (
+        this.checkExactMatch(normalized1, normalized2) ||
+        this.checkNumericalEquality(normalized1, normalized2)
+      );
     } catch {
       return false;
     }
@@ -74,7 +80,7 @@ class FrontendMathValidator {
    */
   normalizeExpression(expression) {
     if (typeof expression !== 'string') return expression;
-    
+
     return expression
       .toLowerCase()
       .replace(/\s+/g, '') // Remove all whitespace
@@ -110,9 +116,12 @@ class FrontendMathValidator {
     try {
       const studentValue = this.math.evaluate(student);
       const correctValue = this.math.evaluate(correct);
-      
+
       // Handle different number types
-      if (typeof studentValue === 'number' && typeof correctValue === 'number') {
+      if (
+        typeof studentValue === 'number' &&
+        typeof correctValue === 'number'
+      ) {
         if (!isFinite(studentValue) || !isFinite(correctValue)) {
           return studentValue === correctValue; // Handle Infinity/-Infinity
         }
@@ -141,24 +150,28 @@ class FrontendMathValidator {
       // Simplify both expressions
       const simplified1 = this.math.simplify(student);
       const simplified2 = this.math.simplify(correct);
-      
+
       // Compare simplified forms
       if (simplified1.toString() === simplified2.toString()) {
         return true;
       }
-      
+
       // Try expanding expressions (for cases like (x+1)^2 vs x^2+2*x+1)
       try {
-        const expanded1 = this.math.simplify(this.math.parse(student), {expand: true});
-        const expanded2 = this.math.simplify(this.math.parse(correct), {expand: true});
-        
+        const expanded1 = this.math.simplify(this.math.parse(student), {
+          expand: true,
+        });
+        const expanded2 = this.math.simplify(this.math.parse(correct), {
+          expand: true,
+        });
+
         if (expanded1.toString() === expanded2.toString()) {
           return true;
         }
       } catch {
         // Expansion failed, continue with other methods
       }
-      
+
       // Try checking if difference equals zero
       try {
         const difference = this.math.simplify(`(${student}) - (${correct})`);
@@ -182,20 +195,20 @@ class FrontendMathValidator {
       if (!input || typeof input !== 'string' || !input.trim()) {
         return false;
       }
-      
+
       // Check for obviously invalid patterns first
       const normalized = this.normalizeExpression(input);
-      
+
       // Reject multiple consecutive operators
       if (/[+\-*/^]{2,}/.test(normalized.replace(/\*\*/g, '^'))) {
         return false;
       }
-      
+
       // Reject expressions starting/ending with operators (except minus)
       if (/^[+*/^]|[+\-*/^]$/.test(normalized)) {
         return false;
       }
-      
+
       // Try to parse the expression
       this.math.parse(normalized);
       return true;
@@ -208,11 +221,11 @@ class FrontendMathValidator {
     if (!input?.trim()) {
       return 'Please enter an answer';
     }
-    
+
     if (!this.isValidMathExpression(input)) {
       return 'Please check your math expression format';
     }
-    
+
     return '';
   }
 }
@@ -220,16 +233,16 @@ class FrontendMathValidator {
 // Create singleton instance
 const mathValidator = new FrontendMathValidator();
 
-const validateMathAnswer = (studentAnswer, correctAnswer) => 
+const validateMathAnswer = (studentAnswer, correctAnswer) =>
   mathValidator.validateAnswer(studentAnswer, correctAnswer);
 
-const quickValidateMath = (studentAnswer, correctAnswer) => 
+const quickValidateMath = (studentAnswer, correctAnswer) =>
   mathValidator.quickValidate(studentAnswer, correctAnswer);
 
-const isValidMathExpression = (input) => 
+const isValidMathExpression = (input) =>
   mathValidator.isValidMathExpression(input);
 
-const getMathValidationMessage = (input) => 
+const getMathValidationMessage = (input) =>
   mathValidator.getValidationMessage(input);
 
 module.exports = {
@@ -238,5 +251,5 @@ module.exports = {
   isValidMathExpression,
   getMathValidationMessage,
   FrontendMathValidator,
-  default: mathValidator
+  default: mathValidator,
 };

@@ -1,11 +1,11 @@
 'use client';
 
-import { validateMathExpression, quickValidateMath } from '@/utils/api';
-import { useState, useEffect, useRef } from 'react';
-import { InlineMath } from 'react-katex';
+import { quickValidateMath, validateMathExpression } from '@/utils/api';
 import 'katex/dist/katex.min.css';
+import { useEffect, useRef, useState } from 'react';
+import { InlineMath } from 'react-katex';
 
-export default function AdvancedMathInputTemplate({ 
+export default function MathInputTemplate({ 
   correctAnswer, 
   setStudentAnswer, 
   setIsAnswerCorrect,

@@ -364,3 +364,82 @@ textarea:focus-visible {
     box-shadow: 2px 0px 4px 0px rgba(105, 105, 105, 0.25);
   }
 }
+
+/* Math Input Animations */
+.animate-fade-in {
+  animation: fadeIn 0.3s ease-in;
+}
+
+@keyframes fadeIn {
+  from { 
+    opacity: 0; 
+    transform: translateY(-10px); 
+  }
+  to { 
+    opacity: 1; 
+    transform: translateY(0); 
+  }
+}
+
+/* Math Input Validation States */
+.math-input-valid {
+  border-color: #10b981 !important; /* green */
+}
+
+.math-input-invalid {
+  border-color: #ef4444 !important; /* red */
+}
+
+.math-input-checking {
+  border-color: #f59e0b !important; /* yellow */
+}
+
+/* Advanced Math Input Styles */
+.math-keyboard-tab-active {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+}
+
+.math-symbol-button {
+  transition: all 0.2s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.math-symbol-button:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+
+.math-symbol-button:active {
+  transform: translateY(0);
+}
+
+.math-preview-container {
+  background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+  border: 2px solid #e3f2fd;
+}
+
+.suggestion-dropdown {
+  backdrop-filter: blur(10px);
+  background: rgba(255, 255, 255, 0.95);
+  border: 1px solid rgba(0,0,0,0.1);
+  box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+}
+
+.history-panel {
+  background: linear-gradient(135deg, #ffeaa7 0%, #fab1a0 100%);
+}
+
+/* Responsive improvements */
+@media (max-width: 640px) {
+  .math-keyboard-grid {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+  }
+  
+  .math-symbol-button {
+    height: 48px;
+    font-size: 16px;
+  }
+}

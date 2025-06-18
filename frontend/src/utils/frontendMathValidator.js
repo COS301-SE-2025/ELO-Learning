@@ -278,11 +278,6 @@ class FrontendMathValidator {
     return openParens === 0 && openBrackets === 0 && openBraces === 0;
   }
 
-  /**
-   * Check for function syntax errors
-   * @param {string} expression - Expression to check
-   * @returns {boolean} - true if there are syntax errors
-   */
   hasFunctionSyntaxErrors(expression) {
     // Check for function calls without parentheses
     const functionPattern = new RegExp(

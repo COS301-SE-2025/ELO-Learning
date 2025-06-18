@@ -10,11 +10,14 @@
   },
   "dependencies": {
     "clsx": "^2.1.1",
+    "katex": "^0.16.22",
     "lucide-react": "^0.511.0",
+    "math-expression-evaluator": "^2.0.7",
     "mathjs": "^14.5.2",
     "next": "15.3.2",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
+    "react-katex": "^3.1.0",
     "typescript": "^5.8.3"
   },
   "devDependencies": {

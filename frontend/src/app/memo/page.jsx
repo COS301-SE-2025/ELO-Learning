@@ -11,7 +11,7 @@ export default function Page() {
       <div>
         <QuestionTemplate question="The area of a triangle with base 10 cm and height 8 cm." />
       </div>
-      <div>
+      <div className="md:flex md:flex-col md:m-auto md:w-[50%]">
         <div>
           <p className="text-xl">Your answer:</p>
           <WrongAnswer answer="30 cm²" />
@@ -21,7 +21,7 @@ export default function Page() {
           <RightAnswer answer="40 cm²" />
         </div>
       </div>
-      <div className="flex flex-row items-center justify-between w-full gap-4">
+      <div className="flex flex-row items-center justify-between w-full gap-4 md:w-[50%] md:m-auto">
         <button className="secondary-button">Previous</button>
         <button className="main-button">Next</button>
       </div>

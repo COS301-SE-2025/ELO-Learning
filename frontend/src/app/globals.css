@@ -371,13 +371,13 @@ textarea:focus-visible {
 }
 
 @keyframes fadeIn {
-  from { 
-    opacity: 0; 
-    transform: translateY(-10px); 
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
   }
-  to { 
-    opacity: 1; 
-    transform: translateY(0); 
+  to {
+    opacity: 1;
+    transform: translateY(0);
   }
 }
 
@@ -408,7 +408,7 @@ textarea:focus-visible {
 
 .math-symbol-button:hover {
   transform: translateY(-1px);
-  box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
 }
 
 .math-symbol-button:active {
@@ -423,8 +423,8 @@ textarea:focus-visible {
 .suggestion-dropdown {
   backdrop-filter: blur(10px);
   background: rgba(255, 255, 255, 0.95);
-  border: 1px solid rgba(0,0,0,0.1);
-  box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
 }
 
 .history-panel {
@@ -437,7 +437,7 @@ textarea:focus-visible {
     grid-template-columns: repeat(3, 1fr);
     gap: 8px;
   }
-  
+
   .math-symbol-button {
     height: 48px;
     font-size: 16px;

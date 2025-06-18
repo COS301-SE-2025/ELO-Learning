@@ -5,12 +5,12 @@ import 'katex/dist/katex.min.css';
 import { useEffect, useRef, useState } from 'react';
 import { InlineMath } from 'react-katex';
 
-export default function MathInputTemplate({ 
-  correctAnswer, 
-  setStudentAnswer, 
+export default function MathInputTemplate({
+  correctAnswer,
+  setStudentAnswer,
   setIsAnswerCorrect,
   setIsValidExpression,
-  studentAnswer = ''
+  studentAnswer = '',
 }) {
   const [inputValue, setInputValue] = useState(studentAnswer);
   const [validationMessage, setValidationMessage] = useState('');
@@ -23,7 +23,7 @@ export default function MathInputTemplate({
   const [cursorPosition, setCursorPosition] = useState(0);
   const [suggestions, setSuggestions] = useState([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
-  
+
   const inputRef = useRef(null);
 
   // Advanced math symbol categories
@@ -40,8 +40,8 @@ export default function MathInputTemplate({
         { symbol: ')', label: ')', description: 'Close parenthesis' },
         { symbol: '^', label: 'xⁿ', description: 'Exponent' },
         { symbol: 'sqrt(', label: '√', description: 'Square root' },
-        { symbol: '=', label: '=', description: 'Equals' }
-      ]
+        { symbol: '=', label: '=', description: 'Equals' },
+      ],
     },
     functions: {
       label: 'Functions',
@@ -55,20 +55,20 @@ export default function MathInputTemplate({
         { symbol: 'atan(', label: 'tan⁻¹', description: 'Arctangent' },
         { symbol: 'log(', label: 'log', description: 'Logarithm base 10' },
         { symbol: 'ln(', label: 'ln', description: 'Natural logarithm' },
-        { symbol: 'abs(', label: '|x|', description: 'Absolute value' }
-      ]
+        { symbol: 'abs(', label: '|x|', description: 'Absolute value' },
+      ],
     },
     constants: {
       label: 'Constants',
       icon: 'π',
       symbols: [
         { symbol: 'pi', label: 'π', description: 'Pi (3.14159...)' },
-        { symbol: 'e', label: 'e', description: 'Euler\'s number (2.718...)' },
+        { symbol: 'e', label: 'e', description: "Euler's number (2.718...)" },
         { symbol: 'infinity', label: '∞', description: 'Infinity' },
         { symbol: 'i', label: 'i', description: 'Imaginary unit' },
         { symbol: 'phi', label: 'φ', description: 'Golden ratio' },
-        { symbol: '±', label: '±', description: 'Plus or minus' }
-      ]
+        { symbol: '±', label: '±', description: 'Plus or minus' },
+      ],
     },
     advanced: {
       label: 'Advanced',
@@ -82,8 +82,8 @@ export default function MathInputTemplate({
         { symbol: 'matrix(', label: '[]', description: 'Matrix' },
         { symbol: '∈', label: '∈', description: 'Element of' },
         { symbol: '∅', label: '∅', description: 'Empty set' },
-        { symbol: '∀', label: '∀', description: 'For all' }
-      ]
+        { symbol: '∀', label: '∀', description: 'For all' },
+      ],
     },
     templates: {
       label: 'Templates',
@@ -94,9 +94,13 @@ export default function MathInputTemplate({
         { symbol: '_{', label: 'x₍ₙ₎', description: 'Subscript template' },
         { symbol: 'sqrt{}', label: '√x', description: 'Square root template' },
         { symbol: 'cbrt{}', label: '∛x', description: 'Cube root template' },
-        { symbol: 'binom{}{', label: '(n k)', description: 'Binomial coefficient' }
-      ]
-    }
+        {
+          symbol: 'binom{}{',
+          label: '(n k)',
+          description: 'Binomial coefficient',
+        },
+      ],
+    },
   };
 
   // Auto-completion suggestions
@@ -109,7 +113,7 @@ export default function MathInputTemplate({
     { trigger: 'sqrt', completion: 'sqrt()', description: 'Square root' },
     { trigger: 'abs', completion: 'abs()', description: 'Absolute value' },
     { trigger: 'pi', completion: 'π', description: 'Pi constant' },
-    { trigger: 'inf', completion: '∞', description: 'Infinity' }
+    { trigger: 'inf', completion: '∞', description: 'Infinity' },
   ];
 
   // Real-time expression validation
@@ -128,8 +132,8 @@ export default function MathInputTemplate({
       // Check for auto-completions
       const currentWord = getCurrentWord(inputValue, cursorPosition);
       if (currentWord.length > 1) {
-        const matchingSuggestions = autoCompletions.filter(ac => 
-          ac.trigger.startsWith(currentWord.toLowerCase())
+        const matchingSuggestions = autoCompletions.filter((ac) =>
+          ac.trigger.startsWith(currentWord.toLowerCase()),
         );
         setSuggestions(matchingSuggestions);
         setShowSuggestions(matchingSuggestions.length > 0);
@@ -143,7 +147,7 @@ export default function MathInputTemplate({
           setLocalIsValidExpression(result.data.isValid);
           setIsValidExpression?.(result.data.isValid);
           setValidationMessage(result.data.message);
-          
+
           if (!result.data.isValid) {
             setTimeout(() => {
               setShowErrorMessage(true);
@@ -217,16 +221,17 @@ export default function MathInputTemplate({
 
     const start = input.selectionStart;
     const end = input.selectionEnd;
-    const newValue = inputValue.substring(0, start) + symbol + inputValue.substring(end);
-    
+    const newValue =
+      inputValue.substring(0, start) + symbol + inputValue.substring(end);
+
     setInputValue(newValue);
     setStudentAnswer(newValue);
-    
+
     // Add to history
     if (!inputHistory.includes(symbol)) {
-      setInputHistory(prev => [symbol, ...prev.slice(0, 9)]); // Keep last 10
+      setInputHistory((prev) => [symbol, ...prev.slice(0, 9)]); // Keep last 10
     }
-    
+
     if (shouldMoveCursor) {
       setTimeout(() => {
         input.focus();
@@ -240,12 +245,15 @@ export default function MathInputTemplate({
   const handleSuggestionClick = (suggestion) => {
     const currentWord = getCurrentWord(inputValue, cursorPosition);
     const start = cursorPosition - currentWord.length;
-    const newValue = inputValue.substring(0, start) + suggestion.completion + inputValue.substring(cursorPosition);
-    
+    const newValue =
+      inputValue.substring(0, start) +
+      suggestion.completion +
+      inputValue.substring(cursorPosition);
+
     setInputValue(newValue);
     setStudentAnswer(newValue);
     setShowSuggestions(false);
-    
+
     setTimeout(() => {
       inputRef.current?.focus();
       const newPosition = start + suggestion.completion.length;
@@ -265,9 +273,10 @@ export default function MathInputTemplate({
 
     const start = input.selectionStart;
     const end = input.selectionEnd;
-    
+
     if (start === end && start > 0) {
-      const newValue = inputValue.substring(0, start - 1) + inputValue.substring(start);
+      const newValue =
+        inputValue.substring(0, start - 1) + inputValue.substring(start);
       setInputValue(newValue);
       setStudentAnswer(newValue);
       setTimeout(() => {
@@ -297,15 +306,15 @@ export default function MathInputTemplate({
           onKeyDown={handleKeyDown}
           placeholder="Enter your mathematical expression..."
           className={`w-full p-4 text-lg border-2 rounded-lg focus:outline-none transition-colors resize-none min-h-[80px] font-mono ${
-            !localIsValidExpression 
-              ? 'border-red-500 focus:border-red-600' 
+            !localIsValidExpression
+              ? 'border-red-500 focus:border-red-600'
               : isChecking
-              ? 'border-yellow-500 focus:border-yellow-600'
-              : 'border-gray-300 focus:border-blue-500'
+                ? 'border-yellow-500 focus:border-yellow-600'
+                : 'border-gray-300 focus:border-blue-500'
           }`}
           rows={2}
         />
-        
+
         {/* Validation indicator */}
         <div className="absolute right-3 top-4">
           {isChecking ? (
@@ -331,8 +340,12 @@ export default function MathInputTemplate({
                 className="w-full px-4 py-2 text-left hover:bg-blue-50 flex justify-between items-center border-b border-gray-100 last:border-b-0"
               >
                 <div>
-                  <span className="font-mono text-blue-600">{suggestion.completion}</span>
-                  <span className="text-gray-600 ml-2 text-sm">{suggestion.description}</span>
+                  <span className="font-mono text-blue-600">
+                    {suggestion.completion}
+                  </span>
+                  <span className="text-gray-600 ml-2 text-sm">
+                    {suggestion.description}
+                  </span>
                 </div>
                 <span className="text-xs text-gray-400">Tab</span>
               </button>
@@ -375,7 +388,9 @@ export default function MathInputTemplate({
       {/* History panel */}
       {showHistory && inputHistory.length > 0 && (
         <div className="bg-gray-50 rounded-lg p-3 border border-gray-200">
-          <div className="text-sm text-gray-700 mb-2 font-medium">Recently Used:</div>
+          <div className="text-sm text-gray-700 mb-2 font-medium">
+            Recently Used:
+          </div>
           <div className="flex flex-wrap gap-2">
             {inputHistory.map((symbol, index) => (
               <button
@@ -439,7 +454,9 @@ export default function MathInputTemplate({
 
       {/* Helper Text */}
       <div className="text-xs text-gray-500 space-y-1 bg-gray-50 p-3 rounded-lg">
-        <p><strong>Tips:</strong></p>
+        <p>
+          <strong>Tips:</strong>
+        </p>
         <p>• Use Tab to accept suggestions</p>
         <p>• Click symbols or type directly</p>
         <p>• Use ^ for exponents (e.g., x^2)</p>

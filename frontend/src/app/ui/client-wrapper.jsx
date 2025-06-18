@@ -18,37 +18,39 @@ export default function ClientWrapper({ questions }) {
   const [currAnswers, setCurrAnswers] = useState(currQuestion.answers || []);
   const [currentStep, setCurrentStep] = useState(1);
   const [isDisabled, setIsDisabled] = useState(true);
-  
+
   // For multiple choice
   const [selectedAnswer, setSelectedAnswer] = useState(null);
   const [isSelectedAnswerCorrect, setIsSelectedAnswerCorrect] = useState(false);
-  
+
   // For math input
   const [studentAnswer, setStudentAnswer] = useState('');
   const [isAnswerCorrect, setIsAnswerCorrect] = useState(false);
   const [isValidExpression, setIsValidExpression] = useState(true);
-  
+
   // Feedback state
   const [showFeedback, setShowFeedback] = useState(false);
   const [feedbackMessage, setFeedbackMessage] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Determine question type
-  const isMathInputQuestion = currQuestion.type === 'math-input' || 
-                             currQuestion.topic === 'Algebra' || 
-                             currQuestion.topic === 'Calculus' ||
-                             currQuestion.Q_id === 3 || 
-                             !currAnswers || currAnswers.length === 0;
+  const isMathInputQuestion =
+    currQuestion.type === 'math-input' ||
+    currQuestion.topic === 'Algebra' ||
+    currQuestion.topic === 'Calculus' ||
+    currQuestion.Q_id === 3 ||
+    !currAnswers ||
+    currAnswers.length === 0;
 
-console.log('=== DEBUG INFO ===');
-console.log('Current question:', currQuestion);
-console.log('Question type:', currQuestion.type);
-console.log('Question topic:', currQuestion.topic);
-console.log('Question ID:', currQuestion.Q_id);
-console.log('Current answers:', currAnswers);
-console.log('Current answers length:', currAnswers?.length);
-console.log('Is math input question?', isMathInputQuestion);
-console.log('==================');
+  console.log('=== DEBUG INFO ===');
+  console.log('Current question:', currQuestion);
+  console.log('Question type:', currQuestion.type);
+  console.log('Question topic:', currQuestion.topic);
+  console.log('Question ID:', currQuestion.Q_id);
+  console.log('Current answers:', currAnswers);
+  console.log('Current answers length:', currAnswers?.length);
+  console.log('Is math input question?', isMathInputQuestion);
+  console.log('==================');
 
   // Enable/disable submit button
   useEffect(() => {
@@ -66,19 +68,21 @@ console.log('==================');
     try {
       if (isMathInputQuestion) {
         // Submit math input answer
-        const correctAnswer = currQuestion.correctAnswer || 
-                             currAnswers.find(a => a.isCorrect)?.answerText || '';
-        
+        const correctAnswer =
+          currQuestion.correctAnswer ||
+          currAnswers.find((a) => a.isCorrect)?.answerText ||
+          '';
+
         const result = await submitQuestionAnswer(
-          currQuestion.Q_id, 
-          studentAnswer, 
-          'current-user-id' // Replace with actual user ID
+          currQuestion.Q_id,
+          studentAnswer,
+          'current-user-id', // Replace with actual user ID
         );
 
         if (result.success) {
           setFeedbackMessage(result.data.message);
           setShowFeedback(true);
-          
+
           // Award XP if correct
           if (result.data.isCorrect && result.data.xpAwarded > 0) {
             console.log(`Awarded ${result.data.xpAwarded} XP!`);
@@ -86,7 +90,11 @@ console.log('==================');
         }
       } else {
         // Handle multiple choice submission (existing logic)
-        setFeedbackMessage(isSelectedAnswerCorrect ? 'Correct! Well done!' : 'Incorrect. Try again!');
+        setFeedbackMessage(
+          isSelectedAnswerCorrect
+            ? 'Correct! Well done!'
+            : 'Incorrect. Try again!',
+        );
         setShowFeedback(true);
       }
 
@@ -94,7 +102,6 @@ console.log('==================');
       setTimeout(() => {
         moveToNextQuestion();
       }, 2000);
-
     } catch (error) {
       console.error('Error submitting answer:', error);
       setFeedbackMessage('Error submitting answer. Please try again.');
@@ -130,14 +137,16 @@ console.log('==================');
     if (isMathInputQuestion) {
       // For Q_id === 1 (testing), return the known correct answer
       if (currQuestion.Q_id === 1) {
-        return "6"; // The correct answer for the mean question
+        return '6'; // The correct answer for the mean question
       }
-      
+
       // For other questions, try multiple field names
-      return currQuestion.correctAnswer || 
-            currAnswers.find(a => a.isCorrect)?.answerText || 
-            currAnswers.find(a => a.isCorrect)?.answer_text || // Add this line
-            '';
+      return (
+        currQuestion.correctAnswer ||
+        currAnswers.find((a) => a.isCorrect)?.answerText ||
+        currAnswers.find((a) => a.isCorrect)?.answer_text || // Add this line
+        ''
+      );
     }
     return null;
   };
@@ -185,11 +194,14 @@ console.log('==================');
 
         {/* Feedback */}
         {showFeedback && (
-          <div className={`m-4 p-4 rounded-lg text-center ${
-            feedbackMessage.includes('Correct') || feedbackMessage.includes('Well done')
-              ? 'bg-green-100 text-green-800 border border-green-300'
-              : 'bg-red-100 text-red-800 border border-red-300'
-          }`}>
+          <div
+            className={`m-4 p-4 rounded-lg text-center ${
+              feedbackMessage.includes('Correct') ||
+              feedbackMessage.includes('Well done')
+                ? 'bg-green-100 text-green-800 border border-green-300'
+                : 'bg-red-100 text-red-800 border border-red-300'
+            }`}
+          >
             {feedbackMessage}
           </div>
         )}

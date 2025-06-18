@@ -438,18 +438,21 @@ app.post('/validate-answer', async (req, res) => {
     const { studentAnswer, correctAnswer } = req.body;
 
     if (!studentAnswer || !correctAnswer) {
-      return res.status(400).json({ 
-        error: 'Both studentAnswer and correctAnswer are required' 
+      return res.status(400).json({
+        error: 'Both studentAnswer and correctAnswer are required',
       });
     }
 
-    const isCorrect = backendMathValidator.validateAnswer(studentAnswer, correctAnswer);
+    const isCorrect = backendMathValidator.validateAnswer(
+      studentAnswer,
+      correctAnswer,
+    );
 
     res.status(200).json({
       isCorrect,
       studentAnswer,
       correctAnswer,
-      message: isCorrect ? 'Answer is correct!' : 'Answer is incorrect.'
+      message: isCorrect ? 'Answer is correct!' : 'Answer is incorrect.',
     });
   } catch (error) {
     console.error('Error validating answer:', error);
@@ -463,17 +466,20 @@ app.post('/quick-validate', async (req, res) => {
     const { studentAnswer, correctAnswer } = req.body;
 
     if (!studentAnswer || !correctAnswer) {
-      return res.status(400).json({ 
-        error: 'Both studentAnswer and correctAnswer are required' 
+      return res.status(400).json({
+        error: 'Both studentAnswer and correctAnswer are required',
       });
     }
 
-    const isCorrect = backendMathValidator.quickValidate(studentAnswer, correctAnswer);
+    const isCorrect = backendMathValidator.quickValidate(
+      studentAnswer,
+      correctAnswer,
+    );
 
     res.status(200).json({
       isCorrect,
       studentAnswer,
-      correctAnswer
+      correctAnswer,
     });
   } catch (error) {
     console.error('Error in quick validation:', error);
@@ -487,8 +493,8 @@ app.post('/validate-expression', async (req, res) => {
     const { expression } = req.body;
 
     if (!expression) {
-      return res.status(400).json({ 
-        error: 'Expression is required' 
+      return res.status(400).json({
+        error: 'Expression is required',
       });
     }
 
@@ -498,7 +504,7 @@ app.post('/validate-expression', async (req, res) => {
     res.status(200).json({
       isValid,
       expression,
-      message
+      message,
     });
   } catch (error) {
     console.error('Error validating expression:', error);
@@ -521,11 +527,16 @@ app.post('/question/:id/submit', async (req, res) => {
       .single();
 
     if (answerError || !correctAnswerData) {
-      return res.status(404).json({ error: 'Question or correct answer not found' });
+      return res
+        .status(404)
+        .json({ error: 'Question or correct answer not found' });
     }
 
     const correctAnswer = correctAnswerData.answerText;
-    const isCorrect = backendMathValidator.validateAnswer(studentAnswer, correctAnswer);
+    const isCorrect = backendMathValidator.validateAnswer(
+      studentAnswer,
+      correctAnswer,
+    );
 
     // If correct and userId provided, award XP
     let updatedUser = null;
@@ -547,7 +558,7 @@ app.post('/question/:id/submit', async (req, res) => {
 
         if (!userError && currentUser) {
           const newXp = (currentUser.xp || 0) + questionData.xpGain;
-          
+
           const { data: updated, error: updateError } = await supabase
             .from('Users')
             .update({ xp: newXp })
@@ -567,16 +578,17 @@ app.post('/question/:id/submit', async (req, res) => {
       studentAnswer,
       correctAnswer,
       message: isCorrect ? 'Correct! Well done!' : 'Incorrect. Try again!',
-      xpAwarded: isCorrect && updatedUser ? updatedUser.xp - (updatedUser.xp - (questionData?.xpGain || 0)) : 0,
-      updatedUser
+      xpAwarded:
+        isCorrect && updatedUser
+          ? updatedUser.xp - (updatedUser.xp - (questionData?.xpGain || 0))
+          : 0,
+      updatedUser,
     });
-
   } catch (error) {
     console.error('Error submitting answer:', error);
     res.status(500).json({ error: 'Failed to submit answer' });
   }
 });
-
 
 // Start server
 // app.listen(PORT, () => {

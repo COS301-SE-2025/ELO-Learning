@@ -31,12 +31,15 @@ const functionsToAdd = {
     } catch {
       throw new Error('Invalid permutation syntax');
     }
-  }
+  },
 };
 
 // Only add functions that don't already exist
-Object.keys(functionsToAdd).forEach(funcName => {
-  if (!math.hasOwnProperty(funcName) && (!math._scope || !math._scope.has(funcName))) {
+Object.keys(functionsToAdd).forEach((funcName) => {
+  if (
+    !math.hasOwnProperty(funcName) &&
+    (!math._scope || !math._scope.has(funcName))
+  ) {
     customImports[funcName] = functionsToAdd[funcName];
   }
 });
@@ -53,18 +56,44 @@ if (Object.keys(customImports).length > 0) {
 class BackendMathValidator {
   constructor() {
     this.math = math;
-    
+
     // Define supported functions for validation
     this.supportedFunctions = [
-      'sin', 'cos', 'tan', 'asin', 'acos', 'atan',
-      'sinh', 'cosh', 'tanh',
-      'log', 'ln', 'log10', 'log2',
-      'sqrt', 'cbrt', 'abs', 'floor', 'ceil', 'round',
-      'exp', 'factorial', 'gamma',
-      'derivative', 'integral', 'limit',
-      'sum', 'prod', 'max', 'min',
-      'combination', 'permutation',
-      'solve', 'factor', 'expand', 'simplify'
+      'sin',
+      'cos',
+      'tan',
+      'asin',
+      'acos',
+      'atan',
+      'sinh',
+      'cosh',
+      'tanh',
+      'log',
+      'ln',
+      'log10',
+      'log2',
+      'sqrt',
+      'cbrt',
+      'abs',
+      'floor',
+      'ceil',
+      'round',
+      'exp',
+      'factorial',
+      'gamma',
+      'derivative',
+      'integral',
+      'limit',
+      'sum',
+      'prod',
+      'max',
+      'min',
+      'combination',
+      'permutation',
+      'solve',
+      'factor',
+      'expand',
+      'simplify',
     ];
   }
 
@@ -117,65 +146,67 @@ class BackendMathValidator {
   normalizeExpression(expression) {
     if (typeof expression !== 'string') return expression;
 
-    return expression
-      .toLowerCase()
-      .replace(/\s+/g, '') // Remove all whitespace
-      
-      // Basic operator conversions
-      .replace(/\*{2}/g, '^') // Convert ** to ^
-      .replace(/×/g, '*') // Convert × to *
-      .replace(/÷/g, '/') // Convert ÷ to /
-      .replace(/\[/g, '(') // Convert [ to (
-      .replace(/\]/g, ')') // Convert ] to )
-      
-      // Advanced symbol conversions
-      .replace(/π/g, 'pi') // Convert π to pi
-      .replace(/∞/g, 'Infinity') // Convert ∞ to Infinity
-      .replace(/φ/g, 'phi') // Convert φ to phi (golden ratio)
-      .replace(/°/g, ' deg') // Convert degrees symbol
-      
-      // Trigonometric function conversions
-      .replace(/sin⁻¹/g, 'asin') // Convert sin⁻¹ to asin
-      .replace(/cos⁻¹/g, 'acos') // Convert cos⁻¹ to acos
-      .replace(/tan⁻¹/g, 'atan') // Convert tan⁻¹ to atan
-      
-      // Root conversions
-      .replace(/√/g, 'sqrt') // Convert √ to sqrt
-      .replace(/∛/g, 'cbrt') // Convert ∛ to cbrt
-      
-      // Calculus symbols
-      .replace(/∫/g, 'integral') // Convert ∫ to integral
-      .replace(/∂/g, 'derivative') // Convert ∂ to derivative
-      .replace(/∑/g, 'sum') // Convert ∑ to sum
-      .replace(/∏/g, 'prod') // Convert ∏ to prod
-      .replace(/∆/g, 'delta') // Convert ∆ to delta
-      
-      // Comparison operators
-      .replace(/≤/g, '<=') // Convert ≤ to <=
-      .replace(/≥/g, '>=') // Convert ≥ to >=
-      .replace(/≠/g, '!=') // Convert ≠ to !=
-      .replace(/≈/g, '~=') // Convert ≈ to ~=
-      
-      // Factorial and combinatorics
-      .replace(/!/g, '!') // Keep factorial as is
-      .replace(/\bC\(/g, 'combination(') // Convert nCr notation
-      .replace(/\bP\(/g, 'permutation(') // Convert nPr notation
-      
-      // Implicit multiplication
-      .replace(/(\d)\(/g, '$1*(') // Add multiplication for cases like 2(x+3)
-      .replace(/\)(\d)/g, ')*$1') // Add multiplication for cases like (x+1)2
-      .replace(/\)([a-z])/g, ')*$1') // Add multiplication for cases like (x+1)y
-      .replace(/([a-z])(\d)/g, '$1*$2') // Add multiplication for cases like x2
-      .replace(/(\d)([a-z])/g, '$1*$2') // Add multiplication for cases like 2x
-      
-      // Function notation cleanup
-      .replace(/([a-z]+)\s*\(/g, '$1(') // Remove spaces before function parentheses
-      
-      // Clean up multiple operators
-      .replace(/\+\+/g, '+')
-      .replace(/--/g, '+')
-      .replace(/\+-/g, '-')
-      .replace(/-\+/g, '-');
+    return (
+      expression
+        .toLowerCase()
+        .replace(/\s+/g, '') // Remove all whitespace
+
+        // Basic operator conversions
+        .replace(/\*{2}/g, '^') // Convert ** to ^
+        .replace(/×/g, '*') // Convert × to *
+        .replace(/÷/g, '/') // Convert ÷ to /
+        .replace(/\[/g, '(') // Convert [ to (
+        .replace(/\]/g, ')') // Convert ] to )
+
+        // Advanced symbol conversions
+        .replace(/π/g, 'pi') // Convert π to pi
+        .replace(/∞/g, 'Infinity') // Convert ∞ to Infinity
+        .replace(/φ/g, 'phi') // Convert φ to phi (golden ratio)
+        .replace(/°/g, ' deg') // Convert degrees symbol
+
+        // Trigonometric function conversions
+        .replace(/sin⁻¹/g, 'asin') // Convert sin⁻¹ to asin
+        .replace(/cos⁻¹/g, 'acos') // Convert cos⁻¹ to acos
+        .replace(/tan⁻¹/g, 'atan') // Convert tan⁻¹ to atan
+
+        // Root conversions
+        .replace(/√/g, 'sqrt') // Convert √ to sqrt
+        .replace(/∛/g, 'cbrt') // Convert ∛ to cbrt
+
+        // Calculus symbols
+        .replace(/∫/g, 'integral') // Convert ∫ to integral
+        .replace(/∂/g, 'derivative') // Convert ∂ to derivative
+        .replace(/∑/g, 'sum') // Convert ∑ to sum
+        .replace(/∏/g, 'prod') // Convert ∏ to prod
+        .replace(/∆/g, 'delta') // Convert ∆ to delta
+
+        // Comparison operators
+        .replace(/≤/g, '<=') // Convert ≤ to <=
+        .replace(/≥/g, '>=') // Convert ≥ to >=
+        .replace(/≠/g, '!=') // Convert ≠ to !=
+        .replace(/≈/g, '~=') // Convert ≈ to ~=
+
+        // Factorial and combinatorics
+        .replace(/!/g, '!') // Keep factorial as is
+        .replace(/\bC\(/g, 'combination(') // Convert nCr notation
+        .replace(/\bP\(/g, 'permutation(') // Convert nPr notation
+
+        // Implicit multiplication
+        .replace(/(\d)\(/g, '$1*(') // Add multiplication for cases like 2(x+3)
+        .replace(/\)(\d)/g, ')*$1') // Add multiplication for cases like (x+1)2
+        .replace(/\)([a-z])/g, ')*$1') // Add multiplication for cases like (x+1)y
+        .replace(/([a-z])(\d)/g, '$1*$2') // Add multiplication for cases like x2
+        .replace(/(\d)([a-z])/g, '$1*$2') // Add multiplication for cases like 2x
+
+        // Function notation cleanup
+        .replace(/([a-z]+)\s*\(/g, '$1(') // Remove spaces before function parentheses
+
+        // Clean up multiple operators
+        .replace(/\+\+/g, '+')
+        .replace(/--/g, '+')
+        .replace(/\+-/g, '-')
+        .replace(/-\+/g, '-')
+    );
   }
 
   isValidMathExpression(input) {
@@ -261,9 +292,9 @@ class BackendMathValidator {
     // Check for function calls without parentheses
     const functionPattern = new RegExp(
       `(${this.supportedFunctions.join('|')})\\s*[^(]`,
-      'i'
+      'i',
     );
-    
+
     return functionPattern.test(expression);
   }
 
@@ -312,9 +343,9 @@ class BackendMathValidator {
     // Check for function syntax errors
     const functionPattern = new RegExp(
       `(${this.supportedFunctions.join('|')})\\s*[^(]`,
-      'i'
+      'i',
     );
-    
+
     if (functionPattern.test(normalized)) {
       return 'Functions need parentheses (e.g., sin(x), log(n))';
     }
@@ -328,7 +359,7 @@ class BackendMathValidator {
     if (/^[+*/^]/.test(normalized)) {
       return 'Expression cannot start with an operator';
     }
-    
+
     if (/[+\-*/^]$/.test(normalized)) {
       return 'Expression cannot end with an operator';
     }
@@ -355,7 +386,10 @@ class BackendMathValidator {
       const correctValue = this.math.evaluate(correct);
 
       // Handle different number types
-      if (typeof studentValue === 'number' && typeof correctValue === 'number') {
+      if (
+        typeof studentValue === 'number' &&
+        typeof correctValue === 'number'
+      ) {
         if (!isFinite(studentValue) || !isFinite(correctValue)) {
           return studentValue === correctValue; // Handle Infinity/-Infinity
         }
@@ -363,7 +397,10 @@ class BackendMathValidator {
       }
 
       // Handle complex numbers
-      if (this.math.typeOf(studentValue) === 'Complex' || this.math.typeOf(correctValue) === 'Complex') {
+      if (
+        this.math.typeOf(studentValue) === 'Complex' ||
+        this.math.typeOf(correctValue) === 'Complex'
+      ) {
         try {
           return this.math.equal(studentValue, correctValue);
         } catch {
@@ -386,7 +423,7 @@ class BackendMathValidator {
   checkAlgebraicEquivalence(student, correct) {
     try {
       // Try multiple approaches for algebraic equivalence
-      
+
       // 1. Simplify both expressions
       const simplified1 = this.math.simplify(student);
       const simplified2 = this.math.simplify(correct);
@@ -397,8 +434,12 @@ class BackendMathValidator {
 
       // 2. Try expanding expressions
       try {
-        const expanded1 = this.math.simplify(this.math.parse(student), { expand: true });
-        const expanded2 = this.math.simplify(this.math.parse(correct), { expand: true });
+        const expanded1 = this.math.simplify(this.math.parse(student), {
+          expand: true,
+        });
+        const expanded2 = this.math.simplify(this.math.parse(correct), {
+          expand: true,
+        });
 
         if (expanded1.toString() === expanded2.toString()) {
           return true;
@@ -427,7 +468,10 @@ class BackendMathValidator {
         return false;
       }
     } catch (error) {
-      console.debug('Backend algebraic equivalence check failed:', error.message);
+      console.debug(
+        'Backend algebraic equivalence check failed:',
+        error.message,
+      );
       return false;
     }
   }
@@ -461,7 +505,10 @@ class BackendMathValidator {
 
       return false;
     } catch (error) {
-      console.debug('Backend advanced equivalence check failed:', error.message);
+      console.debug(
+        'Backend advanced equivalence check failed:',
+        error.message,
+      );
       return false;
     }
   }
@@ -469,14 +516,21 @@ class BackendMathValidator {
   checkTrigonometricEquivalence(student, correct) {
     try {
       // Test with common angle values
-      const testValues = [0, Math.PI/6, Math.PI/4, Math.PI/3, Math.PI/2, Math.PI];
-      
+      const testValues = [
+        0,
+        Math.PI / 6,
+        Math.PI / 4,
+        Math.PI / 3,
+        Math.PI / 2,
+        Math.PI,
+      ];
+
       for (const value of testValues) {
         try {
           const scope = { x: value, theta: value };
           const studentResult = this.math.evaluate(student, scope);
           const correctResult = this.math.evaluate(correct, scope);
-          
+
           if (Math.abs(studentResult - correctResult) > 1e-10) {
             return false;
           }
@@ -484,7 +538,7 @@ class BackendMathValidator {
           continue;
         }
       }
-      
+
       return true;
     } catch {
       return false;
@@ -495,13 +549,13 @@ class BackendMathValidator {
     try {
       // Test with common values for logarithmic expressions
       const testValues = [1, 2, Math.E, 10, 100];
-      
+
       for (const value of testValues) {
         try {
           const scope = { x: value, y: value };
           const studentResult = this.math.evaluate(student, scope);
           const correctResult = this.math.evaluate(correct, scope);
-          
+
           if (Math.abs(studentResult - correctResult) > 1e-10) {
             return false;
           }
@@ -509,7 +563,7 @@ class BackendMathValidator {
           continue;
         }
       }
-      
+
       return true;
     } catch {
       return false;
@@ -520,13 +574,13 @@ class BackendMathValidator {
     try {
       // Test with common values for exponential expressions
       const testValues = [0, 1, 2, 3, -1, -2];
-      
+
       for (const value of testValues) {
         try {
           const scope = { x: value, y: value };
           const studentResult = this.math.evaluate(student, scope);
           const correctResult = this.math.evaluate(correct, scope);
-          
+
           if (Math.abs(studentResult - correctResult) > 1e-10) {
             return false;
           }
@@ -534,7 +588,7 @@ class BackendMathValidator {
           continue;
         }
       }
-      
+
       return true;
     } catch {
       return false;

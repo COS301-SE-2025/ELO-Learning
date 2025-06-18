@@ -217,18 +217,25 @@ export const validateMathExpression = async (expression) => {
 };
 
 // Submit answer for a specific question (with XP awarding)
-export const submitQuestionAnswer = async (questionId, studentAnswer, userId) => {
+export const submitQuestionAnswer = async (
+  questionId,
+  studentAnswer,
+  userId,
+) => {
   try {
-    const response = await fetch(`${API_BASE_URL}/question/${questionId}/submit`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
+    const response = await fetch(
+      `${API_BASE_URL}/question/${questionId}/submit`,
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          studentAnswer,
+          userId,
+        }),
       },
-      body: JSON.stringify({
-        studentAnswer,
-        userId,
-      }),
-    });
+    );
 
     const data = await response.json();
 

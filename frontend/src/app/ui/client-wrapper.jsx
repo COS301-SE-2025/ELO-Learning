@@ -1,12 +1,12 @@
 'use client';
 
-import MCTemplate from '@/app/ui/mc-template';
-import ProgressBar from '@/app/ui/progress-bar';
-import QuestionTemplate from '@/app/ui/question-template';
-import { Heart, X } from 'lucide-react';
-import Link from 'next/link';
-import { redirect } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import MCTemplate from '@/app/ui/mc-template'
+import ProgressBar from '@/app/ui/progress-bar'
+import QuestionTemplate from '@/app/ui/question-template'
+import { Heart, X } from 'lucide-react'
+import Link from 'next/link'
+import { redirect } from 'next/navigation'
+import { useEffect, useState } from 'react'
 
 export default function ClientWrapper({ questions }) {
   const allQuestions = questions;
@@ -22,6 +22,10 @@ export default function ClientWrapper({ questions }) {
   const [selectedAnswer, setSelectedAnswer] = useState(null);
   const [isSelectedAnswerCorrect, setIsSelectedAnswerCorrect] = useState(false);
 
+
+  // const [questionsObj, setQuestionsObj] = useState([]);
+  
+
   useEffect(() => {
     if (selectedAnswer) {
       setIsDisabled(false);
@@ -29,13 +33,25 @@ export default function ClientWrapper({ questions }) {
   }, [selectedAnswer]);
 
   const submitAnswer = () => {
+    const questionsObj = JSON.parse(localStorage.getItem('questionsObj')) || [];
+
+    questionsObj.push({
+      question: currQuestion,
+      q_index: currentStep,
+      selectedAnswer: selectedAnswer,
+      actualAnswer: currAnswers.find((answer) => answer.isCorrect == true),
+    });
+
+    localStorage.setItem('questionsObj', questionsObj);
+
+    localStorage.setItem('questionsObj', JSON.stringify(questionsObj));
     setCurrentStep((prev) => prev + 1);
     setIsDisabled(true);
     setSelectedAnswer(null);
     setIsSelectedAnswerCorrect(false);
 
-    if (currentStep === allQuestions.length - 1) {
-      redirect('/dashboard');
+    if (currentStep === allQuestions.length) {
+      redirect('/end-screen');
     }
 
     setCurrQuestion(allQuestions[currentStep]);

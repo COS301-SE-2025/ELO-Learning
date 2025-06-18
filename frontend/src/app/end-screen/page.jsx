@@ -1,9 +1,19 @@
+'use client';
 import Score from '@/app/ui/end-screen-ui/end-screen-score';
 import Time from '@/app/ui/end-screen-ui/end-screen-total-time';
 import Image from 'next/image';
 import Link from 'next/link';
+import { useEffect, useState } from 'react';
 import TotalXP from '../ui/end-screen-ui/end-screen-total-xp';
 export default function Page() {
+  const [mistakes, setMistakes] = useState(0);
+  useEffect(() => {
+    const questions = JSON.parse(localStorage.getItem('questionsObj'));
+    const correctAnswers = questions.filter(
+      (question) => question.selectedAnswer.isCorrect == true
+    );
+    setMistakes(questions.length - correctAnswers.length);
+  }, []);
   return (
     <div className="flex md:flex-col md:items-center h-full p-5 md:p-10">
       <div className="flex items-center justify-between flex-col gap-4 ">
@@ -25,7 +35,7 @@ export default function Page() {
               alt="ELO Learning Mascot"
               priority
             />
-            <h1 className="text-2xl font-bold">0 Mistakes</h1>
+            <h1 className="text-2xl font-bold">{mistakes} Mistakes</h1>
             <p className="text-center m-5 md:m-1">
               Continue upskilling your maths! You are doing an amazing job!
             </p>

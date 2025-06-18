@@ -1,7 +1,7 @@
 'use client';
 
-import MCTemplate from '@/app/ui/mc-template';
 import MathInputTemplate from '@/app/ui/math-input-template';
+import MCTemplate from '@/app/ui/mc-template';
 import ProgressBar from '@/app/ui/progress-bar';
 import QuestionTemplate from '@/app/ui/question-template';
 import { submitQuestionAnswer } from '@/utils/api';
@@ -37,8 +37,18 @@ export default function ClientWrapper({ questions }) {
   const isMathInputQuestion = currQuestion.type === 'math-input' || 
                              currQuestion.topic === 'Algebra' || 
                              currQuestion.topic === 'Calculus' ||
-                             currQuestion.Q_id === 1 || 
+                             currQuestion.Q_id === 3 || 
                              !currAnswers || currAnswers.length === 0;
+
+console.log('=== DEBUG INFO ===');
+console.log('Current question:', currQuestion);
+console.log('Question type:', currQuestion.type);
+console.log('Question topic:', currQuestion.topic);
+console.log('Question ID:', currQuestion.Q_id);
+console.log('Current answers:', currAnswers);
+console.log('Current answers length:', currAnswers?.length);
+console.log('Is math input question?', isMathInputQuestion);
+console.log('==================');
 
   // Enable/disable submit button
   useEffect(() => {

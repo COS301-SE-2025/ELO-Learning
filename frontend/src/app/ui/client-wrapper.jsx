@@ -1,12 +1,13 @@
 'use client';
 
-import MCTemplate from '@/app/ui/mc-template'
-import ProgressBar from '@/app/ui/progress-bar'
-import QuestionTemplate from '@/app/ui/question-template'
-import { Heart, X } from 'lucide-react'
-import Link from 'next/link'
-import { redirect } from 'next/navigation'
-import { useEffect, useState } from 'react'
+import Lives from '@/app/ui/lives';
+import MCTemplate from '@/app/ui/mc-template';
+import ProgressBar from '@/app/ui/progress-bar';
+import QuestionTemplate from '@/app/ui/question-template';
+import { X } from 'lucide-react';
+import Link from 'next/link';
+import { redirect } from 'next/navigation';
+import { useEffect, useState } from 'react';
 
 export default function ClientWrapper({ questions }) {
   const allQuestions = questions;
@@ -21,10 +22,9 @@ export default function ClientWrapper({ questions }) {
   const [isDisabled, setIsDisabled] = useState(true);
   const [selectedAnswer, setSelectedAnswer] = useState(null);
   const [isSelectedAnswerCorrect, setIsSelectedAnswerCorrect] = useState(false);
-
+  const [numLives, setNumLives] = useState(5);
 
   // const [questionsObj, setQuestionsObj] = useState([]);
-  
 
   useEffect(() => {
     if (selectedAnswer) {
@@ -45,6 +45,12 @@ export default function ClientWrapper({ questions }) {
     localStorage.setItem('questionsObj', questionsObj);
 
     localStorage.setItem('questionsObj', JSON.stringify(questionsObj));
+    if (!isSelectedAnswerCorrect) {
+      setNumLives((prev) => prev - 1);
+      if (numLives <= 1) {
+        redirect('/end-screen');
+      }
+    }
     setCurrentStep((prev) => prev + 1);
     setIsDisabled(true);
     setSelectedAnswer(null);
@@ -68,10 +74,7 @@ export default function ClientWrapper({ questions }) {
           <div className="flex-1">
             <ProgressBar progress={currentStep / totalSteps} />
           </div>
-          <div className="flex flex-row items-center justify-center gap-2">
-            <Heart size={24} fill="#FF6E99" stroke="#FF6E99" />
-            <p>5</p>
-          </div>
+          <Lives numberOfLives={numLives} />
         </div>
         <div>
           <QuestionTemplate question={currQuestion.questionText} />

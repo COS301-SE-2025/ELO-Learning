@@ -10,7 +10,7 @@ export default function Page() {
   useEffect(() => {
     const questions = JSON.parse(localStorage.getItem('questionsObj'));
     const correctAnswers = questions.filter(
-      (question) => question.selectedAnswer.isCorrect == true
+      (question) => question.selectedAnswer.isCorrect == true,
     );
     setMistakes(questions.length - correctAnswers.length);
   }, []);
@@ -48,9 +48,11 @@ export default function Page() {
         </div>
 
         <div className="flex flex-col gap-4 mb-5">
-          <button className="main-button w-full uppercase">
-            View the memo
-          </button>
+          <Link className="btn-link" href="/memo">
+            <button className="main-button w-full uppercase">
+              View the memo
+            </button>
+          </Link>
           <Link className="btn-link" href="/dashboard">
             <button className="secondary-button w-full uppercase">
               Claim xp

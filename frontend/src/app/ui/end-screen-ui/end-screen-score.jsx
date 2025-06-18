@@ -6,8 +6,9 @@ export default function Score() {
   useEffect(() => {
     const questions = JSON.parse(localStorage.getItem('questionsObj'));
     const correctAnswers = questions.filter(
-      (question) => question.selectedAnswer.isCorrect == true
+      (question) => question.selectedAnswer.isCorrect == true,
     );
+
     setPercentage((correctAnswers.length / questions.length) * 100);
   }, []);
 
@@ -17,7 +18,7 @@ export default function Score() {
         Score
       </div>
       <div className="text-center text-[18px] font-bold py-3 px-5">
-        {percentage}%
+        {percentage.toFixed()}%
       </div>
     </div>
   );

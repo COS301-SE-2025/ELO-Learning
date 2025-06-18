@@ -41,7 +41,7 @@ export async function updateUserXP(id, xp) {
   const res = await axiosInstance.post(
     `/user/${id}/xp`,
     { xp },
-    { headers: authHeader }
+    { headers: authHeader },
   );
   return res.data;
 }

@@ -87,14 +87,14 @@ export default function ClientWrapper({ questions }) {
           />
         </div>
       </div>
-      <div>
+      <div className="flex flex-col justify-center items-center md:w-[50%] md:m-auto">
         <button
           type="button"
           disabled={isDisabled}
           onClick={submitAnswer}
           className={`${
             isDisabled ? 'disabled_button' : 'main-button'
-          } px-4 py-5 w-full mt-10`}
+          } px-4 py-5 w-full mt-10 `}
         >
           SUBMIT
         </button>

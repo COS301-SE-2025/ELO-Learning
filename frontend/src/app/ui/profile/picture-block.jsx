@@ -4,8 +4,8 @@ export default function Picture() {
     <div className="flex flex-col items-center justify-center pt-10">
       <Image
         src="/user.svg"
-        width={183}
-        height={183.18}
+        width={200}
+        height={200}
         className="block"
         alt="user profile picture"
         priority

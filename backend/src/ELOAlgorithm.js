@@ -5,7 +5,7 @@ let beta = 0.3; //Adds more XP when you're further from levelling up, and less X
 //for mocking
 let XPGain = 20;
 let currentXP = 600;
-let currentLevel = 5;
+let currentLevel = 4;
 let nextLevelXP = 800;
 let actualTimeSeconds = 20;
 let maxTimeSeconds = 30;
@@ -32,10 +32,11 @@ async function calculateSinglePlayerXP() {
   const gatekeeper = calculateGateKeepingComponent();
 
   const XP =
-    XPGain * CA +
-    XPGain * timeReward +
-    XPGain * levelReward +
-    XPGain * gatekeeper;
+    CA *
+    (XPGain * CA +
+      XPGain * timeReward +
+      XPGain * levelReward +
+      XPGain * gatekeeper);
 
   return XP;
 }

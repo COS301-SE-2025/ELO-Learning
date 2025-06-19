@@ -339,6 +339,94 @@ app.get('/questions/level/topic', async (req, res) => {
   res.status(200).json({ questions: data });
 });
 
+app.post('/submit-answer', async (req, res) => {
+  const { userId, questionId, selectedAnswerId } = req.body;
+
+  const authHeader = req.headers.authorization;
+  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    return res
+      .status(401)
+      .json({ error: 'You are unauthorized to make this request.' });
+  }
+
+  if (!userId || !questionId || !selectedAnswerId) {
+    return res.status(400).json({ error: 'Missing required fields' });
+  }
+
+  try {
+    // 1. Check if the selected answer is correct
+    const { data: answer, error: answerError } = await supabase
+      .from('Answers')
+      .select('isCorrect')
+      .eq('id', selectedAnswerId)
+      .eq('question_id', questionId)
+      .single();
+
+    if (answerError || !answer) {
+      return res
+        .status(404)
+        .json({ error: 'Answer not found or does not match question' });
+    }
+
+    const isCorrect = answer.isCorrect;
+
+    if (!isCorrect) {
+      return res
+        .status(200)
+        .json({ correct: false, message: 'Incorrect answer. No XP awarded.' });
+    }
+
+    // 2. Get XP for the question
+    const { data: question, error: questionError } = await supabase
+      .from('Questions')
+      .select('xpGain')
+      .eq('Q_id', questionId)
+      .single();
+
+    if (questionError) {
+      console.error('Error fetching question XP:', questionError.message);
+      return res.status(500).json({ error: 'Failed to fetch XP' });
+    }
+
+    const xpToAdd = question?.xpGain ?? 0;
+
+    // 3. Get user XP and add to it
+    const { data: user, error: userError } = await supabase
+      .from('Users')
+      .select('xp')
+      .eq('id', userId)
+      .single();
+
+    if (userError) {
+      console.error('Error fetching user:', userError.message);
+      return res.status(500).json({ error: 'Failed to fetch user' });
+    }
+
+    const newXP = (user?.xp ?? 0) + xpToAdd;
+
+    const { data: updatedUser, error: updateError } = await supabase
+      .from('Users')
+      .update({ xp: newXP })
+      .eq('id', userId)
+      .select()
+      .single();
+
+    if (updateError) {
+      console.error('Error updating XP:', updateError.message);
+      return res.status(500).json({ error: 'Failed to update XP' });
+    }
+
+    return res.status(200).json({
+      correct: true,
+      message: `Correct answer! +${xpToAdd} XP awarded.`,
+      newXP: updatedUser.xp,
+    });
+  } catch (err) {
+    console.error('Unexpected error:', err);
+    return res.status(500).json({ error: 'Unexpected server error' });
+  }
+});
+
 // Register new user
 app.post('/register', async (req, res) => {
   const { name, surname, username, email, password } = req.body; //need to add handling for joinDate, xp and currentLevel

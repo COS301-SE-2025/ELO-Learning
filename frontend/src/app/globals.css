@@ -328,6 +328,13 @@ textarea:focus-visible {
     margin: 0% 0%;
     letter-spacing: 1px;
   }
+
+  .disabled_button {
+    width: 90vw;
+    padding: 2.5%;
+    margin: 0% 0%;
+    letter-spacing: 1px;
+  }
   .header-button {
     width: 200px;
     padding: 2.5%;

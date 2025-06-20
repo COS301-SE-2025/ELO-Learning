@@ -254,3 +254,22 @@ export const submitQuestionAnswer = async (
     };
   }
 };
+
+// Get questions by type
+export const getQuestionsByType = async (questionType) => {
+  try {
+    const response = await fetch(
+      `${API_BASE_URL}/practice/type/${questionType}`,
+    );
+    const data = await response.json();
+
+    if (response.ok) {
+      return { success: true, data: data.questions };
+    } else {
+      return { success: false, error: data.error };
+    }
+  } catch (error) {
+    console.error('Error fetching questions by type:', error);
+    return { success: false, error: 'Network error' };
+  }
+};

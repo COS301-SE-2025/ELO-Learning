@@ -1,8 +1,38 @@
+'use client';
 import { X } from 'lucide-react';
 import Link from 'next/link';
-// import { FaGoogle } from 'react-icons/fa';
+import { useRouter } from 'next/navigation';
+import { useState } from 'react';
+import { loginUser } from '../../../services/api';
 
 export default function Page() {
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+  const router = useRouter();
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setError('');
+    setIsLoading(true);
+
+    try {
+      const response = await loginUser(email, password);
+
+      // Store the token and user data
+      localStorage.setItem('token', response.token);
+      localStorage.setItem('user', JSON.stringify(response.user));
+
+      // Redirect to dashboard
+      router.push('/dashboard');
+    } catch (err) {
+      setError('Username or password incorrect, please try again');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   return (
     <div className="w-full min-h-screen flex flex-col justify-between p-3">
       <div>
@@ -15,24 +45,40 @@ export default function Page() {
           </p>
         </div>
         {/* A form to input a name and email */}
-        <form className="">
+        <form onSubmit={handleSubmit}>
           <div className="flex flex-col items-center w-full">
             <input
               type="text"
               placeholder="Username or email"
               className="input-field md:w-1/2 top_form_input"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
             />
             <input
               type="password"
               placeholder="Password"
               className="input-field md:w-1/2 bottom_form_input"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
             />
             <div className="break_small"></div>
-            <Link href="/dashboard">
-              <button className="main-button px-2 py-8">Continue</button>
-            </Link>
+            {error && (
+              <p className="text-[#FF6666] text-center mb-4">{error}</p>
+            )}
+            <button
+              type="submit"
+              className="main-button px-2 py-8"
+              disabled={isLoading}
+            >
+              {isLoading ? 'Loading...' : 'Continue'}
+            </button>
           </div>
         </form>
+        <div>
+          <p className="text-center py-3">Forgot your password?</p>
+        </div>
       </div>
       {/* Disclaimer is now spaced above the bottom */}
       <div className="px-4 text-center">

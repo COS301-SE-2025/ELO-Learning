@@ -85,40 +85,46 @@ export default function Faq() {
       <h1 className="text-xl font-bold mb-6 text-center">
         Frequently Asked Questions
       </h1>
-      <div className="space-y-2">
-        {faqData.faqs.map((faq, index) => (
-          <div
-            key={index}
-            className="border border-gray-300 rounded-lg overflow-hidden"
-          >
-            <button
-              onClick={() => toggleItem(index)}
-              className="w-full px-4 py-3 text-left hover:bg-[#1d1a34] transition-colors duration-200 flex justify-between items-center"
+      <div className="border border-[#696969] rounded-lg mx-3">
+        <div className="">
+          {faqData.faqs.map((faq, index) => (
+            <div
+              key={index}
+              className={`overflow-hidden ${
+                index < faqData.faqs.length - 1
+                  ? 'border-b border-[#696969]'
+                  : ''
+              }`}
             >
-              <span className="font-medium">{faq.question}</span>
-              <svg
-                className={`w-5 h-5 transform transition-transform duration-200 ${
-                  openItems[index] ? 'rotate-180' : ''
-                }`}
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
+              <button
+                onClick={() => toggleItem(index)}
+                className="w-full px-4 py-3 text-left hover:bg-[#1d1a34] transition-colors duration-200 flex justify-between items-center"
               >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M19 9l-7 7-7-7"
-                />
-              </svg>
-            </button>
-            {openItems[index] && (
-              <div className="px-4 py-3 border-t border-gray-200">
-                <p className=" whitespace-pre-line">{faq.answer}</p>
-              </div>
-            )}
-          </div>
-        ))}
+                <span className="font-medium">{faq.question}</span>
+                <svg
+                  className={`w-5 h-5 transform transition-transform duration-200 ${
+                    openItems[index] ? 'rotate-180' : ''
+                  }`}
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M19 9l-7 7-7-7"
+                  />
+                </svg>
+              </button>
+              {openItems[index] && (
+                <div className="px-4 py-3 border-t border-[#696969]">
+                  <p className=" whitespace-pre-line">{faq.answer}</p>
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
       </div>
     </div>
   );

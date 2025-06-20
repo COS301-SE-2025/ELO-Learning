@@ -9,6 +9,15 @@ const axiosInstance = axios.create({
   },
 });
 
+// Add request interceptor to include auth token
+axiosInstance.interceptors.request.use((config) => {
+  const token = localStorage.getItem('token');
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
+  }
+  return config;
+});
+
 // Helper to attach auth token
 const authHeader = {
   Authorization: 'Bearer testtoken123',
@@ -90,4 +99,35 @@ export async function submitAnswer(id, answer) {
     question: [{ answer }],
   });
   return res.data;
+}
+
+export async function loginUser(email, password) {
+  const res = await axiosInstance.post('/login', { email, password });
+  return res.data;
+}
+
+export async function registerUser(
+  name,
+  surname,
+  username,
+  email,
+  password,
+  currentLevel,
+  joinDate,
+) {
+  const res = await axiosInstance.post('/register', {
+    name,
+    surname,
+    username,
+    email,
+    password,
+    currentLevel,
+    joinDate,
+  });
+  return res.data;
+}
+
+export async function logoutUser() {
+  localStorage.removeItem('token');
+  localStorage.removeItem('user');
 }

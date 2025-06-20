@@ -16,7 +16,7 @@ const totalSteps = 6;
 function validatePassword(password) {
   // At least 1 uppercase, 1 number, 1 special char, min 8 chars
   return /^(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?]).{8,}$/.test(
-    password
+    password,
   );
 }
 
@@ -38,7 +38,7 @@ export default function Page() {
     }
     if (!validatePassword(password)) {
       setError(
-        'Password must be at least 8 characters, include an uppercase letter, a number, and a special character.'
+        'Password must be at least 8 characters, include an uppercase letter, a number, and a special character.',
       );
       return;
     }
@@ -59,7 +59,7 @@ export default function Page() {
         reg.email,
         password,
         reg.currentLevel,
-        reg.joinDate
+        reg.joinDate,
       );
       // Save token and user to localStorage
       if (response.token && response.user) {

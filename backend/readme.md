@@ -183,3 +183,30 @@ Query Parameters:
 - `topic` (required): Topic name
 
 Returns questions matching both level and topic.
+
+**POST /attempt**
+Description:
+Records a new question attempt, calculates XP earned, updates the user's XP and level, and returns the updated values.
+
+Request Body:
+
+```json
+{
+  "user_id": 7,
+  "question_id": 7,
+  "isCorrect": true,
+  "timeSpent": 18,
+  "nextLevelXP": 1000
+}
+```
+
+Example Response:
+
+```json
+{
+  "newXP": 894.45,
+  "newLevel": 5,
+  "leveledUp": false,
+  "xpEarned": 22.45
+}
+```

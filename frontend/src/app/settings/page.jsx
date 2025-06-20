@@ -1,8 +1,18 @@
+'use client';
 import Back from '@/app/ui/back';
 import { ChevronRight } from 'lucide-react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 
 export default function Page() {
+  const router = useRouter();
+
+  const handleLogout = () => {
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
+    router.push('/');
+  };
+
   return (
     <div className="h-full flex flex-col">
       <div>
@@ -24,7 +34,10 @@ export default function Page() {
               <div>Notifications</div>
               <ChevronRight />
             </div>
-            <div className="flex flex-row justify-between p-3">
+            <div
+              className="flex flex-row justify-between p-3 cursor-pointer hover:bg-[#1d1a34]"
+              onClick={handleLogout}
+            >
               <div>Logout</div>
               <ChevronRight />
             </div>

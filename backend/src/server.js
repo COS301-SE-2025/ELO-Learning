@@ -341,7 +341,7 @@ app.get('/questions/level/topic', async (req, res) => {
 
 // Register new user
 app.post('/register', async (req, res) => {
-  const { name, surname, username, email, password, currentLevel, joinDate } = req.body
+  const { name, surname, username, email, password, joinDate } = req.body
 
   if (!name || !surname || !username || !email || !password) {
     return res.status(400).json({ error: 'All fields are required' })
@@ -368,6 +368,7 @@ app.post('/register', async (req, res) => {
 
   const safeCurrentLevel = 5
   const safeJoinDate = joinDate || new Date().toISOString()
+  const safeXP = 1000
 
   const { data, error } = await supabase
     .from('Users')
@@ -379,6 +380,7 @@ app.post('/register', async (req, res) => {
       password: hashedPassword,
       currentLevel: safeCurrentLevel,
       joinDate: safeJoinDate,
+      xp: safeXP,
     }])
     .select()
     .single()
@@ -388,7 +390,26 @@ app.post('/register', async (req, res) => {
     return res.status(500).json({ error: 'Failed to register user' })
   }
 
-  res.status(201).json({ message: 'User registered successfully', user: data })
+  const token = jwt.sign(
+    { id: data.id, email: data.email },
+    process.env.JWT_SECRET,
+    { expiresIn: '1h' }
+  )
+
+  res.status(201).json({
+    message: 'User registered successfully',
+    token,
+    user: {
+      id: data.id,
+      name: data.name,
+      surname: data.surname,
+      username: data.username,
+      email: data.email,
+      currentLevel: data.currentLevel,
+      joinDate: data.joinDate,
+      xp: data.xp,
+    },
+  })
 })
 
 // Login user
@@ -402,7 +423,7 @@ app.post('/login', async (req, res) => {
   // Fetch user by email
   const { data: user, error: fetchError } = await supabase
     .from('Users')
-    .select('id,name,surname,username,email,password')
+    .select('id,name,surname,username,email,password,currentLevel,joinDate,xp')
     .eq('email', email)
     .single()
 
@@ -433,7 +454,7 @@ app.post('/login', async (req, res) => {
       surname: user.surname,
       username: user.username,
       email: user.email,
-      currentLevel: user.currentLevel || 1, // Default to level 1 if not set
+      currentLevel: user.currentLevel || 5, // Default to level 1 if not set
       joinDate: user.joinDate || new Date().toISOString(), // Default to current date if not set
       xp: user.xp || 0, // Default to 0 XP if not set
     },

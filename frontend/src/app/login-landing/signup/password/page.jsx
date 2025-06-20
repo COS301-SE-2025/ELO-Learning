@@ -52,7 +52,7 @@ export default function Page() {
     setRegistration({ password });
 
     try {
-      await registerUser(
+      const response = await registerUser(
         reg.name,
         reg.surname,
         reg.username,
@@ -61,6 +61,11 @@ export default function Page() {
         reg.currentLevel,
         reg.joinDate
       );
+      // Save token and user to localStorage
+      if (response.token && response.user) {
+        localStorage.setItem('token', response.token);
+        localStorage.setItem('user', JSON.stringify(response.user));
+      }
       clearRegistration();
       window.location.href = '/dashboard';
     } catch (err) {

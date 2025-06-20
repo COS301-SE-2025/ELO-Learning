@@ -166,9 +166,9 @@ export default function MathInputTemplate({
   }, [inputValue, cursorPosition, setIsValidExpression]);
 
   // Sync with parent studentAnswer prop
-useEffect(() => {
-  setInputValue(studentAnswer);
-}, [studentAnswer]);
+  useEffect(() => {
+    setInputValue(studentAnswer);
+  }, [studentAnswer]);
 
   // Reset error message when typing
   useEffect(() => {
@@ -303,23 +303,23 @@ useEffect(() => {
     <div className="w-full space-y-4">
       {/* Enhanced Input Field */}
       <div className="relative">
-      <textarea
-        ref={inputRef}
-        value={inputValue}
-        onChange={handleInputChange}
-        onSelect={handleCursorPosition}
-        onKeyDown={handleKeyDown}
-        placeholder="Enter your mathematical expression..."
-        style={{ color: '#000000' }}  // Force black text
-        className={`w-full p-4 text-lg border-2 rounded-lg focus:outline-none transition-colors resize-none min-h-[80px] font-mono ${
-          !localIsValidExpression
-            ? 'border-red-500 focus:border-red-600'
-            : isChecking
-              ? 'border-yellow-500 focus:border-yellow-600'
-              : 'border-gray-300 focus:border-blue-500'
-        }`}
-        rows={2}
-      />
+        <textarea
+          ref={inputRef}
+          value={inputValue}
+          onChange={handleInputChange}
+          onSelect={handleCursorPosition}
+          onKeyDown={handleKeyDown}
+          placeholder="Enter your mathematical expression..."
+          style={{ color: '#000000' }} // Force black text
+          className={`w-full p-4 text-lg border-2 rounded-lg focus:outline-none transition-colors resize-none min-h-[80px] font-mono ${
+            !localIsValidExpression
+              ? 'border-red-500 focus:border-red-600'
+              : isChecking
+                ? 'border-yellow-500 focus:border-yellow-600'
+                : 'border-gray-300 focus:border-blue-500'
+          }`}
+          rows={2}
+        />
 
         {/* Validation indicator */}
         <div className="absolute right-3 top-4">

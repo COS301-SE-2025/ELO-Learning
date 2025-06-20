@@ -39,11 +39,13 @@ export default function MathKeyboardWrapper({ questions }) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-900 to-blue-900">
         <div className="text-center p-8 bg-white rounded-xl shadow-lg max-w-md">
-          <h2 className="text-2xl font-bold text-gray-800 mb-4">No Math Questions Available</h2>
+          <h2 className="text-2xl font-bold text-gray-800 mb-4">
+            No Math Questions Available
+          </h2>
           <p className="text-gray-600 mb-6">
             There are currently no math input questions available for practice.
           </p>
-          <Link 
+          <Link
             href="/question-templates/multiple-choice"
             className="inline-block px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
           >
@@ -67,7 +69,7 @@ export default function MathKeyboardWrapper({ questions }) {
       const result = await submitQuestionAnswer(
         currQuestion.Q_id,
         studentAnswer,
-        'current-user-id'
+        'current-user-id',
       );
 
       if (result.success) {
@@ -82,7 +84,6 @@ export default function MathKeyboardWrapper({ questions }) {
       setTimeout(() => {
         moveToNextQuestion();
       }, 2000);
-
     } catch (error) {
       console.error('Error submitting math answer:', error);
       setFeedbackMessage('Error submitting answer. Please try again.');
@@ -125,17 +126,20 @@ export default function MathKeyboardWrapper({ questions }) {
       {/* Header */}
       <div className="bg-white shadow-lg border-b border-gray-300">
         <div className="flex items-center justify-between w-full py-4 px-4">
-          <Link href="/practice" className="p-2 hover:bg-gray-100 rounded-full transition-colors">
+          <Link
+            href="/practice"
+            className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+          >
             <X size={24} className="text-gray-700" />
           </Link>
-          
+
           <div className="flex-1 mx-4">
             <div className="text-sm text-gray-700 mb-1 text-center font-medium">
               Math Question {currentStep} of {totalSteps}
             </div>
             <ProgressBar progress={currentStep / totalSteps} />
           </div>
-          
+
           <div className="flex items-center gap-2 text-pink-500">
             <Heart size={24} fill="#FF6E99" stroke="#FF6E99" />
             <span className="font-semibold text-lg">5</span>
@@ -150,7 +154,7 @@ export default function MathKeyboardWrapper({ questions }) {
           <h2 className="text-2xl font-bold text-gray-800 text-center leading-relaxed">
             {currQuestion.questionText}
           </h2>
-          
+
           {/* Question metadata */}
           <div className="flex justify-center gap-3 mt-6">
             <span className="px-4 py-2 bg-blue-100 text-blue-800 rounded-full text-sm font-semibold">
@@ -172,10 +176,11 @@ export default function MathKeyboardWrapper({ questions }) {
               🧮 Your Answer:
             </h3>
             <p className="text-gray-600">
-              Use the keyboard below or type your mathematical expression directly
+              Use the keyboard below or type your mathematical expression
+              directly
             </p>
           </div>
-          
+
           <MathInputTemplate
             correctAnswer={getCorrectAnswer()}
             setStudentAnswer={setStudentAnswer}
@@ -223,15 +228,21 @@ export default function MathKeyboardWrapper({ questions }) {
             'SUBMIT ANSWER'
           )}
         </button>
-        
+
         {/* Status indicator */}
         <div className="mt-4 text-center">
           {isValidExpression && studentAnswer.trim() ? (
-            <span className="text-green-600 font-semibold">✅ Ready to submit!</span>
+            <span className="text-green-600 font-semibold">
+              ✅ Ready to submit!
+            </span>
           ) : !studentAnswer.trim() ? (
-            <span className="text-gray-600">Enter your mathematical expression above</span>
+            <span className="text-gray-600">
+              Enter your mathematical expression above
+            </span>
           ) : (
-            <span className="text-red-600 font-semibold">⚠️ Please check your expression format</span>
+            <span className="text-red-600 font-semibold">
+              ⚠️ Please check your expression format
+            </span>
           )}
         </div>
       </div>

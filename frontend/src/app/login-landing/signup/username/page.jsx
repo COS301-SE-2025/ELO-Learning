@@ -1,11 +1,27 @@
+'use client';
+import { useState } from 'react';
 import ProgressBar from '@/app/ui/progress-bar';
-import { X } from 'lucide-react';
 import Link from 'next/link';
+import { X } from 'lucide-react';
+import { setRegistration, getRegistration } from '../registrationUtils';
 
 const currentStep = 2;
 const totalSteps = 6;
 
 export default function Page() {
+  const [username, setUsername] = useState(getRegistration().username || '');
+  const [error, setError] = useState('');
+
+  const handleContinue = (e) => {
+    e.preventDefault();
+    if (!username.trim()) {
+      setError('Please enter a username.');
+      return;
+    }
+    setRegistration({ username });
+    window.location.href = '/login-landing/signup/age';
+  };
+
   return (
     <div className="w-full min-h-screen flex flex-col justify-between p-3">
       <div>
@@ -17,27 +33,27 @@ export default function Page() {
             <ProgressBar progress={currentStep / totalSteps} />
           </div>
         </div>
-        {/* A form to input a name and email */}
         <div>
-          <p className="text-lg text-center font-bold">
-            What do you want to be called?
-          </p>
-          <form className="">
+          <p className="text-lg text-center font-bold">Choose a username</p>
+          <form onSubmit={handleContinue}>
             <div className="flex flex-col items-center w-full">
               <input
                 type="text"
                 placeholder="Username"
                 className="input-field md:w-1/2 single_form_input"
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
+                required
               />
+              {error && <p className="text-red-500">{error}</p>}
               <div className="break_small"></div>
-              <Link href="/login-landing/signup/age">
-                <button className="main-button px-2 py-8">Continue</button>
-              </Link>
+              <button className="main-button px-2 py-8" type="submit">
+                Continue
+              </button>
             </div>
           </form>
         </div>
       </div>
-      {/* Disclaimer is now spaced above the bottom */}
       <div className="px-4 text-center">
         <p className="disclaimer pt-5">
           Your data isn't shared with any third parties. View our terms and

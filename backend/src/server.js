@@ -590,6 +590,46 @@ app.post('/question/:id/submit', async (req, res) => {
   }
 });
 
+// Get practice questions by type
+app.get('/practice/type/:questionType', async (req, res) => {
+  try {
+    const { questionType } = req.params;
+
+    const { data, error } = await supabase
+      .from('Questions')
+      .select('*')
+      .eq('type', questionType)
+      .limit(10);
+
+    if (error) {
+      console.error('Error fetching questions by type:', error.message);
+      return res
+        .status(500)
+        .json({ error: 'Failed to fetch questions by type' });
+    }
+
+    // Get answers for each question
+    for (const question of data) {
+      const { data: answers, error: answerError } = await supabase
+        .from('Answers')
+        .select('*')
+        .eq('question_id', question.Q_id);
+
+      if (answerError) {
+        console.error('Error fetching answers:', answerError.message);
+        return res.status(500).json({ error: 'Failed to fetch answers' });
+      }
+
+      question.answers = answers;
+    }
+
+    res.status(200).json({ questions: data });
+  } catch (err) {
+    console.error('Unexpected error:', err);
+    res.status(500).json({ error: 'Unexpected server error' });
+  }
+});
+
 // Start server
 // app.listen(PORT, () => {
 //   console.log(`Server is running on http://localhost:${PORT}`);

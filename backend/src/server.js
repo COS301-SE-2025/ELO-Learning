@@ -5,6 +5,7 @@ import dotenv from 'dotenv';
 import { supabase } from '../database/supabaseClient.js';
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
+import { calculateSinglePlayerXP } from './singlePlayer.js';
 
 // Load environment variables
 dotenv.config();
@@ -339,10 +340,110 @@ app.post('/login', async (req, res) => {
   });
 });
 
-// Start server
-// app.listen(PORT, () => {
-//   console.log(`Server is running on http://localhost:${PORT}`);
-// });
+app.post('/attempt', async (req, res) => {
+  try {
+    const { user_id, question_id, isCorrect, timeSpent, nextLevelXP } =
+      req.body; //For testing with postman
+
+    if (
+      !user_id ||
+      !question_id ||
+      isCorrect === undefined ||
+      timeSpent === undefined ||
+      !nextLevelXP
+    ) {
+      return res.status(400).json({ error: 'Missing required fields!' });
+    }
+
+    //Fetch current user XP & level
+    const { data: userData, error: userError } = await supabase
+      .from('Users')
+      .select('xp, currentLevel')
+      .eq('id', user_id)
+      .single();
+
+    if (userError || !userData) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    const { xp: currentXP, currentLevel } = userData;
+
+    //Fetch question xpGain
+    const { data: questionData, error: qError } = await supabase
+      .from('Questions')
+      .select('xpGain')
+      .eq('Q_id', question_id)
+      .single();
+
+    if (qError || !questionData) {
+      return res.status(404).json({ error: 'Question not found' });
+    }
+
+    const CA = isCorrect ? 1 : 0;
+
+    // Calculate XP earned (single player)
+    const xpEarned = await calculateSinglePlayerXP({
+      CA,
+      XPGain: questionData.xpGain,
+      actualTimeSeconds: timeSpent,
+      currentLevel,
+      currentXP,
+      nextLevelXP,
+    });
+
+    const newXP = currentXP + xpEarned;
+    // Check for level up
+    let newLevel = currentLevel;
+    let leveledUp = false;
+    if (newXP >= nextLevelXP) {
+      newLevel = currentLevel + 1;
+      leveledUp = true;
+    }
+
+    //Insert into QuestionAttempts
+    const { error: insertError } = await supabase
+      .from('QuestionAttempts')
+      .insert([
+        {
+          question_id,
+          user_id,
+          isCorrect,
+          timeSpent,
+          ratingBefore: userData.xp,
+          ratingAfter: newXP,
+          ratingChange: xpEarned,
+          attemptDate: new Date(),
+        },
+      ]);
+    if (insertError) {
+      return res
+        .status(500)
+        .json({ error: 'Error saving attempt', details: insertError.message });
+    }
+    // Update the user record
+    const { error: updateError } = await supabase
+      .from('Users')
+      .update({ xp: newXP, currentLevel: newLevel })
+      .eq('id', user_id);
+
+    if (updateError) {
+      return res.status(500).json({
+        error: 'Error updating user XP/level',
+        details: updateError.message,
+      });
+    }
+
+    return res.status(200).json({
+      message: 'User XP and level updated successfully',
+      newXP,
+      newLevel,
+      leveledUp,
+    });
+  } catch (err) {
+    console.error('Error in /attempt:', err);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
 
 // Only start the server if not testing - changed you may consult Monica
 

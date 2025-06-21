@@ -184,6 +184,10 @@ Query Parameters:
 
 Returns questions matching both level and topic.
 
+---
+
+### 🕹️ Single Player Attempt
+
 **POST /singleplayer**
 Description:
 Records a new question attempt, calculates XP earned, updates the user's XP and level, and returns the updated values.
@@ -207,6 +211,10 @@ Example Response:
   "leveledUp": false
 }
 ```
+
+---
+
+### ⚔️ Multiplayer Match Attempt
 
 **POST /multiplayer**
 Description:
@@ -247,3 +255,5 @@ Example Response:
   ]
 }
 ```
+
+---

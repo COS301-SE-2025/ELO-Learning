@@ -40,7 +40,7 @@
 /* Dark mode */
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #202123;
+    --background: #201f1f;
     --foreground: #ededed;
     --font-color: #ffffff;
     --form-outline: var(--chalk-dust);
@@ -109,6 +109,11 @@ textarea {
   background-color: transparent;
   border: none;
   color: var(--font-color);
+}
+
+.math-input {
+  width: 100%;
+  padding: 3%;
 }
 
 input:focus-visible,
@@ -313,6 +318,11 @@ textarea:focus-visible {
     padding: 3%;
   }
 
+  .math-input {
+    width: 100%;
+    padding: 3%;
+  }
+
   .btn-link {
     margin: 2% 0%;
   }
@@ -404,8 +414,8 @@ textarea:focus-visible {
 
 /* Advanced Math Input Styles */
 .math-keyboard-tab-active {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
+  /* background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white; */
 }
 
 .math-symbol-button {

@@ -2,6 +2,7 @@
 
 import { quickValidateMath, validateMathExpression } from '@/utils/api';
 import 'katex/dist/katex.min.css';
+import { ChevronDown, ChevronUp } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import { InlineMath } from 'react-katex';
 
@@ -23,6 +24,7 @@ export default function MathInputTemplate({
   const [cursorPosition, setCursorPosition] = useState(0);
   const [suggestions, setSuggestions] = useState([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
+  const [showHelper, setShowHelper] = useState(false);
 
   const inputRef = useRef(null);
 
@@ -300,7 +302,7 @@ export default function MathInputTemplate({
   };
 
   return (
-    <div className="w-full space-y-4">
+    <div className="w-full space-y-6">
       {/* Enhanced Input Field */}
       <div className="relative">
         <textarea
@@ -310,8 +312,8 @@ export default function MathInputTemplate({
           onSelect={handleCursorPosition}
           onKeyDown={handleKeyDown}
           placeholder="Enter your mathematical expression..."
-          style={{ color: '#000000' }} // Force black text
-          className={`w-full p-4 text-lg border-2 rounded-lg focus:outline-none transition-colors resize-none min-h-[80px] font-mono ${
+          style={{ border: '1px solid' }} // Force black text
+          className={`math-input w-full p-4 text-lg border rounded-lg resize-none min-h-[80px] font-mono ${
             !localIsValidExpression
               ? 'border-red-500 focus:border-red-600'
               : isChecking
@@ -338,22 +340,18 @@ export default function MathInputTemplate({
 
         {/* Auto-suggestions dropdown */}
         {showSuggestions && suggestions.length > 0 && (
-          <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-300 rounded-lg shadow-lg z-10 max-h-48 overflow-y-auto">
+          <div className="absolute top-full left-0 right-0 mt-1 border rounded-lg shadow-lg z-10 max-h-48 overflow-y-auto">
             {suggestions.map((suggestion, index) => (
               <button
                 key={index}
                 onClick={() => handleSuggestionClick(suggestion)}
-                className="w-full px-4 py-2 text-left hover:bg-blue-50 flex justify-between items-center border-b border-gray-100 last:border-b-0"
+                className="w-full px-4 py-2 text-left hover:bg-[#4D5DED] hover:text-white flex justify-between items-center border-b last:border-b-0"
               >
                 <div>
-                  <span className="font-mono text-blue-600">
-                    {suggestion.completion}
-                  </span>
-                  <span className="text-gray-600 ml-2 text-sm">
-                    {suggestion.description}
-                  </span>
+                  <span className="font-mono">{suggestion.completion}</span>
+                  <span className="ml-2 text-sm">{suggestion.description}</span>
                 </div>
-                <span className="text-xs text-gray-400">Tab</span>
+                <span className="text-xs">Tab</span>
               </button>
             ))}
           </div>
@@ -370,39 +368,37 @@ export default function MathInputTemplate({
       )}
 
       {/* Action buttons */}
-      <div className="flex gap-2">
+      <div className="flex flex-row justify-between gap-2">
         <button
           onClick={clearInput}
-          className="px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors"
+          className="px-4 py-2 bg-white text-black rounded-lg hover:bg-[#4D5DED] hover:text-white transition-colors"
         >
           Clear
         </button>
         <button
-          onClick={backspace}
-          className="px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors"
-        >
-          ⌫
-        </button>
-        <button
           onClick={() => setShowHistory(!showHistory)}
-          className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
+          className="px-4 py-2 bg-white text-black rounded-lg hover:bg-[#4D5DED] hover:text-white transition-colors"
         >
           History
+        </button>
+        <button
+          onClick={backspace}
+          className="px-4 py-2 bg-[#7D32CE] text-white rounded-lg hover:bg-[#4D5DED] hover:text-white transition-colors"
+        >
+          ⌫
         </button>
       </div>
 
       {/* History panel */}
       {showHistory && inputHistory.length > 0 && (
-        <div className="bg-gray-50 rounded-lg p-3 border border-gray-200">
-          <div className="text-sm text-gray-700 mb-2 font-medium">
-            Recently Used:
-          </div>
+        <div className="rounded-lg p-3 border">
+          <div className="text-sm mb-2 font-medium">Recently Used:</div>
           <div className="flex flex-wrap gap-2">
             {inputHistory.map((symbol, index) => (
               <button
                 key={index}
                 onClick={() => insertSymbol(symbol)}
-                className="px-3 py-1 bg-white border border-gray-300 rounded hover:bg-blue-50 hover:border-blue-400 text-sm"
+                className="px-3 py-1 bg-white text-black rounded hover:bg-[#4D5DED] hover:text-white text-sm"
               >
                 {symbol}
               </button>
@@ -412,17 +408,17 @@ export default function MathInputTemplate({
       )}
 
       {/* Tabbed Symbol Categories */}
-      <div className="w-full bg-white rounded-lg border border-gray-200 overflow-hidden">
+      <div className="w-full bg-[#421E68] rounded-lg overflow-hidden">
         {/* Tab headers */}
-        <div className="flex border-b border-gray-200 bg-gray-50">
+        <div className="flex bg-[#7D32CE]">
           {Object.entries(mathCategories).map(([key, category]) => (
             <button
               key={key}
               onClick={() => setActiveTab(key)}
               className={`flex-1 px-3 py-3 text-sm font-medium transition-colors flex items-center justify-center gap-2 ${
                 activeTab === key
-                  ? 'bg-blue-500 text-white border-b-2 border-blue-600'
-                  : 'text-gray-700 hover:bg-gray-100'
+                  ? 'bg-[#FF6E99] text-white'
+                  : ' hover:bg-[#4D5DED] hover:text-white'
               }`}
             >
               <span className="text-lg">{category.icon}</span>
@@ -439,7 +435,7 @@ export default function MathInputTemplate({
                 key={index}
                 onClick={() => insertSymbol(item.symbol)}
                 title={item.description}
-                className="h-12 w-full bg-white border border-gray-300 rounded-md hover:bg-blue-50 hover:border-blue-400 active:bg-blue-100 transition-colors text-lg font-bold text-gray-800 shadow-sm flex items-center justify-center"
+                className="h-12 w-full bg-white text-black rounded-md hover:bg-[#4D5DED] hover:text-white active:bg-[#FF6E99] transition-colors text-lg font-bold flex items-center justify-center"
               >
                 {item.label}
               </button>
@@ -450,8 +446,8 @@ export default function MathInputTemplate({
 
       {/* Live LaTeX Preview */}
       {inputValue.trim() && localIsValidExpression && (
-        <div className="bg-blue-50 rounded-lg p-4 border border-blue-200">
-          <div className="text-sm text-blue-700 mb-2 font-medium">Preview:</div>
+        <div className="p-4 border rounded-lg">
+          <div className="text-sm mb-2 font-medium">Preview:</div>
           <div className="text-xl">
             <InlineMath math={inputValue} />
           </div>
@@ -459,15 +455,25 @@ export default function MathInputTemplate({
       )}
 
       {/* Helper Text */}
-      <div className="text-xs text-gray-500 space-y-1 bg-gray-50 p-3 rounded-lg">
-        <p>
-          <strong>Tips:</strong>
-        </p>
-        <p>• Use Tab to accept suggestions</p>
-        <p>• Click symbols or type directly</p>
-        <p>• Use ^ for exponents (e.g., x^2)</p>
-        <p>• Use * for multiplication (e.g., 2*x)</p>
-        <p>• Functions auto-close parentheses</p>
+      <div
+        className="text-xs border p-3 rounded-lg cursor-pointer select-none"
+        onClick={() => setShowHelper((prev) => !prev)}
+      >
+        <div className="flex items-center justify-between">
+          <strong>Struggling? View some tips here</strong>
+          <span className="ml-2">
+            {showHelper ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+          </span>
+        </div>
+        {showHelper && (
+          <div className="space-y-1 mt-2">
+            <p>• Use Tab to accept suggestions</p>
+            <p>• Click symbols or type directly</p>
+            <p>• Use ^ for exponents (e.g., x^2)</p>
+            <p>• Use * for multiplication (e.g., 2*x)</p>
+            <p>• Functions auto-close parentheses</p>
+          </div>
+        )}
       </div>
     </div>
   );

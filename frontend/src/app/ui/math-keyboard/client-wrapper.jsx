@@ -37,9 +37,9 @@ export default function MathKeyboardWrapper({ questions }) {
   // Handle case where no math questions are available
   if (!mathQuestions || mathQuestions.length === 0) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-900 to-blue-900">
-        <div className="text-center p-8 bg-white rounded-xl shadow-lg max-w-md">
-          <h2 className="text-2xl font-bold text-gray-800 mb-4">
+      <div className="min-h-screen flex items-center justify-center ">
+        <div className="text-center p-8 max-w-md">
+          <h2 className="text-2xl font-bold mb-4">
             No Math Questions Available
           </h2>
           <p className="text-gray-600 mb-6">
@@ -96,7 +96,6 @@ export default function MathKeyboardWrapper({ questions }) {
   const moveToNextQuestion = () => {
     if (currentStep >= totalSteps) {
       redirect('/dashboard');
-      return;
     }
 
     setCurrentStep((prev) => prev + 1);
@@ -122,25 +121,22 @@ export default function MathKeyboardWrapper({ questions }) {
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-gradient-to-br from-slate-900 to-blue-900">
+    <div className="min-h-screen flex flex-col">
       {/* Header */}
-      <div className="bg-white shadow-lg border-b border-gray-300">
-        <div className="flex items-center justify-between w-full py-4 px-4">
-          <Link
-            href="/practice"
-            className="p-2 hover:bg-gray-100 rounded-full transition-colors"
-          >
-            <X size={24} className="text-gray-700" />
+      <div className="fixed top-0 left-0 w-full z-20 bg-[#201F1F]">
+        <div className="flex items-center justify-between w-full py-4 px-4 max-w-4xl mx-auto">
+          <Link href="/practice" className="p-2">
+            <X size={24} />
           </Link>
 
           <div className="flex-1 mx-4">
-            <div className="text-sm text-gray-700 mb-1 text-center font-medium">
+            {/* <div className="text-sm text-gray-700 mb-1 text-center font-medium">
               Math Question {currentStep} of {totalSteps}
-            </div>
+            </div> */}
             <ProgressBar progress={currentStep / totalSteps} />
           </div>
 
-          <div className="flex items-center gap-2 text-pink-500">
+          <div className="flex items-center gap-2">
             <Heart size={24} fill="#FF6E99" stroke="#FF6E99" />
             <span className="font-semibold text-lg">5</span>
           </div>
@@ -148,15 +144,15 @@ export default function MathKeyboardWrapper({ questions }) {
       </div>
 
       {/* Main Content */}
-      <div className="flex-1 p-6 space-y-6">
+      <div className="space-y-11 pb-35 md:pb-50 pt-24 max-w-4xl mx-auto">
         {/* Question Section */}
-        <div className="bg-white rounded-xl shadow-xl p-8 border-2 border-gray-200">
-          <h2 className="text-2xl font-bold text-gray-800 text-center leading-relaxed">
+        <div className=" p-8 ">
+          <h2 className="text-2xl font-bold text-center leading-relaxed">
             {currQuestion.questionText}
           </h2>
 
           {/* Question metadata */}
-          <div className="flex justify-center gap-3 mt-6">
+          {/* <div className="flex justify-center gap-3 mt-6">
             <span className="px-4 py-2 bg-blue-100 text-blue-800 rounded-full text-sm font-semibold">
               📚 {currQuestion.topic}
             </span>
@@ -166,16 +162,13 @@ export default function MathKeyboardWrapper({ questions }) {
             <span className="px-4 py-2 bg-purple-100 text-purple-800 rounded-full text-sm font-semibold">
               ⭐ {currQuestion.xpGain || 10} XP
             </span>
-          </div>
+          </div> */}
         </div>
 
         {/* Math Input Section */}
-        <div className="bg-white rounded-xl shadow-xl p-6 border-2 border-gray-200">
+        <div className="">
           <div className="mb-4">
-            <h3 className="text-xl font-bold text-gray-800 mb-2">
-              🧮 Your Answer:
-            </h3>
-            <p className="text-gray-600">
+            <p className="">
               Use the keyboard below or type your mathematical expression
               directly
             </p>
@@ -208,42 +201,41 @@ export default function MathKeyboardWrapper({ questions }) {
       </div>
 
       {/* Submit Button */}
-      <div className="bg-white border-t-2 border-gray-300 p-6">
-        <button
-          type="button"
-          disabled={isDisabled || isSubmitting}
-          onClick={submitAnswer}
-          className={`w-full px-6 py-4 rounded-xl font-bold text-xl transition-all duration-200 shadow-lg ${
-            isDisabled || isSubmitting
-              ? 'bg-gray-400 text-gray-700 cursor-not-allowed'
-              : 'bg-gradient-to-r from-purple-600 to-blue-600 text-white hover:from-purple-700 hover:to-blue-700 transform hover:scale-[1.02]'
-          }`}
-        >
-          {isSubmitting ? (
-            <div className="flex items-center justify-center">
-              <div className="w-6 h-6 border-3 border-white border-t-transparent rounded-full animate-spin mr-3"></div>
-              SUBMITTING...
-            </div>
-          ) : (
-            'SUBMIT ANSWER'
-          )}
-        </button>
-
-        {/* Status indicator */}
-        <div className="mt-4 text-center">
-          {isValidExpression && studentAnswer.trim() ? (
-            <span className="text-green-600 font-semibold">
-              ✅ Ready to submit!
-            </span>
-          ) : !studentAnswer.trim() ? (
-            <span className="text-gray-600">
-              Enter your mathematical expression above
-            </span>
-          ) : (
-            <span className="text-red-600 font-semibold">
-              ⚠️ Please check your expression format
-            </span>
-          )}
+      <div className="flex fixed bottom-0 left-0 w-full z-10 px-4 py-4 bg-[#201F1F]">
+        <div className="flex flex-col justify-center md:m-auto max-w-2xl mx-auto">
+          <button
+            type="button"
+            disabled={isDisabled || isSubmitting}
+            onClick={submitAnswer}
+            className={`w-full md:m-auto ${
+              isDisabled || isSubmitting ? 'disabled_button' : 'main-button'
+            }`}
+          >
+            {isSubmitting ? (
+              <div className="flex items-center justify-center">
+                <div className="w-6 h-6 border-3 rounded-full animate-spin mr-3"></div>
+                SUBMITTING...
+              </div>
+            ) : (
+              'SUBMIT'
+            )}
+          </button>
+          {/* Status indicator */}
+          <div className="mt-4 text-center">
+            {isValidExpression && studentAnswer.trim() ? (
+              <span className="text-green-600 font-semibold">
+                Ready to submit!
+              </span>
+            ) : !studentAnswer.trim() ? (
+              <span className="text-[#696969]">
+                Enter your mathematical expression above
+              </span>
+            ) : (
+              <span className="text-red-600 font-semibold">
+                Please check your expression format
+              </span>
+            )}
+          </div>
         </div>
       </div>
     </div>

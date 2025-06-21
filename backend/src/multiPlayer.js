@@ -9,19 +9,19 @@ let xpTotal = 80; //total XP available for the match (e.g. 80)
 let p1_rating = 650; //level 4
 let p2_rating = 1400; //level 7
 
-function calculateExpected(p1, p2) {
+export function calculateExpected(p1, p2) {
   const p1_expected = 1 / (1 + Math.pow(10, (p2 - p1) / alpha));
   const p2_expected = 1 - p1_expected;
 
   return [p1_expected, p2_expected];
 }
 
-const [expected1, expected2] = calculateExpected(p1_rating, p2_rating);
+// const [expected1, expected2] = calculateExpected(p1_rating, p2_rating);
 
 //console.log("P1 Expected:", expected1.toFixed(2));
 //console.log("P2 Expected:", expected2.toFixed(2));
 
-function distributeXP(xpTotal, expected1, expected2, score1) {
+export function distributeXP(xpTotal, expected1, expected2, score1) {
   /*
     score 1: actual match result for player 1
     1 -> P1 wins
@@ -47,6 +47,7 @@ function distributeXP(xpTotal, expected1, expected2, score1) {
 }
 
 //Test
+/*
 let score1 = 1; //P1 wins
 
 const [xp1, xp2] = distributeXP(xpTotal, expected1, expected2, score1);
@@ -55,3 +56,4 @@ console.log('P1 Expected:', expected1.toFixed(2));
 console.log('P2 Expected:', expected2.toFixed(2));
 console.log('XP earned - P1:', xp1);
 console.log('XP earned - P2:', xp2);
+*/

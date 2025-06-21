@@ -118,3 +118,158 @@ export const practiceQuestion = async () => {
     };
   }
 };
+
+// NEW MATH VALIDATION API FUNCTIONS
+
+// Validate a math answer
+export const validateMathAnswer = async (studentAnswer, correctAnswer) => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/validate-answer`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        studentAnswer,
+        correctAnswer,
+      }),
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(data.error || 'Failed to validate answer');
+    }
+
+    return {
+      success: true,
+      data,
+    };
+  } catch (error) {
+    return {
+      success: false,
+      error: error.message,
+    };
+  }
+};
+
+// Quick validation for real-time feedback
+export const quickValidateMath = async (studentAnswer, correctAnswer) => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/quick-validate`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        studentAnswer,
+        correctAnswer,
+      }),
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(data.error || 'Failed to validate answer');
+    }
+
+    return {
+      success: true,
+      data,
+    };
+  } catch (error) {
+    return {
+      success: false,
+      error: error.message,
+    };
+  }
+};
+
+// Validate math expression format
+export const validateMathExpression = async (expression) => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/validate-expression`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        expression,
+      }),
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(data.error || 'Failed to validate expression');
+    }
+
+    return {
+      success: true,
+      data,
+    };
+  } catch (error) {
+    return {
+      success: false,
+      error: error.message,
+    };
+  }
+};
+
+// Submit answer for a specific question (with XP awarding)
+export const submitQuestionAnswer = async (
+  questionId,
+  studentAnswer,
+  userId,
+) => {
+  try {
+    const response = await fetch(
+      `${API_BASE_URL}/question/${questionId}/submit`,
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          studentAnswer,
+          userId,
+        }),
+      },
+    );
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(data.error || 'Failed to submit answer');
+    }
+
+    return {
+      success: true,
+      data,
+    };
+  } catch (error) {
+    return {
+      success: false,
+      error: error.message,
+    };
+  }
+};
+
+// Get questions by type
+export const getQuestionsByType = async (questionType) => {
+  try {
+    const response = await fetch(
+      `${API_BASE_URL}/practice/type/${questionType}`,
+    );
+    const data = await response.json();
+
+    if (response.ok) {
+      return { success: true, data: data.questions };
+    } else {
+      return { success: false, error: data.error };
+    }
+  } catch (error) {
+    console.error('Error fetching questions by type:', error);
+    return { success: false, error: 'Network error' };
+  }
+};

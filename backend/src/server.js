@@ -5,6 +5,7 @@ import dotenv from 'dotenv';
 import express from 'express';
 import jwt from 'jsonwebtoken';
 import { supabase } from '../database/supabaseClient.js';
+import { backendMathValidator } from './mathValidator.js';
 
 // Load environment variables
 dotenv.config();
@@ -461,6 +462,206 @@ app.post('/login', async (req, res) => {
       xp: user.xp || 0, // Default to 0 XP if not set
     },
   });
+});
+
+// Math Validation Endpoints
+
+// Validate a math answer
+app.post('/validate-answer', async (req, res) => {
+  try {
+    const { studentAnswer, correctAnswer } = req.body;
+
+    if (!studentAnswer || !correctAnswer) {
+      return res.status(400).json({
+        error: 'Both studentAnswer and correctAnswer are required',
+      });
+    }
+
+    const isCorrect = backendMathValidator.validateAnswer(
+      studentAnswer,
+      correctAnswer,
+    );
+
+    res.status(200).json({
+      isCorrect,
+      studentAnswer,
+      correctAnswer,
+      message: isCorrect ? 'Answer is correct!' : 'Answer is incorrect.',
+    });
+  } catch (error) {
+    console.error('Error validating answer:', error);
+    res.status(500).json({ error: 'Failed to validate answer' });
+  }
+});
+
+// Quick validation for real-time feedback
+app.post('/quick-validate', async (req, res) => {
+  try {
+    const { studentAnswer, correctAnswer } = req.body;
+
+    if (!studentAnswer || !correctAnswer) {
+      return res.status(400).json({
+        error: 'Both studentAnswer and correctAnswer are required',
+      });
+    }
+
+    const isCorrect = backendMathValidator.quickValidate(
+      studentAnswer,
+      correctAnswer,
+    );
+
+    res.status(200).json({
+      isCorrect,
+      studentAnswer,
+      correctAnswer,
+    });
+  } catch (error) {
+    console.error('Error in quick validation:', error);
+    res.status(500).json({ error: 'Failed to perform quick validation' });
+  }
+});
+
+// Validate math expression format
+app.post('/validate-expression', async (req, res) => {
+  try {
+    const { expression } = req.body;
+
+    if (!expression) {
+      return res.status(400).json({
+        error: 'Expression is required',
+      });
+    }
+
+    const isValid = backendMathValidator.isValidMathExpression(expression);
+    const message = backendMathValidator.getValidationMessage(expression);
+
+    res.status(200).json({
+      isValid,
+      expression,
+      message,
+    });
+  } catch (error) {
+    console.error('Error validating expression:', error);
+    res.status(500).json({ error: 'Failed to validate expression' });
+  }
+});
+
+// Submit and validate answer for a specific question
+app.post('/question/:id/submit', async (req, res) => {
+  const { id } = req.params;
+  const { studentAnswer, userId } = req.body;
+
+  try {
+    // Fetch the correct answer from database
+    const { data: correctAnswerData, error: answerError } = await supabase
+      .from('Answers')
+      .select('answerText')
+      .eq('question_id', id)
+      .eq('isCorrect', true)
+      .single();
+
+    if (answerError || !correctAnswerData) {
+      return res
+        .status(404)
+        .json({ error: 'Question or correct answer not found' });
+    }
+
+    const correctAnswer = correctAnswerData.answerText;
+    const isCorrect = backendMathValidator.validateAnswer(
+      studentAnswer,
+      correctAnswer,
+    );
+
+    // If correct and userId provided, award XP
+    let updatedUser = null;
+    if (isCorrect && userId) {
+      // Fetch question XP value
+      const { data: questionData, error: questionError } = await supabase
+        .from('Questions')
+        .select('xpGain')
+        .eq('Q_id', id)
+        .single();
+
+      if (!questionError && questionData) {
+        // Update user XP
+        const { data: currentUser, error: userError } = await supabase
+          .from('Users')
+          .select('xp')
+          .eq('id', userId)
+          .single();
+
+        if (!userError && currentUser) {
+          const newXp = (currentUser.xp || 0) + questionData.xpGain;
+
+          const { data: updated, error: updateError } = await supabase
+            .from('Users')
+            .update({ xp: newXp })
+            .eq('id', userId)
+            .select('id, xp')
+            .single();
+
+          if (!updateError) {
+            updatedUser = updated;
+          }
+        }
+      }
+    }
+
+    res.status(200).json({
+      isCorrect,
+      studentAnswer,
+      correctAnswer,
+      message: isCorrect ? 'Correct! Well done!' : 'Incorrect. Try again!',
+      xpAwarded:
+        isCorrect && updatedUser
+          ? updatedUser.xp - (updatedUser.xp - (questionData?.xpGain || 0))
+          : 0,
+      updatedUser,
+    });
+  } catch (error) {
+    console.error('Error submitting answer:', error);
+    res.status(500).json({ error: 'Failed to submit answer' });
+  }
+});
+
+// Get practice questions by type
+app.get('/practice/type/:questionType', async (req, res) => {
+  try {
+    const { questionType } = req.params;
+
+    const { data, error } = await supabase
+      .from('Questions')
+      .select('*')
+      .eq('type', questionType)
+      .limit(10);
+
+    if (error) {
+      console.error('Error fetching questions by type:', error.message);
+      return res
+        .status(500)
+        .json({ error: 'Failed to fetch questions by type' });
+    }
+
+    // Get answers for each question
+    for (const question of data) {
+      const { data: answers, error: answerError } = await supabase
+        .from('Answers')
+        .select('*')
+        .eq('question_id', question.Q_id);
+
+      if (answerError) {
+        console.error('Error fetching answers:', answerError.message);
+        return res.status(500).json({ error: 'Failed to fetch answers' });
+      }
+
+      question.answers = answers;
+    }
+
+    res.status(200).json({ questions: data });
+  } catch (err) {
+    console.error('Unexpected error:', err);
+    res.status(500).json({ error: 'Unexpected server error' });
+  }
 });
 
 // Start server

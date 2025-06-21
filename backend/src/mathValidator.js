@@ -1,61 +1,61 @@
-/**
- * Enhanced Frontend Math Validation Utils for ELO Learning
- * Validates student math answers for manually typed responses
- * Supports advanced mathematical functions and symbols
- * Uses math.js for expression evaluation and comparison
- */
+import { create, all } from 'mathjs';
 
-const math = require('mathjs');
+// Configure math.js for backend validation with advanced features
+const math = create(all, {
+  epsilon: 1e-10,
+  matrix: 'Matrix',
+  number: 'number',
+  precision: 64,
+});
 
-class FrontendMathValidator {
+// Add custom functions and constants for advanced math (only if they don't exist)
+const customImports = {};
+
+// Check if constants exist before adding them
+if (!math.hasOwnProperty('phi') && !math._scope.has('phi')) {
+  customImports.phi = 1.618033988749895; // Golden ratio
+}
+
+// Check if functions exist before adding them
+const functionsToAdd = {
+  combination: (n, k) => {
+    try {
+      return math.combinations(n, k);
+    } catch {
+      throw new Error('Invalid combination syntax');
+    }
+  },
+  permutation: (n, k) => {
+    try {
+      return math.permutations(n, k);
+    } catch {
+      throw new Error('Invalid permutation syntax');
+    }
+  },
+};
+
+// Only add functions that don't already exist
+Object.keys(functionsToAdd).forEach((funcName) => {
+  if (
+    !math.hasOwnProperty(funcName) &&
+    (!math._scope || !math._scope.has(funcName))
+  ) {
+    customImports[funcName] = functionsToAdd[funcName];
+  }
+});
+
+// Import only the functions/constants that don't exist
+if (Object.keys(customImports).length > 0) {
+  try {
+    math.import(customImports);
+  } catch (error) {
+    console.warn('Some math functions already exist:', error.message);
+  }
+}
+
+class BackendMathValidator {
   constructor() {
-    // Configure math.js for frontend validation with advanced features
-    this.math = math.create(math.all, {
-      epsilon: 1e-10,
-      matrix: 'Matrix',
-      number: 'number',
-      precision: 64,
-    });
-
-    // Add custom functions and constants
-    this.math.import({
-      // Mathematical constants
-      phi: 1.618033988749895, // Golden ratio
-
-      // Custom functions for educational math
-      derivative: (expr, variable) => {
-        try {
-          return this.math.derivative(expr, variable);
-        } catch {
-          throw new Error('Invalid derivative syntax');
-        }
-      },
-
-      integral: (expr, variable, from, to) => {
-        try {
-          if (from !== undefined && to !== undefined) {
-            return this.math.evaluate(
-              `integrate(${expr}, ${variable}, ${from}, ${to})`,
-            );
-          }
-          return this.math.parse(`integral(${expr}, ${variable})`);
-        } catch {
-          throw new Error('Invalid integral syntax');
-        }
-      },
-
-      limit: (expr, variable, value) => {
-        try {
-          return this.math.parse(`limit(${expr}, ${variable}, ${value})`);
-        } catch {
-          throw new Error('Invalid limit syntax');
-        }
-      },
-
-      factorial: (n) => this.math.factorial(n),
-      combination: (n, k) => this.math.combinations(n, k),
-      permutation: (n, k) => this.math.permutations(n, k),
-    });
+    this.math = math;
 
     // Define supported functions for validation
     this.supportedFunctions = [
@@ -65,6 +65,9 @@ class FrontendMathValidator {
       'asin',
       'acos',
       'atan',
+      'sinh',
+      'cosh',
+      'tanh',
       'log',
       'ln',
       'log10',
@@ -87,6 +90,10 @@ class FrontendMathValidator {
       'min',
       'combination',
       'permutation',
+      'solve',
+      'factor',
+      'expand',
+      'simplify',
     ];
   }
 
@@ -114,7 +121,7 @@ class FrontendMathValidator {
         this.checkAdvancedEquivalence(normalizedStudent, normalizedCorrect)
       );
     } catch (error) {
-      console.warn('Enhanced math validation error:', error);
+      console.warn('Enhanced backend math validation error:', error);
       return false;
     }
   }
@@ -161,9 +168,6 @@ class FrontendMathValidator {
         .replace(/sin⁻¹/g, 'asin') // Convert sin⁻¹ to asin
         .replace(/cos⁻¹/g, 'acos') // Convert cos⁻¹ to acos
         .replace(/tan⁻¹/g, 'atan') // Convert tan⁻¹ to atan
-        .replace(/sinh/g, 'sinh') // Hyperbolic sine
-        .replace(/cosh/g, 'cosh') // Hyperbolic cosine
-        .replace(/tanh/g, 'tanh') // Hyperbolic tangent
 
         // Root conversions
         .replace(/√/g, 'sqrt') // Convert √ to sqrt
@@ -175,20 +179,6 @@ class FrontendMathValidator {
         .replace(/∑/g, 'sum') // Convert ∑ to sum
         .replace(/∏/g, 'prod') // Convert ∏ to prod
         .replace(/∆/g, 'delta') // Convert ∆ to delta
-
-        // Set theory symbols
-        .replace(/∈/g, ' in ') // Convert ∈ to in
-        .replace(/∉/g, ' not in ') // Convert ∉ to not in
-        .replace(/∅/g, 'emptyset') // Convert ∅ to emptyset
-        .replace(/∪/g, ' union ') // Convert ∪ to union
-        .replace(/∩/g, ' intersect ') // Convert ∩ to intersect
-
-        // Logic symbols
-        .replace(/∀/g, 'forall') // Convert ∀ to forall
-        .replace(/∃/g, 'exists') // Convert ∃ to exists
-        .replace(/¬/g, 'not ') // Convert ¬ to not
-        .replace(/∧/g, ' and ') // Convert ∧ to and
-        .replace(/∨/g, ' or ') // Convert ∨ to or
 
         // Comparison operators
         .replace(/≤/g, '<=') // Convert ≤ to <=
@@ -250,11 +240,6 @@ class FrontendMathValidator {
         return false;
       }
 
-      // Check for invalid consecutive operators
-      if (/[+\-*/^]{2,}/.test(normalized)) {
-        return false;
-      }
-
       // Check for division by zero patterns
       if (/\/\s*0(?!\d)/.test(normalized)) {
         return false;
@@ -264,7 +249,7 @@ class FrontendMathValidator {
       this.math.parse(normalized);
       return true;
     } catch (error) {
-      console.debug('Expression validation failed:', error.message);
+      console.debug('Backend expression validation failed:', error.message);
       return false;
     }
   }
@@ -430,7 +415,7 @@ class FrontendMathValidator {
       // Use math.js equal function for other types
       return this.math.equal(studentValue, correctValue);
     } catch (error) {
-      console.debug('Numerical equality check failed:', error.message);
+      console.debug('Backend numerical equality check failed:', error.message);
       return false;
     }
   }
@@ -483,7 +468,10 @@ class FrontendMathValidator {
         return false;
       }
     } catch (error) {
-      console.debug('Algebraic equivalence check failed:', error.message);
+      console.debug(
+        'Backend algebraic equivalence check failed:',
+        error.message,
+      );
       return false;
     }
   }
@@ -517,7 +505,10 @@ class FrontendMathValidator {
 
       return false;
     } catch (error) {
-      console.debug('Advanced equivalence check failed:', error.message);
+      console.debug(
+        'Backend advanced equivalence check failed:',
+        error.message,
+      );
       return false;
     }
   }
@@ -605,27 +596,5 @@ class FrontendMathValidator {
   }
 }
 
-// Create singleton instance
-const MathValidator = new FrontendMathValidator();
-
-// Export functions for compatibility
-const validateMathAnswer = (studentAnswer, correctAnswer) =>
-  MathValidator.validateAnswer(studentAnswer, correctAnswer);
-
-const quickValidateMath = (studentAnswer, correctAnswer) =>
-  MathValidator.quickValidate(studentAnswer, correctAnswer);
-
-const isValidMathExpression = (input) =>
-  MathValidator.isValidMathExpression(input);
-
-const getMathValidationMessage = (input) =>
-  MathValidator.getValidationMessage(input);
-
-module.exports = {
-  validateMathAnswer,
-  quickValidateMath,
-  isValidMathExpression,
-  getMathValidationMessage,
-  FrontendMathValidator,
-  default: MathValidator,
-};
+// Create singleton instance for backend
+export const backendMathValidator = new BackendMathValidator();

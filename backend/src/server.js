@@ -4,13 +4,11 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 import express from 'express';
 import jwt from 'jsonwebtoken';
+import { calculateExpected, distributeXP } from './multiPlayer.js';
 import { calculateSinglePlayerXP } from './singlePlayer.js';
-import { distributeXP } from './multiPlayer.js';
-import { calculateExpected } from './multiPlayer.js';
 
 import { supabase } from '../database/supabaseClient.js';
 import { backendMathValidator } from './mathValidator.js';
-
 
 // Load environment variables
 dotenv.config();
@@ -725,6 +723,8 @@ app.post('/multiplayer', async (req, res) => {
   } catch (err) {
     console.error('Error in /multiplayer:', err);
     res.status(500).json({ error: 'Server error' });
+  }
+});
 // Math Validation Endpoints
 
 // Validate a math answer

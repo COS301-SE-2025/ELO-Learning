@@ -1,13 +1,16 @@
 // server.js
-import express from 'express';
+import bcrypt from 'bcrypt';
 import cors from 'cors';
 import dotenv from 'dotenv';
-import { supabase } from '../database/supabaseClient.js';
-import bcrypt from 'bcrypt';
+import express from 'express';
 import jwt from 'jsonwebtoken';
 import { calculateSinglePlayerXP } from './singlePlayer.js';
 import { distributeXP } from './multiPlayer.js';
 import { calculateExpected } from './multiPlayer.js';
+
+import { supabase } from '../database/supabaseClient.js';
+import { backendMathValidator } from './mathValidator.js';
+
 
 // Load environment variables
 dotenv.config();
@@ -149,6 +152,74 @@ app.get('/questions', async (req, res) => {
   }
 });
 
+//return 10 questions for practice
+//also get all the answers for those questions
+app.get('/practice', async (req, res) => {
+  try {
+    const { data, error } = await supabase
+      .from('Questions')
+      .select('*')
+      .limit(10);
+
+    for (const question of data) {
+      const { data, error } = await supabase
+        .from('Answers')
+        .select('*')
+        .eq('question_id', question.Q_id);
+      if (error) {
+        console.error(
+          'Error fetching practice questions:',
+          error.message,
+          question,
+        );
+        return res
+          .status(500)
+          .json({ error: 'Failed to fetch practice questions' });
+      }
+      question.answers = data;
+    }
+
+    if (error) {
+      console.error('Error fetching practice questions:', error.message);
+      return res
+        .status(500)
+        .json({ error: 'Failed to fetch practice questions' });
+    }
+
+    res.status(200).json({ questions: data });
+  } catch (err) {
+    console.error('Unexpected error:', err);
+    res.status(500).json({ error: 'Unexpected server error' });
+  }
+});
+
+// Return specific question by ID (ADD THIS NEW ROUTE)
+app.get('/questionsById/:id', async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    const { data, error } = await supabase
+      .from('Questions')
+      .select('*')
+      .eq('Q_id', id)
+      .single();
+
+    if (error) {
+      console.error('Error fetching question:', error.message);
+      return res.status(500).json({ error: 'Failed to fetch question' });
+    }
+
+    if (!data) {
+      return res.status(404).json({ error: 'Question not found' });
+    }
+
+    res.status(200).json({ question: data });
+  } catch (err) {
+    console.error('Unexpected error:', err);
+    res.status(500).json({ error: 'Unexpected server error' });
+  }
+});
+
 // Return all questions for given level: (works)
 app.get('/question/:level', async (req, res) => {
   const { level } = req.params;
@@ -206,6 +277,28 @@ app.get('/question/:id/answer', async (req, res) => {
   res.status(200).json({ answer: data });
 });
 
+//Return all answers to a specific question
+app.get('/answers/:id', async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    const { data, error } = await supabase
+      .from('Answers')
+      .select('*')
+      .eq('question_id', id);
+
+    if (error) {
+      console.error('Error fetching answers:', error.message);
+      return res.status(500).json({ error: 'Failed to fetch answers' });
+    }
+
+    res.status(200).json({ answer: data });
+  } catch (err) {
+    console.error('Unexpected error:', err);
+    res.status(500).json({ error: 'Unexpected server error' });
+  }
+});
+
 // Return all questions for a specific topic: (works)
 app.get('/questions/topic', async (req, res) => {
   const { topic } = req.query;
@@ -254,7 +347,7 @@ app.get('/questions/level/topic', async (req, res) => {
 
 // Register new user
 app.post('/register', async (req, res) => {
-  const { name, surname, username, email, password } = req.body; //need to add handling for joinDate, xp and currentLevel
+  const { name, surname, username, email, password, joinDate } = req.body;
 
   if (!name || !surname || !username || !email || !password) {
     return res.status(400).json({ error: 'All fields are required' });
@@ -279,9 +372,24 @@ app.post('/register', async (req, res) => {
   // Hash password
   const hashedPassword = await bcrypt.hash(password, 10);
 
+  const safeCurrentLevel = 5;
+  const safeJoinDate = joinDate || new Date().toISOString();
+  const safeXP = 1000;
+
   const { data, error } = await supabase
     .from('Users')
-    .insert([{ name, surname, username, email, password: hashedPassword }])
+    .insert([
+      {
+        name,
+        surname,
+        username,
+        email,
+        password: hashedPassword,
+        currentLevel: safeCurrentLevel,
+        joinDate: safeJoinDate,
+        xp: safeXP,
+      },
+    ])
     .select()
     .single();
 
@@ -290,7 +398,26 @@ app.post('/register', async (req, res) => {
     return res.status(500).json({ error: 'Failed to register user' });
   }
 
-  res.status(201).json({ message: 'User registered successfully', user: data });
+  const token = jwt.sign(
+    { id: data.id, email: data.email },
+    process.env.JWT_SECRET,
+    { expiresIn: '1h' },
+  );
+
+  res.status(201).json({
+    message: 'User registered successfully',
+    token,
+    user: {
+      id: data.id,
+      name: data.name,
+      surname: data.surname,
+      username: data.username,
+      email: data.email,
+      currentLevel: data.currentLevel,
+      joinDate: data.joinDate,
+      xp: data.xp,
+    },
+  });
 });
 
 // Login user
@@ -304,7 +431,7 @@ app.post('/login', async (req, res) => {
   // Fetch user by email
   const { data: user, error: fetchError } = await supabase
     .from('Users')
-    .select('id,name,surname,username,email,password')
+    .select('id,name,surname,username,email,password,currentLevel,joinDate,xp')
     .eq('email', email)
     .single();
 
@@ -335,7 +462,7 @@ app.post('/login', async (req, res) => {
       surname: user.surname,
       username: user.username,
       email: user.email,
-      currentLevel: user.currentLevel || 1, // Default to level 1 if not set
+      currentLevel: user.currentLevel || 5, // Default to level 1 if not set
       joinDate: user.joinDate || new Date().toISOString(), // Default to current date if not set
       xp: user.xp || 0, // Default to 0 XP if not set
     },
@@ -598,6 +725,203 @@ app.post('/multiplayer', async (req, res) => {
   } catch (err) {
     console.error('Error in /multiplayer:', err);
     res.status(500).json({ error: 'Server error' });
+// Math Validation Endpoints
+
+// Validate a math answer
+app.post('/validate-answer', async (req, res) => {
+  try {
+    const { studentAnswer, correctAnswer } = req.body;
+
+    if (!studentAnswer || !correctAnswer) {
+      return res.status(400).json({
+        error: 'Both studentAnswer and correctAnswer are required',
+      });
+    }
+
+    const isCorrect = backendMathValidator.validateAnswer(
+      studentAnswer,
+      correctAnswer,
+    );
+
+    res.status(200).json({
+      isCorrect,
+      studentAnswer,
+      correctAnswer,
+      message: isCorrect ? 'Answer is correct!' : 'Answer is incorrect.',
+    });
+  } catch (error) {
+    console.error('Error validating answer:', error);
+    res.status(500).json({ error: 'Failed to validate answer' });
+  }
+});
+
+// Quick validation for real-time feedback
+app.post('/quick-validate', async (req, res) => {
+  try {
+    const { studentAnswer, correctAnswer } = req.body;
+
+    if (!studentAnswer || !correctAnswer) {
+      return res.status(400).json({
+        error: 'Both studentAnswer and correctAnswer are required',
+      });
+    }
+
+    const isCorrect = backendMathValidator.quickValidate(
+      studentAnswer,
+      correctAnswer,
+    );
+
+    res.status(200).json({
+      isCorrect,
+      studentAnswer,
+      correctAnswer,
+    });
+  } catch (error) {
+    console.error('Error in quick validation:', error);
+    res.status(500).json({ error: 'Failed to perform quick validation' });
+  }
+});
+
+// Validate math expression format
+app.post('/validate-expression', async (req, res) => {
+  try {
+    const { expression } = req.body;
+
+    if (!expression) {
+      return res.status(400).json({
+        error: 'Expression is required',
+      });
+    }
+
+    const isValid = backendMathValidator.isValidMathExpression(expression);
+    const message = backendMathValidator.getValidationMessage(expression);
+
+    res.status(200).json({
+      isValid,
+      expression,
+      message,
+    });
+  } catch (error) {
+    console.error('Error validating expression:', error);
+    res.status(500).json({ error: 'Failed to validate expression' });
+  }
+});
+
+// Submit and validate answer for a specific question
+app.post('/question/:id/submit', async (req, res) => {
+  const { id } = req.params;
+  const { studentAnswer, userId } = req.body;
+
+  try {
+    // Fetch the correct answer from database
+    const { data: correctAnswerData, error: answerError } = await supabase
+      .from('Answers')
+      .select('answerText')
+      .eq('question_id', id)
+      .eq('isCorrect', true)
+      .single();
+
+    if (answerError || !correctAnswerData) {
+      return res
+        .status(404)
+        .json({ error: 'Question or correct answer not found' });
+    }
+
+    const correctAnswer = correctAnswerData.answerText;
+    const isCorrect = backendMathValidator.validateAnswer(
+      studentAnswer,
+      correctAnswer,
+    );
+
+    // If correct and userId provided, award XP
+    let updatedUser = null;
+    if (isCorrect && userId) {
+      // Fetch question XP value
+      const { data: questionData, error: questionError } = await supabase
+        .from('Questions')
+        .select('xpGain')
+        .eq('Q_id', id)
+        .single();
+
+      if (!questionError && questionData) {
+        // Update user XP
+        const { data: currentUser, error: userError } = await supabase
+          .from('Users')
+          .select('xp')
+          .eq('id', userId)
+          .single();
+
+        if (!userError && currentUser) {
+          const newXp = (currentUser.xp || 0) + questionData.xpGain;
+
+          const { data: updated, error: updateError } = await supabase
+            .from('Users')
+            .update({ xp: newXp })
+            .eq('id', userId)
+            .select('id, xp')
+            .single();
+
+          if (!updateError) {
+            updatedUser = updated;
+          }
+        }
+      }
+    }
+
+    res.status(200).json({
+      isCorrect,
+      studentAnswer,
+      correctAnswer,
+      message: isCorrect ? 'Correct! Well done!' : 'Incorrect. Try again!',
+      xpAwarded:
+        isCorrect && updatedUser
+          ? updatedUser.xp - (updatedUser.xp - (questionData?.xpGain || 0))
+          : 0,
+      updatedUser,
+    });
+  } catch (error) {
+    console.error('Error submitting answer:', error);
+    res.status(500).json({ error: 'Failed to submit answer' });
+  }
+});
+
+// Get practice questions by type
+app.get('/practice/type/:questionType', async (req, res) => {
+  try {
+    const { questionType } = req.params;
+
+    const { data, error } = await supabase
+      .from('Questions')
+      .select('*')
+      .eq('type', questionType)
+      .limit(10);
+
+    if (error) {
+      console.error('Error fetching questions by type:', error.message);
+      return res
+        .status(500)
+        .json({ error: 'Failed to fetch questions by type' });
+    }
+
+    // Get answers for each question
+    for (const question of data) {
+      const { data: answers, error: answerError } = await supabase
+        .from('Answers')
+        .select('*')
+        .eq('question_id', question.Q_id);
+
+      if (answerError) {
+        console.error('Error fetching answers:', answerError.message);
+        return res.status(500).json({ error: 'Failed to fetch answers' });
+      }
+
+      question.answers = answers;
+    }
+
+    res.status(200).json({ questions: data });
+  } catch (err) {
+    console.error('Unexpected error:', err);
+    res.status(500).json({ error: 'Unexpected server error' });
   }
 });
 

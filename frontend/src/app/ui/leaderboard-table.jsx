@@ -45,10 +45,10 @@ export default function LeaderboardTable() {
         <tbody>
           {leaderboardData.map((entry) => (
             <tr key={entry.pos}>
-              <td className=" p-2">{entry.pos}</td>
+              <td className="p-2">{entry.pos}</td>
               <td className="p-2">
                 <span
-                  className={`inline-flex items-center justify-center rounded-full w-8 h-8font-bold text-lg ${getColor(
+                  className={`inline-flex items-center justify-center rounded-full w-8 h-8 font-bold text-lg ${getColor(
                     entry.user,
                   )}`}
                 >

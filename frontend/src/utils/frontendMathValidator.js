@@ -7,6 +7,9 @@
 
 const math = require('mathjs');
 
+// Singleton instance to prevent multiple MathJS initializations
+let mathValidatorInstance = null;
+
 class FrontendMathValidator {
   constructor() {
     // Configure math.js for frontend validation with advanced features
@@ -17,45 +20,56 @@ class FrontendMathValidator {
       precision: 64,
     });
 
-    // Add custom functions and constants
-    this.math.import({
-      // Mathematical constants
-      phi: 1.618033988749895, // Golden ratio
+    // Only import custom functions and constants if they haven't been imported yet
+    // This prevents the "Cannot import 'phi': already exists" error
+    if (!this.math._phi) {
+      try {
+        this.math.import({
+          // Mathematical constants
+          phi: 1.618033988749895, // Golden ratio
 
-      // Custom functions for educational math
-      derivative: (expr, variable) => {
-        try {
-          return this.math.derivative(expr, variable);
-        } catch {
-          throw new Error('Invalid derivative syntax');
-        }
-      },
+          // Custom functions for educational math
+          derivative: (expr, variable) => {
+            try {
+              return this.math.derivative(expr, variable);
+            } catch {
+              throw new Error('Invalid derivative syntax');
+            }
+          },
 
-      integral: (expr, variable, from, to) => {
-        try {
-          if (from !== undefined && to !== undefined) {
-            return this.math.evaluate(
-              `integrate(${expr}, ${variable}, ${from}, ${to})`,
-            );
-          }
-          return this.math.parse(`integral(${expr}, ${variable})`);
-        } catch {
-          throw new Error('Invalid integral syntax');
-        }
-      },
+          integral: (expr, variable, from, to) => {
+            try {
+              if (from !== undefined && to !== undefined) {
+                return this.math.evaluate(
+                  `integrate(${expr}, ${variable}, ${from}, ${to})`,
+                );
+              }
+              return this.math.parse(`integral(${expr}, ${variable})`);
+            } catch {
+              throw new Error('Invalid integral syntax');
+            }
+          },
 
-      limit: (expr, variable, value) => {
-        try {
-          return this.math.parse(`limit(${expr}, ${variable}, ${value})`);
-        } catch {
-          throw new Error('Invalid limit syntax');
-        }
-      },
+          limit: (expr, variable, value) => {
+            try {
+              return this.math.parse(`limit(${expr}, ${variable}, ${value})`);
+            } catch {
+              throw new Error('Invalid limit syntax');
+            }
+          },
 
-      factorial: (n) => this.math.factorial(n),
-      combination: (n, k) => this.math.combinations(n, k),
-      permutation: (n, k) => this.math.permutations(n, k),
-    });
+          factorial: (n) => this.math.factorial(n),
+          combination: (n, k) => this.math.combinations(n, k),
+          permutation: (n, k) => this.math.permutations(n, k),
+        });
+      } catch (error) {
+        // If import fails (e.g., constants already exist), continue without custom imports
+        console.warn(
+          'MathJS custom imports skipped (may already be initialized):',
+          error.message,
+        );
+      }
+    }
 
     // Define supported functions for validation
     this.supportedFunctions = [
@@ -314,7 +328,10 @@ class FrontendMathValidator {
   }
 
   getValidationMessage(input) {
-    if (!input?.trim()) {
+    if (typeof input !== 'string') {
+      return 'Invalid input';
+    }
+    if (!input.trim()) {
       return 'Please enter an answer';
     }
 
@@ -606,7 +623,10 @@ class FrontendMathValidator {
 }
 
 // Create singleton instance
-const MathValidator = new FrontendMathValidator();
+if (!mathValidatorInstance) {
+  mathValidatorInstance = new FrontendMathValidator();
+}
+const MathValidator = mathValidatorInstance;
 
 // Export functions for compatibility
 const validateMathAnswer = (studentAnswer, correctAnswer) =>

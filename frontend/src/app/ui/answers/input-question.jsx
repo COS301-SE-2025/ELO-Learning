@@ -203,7 +203,7 @@ export default function MathInputTemplate({
 
     const timeoutId = setTimeout(quickCheck, 500);
     return () => clearTimeout(timeoutId);
-  }, [inputValue, correctAnswer, localIsValidExpression, setIsAnswerCorrect]);
+  }, [inputValue, correctAnswer, localIsValidExpression]);
 
   const getCurrentWord = (text, position) => {
     const beforeCursor = text.substring(0, position);

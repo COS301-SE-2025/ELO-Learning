@@ -12,3 +12,10 @@ export async function deleteCookie() {
     cookieStore.delete('token')
     cookieStore.delete('user')
 }
+
+export async function getCookie() {
+    const cookieStore = await cookies()
+    const token = cookieStore.get('token')
+    const user = cookieStore.get('user')
+    return { token: token?.value, user: user?.value ? JSON.parse(user.value) : null }
+}

@@ -328,9 +328,27 @@ app.get('/questions/level/topic', async (req, res) => {
 
   const { data, error } = await supabase
     .from('Questions')
-    .select('Q_id, topic, difficulty, level, questionText, xpGain')
+    .select('Q_id, topic, difficulty, level, questionText, xpGain, type')
     .eq('level', level)
-    .eq('topic', topic)
+    .eq('topic_id', topic)
+
+  for (const question of data) {
+    const { data, error } = await supabase
+      .from('Answers')
+      .select('*')
+      .eq('question_id', question.Q_id)
+    if (error) {
+      console.error(
+        'Error fetching practice questions:',
+        error.message,
+        question,
+      )
+      return res
+        .status(500)
+        .json({ error: 'Failed to fetch practice questions' })
+    }
+    question.answers = data
+  }
 
   if (error) {
     console.error(
@@ -833,7 +851,7 @@ app.post('/question/:id/submit', async (req, res) => {
     // Fetch the correct answer from database
     const { data: correctAnswerData, error: answerError } = await supabase
       .from('Answers')
-      .select('answerText')
+      .select('answer_text')
       .eq('question_id', id)
       .eq('isCorrect', true)
       .single()

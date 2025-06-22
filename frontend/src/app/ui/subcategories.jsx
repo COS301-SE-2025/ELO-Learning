@@ -26,7 +26,7 @@ export default function SubCategories({ subcategories }) {
           >
             {sub.name.charAt(0)}
           </div>
-          <Link href="/question-templates/multiple-choice/">
+          <Link href={`/topic/${sub.topic_id}`}>
             <div>
               <h2 className="text-xl font-bold">{sub.name}</h2>
               <p className="text-sm">{sub.description}</p>

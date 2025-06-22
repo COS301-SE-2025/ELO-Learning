@@ -56,7 +56,6 @@ export default function QuestionsTracker({ questions }) {
   };
 
   const submitAnswer = () => {
-    console.log('Submitting answer:', answer);
     setLocalStorage();
     handleLives();
 

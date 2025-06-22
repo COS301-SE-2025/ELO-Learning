@@ -12,7 +12,7 @@ export default function TotalXP() {
       (accumulator, question) => accumulator + question.question.xpGain,
       0
     );
-    console.log(correctAnswers);
+
     setTotalXP(totalXPSum);
   }, []);
   return (

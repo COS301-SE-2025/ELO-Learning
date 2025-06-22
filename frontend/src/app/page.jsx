@@ -25,9 +25,9 @@ export default function Home() {
               alt="ELO Learning Mascot"
               priority
             />
-            <h1 className="logo-text">ELO Learning</h1>
+            <h1 className="logo-text text-[#BD86F8]">ELO Learning</h1>
           </div>
-          <p className="text-center max-w-md">
+          <p className="text-center max-w-md p-5">
             Transform the way you engage with math practice through gamified,
             adaptive learning experiences.
           </p>

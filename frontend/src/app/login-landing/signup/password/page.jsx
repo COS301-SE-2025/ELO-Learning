@@ -1,4 +1,5 @@
 'use client';
+import { setCookie } from '@/app/lib/authCookie';
 import ProgressBar from '@/app/ui/progress-bar';
 import { registerUser } from '@/services/api';
 import { X } from 'lucide-react';
@@ -16,7 +17,7 @@ const totalSteps = 6;
 function validatePassword(password) {
   // At least 1 uppercase, 1 number, 1 special char, min 8 chars
   return /^(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?]).{8,}$/.test(
-    password,
+    password
   );
 }
 
@@ -38,7 +39,7 @@ export default function Page() {
     }
     if (!validatePassword(password)) {
       setError(
-        'Password must be at least 8 characters, include an uppercase letter, a number, and a special character.',
+        'Password must be at least 8 characters, include an uppercase letter, a number, and a special character.'
       );
       return;
     }
@@ -59,12 +60,11 @@ export default function Page() {
         reg.email,
         password,
         reg.currentLevel,
-        reg.joinDate,
+        reg.joinDate
       );
       // Save token and user to localStorage
       if (response.token && response.user) {
-        localStorage.setItem('token', response.token);
-        localStorage.setItem('user', JSON.stringify(response.user));
+        await setCookie(response);
       }
       clearRegistration();
       window.location.href = '/dashboard';

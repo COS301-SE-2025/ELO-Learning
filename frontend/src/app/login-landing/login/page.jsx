@@ -1,4 +1,5 @@
 'use client';
+import { setCookie } from '@/app/lib/authCookie';
 import { X } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
@@ -19,14 +20,16 @@ export default function Page() {
 
     try {
       const response = await loginUser(email, password);
+      await setCookie(response);
 
       // Store the token and user data
-      localStorage.setItem('token', response.token);
-      localStorage.setItem('user', JSON.stringify(response.user));
+      // localStorage.setItem('token', response.token);
+      // localStorage.setItem('user', JSON.stringify(response.user));
 
       // Redirect to dashboard
       router.push('/dashboard');
     } catch (err) {
+      console.error('Login failed:', err);
       setError('Username or password incorrect, please try again');
     } finally {
       setIsLoading(false);

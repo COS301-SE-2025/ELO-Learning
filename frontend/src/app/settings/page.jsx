@@ -1,4 +1,5 @@
 'use client';
+import { deleteCookie } from '@/app/lib/authCookie';
 import Back from '@/app/ui/back';
 import { ChevronRight } from 'lucide-react';
 import Link from 'next/link';
@@ -7,9 +8,8 @@ import { useRouter } from 'next/navigation';
 export default function Page() {
   const router = useRouter();
 
-  const handleLogout = () => {
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
+  const handleLogout = async () => {
+    await deleteCookie();
     router.push('/');
   };
 

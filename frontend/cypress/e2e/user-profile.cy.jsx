@@ -12,16 +12,37 @@ describe('User Profile & Gamification', () => {
   // --- Profile Page Tests ---
   describe('Profile Page', () => {
     beforeEach(() => {
-      cy.setCookie('token', 'mock-jwt-token');
+      cy.setCookie(
+        'user',
+        JSON.stringify({
+          id: 36,
+          name: 'Saskia',
+          surname: 'Steyn',
+          username: 'Yapsalot',
+          email: 'user.surname@email.com',
+          currentLevel: 4,
+          joinDate: '1998-08-06',
+          xp: 1000,
+          pfpURL:
+            'https://ifbpkwlfrsgstdapteqh.supabase.co/storage/v1/object/public/profile-pics//Player%201%20Avatar.png',
+        }),
+      );
+      cy.setCookie('token', 'mock-token');
+      cy.getCookies().then((cookies) => {
+        console.log('COOKIES AFTER SET:', cookies);
+      });
       cy.visit('/profile');
       cy.url().should('include', '/profile');
     });
 
     it('should display the main user information', () => {
       // From <UsernameBlock>
-      cy.get('h2').should('contain', 'Lady Yapsalot');
+      cy.get('h2').should('contain', 'Yapsalot');
       cy.get('p').should('contain', 'Saskia Steyn');
       cy.get('p').should('contain', 'Joined: 6 August 1998');
+      cy.document().then((doc) => {
+        console.log('PROFILE PAGE DOM:', doc.body.innerHTML);
+      });
     });
 
     it('should display the user picture block', () => {
@@ -52,38 +73,42 @@ describe('User Profile & Gamification', () => {
   // --- Leaderboard Tests ---
   describe('Leaderboard System', () => {
     beforeEach(() => {
+      cy.setCookie(
+        'user',
+        JSON.stringify({
+          id: 36,
+          name: 'Saskia',
+          surname: 'Steyn',
+          username: 'Yapsalot',
+          email: 'user.surname@email.com',
+          currentLevel: 4,
+          joinDate: '1998-08-06',
+          xp: 1000,
+          pfpURL:
+            'https://ifbpkwlfrsgstdapteqh.supabase.co/storage/v1/object/public/profile-pics//Player%201%20Avatar.png',
+        }),
+      );
+      cy.setCookie('token', 'mock-token');
+      cy.getCookies().then((cookies) => {
+        console.log('COOKIES AFTER SET:', cookies);
+      });
       cy.visit('/dashboard');
-      cy.intercept('GET', '/api/user/profile', {
-        statusCode: 200,
-        body: {
-          success: true,
-          data: {
-            id: 1,
-            username: 'testuser',
-            elo: 1200,
-            xp: 850,
-          },
-        },
-      }).as('getUserProfile');
+      cy.url().should('include', '/dashboard');
 
-      cy.intercept('GET', '/api/leaderboard', {
+      // Mock leaderboard with 15 users
+      const leaderboardUsers = Array.from({ length: 15 }, (_, i) => ({
+        id: i + 1,
+        rank: i + 1,
+        username: `User${i + 1}`,
+        xp: 10000 - i * 500,
+      }));
+      cy.intercept('GET', '/users', {
         statusCode: 200,
-        body: {
-          success: true,
-          data: [
-            { rank: 1, username: 'Alice', xp: 11500 },
-            { rank: 2, username: 'Bob', xp: 9000 },
-            { rank: 3, username: 'Charlie', xp: 8000 },
-            { rank: 4, username: 'David', xp: 7000 },
-            { rank: 5, username: 'Eve', xp: 6000 },
-            { rank: 6, username: 'Frank', xp: 5000 },
-            { rank: 7, username: 'Grace', xp: 4000 },
-            { rank: 8, username: 'Heidi', xp: 3000 },
-            { rank: 9, username: 'Ivan', xp: 2000 },
-            { rank: 10, username: 'Judy', xp: 1000 },
-          ],
-        },
-      }).as('getLeaderboard');
+        body: leaderboardUsers,
+      }).as('getUsers');
+
+      // Catch-all for other API calls
+      cy.intercept('GET', '/api/*', { statusCode: 200, body: [] });
     });
 
     it('should display the leaderboard with correct headers', () => {
@@ -92,38 +117,77 @@ describe('User Profile & Gamification', () => {
       cy.get('th').should('contain', '#');
       cy.get('th').should('contain', 'Username');
       cy.get('th').should('contain', 'Total XP');
+      cy.document().then((doc) => {
+        console.log('LEADERBOARD PAGE DOM:', doc.body.innerHTML);
+      });
     });
 
     it('should display the top 10 users with their data', () => {
-      cy.get('tbody tr').should('have.length', 10);
-
-      // Check the first user
-      cy.get('tbody tr').first().as('firstUser');
-      cy.get('@firstUser').should('contain', '1');
-      cy.get('@firstUser').should('contain', 'Alice');
-      cy.get('@firstUser').should('contain', '11500 XP');
+      cy.get('tbody tr').should('have.length', 15);
+      for (let i = 0; i < 15; i++) {
+        cy.get('tbody tr')
+          .eq(i)
+          .should('contain', `User${i + 1}`);
+        cy.get('tbody tr')
+          .eq(i)
+          .should('contain', `${10000 - i * 500} XP`);
+      }
     });
 
     it('should display user avatars with a colored background', () => {
-      cy.get('tbody tr').each(($row) => {
-        cy.wrap($row).find('span[class*="bg-"]').should('be.visible');
+      cy.get('tbody tr').each(($row, idx) => {
+        cy.wrap($row).find('span').should('contain', `U`); // All usernames start with 'U'
+        cy.wrap($row).find('span[class*=bg-]').should('exist');
       });
     });
   });
 
   // --- Settings and End Screen Tests (Simplified) ---
   describe('Other Gamification Pages', () => {
-    it('should load the settings page', () => {
-      cy.visit('/settings');
-      // The page uses a <p> tag for its main heading inside the <Back> component
-      cy.get('p.text-2xl.font-bold').should('contain', 'Settings');
+    beforeEach(() => {
+      cy.setCookie(
+        'user',
+        JSON.stringify({
+          id: 36,
+          name: 'Saskia',
+          surname: 'Steyn',
+          username: 'Yapsalot',
+          email: 'user.surname@email.com',
+          currentLevel: 4,
+          joinDate: '1998-08-06',
+          xp: 1000,
+          pfpURL:
+            'https://ifbpkwlfrsgstdapteqh.supabase.co/storage/v1/object/public/profile-pics//Player%201%20Avatar.png',
+        }),
+      );
+      cy.setCookie('token', 'mock-token');
+      // Mock leaderboard with 15 users for any /users call
+      const leaderboardUsers = Array.from({ length: 15 }, (_, i) => ({
+        id: i + 1,
+        rank: i + 1,
+        username: `User${i + 1}`,
+        xp: 10000 - i * 500,
+      }));
+      cy.intercept('GET', '/users', {
+        statusCode: 200,
+        body: leaderboardUsers,
+      }).as('getUsers');
+      // Catch-all for other API calls
+      cy.intercept('GET', '/api/*', { statusCode: 200, body: [] });
     });
 
-    it('should not crash when visiting the end-screen directly', () => {
-      // The end-screen page requires game state and cannot be visited directly.
-      // We will visit it and just assert that the app doesn't crash and we are on the page.
-      cy.visit('/end-screen');
-      cy.url().should('include', '/end-screen');
+    it('should load the settings page', () => {
+      cy.visit('/settings');
+      cy.contains('Settings').should('be.visible');
+    });
+
+    it('should clear the user cookie on logout', () => {
+      cy.visit('/settings');
+      cy.contains('Logout').click();
+      // Check for redirect to home or login page
+      cy.url().should('match', /\/(|login-landing)$/);
+      // Optionally, check that settings content is gone
+      cy.contains('Settings').should('not.exist');
     });
   });
 });

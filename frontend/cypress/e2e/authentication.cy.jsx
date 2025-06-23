@@ -55,7 +55,7 @@ describe('Authentication & User Management', () => {
     it('should handle successful login', () => {
       cy.intercept('POST', '**/login', {
         statusCode: 200,
-        body: { token: 'mock-token', user: { id: 1, username: 'testuser' } }
+        body: { token: 'mock-token', user: { id: 1, username: 'testuser' } },
       }).as('loginRequest');
 
       cy.visit('/login-landing/login');
@@ -69,24 +69,28 @@ describe('Authentication & User Management', () => {
     it('should show an error for incorrect credentials', () => {
       cy.intercept('POST', '**/login', {
         statusCode: 401,
-        body: { error: 'Invalid credentials' }
+        body: { error: 'Invalid credentials' },
       }).as('failedLogin');
 
       cy.visit('/login-landing/login');
-      cy.get('input[placeholder="Username or email"]').type('wrong@example.com');
+      cy.get('input[placeholder="Username or email"]').type(
+        'wrong@example.com',
+      );
       cy.get('input[placeholder="Password"]').type('wrongpassword');
       cy.get('button[type="submit"]').click();
       cy.wait('@failedLogin');
-      cy.get('p').contains('Username or password incorrect').should('be.visible');
+      cy.get('p')
+        .contains('Username or password incorrect')
+        .should('be.visible');
     });
 
     it('should show loading state on submission', () => {
       cy.intercept('POST', '**/login', {
         delay: 500,
         statusCode: 200,
-        body: { token: 'mock-token', user: { id: 1, username: 'testuser' } }
+        body: { token: 'mock-token', user: { id: 1, username: 'testuser' } },
       }).as('slowLogin');
-      
+
       cy.visit('/login-landing/login');
       cy.get('input[placeholder="Username or email"]').type('test@example.com');
       cy.get('input[placeholder="Password"]').type('password123');
@@ -96,15 +100,15 @@ describe('Authentication & User Management', () => {
     });
 
     it('should show validation error if forms are empty', () => {
-        cy.visit('/login-landing/login');
-        // Try to submit empty form - HTML5 validation should prevent submission
-        cy.get('button[type="submit"]').click();
-        // Verify we're still on the login page (form wasn't submitted)
-        cy.url().should('include', '/login-landing/login');
-        // Verify the form inputs are still visible (page didn't navigate away)
-        cy.get('input[placeholder="Username or email"]').should('be.visible');
-        cy.get('input[placeholder="Password"]').should('be.visible');
-      });
+      cy.visit('/login-landing/login');
+      // Try to submit empty form - HTML5 validation should prevent submission
+      cy.get('button[type="submit"]').click();
+      // Verify we're still on the login page (form wasn't submitted)
+      cy.url().should('include', '/login-landing/login');
+      // Verify the form inputs are still visible (page didn't navigate away)
+      cy.get('input[placeholder="Username or email"]').should('be.visible');
+      cy.get('input[placeholder="Password"]').should('be.visible');
+    });
   });
 
   /*
@@ -137,4 +141,4 @@ describe('Authentication & User Management', () => {
   //     cy.url().should('include', '/login-landing');
   //   });
   // });
-}); 
+});

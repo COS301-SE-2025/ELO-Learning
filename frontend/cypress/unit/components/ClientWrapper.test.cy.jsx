@@ -6,9 +6,9 @@ describe('ClientWrapper Component Unit Tests', () => {
       cy.mount(
         <ClientWrapper>
           <div data-testid="child">Test Content</div>
-        </ClientWrapper>
+        </ClientWrapper>,
       );
-      
+
       cy.get('[data-testid="child"]').should('exist');
       cy.get('[data-testid="child"]').should('contain', 'Test Content');
     });
@@ -18,16 +18,16 @@ describe('ClientWrapper Component Unit Tests', () => {
         <ClientWrapper>
           <div data-testid="child1">Child 1</div>
           <div data-testid="child2">Child 2</div>
-        </ClientWrapper>
+        </ClientWrapper>,
       );
-      
+
       cy.get('[data-testid="child1"]').should('exist');
       cy.get('[data-testid="child2"]').should('exist');
     });
 
     it('should render with no children', () => {
       cy.mount(<ClientWrapper />);
-      
+
       // Should render without errors
       cy.get('div').should('exist');
     });
@@ -38,9 +38,9 @@ describe('ClientWrapper Component Unit Tests', () => {
       cy.mount(
         <ClientWrapper>
           <div data-testid="state-test">Initial State</div>
-        </ClientWrapper>
+        </ClientWrapper>,
       );
-      
+
       cy.get('[data-testid="state-test"]').should('contain', 'Initial State');
     });
 
@@ -48,9 +48,9 @@ describe('ClientWrapper Component Unit Tests', () => {
       cy.mount(
         <ClientWrapper>
           <button data-testid="test-button">Click Me</button>
-        </ClientWrapper>
+        </ClientWrapper>,
       );
-      
+
       cy.get('[data-testid="test-button"]').should('exist');
       cy.get('[data-testid="test-button"]').should('contain', 'Click Me');
     });
@@ -59,9 +59,9 @@ describe('ClientWrapper Component Unit Tests', () => {
       cy.mount(
         <ClientWrapper>
           <div data-testid="effect-test">Effect Test</div>
-        </ClientWrapper>
+        </ClientWrapper>,
       );
-      
+
       // Test that useEffect and other client-side hooks work
       cy.get('[data-testid="effect-test"]').should('exist');
     });
@@ -72,9 +72,9 @@ describe('ClientWrapper Component Unit Tests', () => {
       cy.mount(
         <ClientWrapper>
           <div data-testid="hydration-test">Hydration Test</div>
-        </ClientWrapper>
+        </ClientWrapper>,
       );
-      
+
       // Test that the component hydrates correctly
       cy.get('[data-testid="hydration-test"]').should('be.visible');
     });
@@ -83,9 +83,9 @@ describe('ClientWrapper Component Unit Tests', () => {
       cy.mount(
         <ClientWrapper>
           <div data-testid="mismatch-test">No Mismatch</div>
-        </ClientWrapper>
+        </ClientWrapper>,
       );
-      
+
       // Should not cause hydration mismatches
       cy.get('[data-testid="mismatch-test"]').should('exist');
     });
@@ -94,28 +94,26 @@ describe('ClientWrapper Component Unit Tests', () => {
   describe('Performance', () => {
     it('should render efficiently', () => {
       const startTime = Date.now();
-      
+
       cy.mount(
         <ClientWrapper>
           <div>Performance Test</div>
-        </ClientWrapper>
+        </ClientWrapper>,
       );
-      
+
       const endTime = Date.now();
       expect(endTime - startTime).to.be.lessThan(100); // Should render quickly
     });
 
     it('should handle large content efficiently', () => {
       const largeContent = Array.from({ length: 100 }, (_, i) => (
-        <div key={i} data-testid={`item-${i}`}>Item {i}</div>
+        <div key={i} data-testid={`item-${i}`}>
+          Item {i}
+        </div>
       ));
-      
-      cy.mount(
-        <ClientWrapper>
-          {largeContent}
-        </ClientWrapper>
-      );
-      
+
+      cy.mount(<ClientWrapper>{largeContent}</ClientWrapper>);
+
       // Should handle large amounts of content
       cy.get('[data-testid="item-0"]').should('exist');
       cy.get('[data-testid="item-99"]').should('exist');
@@ -127,9 +125,9 @@ describe('ClientWrapper Component Unit Tests', () => {
       cy.mount(
         <ClientWrapper>
           <button aria-label="Test Button">Accessible Button</button>
-        </ClientWrapper>
+        </ClientWrapper>,
       );
-      
+
       cy.get('button').should('have.attr', 'aria-label', 'Test Button');
     });
 
@@ -143,9 +141,9 @@ describe('ClientWrapper Component Unit Tests', () => {
               <p>Content</p>
             </section>
           </main>
-        </ClientWrapper>
+        </ClientWrapper>,
       );
-      
+
       cy.get('main').should('exist');
       cy.get('h1').should('contain', 'Main Heading');
       cy.get('section').should('exist');
@@ -158,9 +156,9 @@ describe('ClientWrapper Component Unit Tests', () => {
       cy.mount(
         <ClientWrapper>
           <div>Valid Content</div>
-        </ClientWrapper>
+        </ClientWrapper>,
       );
-      
+
       // Should not throw errors during normal operation
       cy.get('div').should('contain', 'Valid Content');
     });
@@ -170,9 +168,9 @@ describe('ClientWrapper Component Unit Tests', () => {
         <ClientWrapper>
           {null}
           <div>Valid Content</div>
-        </ClientWrapper>
+        </ClientWrapper>,
       );
-      
+
       cy.get('div').should('contain', 'Valid Content');
     });
 
@@ -181,9 +179,9 @@ describe('ClientWrapper Component Unit Tests', () => {
         <ClientWrapper>
           {undefined}
           <div>Valid Content</div>
-        </ClientWrapper>
+        </ClientWrapper>,
       );
-      
+
       cy.get('div').should('contain', 'Valid Content');
     });
   });
@@ -195,56 +193,63 @@ describe('ClientWrapper Component Unit Tests', () => {
           <div className="test-class" data-testid="styled-element">
             Styled Content
           </div>
-        </ClientWrapper>
+        </ClientWrapper>,
       );
-      
-      cy.get('[data-testid="styled-element"]').should('have.class', 'test-class');
+
+      cy.get('[data-testid="styled-element"]').should(
+        'have.class',
+        'test-class',
+      );
     });
 
     it('should preserve inline styles', () => {
       cy.mount(
         <ClientWrapper>
-          <div 
-            style={{ color: 'red', fontSize: '16px' }} 
+          <div
+            style={{ color: 'red', fontSize: '16px' }}
             data-testid="inline-styled"
           >
             Inline Styled
           </div>
-        </ClientWrapper>
+        </ClientWrapper>,
       );
-      
-      cy.get('[data-testid="inline-styled"]').should('have.css', 'color', 'rgb(255, 0, 0)');
+
+      cy.get('[data-testid="inline-styled"]').should(
+        'have.css',
+        'color',
+        'rgb(255, 0, 0)',
+      );
     });
   });
 
   describe('Event Handling', () => {
     it('should handle click events', () => {
       const clickSpy = cy.spy().as('clickSpy');
-      
+
       cy.mount(
         <ClientWrapper>
           <button data-testid="click-button" onClick={clickSpy}>
             Click Me
           </button>
-        </ClientWrapper>
+        </ClientWrapper>,
       );
-      
+
       cy.get('[data-testid="click-button"]').click();
       cy.get('@clickSpy').should('have.been.called');
     });
 
     it('should handle form events', () => {
       const submitSpy = cy.spy().as('submitSpy');
-      
+
       cy.mount(
         <ClientWrapper>
           <form data-testid="test-form" onSubmit={submitSpy}>
             <input type="text" data-testid="test-input" />
             <button type="submit">Submit</button>
           </form>
-        </ClientWrapper>
+        </ClientWrapper>,
       );
-      
+
       cy.get('[data-testid="test-form"]').submit();
       cy.get('@submitSpy').should('have.been.called');
     });
@@ -255,9 +260,9 @@ describe('ClientWrapper Component Unit Tests', () => {
       cy.mount(
         <ClientWrapper>
           <div data-testid="state-component">State Component</div>
-        </ClientWrapper>
+        </ClientWrapper>,
       );
-      
+
       // Test that useState works within the wrapper
       cy.get('[data-testid="state-component"]').should('exist');
     });
@@ -266,9 +271,9 @@ describe('ClientWrapper Component Unit Tests', () => {
       cy.mount(
         <ClientWrapper>
           <div data-testid="effect-component">Effect Component</div>
-        </ClientWrapper>
+        </ClientWrapper>,
       );
-      
+
       // Test that useEffect works within the wrapper
       cy.get('[data-testid="effect-component"]').should('exist');
     });
@@ -283,9 +288,9 @@ describe('ClientWrapper Component Unit Tests', () => {
             <main>Main Content</main>
             <footer>Footer</footer>
           </div>
-        </ClientWrapper>
+        </ClientWrapper>,
       );
-      
+
       cy.get('header').should('contain', 'Header');
       cy.get('main').should('contain', 'Main Content');
       cy.get('footer').should('contain', 'Footer');
@@ -306,13 +311,13 @@ describe('ClientWrapper Component Unit Tests', () => {
               </main>
             </div>
           </div>
-        </ClientWrapper>
+        </ClientWrapper>,
       );
-      
+
       cy.get('nav').should('contain', 'Navigation');
       cy.get('aside').should('contain', 'Sidebar');
       cy.get('article h1').should('contain', 'Article Title');
       cy.get('article p').should('contain', 'Article content');
     });
   });
-}); 
+});

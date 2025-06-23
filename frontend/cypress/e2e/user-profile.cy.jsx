@@ -1,12 +1,14 @@
 // Handle uncaught exceptions from Next.js
 Cypress.on('uncaught:exception', (err) => {
-  if (err.message.includes('NEXT_REDIRECT') || err.message.includes('Cannot read properties of null')) {
+  if (
+    err.message.includes('NEXT_REDIRECT') ||
+    err.message.includes('Cannot read properties of null')
+  ) {
     return false;
   }
 });
 
 describe('User Profile & Gamification', () => {
-
   // --- Profile Page Tests ---
   describe('Profile Page', () => {
     beforeEach(() => {
@@ -25,7 +27,7 @@ describe('User Profile & Gamification', () => {
       // From <Picture>
       cy.get('img[alt="user profile picture"]').should('be.visible');
     });
-    
+
     it('should show a link to the settings page', () => {
       cy.get('a[href="settings"]').should('be.visible');
     });
@@ -40,7 +42,7 @@ describe('User Profile & Gamification', () => {
       // From <MatchStats> and <Achievements>
       cy.contains('h3', 'Match Statistics').should('be.visible');
       cy.contains('p', 'Match statistics coming soon').should('be.visible');
-      
+
       cy.contains('h3', 'Achievement').should('be.visible');
       cy.contains('p', 'Achievements coming soon').should('be.visible');
     });
@@ -84,12 +86,12 @@ describe('User Profile & Gamification', () => {
       // The page uses a <p> tag for its main heading inside the <Back> component
       cy.get('p.text-2xl.font-bold').should('contain', 'Settings');
     });
-    
+
     it('should not crash when visiting the end-screen directly', () => {
-        // The end-screen page requires game state and cannot be visited directly.
-        // We will visit it and just assert that the app doesn't crash and we are on the page.
-        cy.visit('/end-screen');
-        cy.url().should('include', '/end-screen');
+      // The end-screen page requires game state and cannot be visited directly.
+      // We will visit it and just assert that the app doesn't crash and we are on the page.
+      cy.visit('/end-screen');
+      cy.url().should('include', '/end-screen');
     });
   });
-}); 
+});

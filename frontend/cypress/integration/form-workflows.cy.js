@@ -52,7 +52,9 @@ describe('Form Workflows', () => {
       }).as('loginRequest');
 
       // Fill out the form with incorrect credentials
-      cy.get('input[placeholder="Username or email"]').type('wrong@example.com');
+      cy.get('input[placeholder="Username or email"]').type(
+        'wrong@example.com',
+      );
       cy.get('input[placeholder="Password"]').type('wrongpassword');
 
       // Submit the form
@@ -62,7 +64,10 @@ describe('Form Workflows', () => {
       cy.wait('@loginRequest');
 
       // Verify the error message is displayed
-      cy.contains('p', 'Username or password incorrect, please try again').should('be.visible');
+      cy.contains(
+        'p',
+        'Username or password incorrect, please try again',
+      ).should('be.visible');
 
       // Verify the user remains on the login page
       cy.url().should('include', '/login-landing/login');
@@ -106,4 +111,4 @@ describe('Form Workflows', () => {
       cy.url().should('include', '/login-landing/signup');
     });
   });
-}); 
+});

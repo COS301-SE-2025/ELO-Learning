@@ -10,15 +10,18 @@ describe('Component Tests with Real Selectors', () => {
     // Mock authentication for protected routes
     cy.window().then((win) => {
       win.localStorage.setItem('token', 'mock-jwt-token');
-      win.localStorage.setItem('user', JSON.stringify({
-        id: 1,
-        username: 'testuser',
-        name: 'Test',
-        surname: 'User',
-        date_joined: '2023-01-01',
-        elo: 1200,
-        xp: 500
-      }));
+      win.localStorage.setItem(
+        'user',
+        JSON.stringify({
+          id: 1,
+          username: 'testuser',
+          name: 'Test',
+          surname: 'User',
+          date_joined: '2023-01-01',
+          elo: 1200,
+          xp: 500,
+        }),
+      );
     });
   });
 
@@ -95,4 +98,4 @@ describe('Component Tests with Real Selectors', () => {
       cy.contains('Achievements coming soon').should('be.visible');
     });
   });
-}); 
+});

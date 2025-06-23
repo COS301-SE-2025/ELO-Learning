@@ -36,4 +36,4 @@ describe('API Data Flow', () => {
       cy.contains('button', '+').should('be.visible'); // Check for a keyboard button
     });
   });
-}); 
+});

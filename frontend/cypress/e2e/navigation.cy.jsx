@@ -7,7 +7,6 @@ Cypress.on('uncaught:exception', (err) => {
 });
 
 describe('Navigation & Routing Tests', () => {
-
   describe('Landing Page Navigation', () => {
     beforeEach(() => {
       cy.visit('/');
@@ -87,5 +86,4 @@ describe('Navigation & Routing Tests', () => {
       cy.contains('This page could not be found').should('be.visible');
     });
   });
-
-}); 
+});

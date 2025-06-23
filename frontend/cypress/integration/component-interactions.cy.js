@@ -70,21 +70,21 @@ describe('Component Interactions', () => {
      * Components: /app/ui/math-keyboard/math-input-template.jsx
      * User Behavior: Types something and then uses the virtual backspace.
      */
-    it("should remove the last character when backspace is clicked", () => {
-        const mathInput = 'textarea.math-input';
+    it('should remove the last character when backspace is clicked', () => {
+      const mathInput = 'textarea.math-input';
 
-        // Switch to the functions tab to find the 'sin' button
-        cy.contains('button', 'Functions').click();
-        
-        // Use keyboard to input 'sin('
-        cy.contains('button', 'sin').click();
-        cy.get(mathInput).should('have.value', 'sin(');
+      // Switch to the functions tab to find the 'sin' button
+      cy.contains('button', 'Functions').click();
 
-        // Use the virtual backspace
-        cy.contains('button', '⌫').click();
+      // Use keyboard to input 'sin('
+      cy.contains('button', 'sin').click();
+      cy.get(mathInput).should('have.value', 'sin(');
 
-        // Verify the input
-        cy.get(mathInput).should('have.value', 'sin');
+      // Use the virtual backspace
+      cy.contains('button', '⌫').click();
+
+      // Verify the input
+      cy.get(mathInput).should('have.value', 'sin');
     });
   });
-}); 
+});

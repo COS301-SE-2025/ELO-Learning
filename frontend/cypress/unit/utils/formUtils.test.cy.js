@@ -1,11 +1,14 @@
 // Import form utility functions at the top
-import { handleButtonClick, handleFormSubmit } from '../../../src/utils/formUtils.js';
+import {
+  handleButtonClick,
+  handleFormSubmit,
+} from '../../../src/utils/formUtils.js';
 
 describe('Form Utils', () => {
   beforeEach(() => {
     // Mock window.dispatchEvent
     cy.stub(window, 'dispatchEvent').as('dispatchEventStub');
-    
+
     // Mock console.log
     cy.stub(console, 'log').as('consoleLogStub');
   });
@@ -24,7 +27,7 @@ describe('Form Utils', () => {
 
         // Check that dispatchEvent was called
         cy.get('@dispatchEventStub').should('be.calledOnce');
-        
+
         // Get the event that was dispatched
         cy.get('@dispatchEventStub').then((stub) => {
           const eventCall = stub.getCall(0);
@@ -51,7 +54,7 @@ describe('Form Utils', () => {
 
         // Check that dispatchEvent was called
         cy.get('@dispatchEventStub').should('be.calledOnce');
-        
+
         // Get the event that was dispatched
         cy.get('@dispatchEventStub').then((stub) => {
           const eventCall = stub.getCall(0);
@@ -70,9 +73,10 @@ describe('Form Utils', () => {
       cy.window().then(() => {
         handleFormSubmit(formName, formData);
 
-        cy.get('@consoleLogStub').should('be.calledWith',
+        cy.get('@consoleLogStub').should(
+          'be.calledWith',
           `Form "${formName}" submitted with data:`,
-          formData
+          formData,
         );
       });
     });
@@ -90,7 +94,7 @@ describe('Form Utils', () => {
 
         // Check that dispatchEvent was called
         cy.get('@dispatchEventStub').should('be.calledOnce');
-        
+
         // Get the event that was dispatched
         cy.get('@dispatchEventStub').then((stub) => {
           const eventCall = stub.getCall(0);
@@ -110,8 +114,9 @@ describe('Form Utils', () => {
       cy.window().then(() => {
         handleButtonClick(buttonName);
 
-        cy.get('@consoleLogStub').should('be.calledWith',
-          `Button "${buttonName}" clicked`
+        cy.get('@consoleLogStub').should(
+          'be.calledWith',
+          `Button "${buttonName}" clicked`,
         );
       });
     });
@@ -143,7 +148,7 @@ describe('Form Utils', () => {
         handleFormSubmit('form2', { data: '2' });
 
         cy.get('@dispatchEventStub').should('be.calledTwice');
-        
+
         cy.get('@dispatchEventStub').then((stub) => {
           const firstEvent = stub.getCall(0).args[0];
           const secondEvent = stub.getCall(1).args[0];
@@ -154,4 +159,4 @@ describe('Form Utils', () => {
       });
     });
   });
-}); 
+});

@@ -12,13 +12,15 @@ describe('Math Input Component Tests', () => {
       statusCode: 200,
       body: {
         success: true,
-        questions: [{
-          Q_id: 1,
-          questionText: 'What is 2 + 2?',
-          correctAnswer: '4',
-          answers: [{ answer_text: '4', isCorrect: true }]
-        }]
-      }
+        questions: [
+          {
+            Q_id: 1,
+            questionText: 'What is 2 + 2?',
+            correctAnswer: '4',
+            answers: [{ answer_text: '4', isCorrect: true }],
+          },
+        ],
+      },
     }).as('getMathQuestions');
 
     cy.visit('/question-templates/input-questions');
@@ -33,9 +35,7 @@ describe('Math Input Component Tests', () => {
 
   it('should allow typing a mathematical expression', () => {
     cy.contains('Loading...').should('not.exist');
-    cy.get('textarea').first()
-      .type('2+2')
-      .should('have.value', '2+2');
+    cy.get('textarea').first().type('2+2').should('have.value', '2+2');
   });
 
   it('should insert a symbol using the virtual keyboard', () => {
@@ -61,27 +61,29 @@ describe('Math Input Component Tests', () => {
 
   it('should allow submitting an answer', () => {
     cy.contains('Loading...').should('not.exist');
-    
+
     // Intercept the submit API call
     cy.intercept('POST', '**/question/*/submit', {
       statusCode: 200,
       body: {
-        message: 'Correct!', isCorrect: true, xpAwarded: 10
-      }
+        message: 'Correct!',
+        isCorrect: true,
+        xpAwarded: 10,
+      },
     }).as('submitAnswer');
-  
+
     // Type an answer
     cy.get('textarea').first().type('4');
-    
+
     // Verify submit button becomes enabled
     cy.get('button').contains('SUBMIT').should('not.be.disabled');
-    
+
     // Click submit button
     cy.get('button').contains('SUBMIT').click();
-    
+
     // Verify the API call was made
     cy.wait('@submitAnswer');
-    
+
     // Verify the button shows submitting state or becomes disabled during submission
     // (This is more reliable than waiting for success message that may have rendering issues)
     cy.get('button').should('exist'); // Just verify the test completed successfully

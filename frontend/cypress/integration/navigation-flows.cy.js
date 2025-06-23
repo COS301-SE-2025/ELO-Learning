@@ -77,4 +77,4 @@ describe('Navigation Flows', () => {
     // Check for some content on the login-landing page
     cy.contains('h1', 'ELO Learning').should('be.visible');
   });
-}); 
+});

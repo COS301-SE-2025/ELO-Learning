@@ -1,14 +1,14 @@
 // Import API functions at the top
 import {
-    getAllAnswers,
-    getAllQuestions,
-    getQuestionById,
-    getQuestionsByType,
-    practiceQuestion,
-    quickValidateMath,
-    submitQuestionAnswer,
-    validateMathAnswer,
-    validateMathExpression
+  getAllAnswers,
+  getAllQuestions,
+  getQuestionById,
+  getQuestionsByType,
+  practiceQuestion,
+  quickValidateMath,
+  submitQuestionAnswer,
+  validateMathAnswer,
+  validateMathExpression,
 } from '../../../src/utils/api.js';
 
 describe('API Utilities', () => {
@@ -21,12 +21,12 @@ describe('API Utilities', () => {
     it('should fetch all questions successfully', () => {
       const mockQuestions = [
         { id: 1, question: 'What is 2+2?', answers: ['4', '5', '6'] },
-        { id: 2, question: 'What is 3*3?', answers: ['6', '9', '12'] }
+        { id: 2, question: 'What is 3*3?', answers: ['6', '9', '12'] },
       ];
 
       cy.intercept('GET', 'http://localhost:3000/questions', {
         statusCode: 200,
-        body: { questions: mockQuestions }
+        body: { questions: mockQuestions },
       }).as('getQuestions');
 
       cy.window().then(() => {
@@ -42,7 +42,7 @@ describe('API Utilities', () => {
     it('should handle fetch error', () => {
       cy.intercept('GET', 'http://localhost:3000/questions', {
         statusCode: 500,
-        body: { error: 'Server error' }
+        body: { error: 'Server error' },
       }).as('getQuestionsError');
 
       cy.window().then(() => {
@@ -57,7 +57,7 @@ describe('API Utilities', () => {
 
     it('should handle network error', () => {
       cy.intercept('GET', 'http://localhost:3000/questions', {
-        forceNetworkError: true
+        forceNetworkError: true,
       }).as('getQuestionsNetworkError');
 
       cy.window().then(() => {
@@ -73,11 +73,15 @@ describe('API Utilities', () => {
 
   describe('getQuestionById', () => {
     it('should fetch question by ID successfully', () => {
-      const mockQuestion = { id: 1, question: 'What is 2+2?', answers: ['4', '5', '6'] };
+      const mockQuestion = {
+        id: 1,
+        question: 'What is 2+2?',
+        answers: ['4', '5', '6'],
+      };
 
       cy.intercept('GET', 'http://localhost:3000/questionsById/1', {
         statusCode: 200,
-        body: { question: mockQuestion }
+        body: { question: mockQuestion },
       }).as('getQuestionById');
 
       cy.window().then(() => {
@@ -97,7 +101,7 @@ describe('API Utilities', () => {
 
       cy.intercept('GET', 'http://localhost:3000/answers/1', {
         statusCode: 200,
-        body: { answer: mockAnswer }
+        body: { answer: mockAnswer },
       }).as('getAnswers');
 
       cy.window().then(() => {
@@ -115,12 +119,12 @@ describe('API Utilities', () => {
     it('should fetch practice questions successfully', () => {
       const mockQuestions = [
         { id: 1, question: 'Practice question 1' },
-        { id: 2, question: 'Practice question 2' }
+        { id: 2, question: 'Practice question 2' },
       ];
 
       cy.intercept('GET', 'http://localhost:3000/practice', {
         statusCode: 200,
-        body: { questions: mockQuestions }
+        body: { questions: mockQuestions },
       }).as('getPracticeQuestions');
 
       cy.window().then(() => {
@@ -136,11 +140,15 @@ describe('API Utilities', () => {
 
   describe('validateMathAnswer', () => {
     it('should validate math answer successfully', () => {
-      const mockValidation = { isValid: true, isCorrect: true, message: 'Correct!' };
+      const mockValidation = {
+        isValid: true,
+        isCorrect: true,
+        message: 'Correct!',
+      };
 
       cy.intercept('POST', 'http://localhost:3000/validate-answer', {
         statusCode: 200,
-        body: mockValidation
+        body: mockValidation,
       }).as('validateMathAnswer');
 
       cy.window().then(() => {
@@ -152,7 +160,7 @@ describe('API Utilities', () => {
 
       cy.wait('@validateMathAnswer').its('request.body').should('deep.equal', {
         studentAnswer: '2+2',
-        correctAnswer: '4'
+        correctAnswer: '4',
       });
     });
   });
@@ -163,7 +171,7 @@ describe('API Utilities', () => {
 
       cy.intercept('POST', 'http://localhost:3000/quick-validate', {
         statusCode: 200,
-        body: mockQuickValidation
+        body: mockQuickValidation,
       }).as('quickValidateMath');
 
       cy.window().then(() => {
@@ -175,18 +183,21 @@ describe('API Utilities', () => {
 
       cy.wait('@quickValidateMath').its('request.body').should('deep.equal', {
         studentAnswer: '2+2',
-        correctAnswer: '4'
+        correctAnswer: '4',
       });
     });
   });
 
   describe('validateMathExpression', () => {
     it('should validate math expression successfully', () => {
-      const mockExpressionValidation = { isValid: true, message: 'Valid expression' };
+      const mockExpressionValidation = {
+        isValid: true,
+        message: 'Valid expression',
+      };
 
       cy.intercept('POST', 'http://localhost:3000/validate-expression', {
         statusCode: 200,
-        body: mockExpressionValidation
+        body: mockExpressionValidation,
       }).as('validateMathExpression');
 
       cy.window().then(() => {
@@ -196,9 +207,11 @@ describe('API Utilities', () => {
         });
       });
 
-      cy.wait('@validateMathExpression').its('request.body').should('deep.equal', {
-        expression: '2+2'
-      });
+      cy.wait('@validateMathExpression')
+        .its('request.body')
+        .should('deep.equal', {
+          expression: '2+2',
+        });
     });
   });
 
@@ -208,7 +221,7 @@ describe('API Utilities', () => {
 
       cy.intercept('POST', 'http://localhost:3000/question/1/submit', {
         statusCode: 200,
-        body: mockSubmission
+        body: mockSubmission,
       }).as('submitQuestionAnswer');
 
       cy.window().then(() => {
@@ -218,10 +231,12 @@ describe('API Utilities', () => {
         });
       });
 
-      cy.wait('@submitQuestionAnswer').its('request.body').should('deep.equal', {
-        studentAnswer: '4',
-        userId: 'user123'
-      });
+      cy.wait('@submitQuestionAnswer')
+        .its('request.body')
+        .should('deep.equal', {
+          studentAnswer: '4',
+          userId: 'user123',
+        });
     });
   });
 
@@ -229,12 +244,12 @@ describe('API Utilities', () => {
     it('should fetch questions by type successfully', () => {
       const mockQuestions = [
         { id: 1, type: 'algebra', question: 'Solve for x' },
-        { id: 2, type: 'algebra', question: 'Factor the expression' }
+        { id: 2, type: 'algebra', question: 'Factor the expression' },
       ];
 
       cy.intercept('GET', 'http://localhost:3000/practice/type/algebra', {
         statusCode: 200,
-        body: { questions: mockQuestions }
+        body: { questions: mockQuestions },
       }).as('getQuestionsByType');
 
       cy.window().then(() => {
@@ -249,7 +264,7 @@ describe('API Utilities', () => {
 
     it('should handle network error for questions by type', () => {
       cy.intercept('GET', 'http://localhost:3000/practice/type/algebra', {
-        forceNetworkError: true
+        forceNetworkError: true,
       }).as('getQuestionsByTypeError');
 
       cy.window().then(() => {
@@ -262,4 +277,4 @@ describe('API Utilities', () => {
       cy.wait('@getQuestionsByTypeError');
     });
   });
-}); 
+});

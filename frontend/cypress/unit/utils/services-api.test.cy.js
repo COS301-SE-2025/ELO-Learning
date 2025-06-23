@@ -1,18 +1,18 @@
 // Import service functions at the top
 import {
-    fetchAllQuestions,
-    fetchAllUsers,
-    fetchQuestionAnswer,
-    fetchQuestionsByLevel,
-    fetchQuestionsByLevelAndTopic,
-    fetchQuestionsByTopic,
-    fetchUserAchievements,
-    fetchUserById,
-    loginUser,
-    logoutUser,
-    registerUser,
-    submitAnswer,
-    updateUserXP
+  fetchAllQuestions,
+  fetchAllUsers,
+  fetchQuestionAnswer,
+  fetchQuestionsByLevel,
+  fetchQuestionsByLevelAndTopic,
+  fetchQuestionsByTopic,
+  fetchUserAchievements,
+  fetchUserById,
+  loginUser,
+  logoutUser,
+  registerUser,
+  submitAnswer,
+  updateUserXP,
 } from '../../../src/services/api.js';
 
 describe('Services API', () => {
@@ -25,12 +25,12 @@ describe('Services API', () => {
     it('should fetch all users successfully', () => {
       const mockUsers = [
         { id: 1, name: 'Alice', email: 'alice@example.com' },
-        { id: 2, name: 'Bob', email: 'bob@example.com' }
+        { id: 2, name: 'Bob', email: 'bob@example.com' },
       ];
 
       cy.intercept('GET', 'http://localhost:3000/users', {
         statusCode: 200,
-        body: mockUsers
+        body: mockUsers,
       }).as('fetchAllUsers');
 
       cy.window().then(() => {
@@ -49,7 +49,7 @@ describe('Services API', () => {
 
       cy.intercept('GET', 'http://localhost:3000/user/1', {
         statusCode: 200,
-        body: mockUser
+        body: mockUser,
       }).as('fetchUserById');
 
       cy.window().then(() => {
@@ -66,12 +66,12 @@ describe('Services API', () => {
     it('should fetch user achievements successfully', () => {
       const mockAchievements = [
         { id: 1, name: 'First Win', description: 'Win your first game' },
-        { id: 2, name: 'Streak Master', description: 'Win 10 games in a row' }
+        { id: 2, name: 'Streak Master', description: 'Win 10 games in a row' },
       ];
 
       cy.intercept('GET', 'http://localhost:3000/users/1/achievements', {
         statusCode: 200,
-        body: mockAchievements
+        body: mockAchievements,
       }).as('fetchUserAchievements');
 
       cy.window().then(() => {
@@ -90,7 +90,7 @@ describe('Services API', () => {
 
       cy.intercept('POST', 'http://localhost:3000/user/1/xp', {
         statusCode: 200,
-        body: mockResponse
+        body: mockResponse,
       }).as('updateUserXP');
 
       cy.window().then(() => {
@@ -99,7 +99,9 @@ describe('Services API', () => {
         });
       });
 
-      cy.wait('@updateUserXP').its('request.body').should('deep.equal', { xp: 100 });
+      cy.wait('@updateUserXP')
+        .its('request.body')
+        .should('deep.equal', { xp: 100 });
     });
   });
 
@@ -107,12 +109,12 @@ describe('Services API', () => {
     it('should fetch all questions successfully', () => {
       const mockQuestions = [
         { id: 1, question: 'What is 2+2?', type: 'basic' },
-        { id: 2, question: 'What is 3*3?', type: 'basic' }
+        { id: 2, question: 'What is 3*3?', type: 'basic' },
       ];
 
       cy.intercept('GET', 'http://localhost:3000/questions', {
         statusCode: 200,
-        body: mockQuestions
+        body: mockQuestions,
       }).as('fetchAllQuestions');
 
       cy.window().then(() => {
@@ -129,12 +131,12 @@ describe('Services API', () => {
     it('should fetch questions by level successfully', () => {
       const mockQuestions = [
         { id: 1, question: 'Level 1 question', level: 1 },
-        { id: 2, question: 'Level 1 question 2', level: 1 }
+        { id: 2, question: 'Level 1 question 2', level: 1 },
       ];
 
       cy.intercept('GET', 'http://localhost:3000/question/1', {
         statusCode: 200,
-        body: mockQuestions
+        body: mockQuestions,
       }).as('fetchQuestionsByLevel');
 
       cy.window().then(() => {
@@ -153,7 +155,7 @@ describe('Services API', () => {
 
       cy.intercept('GET', 'http://localhost:3000/question/1/answer', {
         statusCode: 200,
-        body: mockAnswer
+        body: mockAnswer,
       }).as('fetchQuestionAnswer');
 
       cy.window().then(() => {
@@ -170,13 +172,17 @@ describe('Services API', () => {
     it('should fetch questions by topic successfully', () => {
       const mockQuestions = [
         { id: 1, question: 'Algebra question 1', topic: 'Algebra' },
-        { id: 2, question: 'Algebra question 2', topic: 'Algebra' }
+        { id: 2, question: 'Algebra question 2', topic: 'Algebra' },
       ];
 
-      cy.intercept('GET', 'http://localhost:3000/questions/topic?topic=Algebra', {
-        statusCode: 200,
-        body: mockQuestions
-      }).as('fetchQuestionsByTopic');
+      cy.intercept(
+        'GET',
+        'http://localhost:3000/questions/topic?topic=Algebra',
+        {
+          statusCode: 200,
+          body: mockQuestions,
+        },
+      ).as('fetchQuestionsByTopic');
 
       cy.window().then(() => {
         fetchQuestionsByTopic('Algebra').then((result) => {
@@ -192,13 +198,17 @@ describe('Services API', () => {
     it('should fetch questions by level and topic successfully', () => {
       const mockQuestions = [
         { id: 1, question: 'Level 1 Algebra', level: 1, topic: 'Algebra' },
-        { id: 2, question: 'Level 1 Algebra 2', level: 1, topic: 'Algebra' }
+        { id: 2, question: 'Level 1 Algebra 2', level: 1, topic: 'Algebra' },
       ];
 
-      cy.intercept('GET', 'http://localhost:3000/questions/level/topic?level=1&topic=Algebra', {
-        statusCode: 200,
-        body: mockQuestions
-      }).as('fetchQuestionsByLevelAndTopic');
+      cy.intercept(
+        'GET',
+        'http://localhost:3000/questions/level/topic?level=1&topic=Algebra',
+        {
+          statusCode: 200,
+          body: mockQuestions,
+        },
+      ).as('fetchQuestionsByLevelAndTopic');
 
       cy.window().then(() => {
         fetchQuestionsByLevelAndTopic(1, 'Algebra').then((result) => {
@@ -216,7 +226,7 @@ describe('Services API', () => {
 
       cy.intercept('POST', 'http://localhost:3000/question/1/answer', {
         statusCode: 200,
-        body: mockResponse
+        body: mockResponse,
       }).as('submitAnswer');
 
       cy.window().then(() => {
@@ -225,19 +235,25 @@ describe('Services API', () => {
         });
       });
 
-      cy.wait('@submitAnswer').its('request.body').should('deep.equal', {
-        question: [{ answer: '4' }]
-      });
+      cy.wait('@submitAnswer')
+        .its('request.body')
+        .should('deep.equal', {
+          question: [{ answer: '4' }],
+        });
     });
   });
 
   describe('loginUser', () => {
     it('should login user successfully', () => {
-      const mockResponse = { success: true, token: 'test-token', user: { id: 1, name: 'Alice' } };
+      const mockResponse = {
+        success: true,
+        token: 'test-token',
+        user: { id: 1, name: 'Alice' },
+      };
 
       cy.intercept('POST', 'http://localhost:3000/login', {
         statusCode: 200,
-        body: mockResponse
+        body: mockResponse,
       }).as('loginUser');
 
       cy.window().then(() => {
@@ -248,18 +264,21 @@ describe('Services API', () => {
 
       cy.wait('@loginUser').its('request.body').should('deep.equal', {
         email: 'alice@example.com',
-        password: 'password123'
+        password: 'password123',
       });
     });
   });
 
   describe('registerUser', () => {
     it('should register user successfully', () => {
-      const mockResponse = { success: true, message: 'User registered successfully' };
+      const mockResponse = {
+        success: true,
+        message: 'User registered successfully',
+      };
 
       cy.intercept('POST', 'http://localhost:3000/register', {
         statusCode: 200,
-        body: mockResponse
+        body: mockResponse,
       }).as('registerUser');
 
       const userData = {
@@ -269,7 +288,7 @@ describe('Services API', () => {
         email: 'alice@example.com',
         password: 'password123',
         currentLevel: 1,
-        joinDate: '2024-01-01'
+        joinDate: '2024-01-01',
       };
 
       cy.window().then(() => {
@@ -280,13 +299,15 @@ describe('Services API', () => {
           userData.email,
           userData.password,
           userData.currentLevel,
-          userData.joinDate
+          userData.joinDate,
         ).then((result) => {
           expect(result).to.deep.equal(mockResponse);
         });
       });
 
-      cy.wait('@registerUser').its('request.body').should('deep.equal', userData);
+      cy.wait('@registerUser')
+        .its('request.body')
+        .should('deep.equal', userData);
     });
   });
 
@@ -296,14 +317,14 @@ describe('Services API', () => {
       cy.window().then((win) => {
         win.localStorage.setItem('token', 'test-token');
         win.localStorage.setItem('user', 'test-user');
-        
+
         // Call logout function
         logoutUser();
-        
+
         // Check that localStorage items were removed
         expect(win.localStorage.getItem('token')).to.be.null;
         expect(win.localStorage.getItem('user')).to.be.null;
       });
     });
   });
-}); 
+});

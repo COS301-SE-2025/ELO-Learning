@@ -8,15 +8,15 @@ describe('Game Modes Smoke Tests', () => {
   it('should load all game mode pages without errors', () => {
     const gamePages = [
       '/practice',
-      '/single-player', 
+      '/single-player',
       '/match',
       '/base-assessment',
       '/question-templates',
       '/question-templates/multiple-choice',
-      '/question-templates/input-questions'
+      '/question-templates/input-questions',
     ];
-    
-    gamePages.forEach(page => {
+
+    gamePages.forEach((page) => {
       cy.visit(page);
       cy.get('body').should('be.visible');
     });

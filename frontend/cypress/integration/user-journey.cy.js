@@ -56,4 +56,4 @@ describe('User Journey', () => {
     cy.url().should('include', '/dashboard');
     cy.contains('h1', 'Leaderboard').should('be.visible');
   });
-}); 
+});

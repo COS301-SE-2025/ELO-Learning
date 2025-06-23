@@ -3,17 +3,25 @@ import Score from '@/app/ui/end-screen-ui/end-screen-score';
 import Time from '@/app/ui/end-screen-ui/end-screen-total-time';
 import Image from 'next/image';
 import Link from 'next/link';
+import { redirect } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import TotalXP from '../ui/end-screen-ui/end-screen-total-xp';
+
 export default function Page() {
   const [mistakes, setMistakes] = useState(0);
   useEffect(() => {
     const questions = JSON.parse(localStorage.getItem('questionsObj'));
     const correctAnswers = questions.filter(
-      (question) => question.selectedAnswer.isCorrect == true,
+      (question) => question.isCorrect == true,
     );
     setMistakes(questions.length - correctAnswers.length);
   }, []);
+
+  const clearStorageAndRedirect = () => {
+    localStorage.removeItem('questionsObj');
+    redirect(`/dashboard`);
+  };
+
   return (
     <div className="flex md:flex-col md:items-center h-full p-5 md:p-10">
       <div className="flex items-center justify-between flex-col gap-4 ">
@@ -53,11 +61,12 @@ export default function Page() {
               View the memo
             </button>
           </Link>
-          <Link className="btn-link" href="/dashboard">
-            <button className="secondary-button w-full uppercase">
-              Claim xp
-            </button>
-          </Link>
+          <button
+            className="secondary-button w-full uppercase"
+            onClick={clearStorageAndRedirect}
+          >
+            Claim xp
+          </button>
         </div>
       </div>
     </div>

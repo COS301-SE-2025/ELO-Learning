@@ -6,13 +6,13 @@ export default function TotalXP() {
   useEffect(() => {
     const questions = JSON.parse(localStorage.getItem('questionsObj'));
     const correctAnswers = questions.filter(
-      (question) => question.selectedAnswer.isCorrect == true,
+      (question) => question.isCorrect == true,
     );
     const totalXPSum = correctAnswers.reduce(
       (accumulator, question) => accumulator + question.question.xpGain,
       0,
     );
-    console.log(correctAnswers);
+
     setTotalXP(totalXPSum);
   }, []);
   return (

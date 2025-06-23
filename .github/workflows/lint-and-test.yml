@@ -54,8 +54,16 @@ jobs:
           cache: 'yarn'
           cache-dependency-path: frontend/yarn.lock
 
-      # Install npm dependencies, cache them correctly
-      # and run all Cypress tests
+      - name: Install backend dependencies
+        run: npm install
+        working-directory: ./backend
+
+      - name: Start backend server
+        run: |
+          nohup node src/server.js > backend.log 2>&1 &
+          npx wait-on http://localhost:3000
+        working-directory: ./backend
+
       - name: Cypress Tests
         uses: cypress-io/github-action@v6
         with:
@@ -63,4 +71,3 @@ jobs:
           build: yarn build
           start: yarn run dev
           working-directory: ./frontend
-        timeout-minutes: 2

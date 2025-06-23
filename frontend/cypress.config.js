@@ -6,7 +6,8 @@ export default defineConfig({
       framework: 'next',
       bundler: 'webpack',
     },
-    specPattern: 'cypress/unit/**/*.test.cy.{js,jsx}', // Add unit tests
+    specPattern: 'cypress/component/**/*.cy.{js,jsx,ts,tsx}',
+    supportFile: 'cypress/support/component.ts', // Ensure cy.mount is available
   },
 
   e2e: {

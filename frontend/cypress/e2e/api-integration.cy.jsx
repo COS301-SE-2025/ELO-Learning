@@ -7,20 +7,17 @@ describe('API Integration & Data Flow', () => {
   });
 
   beforeEach(() => {
-    // Mock authentication in localStorage
-    cy.window().then((win) => {
-      win.localStorage.setItem('token', 'mock-jwt-token');
-      win.localStorage.setItem(
-        'user',
-        JSON.stringify({
-          id: 1,
-          username: 'testuser',
-          elo: 1200,
-          xp: 500,
-        }),
-      );
-    });
-
+    // Set authentication cookies (like profile tests)
+    cy.setCookie(
+      'user',
+      JSON.stringify({
+        id: 1,
+        username: 'testuser',
+        elo: 1200,
+        xp: 500,
+      }),
+    );
+    cy.setCookie('token', 'mock-jwt-token');
     // Mock all API endpoints used in tests
     cy.intercept('GET', '/api/questions**', {
       statusCode: 200,
@@ -78,32 +75,11 @@ describe('API Integration & Data Flow', () => {
         ],
       },
     }).as('getLeaderboard');
-
-    // Mock practice endpoint for legacy tests
-    cy.intercept('GET', '**/practice', {
-      statusCode: 200,
-      body: {
-        questions: [
-          {
-            id: 1,
-            questionText: 'What is 2 + 2?',
-            answers: [
-              { answer_text: '3', isCorrect: false },
-              { answer_text: '4', isCorrect: true },
-              { answer_text: '5', isCorrect: false },
-              { answer_text: '6', isCorrect: false },
-            ],
-            category: 'arithmetic',
-            difficulty: 'easy',
-          },
-        ],
-      },
-    }).as('getPracticeQuestions');
   });
 
   describe('Question API Integration', () => {
     it.skip('should load the multiple-choice page', () => {
-      // Skip - navigation/auth not implemented in test env
+      // Skipped due to SSR API call not mockable by Cypress intercept
     });
 
     it.skip('should fetch questions from API', () => {});

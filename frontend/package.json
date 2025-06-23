@@ -30,9 +30,11 @@
     "@tailwindcss/postcss": "^4",
     "@types/cypress": "^0.1.6",
     "@types/react": "19.1.5",
+    "@types/sinon": "^17.0.4",
     "cypress": "^14.4.0",
     "eslint": "^9",
     "eslint-config-next": "15.3.2",
+    "sinon": "^21.0.0",
     "tailwindcss": "^4"
   }
 }

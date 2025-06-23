@@ -221,7 +221,7 @@ export default function MathKeyboardWrapper({ questions }) {
             )}
           </button>
           {/* Status indicator */}
-          <div className="mt-4 text-center">
+          {/* <div className="mt-4 text-center">
             {isValidExpression && studentAnswer.trim() ? (
               <span className="text-green-600 font-semibold">
                 Ready to submit!
@@ -235,7 +235,7 @@ export default function MathKeyboardWrapper({ questions }) {
                 Please check your expression format
               </span>
             )}
-          </div>
+          </div> */}
         </div>
       </div>
     </div>

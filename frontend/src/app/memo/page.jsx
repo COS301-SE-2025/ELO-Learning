@@ -10,8 +10,9 @@ import QuestionTemplate from '@/app/ui/question-template';
 export default function Page() {
   const [questions, setQuestions] = useState([]);
   const [currQuestion, setCurrQuestion] = useState(null);
-  const [selectedAnswer, setSelectedAnswer] = useState(null);
+  const [answer, setAnswer] = useState(null);
   const [correctAnswer, setCorrectAnswer] = useState(null);
+  const [isCorrect, setIsCorrect] = useState(false);
   const [index, setIndex] = useState(0);
 
   useEffect(() => {
@@ -19,11 +20,13 @@ export default function Page() {
     setQuestions(tempQuestions);
     setCurrQuestion(tempQuestions[index]);
     setCorrectAnswer(tempQuestions[index].actualAnswer);
-    setSelectedAnswer(tempQuestions[index].selectedAnswer);
+    setAnswer(tempQuestions[index].answer);
+    setIsCorrect(tempQuestions[index].isCorrect);
   }, []);
 
   const nextPage = () => {
     if (index === questions.length - 1) {
+      localStorage.removeItem('questionsObj');
       redirect('/dashboard');
     }
     setIndex((prev) => prev + 1);
@@ -37,7 +40,8 @@ export default function Page() {
     if (questions.length > 0) {
       setCurrQuestion(questions[index]);
       setCorrectAnswer(questions[index].actualAnswer);
-      setSelectedAnswer(questions[index].selectedAnswer);
+      setAnswer(questions[index].answer);
+      setIsCorrect(questions[index].isCorrect);
     }
   }, [index]);
 
@@ -52,10 +56,10 @@ export default function Page() {
       <div className="md:flex md:flex-col md:m-auto md:w-[50%]">
         <div>
           <p className="text-xl">Your answer:</p>
-          {selectedAnswer?.isCorrect ? (
-            <RightAnswer answer={selectedAnswer?.answer_text} />
+          {isCorrect ? (
+            <RightAnswer answer={answer} />
           ) : (
-            <WrongAnswer answer={selectedAnswer?.answer_text} />
+            <WrongAnswer answer={answer} />
           )}
         </div>
         <div>

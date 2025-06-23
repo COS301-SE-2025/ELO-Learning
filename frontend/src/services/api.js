@@ -2,6 +2,8 @@ import axios from 'axios';
 
 const BASE_URL = 'http://localhost:3000'; // Change this when deploying
 
+const isServer = typeof window === 'undefined';
+
 const axiosInstance = axios.create({
   baseURL: BASE_URL,
   headers: {
@@ -10,12 +12,23 @@ const axiosInstance = axios.create({
 });
 
 // Add request interceptor to include auth token
-axiosInstance.interceptors.request.use((config) => {
-  const token = localStorage.getItem('token');
-  if (token) {
-    config.headers.Authorization = `Bearer ${token}`;
+axiosInstance.interceptors.request.use(async (config) => {
+  if (isServer) {
+    const { cookies } = await import('next/headers');
+    const awaitedCookies = await cookies();
+    const cookiesString = awaitedCookies
+      .getAll()
+      .filter((item) => item.name === 'token')
+      .map((item) => item.value);
+    config.headers.Authorization = `Bearer ${cookiesString}`;
+    return config;
+  } else {
+    const token = localStorage.getItem('token');
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+    return config;
   }
-  return config;
 });
 
 // Helper to attach auth token
@@ -130,4 +143,10 @@ export async function registerUser(
 export async function logoutUser() {
   localStorage.removeItem('token');
   localStorage.removeItem('user');
+}
+
+// 11. GET /topics
+export async function fetchAllTopics() {
+  const res = await axiosInstance.get('/topics');
+  return res.data.topics;
 }

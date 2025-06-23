@@ -330,7 +330,26 @@ app.get('/questions/level/topic', async (req, res) => {
     .from('Questions')
     .select('Q_id, topic, difficulty, level, questionText, xpGain, type')
     .eq('level', level)
-    .eq('topic', topic);
+    .eq('topic_id', topic);
+  if (data) {
+    for (const question of data) {
+      const { data, error } = await supabase
+        .from('Answers')
+        .select('*')
+        .eq('question_id', question.Q_id);
+      if (error) {
+        console.error(
+          'Error fetching practice questions:',
+          error.message,
+          question,
+        );
+        return res
+          .status(500)
+          .json({ error: 'Failed to fetch practice questions' });
+      }
+      question.answers = data;
+    }
+  }
 
   if (error) {
     console.error(
@@ -341,6 +360,22 @@ app.get('/questions/level/topic', async (req, res) => {
   }
 
   res.status(200).json({ questions: data });
+});
+
+app.get('/topics', async (req, res) => {
+  try {
+    const { data, error } = await supabase.from('Topics').select('*');
+
+    if (error) {
+      console.error('Error fetching topics:', error.message);
+      return res.status(500).json({ error: 'Failed to fetch topics' });
+    }
+
+    res.status(200).json({ topics: data });
+  } catch (err) {
+    console.error('Unexpected error:', err);
+    res.status(500).json({ error: 'Unexpected server error' });
+  }
 });
 
 app.post('/submit-answer', async (req, res) => {

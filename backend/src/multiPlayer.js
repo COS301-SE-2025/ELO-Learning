@@ -1,25 +1,19 @@
-let alpha = 400;
-/*
-scaling constant
-(controls how much rating difference influences expected outcome)
-Still needs to be adjusted accordingly
-*/
+const alpha = 400;
 
-let xpTotal = 80; //total XP available for the match (e.g. 80)
-let p1_rating = 650; //level 4
-let p2_rating = 1400; //level 7
+function isValidNumber(n) {
+  return typeof n === 'number' && !isNaN(n);
+}
 
 export function calculateExpected(p1, p2) {
+  if (!isValidNumber(p1) || !isValidNumber(p2)) {
+    throw new TypeError('Both player ratings must be valid numbers');
+  }
+
   const p1_expected = 1 / (1 + Math.pow(10, (p2 - p1) / alpha));
   const p2_expected = 1 - p1_expected;
 
   return [p1_expected, p2_expected];
 }
-
-// const [expected1, expected2] = calculateExpected(p1_rating, p2_rating);
-
-//console.log("P1 Expected:", expected1.toFixed(2));
-//console.log("P2 Expected:", expected2.toFixed(2));
 
 export function distributeXP(xpTotal, expected1, expected2, score1) {
   /*
@@ -27,7 +21,21 @@ export function distributeXP(xpTotal, expected1, expected2, score1) {
     1 -> P1 wins
     0 -> P2 loses
     0.5 -> draw
-    */
+  */
+
+  if (!isValidNumber(xpTotal) || xpTotal < 0) {
+    throw new TypeError('xpTotal must be a non-negative number');
+  }
+  if (!isValidNumber(expected1) || expected1 < 0 || expected1 > 1) {
+    throw new TypeError('expected1 must be a number between 0 and 1');
+  }
+  if (!isValidNumber(expected2) || expected2 < 0 || expected2 > 1) {
+    throw new TypeError('expected2 must be a number between 0 and 1');
+  }
+  if (![0, 0.5, 1].includes(score1)) {
+    throw new TypeError('score1 must be 0, 0.5, or 1');
+  }
+
   const score2 = 1 - score1;
 
   const magnifier1 = 1 + (score1 - expected1);

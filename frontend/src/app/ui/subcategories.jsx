@@ -1,60 +1,4 @@
 import Link from 'next/link';
-const subcategories = [
-  {
-    title: 'Statistics',
-    description:
-      'Learn about data analysis, probability, and statistical inference.',
-    completion: 75,
-  },
-  {
-    title: 'Algebra',
-    description: 'Master equations, inequalities, and algebraic structures.',
-    completion: 40,
-  },
-  {
-    title: 'Geometry',
-    description: 'Explore shapes, sizes, and spatial properties.',
-    completion: 0,
-  },
-  {
-    title: 'Calculus',
-    description:
-      'Understand change and motion through derivatives and integrals.',
-    completion: 0,
-  },
-  {
-    title: 'Trigonometry',
-    description: 'Study relationships between angles and sides of triangles.',
-    completion: 0,
-  },
-  {
-    title: 'Probability',
-    description: 'Explore chance, randomness, and likelihood of events.',
-    completion: 0,
-  },
-  {
-    title: 'Number Theory',
-    description: 'Discover properties of integers and whole numbers.',
-    completion: 0,
-  },
-  {
-    title: 'Discrete Mathematics',
-    description:
-      'Examine countable structures like graphs, logic, and combinatorics.',
-    completion: 0,
-  },
-  {
-    title: 'Linear Algebra',
-    description: 'Work with vectors, matrices, and linear transformations.',
-    completion: 0,
-  },
-  {
-    title: 'Differential Equations',
-    description:
-      'Solve equations involving derivatives and their applications.',
-    completion: 0,
-  },
-];
 
 const colors = [
   'bg-blue-500',
@@ -67,7 +11,7 @@ const colors = [
   'bg-gray-500',
 ];
 
-export default function SubCategories() {
+export default function SubCategories({ subcategories }) {
   return (
     <div className="p-5">
       {subcategories.map((sub, idx) => (
@@ -80,14 +24,14 @@ export default function SubCategories() {
               colors[idx % colors.length]
             }`}
           >
-            {sub.title.charAt(0)}
+            {sub.name.charAt(0)}
           </div>
-          <Link href="/question-templates/multiple-choice/q1">
+          <Link href={`/topic/${sub.topic_id}`}>
             <div>
-              <h2 className="text-xl font-bold">{sub.title}</h2>
+              <h2 className="text-xl font-bold">{sub.name}</h2>
               <p className="text-sm">{sub.description}</p>
             </div>
-            <p className="text-lg ml-auto">{sub.completion}%</p>
+            {/* <p className="text-lg ml-auto">{sub.completion}%</p> */}
           </Link>
         </div>
       ))}

@@ -1,4 +1,5 @@
 'use client';
+import { setCookie } from '@/app/lib/authCookie';
 import ProgressBar from '@/app/ui/progress-bar';
 import { registerUser } from '@/services/api';
 import { X } from 'lucide-react';
@@ -63,8 +64,7 @@ export default function Page() {
       );
       // Save token and user to localStorage
       if (response.token && response.user) {
-        localStorage.setItem('token', response.token);
-        localStorage.setItem('user', JSON.stringify(response.user));
+        await setCookie(response);
       }
       clearRegistration();
       window.location.href = '/dashboard';

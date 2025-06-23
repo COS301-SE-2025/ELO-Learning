@@ -328,7 +328,7 @@ app.get('/questions/level/topic', async (req, res) => {
 
   const { data, error } = await supabase
     .from('Questions')
-    .select('Q_id, topic, difficulty, level, questionText, xpGain')
+    .select('Q_id, topic, difficulty, level, questionText, xpGain, type')
     .eq('level', level)
     .eq('topic', topic);
 
@@ -904,7 +904,7 @@ app.post('/question/:id/submit', async (req, res) => {
     // Fetch the correct answer from database
     const { data: correctAnswerData, error: answerError } = await supabase
       .from('Answers')
-      .select('answerText')
+      .select('answer_text')
       .eq('question_id', id)
       .eq('isCorrect', true)
       .single();

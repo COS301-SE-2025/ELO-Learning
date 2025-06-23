@@ -53,8 +53,16 @@ describe('Navigation & Routing Tests', () => {
         body: {
           success: true,
           data: [
-            { rank: 1, username: 'user1', xp: 1000 },
-            { rank: 2, username: 'user2', xp: 900 },
+            { rank: 1, username: 'Alice', xp: 11500 },
+            { rank: 2, username: 'Bob', xp: 9000 },
+            { rank: 3, username: 'Charlie', xp: 8000 },
+            { rank: 4, username: 'David', xp: 7000 },
+            { rank: 5, username: 'Eve', xp: 6000 },
+            { rank: 6, username: 'Frank', xp: 5000 },
+            { rank: 7, username: 'Grace', xp: 4000 },
+            { rank: 8, username: 'Heidi', xp: 3000 },
+            { rank: 9, username: 'Ivan', xp: 2000 },
+            { rank: 10, username: 'Judy', xp: 1000 },
           ],
         },
       }).as('getLeaderboard');
@@ -95,6 +103,11 @@ describe('Navigation & Routing Tests', () => {
       cy.visit('/a-page-that-does-not-exist', { failOnStatusCode: false });
       cy.contains('404').should('be.visible');
       cy.contains('This page could not be found').should('be.visible');
+      // Debug: print DOM if test fails
+      cy.document().then((doc) => {
+        // eslint-disable-next-line no-console
+        console.log('404 PAGE DOM:', doc.body.innerHTML);
+      });
     });
   });
 });

@@ -12,10 +12,9 @@ describe('User Profile & Gamification', () => {
   // --- Profile Page Tests ---
   describe('Profile Page', () => {
     beforeEach(() => {
-      cy.window().then((win) => {
-        win.localStorage.setItem('token', 'mock-jwt-token');
-      });
+      cy.setCookie('token', 'mock-jwt-token');
       cy.visit('/profile');
+      cy.url().should('include', '/profile');
     });
 
     it('should display the main user information', () => {

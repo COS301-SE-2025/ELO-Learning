@@ -552,7 +552,9 @@ app.post('/login', async (req, res) => {
   // Fetch user by email
   const { data: user, error: fetchError } = await supabase
     .from('Users')
-    .select('id,name,surname,username,email,password,currentLevel,joinDate,xp')
+    .select(
+      'id,name,surname,username,email,password,currentLevel,joinDate,xp,pfpURL',
+    )
     .eq('email', email)
     .single();
 
@@ -586,6 +588,7 @@ app.post('/login', async (req, res) => {
       currentLevel: user.currentLevel || 5, // Default to level 1 if not set
       joinDate: user.joinDate || new Date().toISOString(), // Default to current date if not set
       xp: user.xp || 0, // Default to 0 XP if not set
+      pfpURL: user.pfpURL,
     },
   });
 });

@@ -12,7 +12,9 @@ describe('User Profile & Gamification', () => {
   // --- Profile Page Tests ---
   describe('Profile Page', () => {
     beforeEach(() => {
-      // The profile page uses hardcoded data, so no need to mock auth
+      cy.window().then((win) => {
+        win.localStorage.setItem('token', 'mock-jwt-token');
+      });
       cy.visit('/profile');
     });
 

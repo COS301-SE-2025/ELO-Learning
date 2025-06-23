@@ -77,7 +77,9 @@ describe('Navigation & Routing Tests', () => {
     });
 
     it('should highlight the active navigation link', () => {
-      cy.visit('/profile');
+      cy.visit('/dashboard');
+      cy.get('a[href="/profile"]').click();
+      cy.url().should('include', '/profile');
       cy.get('a[href="/profile"]').should('have.class', 'bg-[#e8e8e8]');
     });
   });

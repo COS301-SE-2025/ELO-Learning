@@ -197,12 +197,8 @@ const config = {
 
 //export default config;
 export default {
-  testMatch: ['**/test/**/*.test.mjs'],
+  testMatch: ['**/test/**/*.test.mjs', '**/test/**/*.test.js'],
   testEnvironment: 'node',
-  moduleNameMapper: {
-    '^(\\.{1,2}/.*)\\.js$': '$1',
-  },
-  transform: {},
   clearMocks: true,
   collectCoverage: true,
   coverageDirectory: 'coverage',

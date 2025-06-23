@@ -52,6 +52,29 @@ describe('User Profile & Gamification', () => {
   describe('Leaderboard System', () => {
     beforeEach(() => {
       cy.visit('/dashboard');
+      cy.intercept('GET', '/api/user/profile', {
+        statusCode: 200,
+        body: {
+          success: true,
+          data: {
+            id: 1,
+            username: 'testuser',
+            elo: 1200,
+            xp: 850,
+          },
+        },
+      }).as('getUserProfile');
+
+      cy.intercept('GET', '/api/leaderboard', {
+        statusCode: 200,
+        body: {
+          success: true,
+          data: [
+            { rank: 1, username: 'user1', xp: 1000 },
+            { rank: 2, username: 'user2', xp: 900 },
+          ],
+        },
+      }).as('getLeaderboard');
     });
 
     it('should display the leaderboard with correct headers', () => {

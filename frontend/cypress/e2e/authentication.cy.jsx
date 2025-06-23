@@ -11,6 +11,24 @@ describe('Authentication & User Management', () => {
     cy.window().then((win) => {
       win.localStorage.clear();
     });
+
+    // Mock login success
+    cy.intercept('POST', '/api/login', {
+      statusCode: 200,
+      body: { success: true, token: 'mock-jwt-token' },
+    }).as('loginSuccess');
+
+    // Mock login failure
+    cy.intercept('POST', '/api/login', {
+      statusCode: 401,
+      body: { success: false, error: 'Invalid credentials' },
+    }).as('loginFail');
+
+    // Mock register success
+    cy.intercept('POST', '/api/register', {
+      statusCode: 201,
+      body: { success: true, message: 'User created' },
+    }).as('registerSuccess');
   });
 
   describe('Landing Page Authentication', () => {

@@ -1,6 +1,16 @@
 describe('Landing Page', () => {
   beforeEach(() => {
     cy.visit('/');
+    cy.intercept('GET', '/api/leaderboard', {
+      statusCode: 200,
+      body: {
+        success: true,
+        data: [
+          { rank: 1, username: 'user1', xp: 1000 },
+          { rank: 2, username: 'user2', xp: 900 },
+        ],
+      },
+    }).as('getLeaderboard');
   });
 
   it('should display the main landing page with all sections', () => {

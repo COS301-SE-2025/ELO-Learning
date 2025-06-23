@@ -135,7 +135,7 @@ export default function MathInputTemplate({
       const currentWord = getCurrentWord(inputValue, cursorPosition);
       if (currentWord.length > 1) {
         const matchingSuggestions = autoCompletions.filter((ac) =>
-          ac.trigger.startsWith(currentWord.toLowerCase())
+          ac.trigger.startsWith(currentWord.toLowerCase()),
         );
         setSuggestions(matchingSuggestions);
         setShowSuggestions(matchingSuggestions.length > 0);
@@ -320,8 +320,8 @@ export default function MathInputTemplate({
             !localIsValidExpression
               ? 'border-red-500 focus:border-red-600'
               : isChecking
-              ? 'border-yellow-500 focus:border-yellow-600'
-              : 'border-gray-300 focus:border-blue-500'
+                ? 'border-yellow-500 focus:border-yellow-600'
+                : 'border-gray-300 focus:border-blue-500'
           }`}
           rows={2}
         />

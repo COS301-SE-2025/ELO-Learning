@@ -69,7 +69,7 @@ export default function MathKeyboardWrapper({ questions }) {
       const result = await submitQuestionAnswer(
         currQuestion.Q_id,
         studentAnswer,
-        'current-user-id'
+        'current-user-id',
       );
 
       if (result.success) {

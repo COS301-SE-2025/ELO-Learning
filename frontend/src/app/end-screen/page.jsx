@@ -12,7 +12,7 @@ export default function Page() {
   useEffect(() => {
     const questions = JSON.parse(localStorage.getItem('questionsObj'));
     const correctAnswers = questions.filter(
-      (question) => question.isCorrect == true
+      (question) => question.isCorrect == true,
     );
     setMistakes(questions.length - correctAnswers.length);
   }, []);

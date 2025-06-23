@@ -6,7 +6,7 @@ export default function Score() {
   useEffect(() => {
     const questions = JSON.parse(localStorage.getItem('questionsObj'));
     const correctAnswers = questions.filter(
-      (question) => question.isCorrect == true
+      (question) => question.isCorrect == true,
     );
 
     setPercentage((correctAnswers.length / questions.length) * 100);

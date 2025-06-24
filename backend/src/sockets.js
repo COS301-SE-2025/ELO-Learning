@@ -141,6 +141,8 @@ export default (io, socket) => {
         }
     }
 
+    //end the match still to come
+
     socket.on("queue", queueForGame)
     socket.on("cancelQueue", cancelQueue)
     socket.on("startMatch", (data) => startMatch(data.game, data.level))

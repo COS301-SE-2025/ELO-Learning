@@ -1,28 +1,41 @@
-let alpha = 0.05; // Tuning constant, controls how much XP gain slows down as player levels up
-let beta = 0.3; //Adds more XP when you're further from levelling up, and less XP when you're near the next level
-//defines how much the "gatekeeper" slows down the XP gain as you approach leveling up
+let alpha = 0.05; // Tuning constant, controls XP scaling of a level
+let beta = 0.3; //Adds more XP when you're further from next level
 let maxTimeSeconds = 30;
-//for mocking
-/*let XPGain = 20;
-let currentXP = 600;
-let currentLevel = 4;
-let nextLevelXP = 800;
-let actualTimeSeconds = 20;
+let maxLevel = 10;
 
-let CA = 1; //Correct answer, range from (0-1)
-*/
+function isValidNumber(n) {
+  return typeof n === 'number' && !isNaN(n);
+}
 
-function calculateTimeReward(actualTimeSeconds) {
+export function calculateTimeReward(actualTimeSeconds) {
+  if (!isValidNumber(actualTimeSeconds) || actualTimeSeconds < 0) {
+    return 0;
+  }
   let RT = Math.max(0, maxTimeSeconds - actualTimeSeconds);
   return RT / maxTimeSeconds;
 }
 
-function calculateLevelReward(currentLevel) {
+export function calculateLevelReward(currentLevel) {
+  if (
+    !isValidNumber(currentLevel) ||
+    currentLevel < 0 ||
+    currentLevel > maxLevel
+  ) {
+    return 0; //invalid level -> no reward
+  }
   let scaling = 1 + alpha * currentLevel;
   return 1 / scaling;
 }
 
-function calculateGateKeepingComponent(currentXP, nextLevelXP) {
+export function calculateGateKeepingComponent(currentXP, nextLevelXP) {
+  //input validation
+  if (
+    !isValidNumber(currentXP) ||
+    !isValidNumber(nextLevelXP) ||
+    nextLevelXP <= 0
+  ) {
+    return 0;
+  }
   let remainingXP = nextLevelXP - currentXP;
   return beta * (remainingXP / nextLevelXP);
 }
@@ -35,16 +48,37 @@ export async function calculateSinglePlayerXP({
   currentXP,
   nextLevelXP,
 }) {
+  if (!isValidNumber(CA) || CA < 0 || CA > 1) {
+    CA = 0; // treat invalid CA as incorrect
+  }
+  if (!isValidNumber(XPGain) || XPGain < 0) {
+    XPGain = 0; // no XP gain if invalid
+  }
+
   const timeReward = calculateTimeReward(actualTimeSeconds);
   const levelReward = calculateLevelReward(currentLevel);
   const gatekeeper = calculateGateKeepingComponent(currentXP, nextLevelXP);
 
-  const XP =
+  let XP =
     CA *
     (XPGain * CA +
       XPGain * timeReward +
       XPGain * levelReward +
       XPGain * gatekeeper);
 
+  //Clamping so it never goes below
+  if (XP < 0) {
+    XP = 0;
+  }
+
   return Number(XP.toFixed(2));
 }
+
+/*
+module.exports = {
+  calculateTimeReward,
+  calculateLevelReward,
+  calculateGateKeepingComponent,
+  calculateSinglePlayerXP,
+};
+*/

@@ -7,7 +7,7 @@ import AnswerWrapper from '@/app/ui/answers/answer-wrapper';
 import QuestionTemplate from '@/app/ui/question-template';
 import QuestionFooter from '@/app/ui/questions/question-footer';
 import QuestionHeader from '@/app/ui/questions/question-header';
-export default function QuestionsTracker({ questions }) {
+export default function QuestionsTracker({ questions, submitCallback }) {
   //Normal JS variables
   const allQuestions = questions;
   const totalSteps = allQuestions.length;
@@ -66,7 +66,8 @@ export default function QuestionsTracker({ questions }) {
     setIsAnswerCorrect(false);
 
     if (currentStep === allQuestions.length) {
-      redirect('/end-screen');
+      submitCallback(); // Call the callback to notify the parent component
+      return;
     }
 
     setCurrQuestion(allQuestions[currentStep]);

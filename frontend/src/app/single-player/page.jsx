@@ -1,3 +1,17 @@
+import Link from 'next/link';
+
 export default function Page() {
-  return <p>This is the where the timed rounds will go</p>;
+  return (
+    <div className="flex flex-col items-center gap-15">
+      <div>
+        <h2 className="text-2xl font-bold">Ready to challenge yourself?</h2>
+      </div>
+      <div className="flex flex-col items-center gap-10">
+        <button className="main-button uppercase">Start playing</button>
+        <Link href="/dashboard">
+          <button className="secondary-button uppercase">Cancel</button>
+        </Link>
+      </div>
+    </div>
+  );
 }

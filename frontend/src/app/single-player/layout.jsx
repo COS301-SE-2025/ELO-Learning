@@ -18,7 +18,7 @@ export default function Layout({ children }) {
         </div>
 
         {/* Middle column - Content (2/4) */}
-        <div className="main-content flex-grow md:w-3/5 md:overflow-y-auto">
+        <div className="flex flex-1 min-h-screen flex-col items-center justify-center md:w-3/5 md:overflow-y-auto">
           {children}
         </div>
 

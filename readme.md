@@ -19,42 +19,42 @@ The platform encourages growth through competitive, skill-based challenges—suc
   <summary>
     Services Requirement Specification (SRS)
   </summary>
-  <a href="[https://docs.google.com/document/d/1mucPjnS9raDPziTZLBBJaGlGvEBkxai2qoeAnJ0Ysa4/edit?usp=sharing](https://docs.google.com/document/d/1YwP50FDEFd87CN88d_aszxSXY386VK3t/edit?usp=drive_link&ouid=109634070400094344641&rtpof=true&sd=true)">Services Requirement Specification (SRS)</a>
+  <a href="https://docs.google.com/document/d/1YwP50FDEFd87CN88d_aszxSXY386VK3t/edit?usp=drive_link&ouid=109634070400094344641&rtpof=true&sd=true">Services Requirement Specification (SRS)</a>
 </details>
 
 <details>
   <summary>
     Domain Model
   </summary>
-  <a href="[https://drive.google.com/file/d/1eqc1UJakTQlBp5AYYW4u8XJU-QDGhuS1/view?usp=drive_link](https://drive.google.com/file/d/1F8aDnzwpgg69GMHLet1e-gUtFcX8yFjo/view?usp=drive_link)">Domain Model</a>
+  <a href="https://drive.google.com/file/d/1F8aDnzwpgg69GMHLet1e-gUtFcX8yFjo/view?usp=drive_link">Domain Model</a>
 </details>
 
 <details>
   <summary>
     Architectural Requirements
   </summary>
-  <a href="[https://docs.google.com/document/d/1xdGqOoLsAz72sCGqKvzmkCbCI1pfcCCaEVDiZFA88Zo/edit?usp=sharing](https://docs.google.com/document/d/1izYvZk-W59HGZy5bak7VuHOUFCfJNT3f/edit?usp=drive_link&ouid=109634070400094344641&rtpof=true&sd=true)">Architectural Requirements</a>
+  <a href="https://docs.google.com/document/d/1izYvZk-W59HGZy5bak7VuHOUFCfJNT3f/edit?usp=sharing&ouid=109634070400094344641&rtpof=true&sd=true">Architectural Requirements</a>
 </details>
 
 <details>
   <summary>
     Service Contracts
   </summary>
-  <a href="[https://docs.google.com/document/d/1SXkf3Jrm87EWsAGJYcIpyP3F58__FTMo9zLXIschNY8/edit?usp=sharing](https://docs.google.com/document/d/1VrDDmFJkHTyw__CENO48pkmnlwMOj7_4/edit?usp=drive_link&ouid=109634070400094344641&rtpof=true&sd=true)">Service Contracts</a>
+  <a href="https://docs.google.com/document/d/1VrDDmFJkHTyw__CENO48pkmnlwMOj7_4/edit?usp=drive_link&ouid=109634070400094344641&rtpof=true&sd=true">Service Contracts</a>
 </details>
 
 <details>
   <summary>
     Coding Standards
   </summary>
-  <a href="[https://docs.google.com/document/d/1SXkf3Jrm87EWsAGJYcIpyP3F58__FTMo9zLXIschNY8/edit?usp=sharing](https://docs.google.com/document/d/1VrDDmFJkHTyw__CENO48pkmnlwMOj7_4/edit?usp=drive_link&ouid=109634070400094344641&rtpof=true&sd=true)">Coding Standards</a>
+  <a href="https://docs.google.com/document/d/1e4U_fcfMQQVNAGfhPgr4udJurXSMR1kxjpEV58yQLgk/edit?usp=drive_link">Coding Standards</a>
 </details>
 
 <details>
   <summary>
     User Manual
   </summary>
-  <a href="[https://docs.google.com/document/d/1SXkf3Jrm87EWsAGJYcIpyP3F58__FTMo9zLXIschNY8/edit?usp=sharing](https://docs.google.com/document/d/1VrDDmFJkHTyw__CENO48pkmnlwMOj7_4/edit?usp=drive_link&ouid=109634070400094344641&rtpof=true&sd=true)](https://docs.google.com/document/d/1SW5_SxLHrdIEG0yTvba2_4nfIop5MrP82Jwp3I-evYI/edit?usp=drive_link)">User Manual</a>
+  <a href="https://docs.google.com/document/d/1SW5_SxLHrdIEG0yTvba2_4nfIop5MrP82Jwp3I-evYI/edit?usp=drive_link">User Manual</a>
 </details>
 
 <details>

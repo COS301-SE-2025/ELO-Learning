@@ -8,7 +8,8 @@ export default async function PracticeTopic({ params }) {
   const level = authCookie.user.currentLevel;
   const questions = await fetchQuestionsByLevelAndTopic(level, topic);
 
-  const submitCallback = () => {
+  const submitCallback = async () => {
+    'use server';
     redirect('/end-screen');
   };
 
@@ -18,6 +19,7 @@ export default async function PracticeTopic({ params }) {
       <QuestionsTracker
         questions={questions.questions}
         submitCallback={submitCallback}
+        lives={5}
       />
     </div>
   );

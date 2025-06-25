@@ -182,7 +182,6 @@ export default (io, socket) => {
         //another array with player 2 question objects
         const firstPlayerToFinishResults = JSON.parse(gameData.playerResults[0])
         const secondPlayerToFinishResults = JSON.parse(gameData.playerResults[1])
-        console.log('First Player Results:', firstPlayerToFinishResults)
 
 
         const correctAnswersForFirstPlayer = firstPlayerToFinishResults.filter(
@@ -220,6 +219,8 @@ export default (io, socket) => {
         } //@Ntokozo: if it is a draw, should we look at who finished first and give them the win?
 
         //TODO: process the results, here is where the elo logic comes in. A object is passed through from the FE with all of the questions and their answers. Can we update the ELO algorithm so that it can give back the amount of XP for each player?
+
+        //I added the multiPlayerArray functionality. Can you see if that will work. 
 
 
 

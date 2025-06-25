@@ -5,9 +5,9 @@ import TotalXP from '@/app/ui/end-screen-ui/end-screen-total-xp';
 import { updateUserXP } from '@/services/api';
 import Image from 'next/image';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { useState } from 'react';
+import { Suspense, useState } from 'react';
 
-export default function Page() {
+function MatchEndScreenContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const result = searchParams.get('result');
@@ -124,5 +124,13 @@ export default function Page() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function Page() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <MatchEndScreenContent />
+    </Suspense>
   );
 }

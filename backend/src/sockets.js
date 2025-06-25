@@ -183,6 +183,9 @@ export default (io, socket) => {
         const firstPlayerToFinishResults = JSON.parse(gameData.playerResults[0])
         const secondPlayerToFinishResults = JSON.parse(gameData.playerResults[1])
 
+        console.log('First player results:', firstPlayerToFinishResults)
+        console.log('Second player results:', secondPlayerToFinishResults)
+
 
         const correctAnswersForFirstPlayer = firstPlayerToFinishResults.filter(
             (question) => question.isCorrect == true
@@ -216,7 +219,7 @@ export default (io, socket) => {
             io.to(secondPlayer).emit('matchEnd', {
                 isWinner: false,
             })
-        } //@Ntokozo: if it is a draw, should we look at who finished first and give them the win?
+        } //@Ntokozo: update the if statement to be in line with ELO
 
         //TODO: process the results, here is where the elo logic comes in. A object is passed through from the FE with all of the questions and their answers. Can we update the ELO algorithm so that it can give back the amount of XP for each player?
 

@@ -1,5 +1,4 @@
 import { getCookie } from '@/app/lib/authCookie';
-import QuestionsTracker from '@/app/ui/questions/questions-tracker';
 import GameClient from '@/app/ui/game/game-client';
 export default async function GameMatch({ params }) {
   const { game } = await params;

@@ -1061,30 +1061,16 @@ app.get('/practice/type/:questionType', async (req, res) => {
 
 app.get('/questions/random', async (req, res) => {
   try {
-    const userId = req.query.userId;
-    if (!userId) {
-      return res.status(400).json({ error: 'userId is required' });
+    const level = req.query.level;
+    if (!level) {
+      return res.status(400).json({ error: 'level is required' });
     }
-
-    //Fetch currentLevel for this user
-    const { data: userData, error: userError } = await supabase
-      .from('Users')
-      .select('currentLevel')
-      .eq('id', userId)
-      .single();
-
-    if (userError || !userData) {
-      return res.status(404).json({ error: 'User not found' });
-    }
-
-    const currentLevel = userData.currentLevel;
-    //console.log('User level:',currentLevel)
 
     // Fetch 15 random questions for this level
     const { data: questions, error: qError } = await supabase
       .from('Questions')
       .select('*')
-      .eq('level', currentLevel);
+      .eq('level', level);
 
     if (qError) {
       //console.log(qError);
@@ -1101,20 +1087,37 @@ app.get('/questions/random', async (req, res) => {
 
     //shuffle and pick 15
     const shuffled = questions.sort(() => 0.5 - Math.random());
-    const selected = shuffled.slice(0, 15);
+    const selected = shuffled.slice(0, 5);
 
-    //Map to clean structure
-    const cleanQuestions = selected.map((q) => ({
-      id: q.Q_id,
-      topic: q.topic,
-      difficulty: q.difficulty,
-      level: q.level,
-      question: q.questionText,
-      xpGain: q.xpGain,
-      type: q.type,
-    }));
+    //fetch the answers for the above questions
+    const questionIds = selected.map((q) => q.Q_id);
+    const { data: answers, error: aError } = await supabase
+      .from('Answers')
+      .select('*')
+      .in('question_id', questionIds);
+    if (aError) {
+      console.log('Database error:', aError);
+      io.to(gameId).emit('gameError', { error: 'Failed to fetch answers' });
+      return;
+    }
 
-    return res.status(200).json({ questions: cleanQuestions });
+    // Map answers to respective questions in the selected array
+    selected.forEach((q) => {
+      q.answers = answers.filter((a) => a.question_id === q.Q_id);
+    });
+
+    // //Map to clean structure
+    // const cleanQuestions = selected.map((q) => ({
+    //   id: q.Q_id,
+    //   topic: q.topic,
+    //   difficulty: q.difficulty,
+    //   level: q.level,
+    //   question: q.questionText,
+    //   xpGain: q.xpGain,
+    //   type: q.type,
+    // }));
+
+    return res.status(200).json({ questions: selected });
   } catch (err) {
     console.log(err);
     return res.status(500).json({ error: 'Server error' });

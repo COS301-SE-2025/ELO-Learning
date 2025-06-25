@@ -36,14 +36,14 @@ function MatchEndScreenContent() {
 
       // Calculate XP earned using the same logic as TotalXP component
       const questions = JSON.parse(
-        localStorage.getItem('questionsObj') || '[]'
+        localStorage.getItem('questionsObj') || '[]',
       );
       const correctAnswers = questions.filter(
-        (question) => question.isCorrect == true
+        (question) => question.isCorrect == true,
       );
       const xpEarned = correctAnswers.reduce(
         (accumulator, question) => accumulator + question.question.xpGain,
-        0
+        0,
       );
 
       if (xpEarned > 0) {
@@ -56,7 +56,7 @@ function MatchEndScreenContent() {
         // Update the cookie with new XP value
         const updatedUserData = { ...userData, xp: newTotalXP };
         const updatedCookie = encodeURIComponent(
-          JSON.stringify(updatedUserData)
+          JSON.stringify(updatedUserData),
         );
         document.cookie = `user=${updatedCookie}; path=/`;
       }

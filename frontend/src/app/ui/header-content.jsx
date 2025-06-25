@@ -40,7 +40,7 @@ export default function HeaderContent() {
     <div className="w-full md:w-auto">
       <div
         className={clsx(
-          'flex h-[48px] w-full items-start justify-center gap-6 rounded-md p-3 text-sm font-medium md:flex-col md:h-auto md:gap-4 md:justify-start md:p-2 md:px-5 md:w-auto'
+          'flex h-[48px] w-full items-start justify-center gap-6 rounded-md p-3 text-sm font-medium md:flex-col md:h-auto md:gap-4 md:justify-start md:p-2 md:px-5 md:w-auto',
         )}
       >
         {/* <div className="flex items-center gap-2">
@@ -52,7 +52,7 @@ export default function HeaderContent() {
           <p>3</p>
         </div> */}
         <div className="flex items-center gap-2">
-          <p className='text-lg font-bold'>{username}</p>
+          <p className="text-lg font-bold">{username}</p>
         </div>
         <div className="flex items-center gap-2">
           <Shield size={24} fill="#4D5DED" stroke="#4D5DED" />

@@ -24,8 +24,8 @@ export default (io, socket) => {
             matchMap.set(gameId, {
                 players: [player1.id, player2.id],
                 levels: [],
-                playerReadyCount: 0,
-                playerDoneCount: 0,
+                playerReadyCount: [],
+                playerDoneCount: [],
                 playerResults: [],
             })
         }
@@ -44,14 +44,19 @@ export default (io, socket) => {
     }
 
     const startMatch = async (gameId, level) => {
+        console.log('Starting match for game:', gameId, 'with level:', level)
         const gameData = matchMap.get(gameId)
+        console.log(gameData)
         if (!gameData) {
             console.log('Game not found:', gameId)
             return
         }
 
         // Update player ready count
-        gameData.playerReadyCount += 1
+        if (!gameData.playerReadyCount.includes(socket.id)) {
+            gameData.playerReadyCount.push(socket.id)
+        }
+
 
         // Store user level data
         if (!gameData.levels.includes(level)) {
@@ -61,8 +66,11 @@ export default (io, socket) => {
         // Update the matchMap with the modified data
         matchMap.set(gameId, gameData)
 
-        if (gameData.playerReadyCount === 2) {
+        if (gameData.playerReadyCount.length === 2) {
+
             console.log('Both players are ready for game:', gameId)
+
+            console.log('Game levels: ', gameData.levels)
 
             try {
                 // Calculate the average level from all players
@@ -150,10 +158,13 @@ export default (io, socket) => {
         }
 
         // Update player done count
-        gameData.playerDoneCount += 1
-        gameData.playerResults.push(playerResults)
+        if (!gameData.playerDoneCount.includes(playerID)) {
+            gameData.playerDoneCount.push(playerID)
+            gameData.playerResults.push(playerResults)
+        }
+
         matchMap.set(gameId, gameData)
-        if (gameData.playerDoneCount < 2) {
+        if (gameData.playerDoneCount.length < 2) {
             console.log('Waiting for other player to finish game:', gameId)
             return
         }
@@ -171,6 +182,7 @@ export default (io, socket) => {
         //another array with player 2 question objects
         const firstPlayerToFinishResults = JSON.parse(gameData.playerResults[0])
         const secondPlayerToFinishResults = JSON.parse(gameData.playerResults[1])
+        console.log('First Player Results:', firstPlayerToFinishResults)
 
 
         const correctAnswersForFirstPlayer = firstPlayerToFinishResults.filter(
@@ -208,6 +220,8 @@ export default (io, socket) => {
         } //@Ntokozo: if it is a draw, should we look at who finished first and give them the win?
 
         //TODO: process the results, here is where the elo logic comes in. A object is passed through from the FE with all of the questions and their answers. Can we update the ELO algorithm so that it can give back the amount of XP for each player?
+
+
 
 
         // Clean up the matchMap entry

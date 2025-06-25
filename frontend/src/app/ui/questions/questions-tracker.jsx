@@ -76,7 +76,7 @@ export default function QuestionsTracker({ questions, submitCallback, lives }) {
     setAnswer('');
     setIsAnswerCorrect(false);
 
-    if (currentStep === allQuestions.length) {
+    if (currentStep >= allQuestions.length) {
       submitCallback(); // Call the callback to notify the parent component
       return;
     }

@@ -8,7 +8,12 @@ import QuestionTemplate from '@/app/ui/question-template';
 import QuestionFooter from '@/app/ui/questions/question-footer';
 import QuestionHeader from '@/app/ui/questions/question-header';
 
-export default function QuestionsTracker({ questions, submitCallback, lives }) {
+export default function QuestionsTracker({
+  questions,
+  submitCallback,
+  lives,
+  isMultiplayer = false,
+}) {
   //Normal JS variables
   const allQuestions = questions;
   const totalSteps = allQuestions.length;
@@ -61,14 +66,33 @@ export default function QuestionsTracker({ questions, submitCallback, lives }) {
     if (!isAnswerCorrect) {
       setNumLives((prev) => prev - 1);
       if (numLives <= 1) {
-        redirect('/end-screen');
+        console.log(
+          'Player ran out of lives. Multiplayer mode:',
+          isMultiplayer,
+        );
+        if (isMultiplayer && submitCallback) {
+          // Use the callback for multiplayer to support proper match handling
+          console.log('Using multiplayer callback for lives end');
+          submitCallback();
+          return true; // Indicate that the game ended due to no lives
+        } else {
+          // Direct redirect for single-player
+          console.log('Using direct redirect for single-player lives end');
+          redirect('/end-screen');
+        }
       }
     }
+    return false; // Game continues
   };
 
   const submitAnswer = () => {
     setLocalStorage();
-    handleLives();
+    const gameEndedFromLives = handleLives();
+
+    // If game ended due to no lives, don't continue processing
+    if (gameEndedFromLives) {
+      return;
+    }
 
     // Increment the current step and reset states
     setCurrentStep((prev) => prev + 1);
@@ -77,7 +101,14 @@ export default function QuestionsTracker({ questions, submitCallback, lives }) {
     setIsAnswerCorrect(false);
 
     if (currentStep >= allQuestions.length) {
-      submitCallback(); // Call the callback to notify the parent component
+      console.log('All questions completed. Multiplayer mode:', isMultiplayer);
+      if (isMultiplayer && submitCallback) {
+        console.log('Using multiplayer callback for completion');
+        submitCallback(); // Call the callback for multiplayer
+      } else {
+        console.log('Using direct redirect for single-player completion');
+        redirect('/end-screen'); // Direct redirect for single-player
+      }
       return;
     }
 

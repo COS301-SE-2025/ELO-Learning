@@ -7,6 +7,7 @@ import { useEffect, useState } from 'react';
 
 export default function GameClient({ game, level }) {
   const [questions, setQuestions] = useState([]);
+  const [isWaitingForOpponent, setIsWaitingForOpponent] = useState(false);
 
   useEffect(() => {
     console.log('Game: ', game);
@@ -36,6 +37,7 @@ export default function GameClient({ game, level }) {
 
   const submitCallback = () => {
     console.log('Submit callback triggered - Match ended');
+    setIsWaitingForOpponent(true);
     // Emit an event to the server to handle the end of the match
     const userAnswers = localStorage.getItem('questionsObj');
     socket.emit('matchComplete', {
@@ -50,15 +52,37 @@ export default function GameClient({ game, level }) {
 
   return (
     <div>
-      <div>
-        {questions.length > 0 && (
-          <QuestionsTracker
-            questions={questions}
-            submitCallback={submitCallback}
-            lives={15}
-          />
-        )}
-      </div>
+      {!isWaitingForOpponent ? (
+        <div>
+          {questions.length > 0 && (
+            <QuestionsTracker
+              questions={questions}
+              submitCallback={submitCallback}
+              lives={15}
+            />
+          )}
+        </div>
+      ) : (
+        <div className="flex flex-col items-center justify-center min-h-screen">
+          <div className="flex flex-row items-center justify-center gap-5">
+            <div
+              className="animate-bounce rounded-full h-5 w-5 bg-[#FF6E99] mb-4"
+              style={{ animationDelay: '0ms' }}
+            ></div>
+            <div
+              className="animate-bounce rounded-full h-5 w-5 bg-[#FF6E99] mb-4"
+              style={{ animationDelay: '150ms' }}
+            ></div>
+            <div
+              className="animate-bounce rounded-full h-5 w-5 bg-[#FF6E99] mb-4"
+              style={{ animationDelay: '300ms' }}
+            ></div>
+          </div>
+          <div className="text-lg font-bold">
+            Waiting for your opponent to finish...
+          </div>
+        </div>
+      )}
     </div>
   );
 }

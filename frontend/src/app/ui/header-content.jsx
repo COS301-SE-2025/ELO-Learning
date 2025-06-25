@@ -52,7 +52,7 @@ export default function HeaderContent() {
           <p>3</p>
         </div> */}
         <div className="flex items-center gap-2">
-          <p>{username}</p>
+          <p className="text-lg font-bold">{username}</p>
         </div>
         <div className="flex items-center gap-2">
           <Shield size={24} fill="#4D5DED" stroke="#4D5DED" />

@@ -20,7 +20,7 @@ DEMO 1 Documentation (May 28, 2025)
   <summary>
     Services Requirement Specification (SRS) v1
   </summary>
-  <a href="https://docs.google.com/document/d/1YwP50FDEFd87CN88d_aszxSXY386VK3t/edit?usp=drive_link&ouid=109634070400094344641&rtpof=true&sd=true">Services Requirement Specification (SRS) v1</a>
+  <a href="https://docs.google.com/document/d/1mucPjnS9raDPziTZLBBJaGlGvEBkxai2qoeAnJ0Ysa4/edit?usp=sharing">Services Requirement Specification (SRS) v1</a>
 </details>
 <details>
   <summary>

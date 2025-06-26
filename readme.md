@@ -6,6 +6,12 @@
 [![Issue Tracking](https://img.shields.io/badge/Issue_Tracking-GitHub_Issues-yellow)](https://github.com/COS301-SE-2025/ELO-Learning/issues)
 [![Build Status](https://img.shields.io/badge/Build_Status-GitHub_Actions-brightgreen)](https://github.com/COS301-SE-2025/ELO-Learning/actions/workflows/linter.yml)
 ![Uptime Robot status](https://img.shields.io/uptimerobot/status/m797015486-75c486778a8f87b141372bd7)
+[![codecov](https://codecov.io/gh/COS301-SE-2025/ELO-Learning/branch/development/graph/badge.svg)](https://codecov.io/gh/COS301-SE-2025/ELO-Learning/tree/development)
+![Node.js Version](https://img.shields.io/badge/node-%3E%3D16.0.0-brightgreen)
+![React](https://img.shields.io/badge/react-%2320232a.svg?style=flat&logo=react&logoColor=%2361DAFB)
+![Next.js](https://img.shields.io/badge/Next-black?style=flat&logo=next.js&logoColor=white)
+![Express.js](https://img.shields.io/badge/express.js-%23404d59.svg?style=flat&logo=express&logoColor=%2361DAFB)
+![PostgreSQL](https://img.shields.io/badge/postgres-%23316192.svg?style=flat&logo=postgresql&logoColor=white)
 
 ## 📄 Description
 

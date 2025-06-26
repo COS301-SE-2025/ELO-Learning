@@ -93,20 +93,19 @@ DEMO 2 Documentation (June 27, 2025)
   <a href="[ADD_LINK_TO_TESTING_DOCS]">Unit & Integration Testing Documentation</a>
 </details>
 
+Shared Documentation
 <details>
   <summary>
     Coding Standards
   </summary>
   <a href="https://docs.google.com/document/d/1e4U_fcfMQQVNAGfhPgr4udJurXSMR1kxjpEV58yQLgk/edit?usp=drive_link">Coding Standards</a>
 </details>
-
 <details>
   <summary>
     User Manual
   </summary>
   <a href="https://docs.google.com/document/d/1SW5_SxLHrdIEG0yTvba2_4nfIop5MrP82Jwp3I-evYI/edit?usp=drive_link">User Manual</a>
 </details>
-
 <details>
     <summary>
         ELO Learning Project Board

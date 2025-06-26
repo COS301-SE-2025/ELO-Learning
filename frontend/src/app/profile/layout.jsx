@@ -1,18 +1,18 @@
 import '../styles/dashboard.css';
-import Header from '../ui/header';
 import NavBar from '../ui/nav-bar';
 
 export default function Layout({ children }) {
   return (
-    <div className="h-screen flex flex-col">
-      <div className="flex-none">
-        <Header />
-      </div>
-      <div className="flex flex-1 flex-col md:flex-row md:overflow-hidden">
-        <div className="w-full flex-none md:w-64">
+    <div className="h-screen flex flex-col md:flex-row">
+      {/* Desktop: 2-column layout */}
+      <div className="flex flex-1 flex-col md:flex-row">
+        {/* Left column - NavBar (1/4) */}
+        <div className="w-full flex-none md:w-1/5 md:sticky md:top-0 md:h-screen md:overflow-y-auto">
           <NavBar />
         </div>
-        <div className="main-content flex-grow p-6 md:overflow-y-auto md:p-12">
+
+        {/* Middle column - Content (2/4) */}
+        <div className=" h-screen flex-grow md:w-4/5 md:overflow-y-auto">
           {children}
         </div>
       </div>

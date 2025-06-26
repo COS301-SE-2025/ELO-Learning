@@ -197,7 +197,10 @@ const config = {
 
 //export default config;
 export default {
-  testMatch: ['**/test/**/*.test.mjs'],
+  testMatch: ['**/test/**/*.test.mjs', '**/test/**/*.test.js'],
   testEnvironment: 'node',
-  transform: {},
+  clearMocks: true,
+  collectCoverage: true,
+  coverageDirectory: 'coverage',
+  coverageProvider: 'v8',
 };

@@ -2,9 +2,11 @@
   "name": "backend",
   "version": "1.0.0",
   "type": "module",
-  "main": "testConnection.js",
+  "main": "server.js",
   "scripts": {
-    "test": "jest"
+    "start": "node server.js",
+    "dev": "node server.js",
+    "test": "cross-env NODE_OPTIONS=--experimental-vm-modules jest"
   },
   "keywords": [],
   "author": "",
@@ -13,12 +15,17 @@
   "dependencies": {
     "@paralleldrive/cuid2": "^2.2.2",
     "@supabase/supabase-js": "^2.49.7",
+    "bcrypt": "^6.0.0",
     "cors": "^2.8.5",
     "dotenv": "^16.5.0",
     "express": "^5.1.0",
-    "python": "^0.0.4"
+    "jsonwebtoken": "^9.0.2",
+    "mathjs": "^13.2.3",
+    "socket.io": "^4.8.1",
+    "uuid": "^11.1.0"
   },
   "devDependencies": {
+    "cross-env": "^7.0.3",
     "jest": "^29.7.0",
     "supertest": "^7.1.1"
   }

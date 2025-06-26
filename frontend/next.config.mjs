@@ -1,8 +1,15 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  devIndicators: {
-    position: 'top-right',
+  images: {
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: 'ifbpkwlfrsgstdapteqh.supabase.co',
+        pathname: '/storage/v1/object/public/profile-pics/**',
+      },
+    ],
   },
+  devIndicators: false,
 };
 
 export default nextConfig;

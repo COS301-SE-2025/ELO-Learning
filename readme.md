@@ -15,6 +15,40 @@ The platform encourages growth through competitive, skill-based challenges—suc
 
 ## 📁 Documentation
 
+DEMO 1 Documentation (May 28, 2025)
+<details>
+  <summary>
+    Services Requirement Specification (SRS) v1
+  </summary>
+  <a href="https://docs.google.com/document/d/1YwP50FDEFd87CN88d_aszxSXY386VK3t/edit?usp=drive_link&ouid=109634070400094344641&rtpof=true&sd=true">Services Requirement Specification (SRS) v1</a>
+</details>
+<details>
+  <summary>
+    Domain Model v1
+  </summary>
+  <a href="https://drive.google.com/file/d/1F8aDnzwpgg69GMHLet1e-gUtFcX8yFjo/view?usp=drive_link">Domain Model v1</a>
+</details>
+<details>
+  <summary>
+    Use Case Diagrams v1
+  </summary>
+    | <a href="https://drive.google.com/file/d/1_e4iI2zL_l6zaKoQeHNQ1t2FYm1D3MNm/view?usp=sharing">Practice</a> |
+    <a href="https://drive.google.com/file/d/12vq5eqNXVcbZB3QwOQgsBJQvF-L1z5Im/view?usp=sharing">Memorandum</a> |
+    <a href="https://drive.google.com/file/d/12vq5eqNXVcbZB3QwOQgsBJQvF-L1z5Im/view?usp=sharing">Leaderboard</a> |
+</details>
+<details>
+  <summary>
+    Architectural Requirements v1
+  </summary>
+  <a href="https://docs.google.com/document/d/1izYvZk-W59HGZy5bak7VuHOUFCfJNT3f/edit?usp=sharing&ouid=111519098189217056979&rtpof=true&sd=true">Architectural Requirements v1</a>
+</details>
+<details>
+  <summary>
+    Service Contracts v1
+  </summary>
+  <a href="https://docs.google.com/document/d/1VrDDmFJkHTyw__CENO48pkmnlwMOj7_4/edit?usp=drive_link&ouid=109634070400094344641&rtpof=true&sd=true">Service Contracts v1</a>
+</details>
+
 <details>
   <summary>
     Services Requirement Specification (SRS)

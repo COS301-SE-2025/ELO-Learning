@@ -6,6 +6,12 @@
 [![Issue Tracking](https://img.shields.io/badge/Issue_Tracking-GitHub_Issues-yellow)](https://github.com/COS301-SE-2025/ELO-Learning/issues)
 [![Build Status](https://img.shields.io/badge/Build_Status-GitHub_Actions-brightgreen)](https://github.com/COS301-SE-2025/ELO-Learning/actions/workflows/linter.yml)
 ![Uptime Robot status](https://img.shields.io/uptimerobot/status/m797015486-75c486778a8f87b141372bd7)
+[![codecov](https://codecov.io/gh/COS301-SE-2025/ELO-Learning/branch/development/graph/badge.svg)](https://codecov.io/gh/COS301-SE-2025/ELO-Learning/tree/development)
+![Node.js Version](https://img.shields.io/badge/node-%3E%3D16.0.0-brightgreen)
+![React](https://img.shields.io/badge/react-%2320232a.svg?style=flat&logo=react&logoColor=%2361DAFB)
+![Next.js](https://img.shields.io/badge/Next-black?style=flat&logo=next.js&logoColor=white)
+![Express.js](https://img.shields.io/badge/express.js-%23404d59.svg?style=flat&logo=express&logoColor=%2361DAFB)
+![PostgreSQL](https://img.shields.io/badge/postgres-%23316192.svg?style=flat&logo=postgresql&logoColor=white)
 
 ## 📄 Description
 
@@ -15,34 +21,91 @@ The platform encourages growth through competitive, skill-based challenges—suc
 
 ## 📁 Documentation
 
+### DEMO 1 Documentation (May 28, 2025)
+
 <details>
   <summary>
-    Services Requirement Specification (SRS)
+    Services Requirement Specification (SRS) v1
   </summary>
-  <a href="https://docs.google.com/document/d/1mucPjnS9raDPziTZLBBJaGlGvEBkxai2qoeAnJ0Ysa4/edit?usp=sharing">Services Requirement Specification (SRS)</a>
+  <a href="https://docs.google.com/document/d/1mucPjnS9raDPziTZLBBJaGlGvEBkxai2qoeAnJ0Ysa4/edit?usp=sharing">Services Requirement Specification (SRS) v1</a>
+</details>
+<details>
+  <summary>
+    Domain Model v1
+  </summary>
+  <a href="https://drive.google.com/file/d/1F8aDnzwpgg69GMHLet1e-gUtFcX8yFjo/view?usp=drive_link">Domain Model v1</a>
+</details>
+<details>
+  <summary>
+    Use Case Diagrams v1
+  </summary>
+    | <a href="https://drive.google.com/file/d/1_e4iI2zL_l6zaKoQeHNQ1t2FYm1D3MNm/view?usp=sharing">Practice</a> |
+    <a href="https://drive.google.com/file/d/12vq5eqNXVcbZB3QwOQgsBJQvF-L1z5Im/view?usp=sharing">Memorandum</a> |
+    <a href="https://drive.google.com/file/d/12vq5eqNXVcbZB3QwOQgsBJQvF-L1z5Im/view?usp=sharing">Leaderboard</a> |
+</details>
+<details>
+  <summary>
+    Architectural Requirements v1
+  </summary>
+  <a href="https://docs.google.com/document/d/1izYvZk-W59HGZy5bak7VuHOUFCfJNT3f/edit?usp=sharing&ouid=111519098189217056979&rtpof=true&sd=true">Architectural Requirements v1</a>
+</details>
+<details>
+  <summary>
+    Service Contracts v1
+  </summary>
+  <a href="https://docs.google.com/document/d/1VrDDmFJkHTyw__CENO48pkmnlwMOj7_4/edit?usp=drive_link&ouid=109634070400094344641&rtpof=true&sd=true">Service Contracts v1</a>
+</details>
+
+### DEMO 2 Documentation (June 27, 2025)
+
+<details>
+  <summary>
+    Services Requirement Specification (SRS) v2
+  </summary>
+  <a href="https://docs.google.com/document/d/1YwP50FDEFd87CN88d_aszxSXY386VK3t/edit?usp=drive_link&ouid=109634070400094344641&rtpof=true&sd=true">Services Requirement Specification (SRS) v2</a>
+</details>
+<details>
+  <summary>
+    Domain Model v2
+  </summary>
+  <a href="https://drive.google.com/file/d/1F8aDnzwpgg69GMHLet1e-gUtFcX8yFjo/view?usp=drive_link">Domain Model v2</a>
+</details>
+<details>
+  <summary>
+    Use Case Diagrams v2
+  </summary>
+    | <a href="https://drive.google.com/file/d/12vq5eqNXVcbZB3QwOQgsBJQvF-L1z5Im/view?usp=sharing">Math Keyboard</a> |
+    <a href="https://drive.google.com/file/d/17W-wW4N08pu6yigME1U5rJHu1VaM5AYe/view?usp=sharing">Single Player</a> |
+    <a href="https://drive.google.com/file/d/1G8FFKYUyhS-_iPGuu0Po7MkZPzBbBZkC/view?usp=sharing">Multiplayer</a> |
+</details>
+<details>
+  <summary>
+    Architectural Requirements v2
+  </summary>
+  <a href="https://docs.google.com/document/d/1QqYa0kwkN3fPhvyjZu5W3-cpX-PQKAzK/edit?usp=sharing&ouid=111519098189217056979&rtpof=true&sd=true">Architectural Requirements v2</a>
 </details>
 
 <details>
   <summary>
-    Domain Model
+    Testing Documentation
   </summary>
-  <a href="https://drive.google.com/file/d/1eqc1UJakTQlBp5AYYW4u8XJU-QDGhuS1/view?usp=drive_link">Domain Model</a>
+  <a href="https://docs.google.com/document/d/1YdhTuejO4JdwaaNWz-BV63t_mzgbSKEl/edit?usp=sharing&ouid=111519098189217056979&rtpof=true&sd=true">Postman Tests</a>
 </details>
+
+Shared Documentation
 
 <details>
   <summary>
-    Architectural Requirements
+    Coding Standards
   </summary>
-  <a href="https://docs.google.com/document/d/1xdGqOoLsAz72sCGqKvzmkCbCI1pfcCCaEVDiZFA88Zo/edit?usp=sharing">Architectural Requirements</a>
+  <a href="https://docs.google.com/document/d/1e4U_fcfMQQVNAGfhPgr4udJurXSMR1kxjpEV58yQLgk/edit?usp=drive_link">Coding Standards</a>
 </details>
-
 <details>
   <summary>
-    Service Contracts
+    User Manual
   </summary>
-  <a href="https://docs.google.com/document/d/1SXkf3Jrm87EWsAGJYcIpyP3F58__FTMo9zLXIschNY8/edit?usp=sharing">Service Contracts</a>
+  <a href="https://docs.google.com/document/d/1SW5_SxLHrdIEG0yTvba2_4nfIop5MrP82Jwp3I-evYI/edit?usp=drive_link">User Manual</a>
 </details>
-
 <details>
     <summary>
         ELO Learning Project Board
@@ -188,4 +251,12 @@ The platform encourages growth through competitive, skill-based challenges—suc
 <div align="center">
     <h3>zeroday0d4y@gmail.com</h3>
     <img src="https://drive.usercontent.google.com/download?id=1Py1pypOH4mMxOnsg2kw2PCKg340RuPTJ" width="300px"/>
+</div>
+<div height="500px"></div>
+
+## ♟️ Partner
+
+<div align="center">
+    <p>In collaboration with <a href="https://proking.solutions/">Proking Solutions</a></p>
+    <img src="https://drive.usercontent.google.com/download?id=1usb25gGHfheUws5oPzCXmuTKMUe-GAAQ"  width="300px"/>
 </div>

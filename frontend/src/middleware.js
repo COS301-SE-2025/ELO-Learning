@@ -5,11 +5,13 @@ export function middleware(request) {
 
   if (!cookie) {
     // If no token, redirect to login-landing
-    return NextResponse.redirect(new URL('/login-landing', request.url));
+    return NextResponse.redirect(new URL('/', request.url));
   }
 }
 
 export const config = {
   //regexp to match all paths except login-landing
-  matcher: ['/((?!api|_next/static|_next/image|favicon.ico|login-landing).*)'],
+  matcher: [
+    '/((?!api|_next/static|_next/image|favicon.ico|login-landing|$).*)',
+  ],
 };

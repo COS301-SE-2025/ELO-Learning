@@ -6,6 +6,12 @@
 [![Issue Tracking](https://img.shields.io/badge/Issue_Tracking-GitHub_Issues-yellow)](https://github.com/COS301-SE-2025/ELO-Learning/issues)
 [![Build Status](https://img.shields.io/badge/Build_Status-GitHub_Actions-brightgreen)](https://github.com/COS301-SE-2025/ELO-Learning/actions/workflows/linter.yml)
 ![Uptime Robot status](https://img.shields.io/uptimerobot/status/m797015486-75c486778a8f87b141372bd7)
+[![codecov](https://codecov.io/gh/COS301-SE-2025/ELO-Learning/branch/development/graph/badge.svg)](https://codecov.io/gh/COS301-SE-2025/ELO-Learning/tree/development)
+![Node.js Version](https://img.shields.io/badge/node-%3E%3D16.0.0-brightgreen)
+![React](https://img.shields.io/badge/react-%2320232a.svg?style=flat&logo=react&logoColor=%2361DAFB)
+![Next.js](https://img.shields.io/badge/Next-black?style=flat&logo=next.js&logoColor=white)
+![Express.js](https://img.shields.io/badge/express.js-%23404d59.svg?style=flat&logo=express&logoColor=%2361DAFB)
+![PostgreSQL](https://img.shields.io/badge/postgres-%23316192.svg?style=flat&logo=postgresql&logoColor=white)
 
 ## 📄 Description
 
@@ -15,7 +21,7 @@ The platform encourages growth through competitive, skill-based challenges—suc
 
 ## 📁 Documentation
 
-DEMO 1 Documentation (May 28, 2025)
+### DEMO 1 Documentation (May 28, 2025)
 
 <details>
   <summary>
@@ -50,7 +56,7 @@ DEMO 1 Documentation (May 28, 2025)
   <a href="https://docs.google.com/document/d/1VrDDmFJkHTyw__CENO48pkmnlwMOj7_4/edit?usp=drive_link&ouid=109634070400094344641&rtpof=true&sd=true">Service Contracts v1</a>
 </details>
 
-DEMO 2 Documentation (June 27, 2025)
+### DEMO 2 Documentation (June 27, 2025)
 
 <details>
   <summary>
@@ -245,4 +251,12 @@ Shared Documentation
 <div align="center">
     <h3>zeroday0d4y@gmail.com</h3>
     <img src="https://drive.usercontent.google.com/download?id=1Py1pypOH4mMxOnsg2kw2PCKg340RuPTJ" width="300px"/>
+</div>
+<div height="500px"></div>
+
+## ♟️ Partner
+
+<div align="center">
+    <p>In collaboration with <a href="https://proking.solutions/">Proking Solutions</a></p>
+    <img src="https://drive.usercontent.google.com/download?id=1usb25gGHfheUws5oPzCXmuTKMUe-GAAQ"  width="300px"/>
 </div>

@@ -31,6 +31,18 @@ The platform encourages growth through competitive, skill-based challenges—suc
 
 <details>
   <summary>
+    Use Case Diagrams
+  </summary>
+    <a href="https://drive.google.com/file/d/1_e4iI2zL_l6zaKoQeHNQ1t2FYm1D3MNm/view?usp=sharing">Practice</a> |
+    <a href="https://drive.google.com/file/d/12vq5eqNXVcbZB3QwOQgsBJQvF-L1z5Im/view?usp=sharing">Memorandum</a> |
+    <a href="https://drive.google.com/file/d/12vq5eqNXVcbZB3QwOQgsBJQvF-L1z5Im/view?usp=sharing">Leaderboard</a> |
+  <a href="https://drive.google.com/file/d/12vq5eqNXVcbZB3QwOQgsBJQvF-L1z5Im/view?usp=sharing">Math Keyboard</a> |
+    <a href="https://drive.google.com/file/d/17W-wW4N08pu6yigME1U5rJHu1VaM5AYe/view?usp=sharing">Single Player</a> |
+    <a href="https://drive.google.com/file/d/1ZH9t2acjctTkJEAnUB07MeAzHi_2bB44/view?usp=sharing">Multiplayer</a> |
+</details>
+
+<details>
+  <summary>
     Architectural Requirements
   </summary>
   <a href="https://docs.google.com/document/d/1QqYa0kwkN3fPhvyjZu5W3-cpX-PQKAzK/edit?usp=sharing&ouid=111519098189217056979&rtpof=true&sd=true">Architectural Requirements</a>

@@ -76,18 +76,7 @@ DEMO 2 Documentation (June 27, 2025)
   </summary>
   <a href="https://docs.google.com/document/d/1QqYa0kwkN3fPhvyjZu5W3-cpX-PQKAzK/edit?usp=sharing&ouid=111519098189217056979&rtpof=true&sd=true">Architectural Requirements v2</a>
 </details>
-<details>
-  <summary>
-    Quality Requirements Document
-  </summary>
-  <a href="[ADD_LINK_TO_QUALITY_REQUIREMENTS]">Quality Requirements Document</a>
-</details>
-<details>
-  <summary>
-    Technology Choices & Justifications
-  </summary>
-  <a href="[ADD_LINK_TO_TECH_CHOICES]">Technology Choices & Justifications</a>
-</details>
+
 <details>
   <summary>
     Testing Documentation

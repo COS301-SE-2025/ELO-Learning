@@ -54,19 +54,21 @@ DEMO 2 Documentation (June 27, 2025)
   <summary>
     Services Requirement Specification (SRS) v2
   </summary>
-  <a href="[ADD_LINK_TO_SRS_V2]">Services Requirement Specification (SRS) v2</a>
+  <a href="https://docs.google.com/document/d/1YwP50FDEFd87CN88d_aszxSXY386VK3t/edit?usp=drive_link&ouid=109634070400094344641&rtpof=true&sd=true">Services Requirement Specification (SRS) v2</a>
 </details>
 <details>
   <summary>
     Domain Model v2
   </summary>
-  <a href="[ADD_LINK_TO_DOMAIN_MODEL_V2]">Domain Model v2</a>
+  <a href="https://drive.google.com/file/d/1F8aDnzwpgg69GMHLet1e-gUtFcX8yFjo/view?usp=drive_link">Domain Model v2</a>
 </details>
 <details>
   <summary>
     Use Case Diagrams v2
   </summary>
-  <a href="[ADD_LINK_TO_USE_CASES_V2]">Use Case Diagrams v2</a>
+    | <a href="https://drive.google.com/file/d/12vq5eqNXVcbZB3QwOQgsBJQvF-L1z5Im/view?usp=sharing">Math Keyboard</a> |
+    <a href="https://drive.google.com/file/d/1_e4iI2zL_l6zaKoQeHNQ1t2FYm1D3MNm/view?usp=sharing">Single Player</a> |
+    <a href="https://drive.google.com/file/d/1G8FFKYUyhS-_iPGuu0Po7MkZPzBbBZkC/view?usp=sharing">Multiplayer</a> |
 </details>
 <details>
   <summary>

@@ -67,7 +67,7 @@ DEMO 2 Documentation (June 27, 2025)
     Use Case Diagrams v2
   </summary>
     | <a href="https://drive.google.com/file/d/12vq5eqNXVcbZB3QwOQgsBJQvF-L1z5Im/view?usp=sharing">Math Keyboard</a> |
-    <a href="https://drive.google.com/file/d/1_e4iI2zL_l6zaKoQeHNQ1t2FYm1D3MNm/view?usp=sharing">Single Player</a> |
+    <a href="https://drive.google.com/file/d/17W-wW4N08pu6yigME1U5rJHu1VaM5AYe/view?usp=sharing">Single Player</a> |
     <a href="https://drive.google.com/file/d/1G8FFKYUyhS-_iPGuu0Po7MkZPzBbBZkC/view?usp=sharing">Multiplayer</a> |
 </details>
 <details>

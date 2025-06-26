@@ -1,8 +1,20 @@
+'use client';
 import LandingHeader from '@/app/ui/landing-header';
+import { ChevronDown } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
 import LandingFooter from './ui/landing-footer';
 export default function Home() {
+  const scrollToNextSection = () => {
+    const nextSection = document.querySelector('[data-section="features"]');
+    if (nextSection) {
+      nextSection.scrollIntoView({
+        behavior: 'smooth',
+        block: 'start',
+      });
+    }
+  };
+
   return (
     <main className="flex flex-col items-center">
       <LandingHeader />
@@ -40,8 +52,17 @@ export default function Home() {
               I ALREADY HAVE AN ACCOUNT
             </button>
           </Link>
+          <div
+            className="mt-20 animate-bounce cursor-pointer"
+            onClick={scrollToNextSection}
+          >
+            <ChevronDown size={50} stroke="#FF6E99" />
+          </div>
         </div>
-        <div className="flex items-center justify-center min-h-screen flex-col mx-3">
+        <div
+          className="flex items-center justify-center min-h-screen flex-col mx-3"
+          data-section="features"
+        >
           <div>
             <h2 className="text-3xl font-bold text-center">
               Smarter. Sharper. Way More Fun.
@@ -154,6 +175,28 @@ export default function Home() {
         <div className="flex items-center justify-center min-h-screen flex-col mx-3">
           <div>
             <h2 className="text-3xl font-bold text-center">
+              Made by real humans. Powered by real math.
+            </h2>
+            <div className="text-center my-5 md:w-150">
+              <p>
+                Because learning should feel like levelling up; not zoning out!
+              </p>
+            </div>
+          </div>
+          <div className="my-10">
+            <Image
+              src="/winner.gif"
+              width={280}
+              height={280}
+              className="block"
+              alt="Leveling Up Animation"
+              priority
+            />
+          </div>
+        </div>
+        <div className="flex items-center justify-center min-h-screen flex-col mx-3">
+          <div>
+            <h2 className="text-3xl font-bold text-center">
               Start Solving Today
             </h2>
             <div className="text-center my-5 md:w-150">
@@ -172,28 +215,6 @@ export default function Home() {
                 </Link>
               </div>
             </div>
-          </div>
-        </div>
-        <div className="flex items-center justify-center min-h-screen flex-col mx-3">
-          <div>
-            <h2 className="text-3xl font-bold text-center">
-              Made by real humans. Powered by real math.
-            </h2>
-            <div className="text-center my-5 md:w-150">
-              <p>
-                Because learning should feel like levelling up; not zoning out!
-              </p>
-            </div>
-          </div>
-          <div className="my-10">
-            <Image
-              src="/winner.gif"
-              width={280}
-              height={280}
-              className="block"
-              alt="Leveling Up Animation"
-              priority
-            />
           </div>
         </div>
       </div>

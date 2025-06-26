@@ -15,7 +15,7 @@ The platform encourages growth through competitive, skill-based challenges—suc
 
 ## 📁 Documentation
 
-DEMO 1 Documentation (May 28, 2025)
+### DEMO 1 Documentation (May 28, 2025)
 <details>
   <summary>
     Services Requirement Specification (SRS) v1
@@ -49,7 +49,7 @@ DEMO 1 Documentation (May 28, 2025)
   <a href="https://docs.google.com/document/d/1VrDDmFJkHTyw__CENO48pkmnlwMOj7_4/edit?usp=drive_link&ouid=109634070400094344641&rtpof=true&sd=true">Service Contracts v1</a>
 </details>
 
-DEMO 2 Documentation (June 27, 2025)
+### DEMO 2 Documentation (June 27, 2025)
 <details>
   <summary>
     Services Requirement Specification (SRS) v2

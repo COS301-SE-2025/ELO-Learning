@@ -56,8 +56,10 @@ describe('User Profile & Gamification', () => {
 
     it('should display user ranking and XP', () => {
       // From <UserInfo>
-      cy.contains('h4', 'Ranking').siblings('p').should('contain', '1st place');
-      cy.contains('h4', 'Total XP').siblings('p').should('contain', '1000 xp');
+      cy.contains('h4', 'Ranking')
+        .siblings('p')
+        .should('contain', 'Coming soon');
+      cy.contains('h4', 'Total XP').siblings('p').should('contain', '1000 xp'); // Changed from 'Coming soon' to actual XP value
     });
 
     it('should display placeholder sections for upcoming features', () => {

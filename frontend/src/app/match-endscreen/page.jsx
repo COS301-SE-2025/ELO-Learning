@@ -4,31 +4,17 @@ import Time from '@/app/ui/end-screen-ui/end-screen-total-time';
 import TotalXP from '@/app/ui/end-screen-ui/end-screen-total-xp';
 import { updateUserXP } from '@/services/api';
 import Image from 'next/image';
-import Link from 'next/link';
-import { redirect, useRouter, useSearchParams } from 'next/navigation';
-import { Suspense, useEffect, useState } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { Suspense, useState } from 'react';
 
-function EndScreen() {
+function MatchEndScreenContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
-  const mode = searchParams.get('mode');
+  const result = searchParams.get('result');
+  const [isWinner, setIsWinner] = useState(result === 'winner');
   const [isLoading, setIsLoading] = useState(false);
 
-  const [mistakes, setMistakes] = useState(0);
-  useEffect(() => {
-    const questions = JSON.parse(localStorage.getItem('questionsObj'));
-    const correctAnswers = questions.filter(
-      (question) => question.isCorrect == true,
-    );
-    setMistakes(questions.length - correctAnswers.length);
-  }, []);
-
-  const clearStorageAndRedirect = () => {
-    localStorage.removeItem('questionsObj');
-    redirect(`/dashboard`);
-  };
-
-  const calculateXP = async () => {
+  const clearStorageAndRedirect = async () => {
     try {
       setIsLoading(true);
 
@@ -112,10 +98,12 @@ function EndScreen() {
               priority
             />
             <h1 className="text-2xl font-bold">
-              {mistakes} {mistakes === 1 ? 'Mistake' : 'Mistakes'}
+              {isWinner ? 'Winner' : 'Defeat'}
             </h1>
             <p className="text-center m-5 md:m-1">
-              Continue upskilling your maths! You are doing an amazing job!
+              {isWinner
+                ? 'Congratulations! You are doing an amazing job!'
+                : 'Keep practicing! You are improving every day!'}
             </p>
           </div>
           <div className="flex flex-row items-center justify-center gap-8 my-7">
@@ -126,30 +114,13 @@ function EndScreen() {
         </div>
 
         <div className="flex flex-col gap-4 mb-5">
-          {mode === 'practice' && (
-            <div className="flex flex-col gap-2">
-              <Link className="btn-link" href="/memo">
-                <button className="main-button w-full uppercase">
-                  View the memo
-                </button>
-              </Link>
-              <button
-                className="secondary-button w-full uppercase"
-                onClick={clearStorageAndRedirect}
-              >
-                Finish session
-              </button>
-            </div>
-          )}
-          {mode === 'single-player' && (
-            <button
-              className="secondary-button w-full uppercase"
-              onClick={calculateXP}
-              disabled={isLoading}
-            >
-              {isLoading ? 'Claiming XP...' : 'Claim XP'}
-            </button>
-          )}
+          <button
+            className="secondary-button w-full uppercase"
+            onClick={clearStorageAndRedirect}
+            disabled={isLoading}
+          >
+            {isLoading ? 'Claiming XP...' : 'Claim XP'}
+          </button>
         </div>
       </div>
     </div>
@@ -159,7 +130,7 @@ function EndScreen() {
 export default function Page() {
   return (
     <Suspense fallback={<div>Loading...</div>}>
-      <EndScreen />
+      <MatchEndScreenContent />
     </Suspense>
   );
 }

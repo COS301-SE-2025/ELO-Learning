@@ -7,7 +7,8 @@ import AnswerWrapper from '@/app/ui/answers/answer-wrapper';
 import QuestionTemplate from '@/app/ui/question-template';
 import QuestionFooter from '@/app/ui/questions/question-footer';
 import QuestionHeader from '@/app/ui/questions/question-header';
-export default function QuestionsTracker({ questions }) {
+
+export default function QuestionsTracker({ questions, submitCallback, lives }) {
   //Normal JS variables
   const allQuestions = questions;
   const totalSteps = allQuestions.length;
@@ -20,8 +21,11 @@ export default function QuestionsTracker({ questions }) {
   const [isDisabled, setIsDisabled] = useState(true);
   const [answer, setAnswer] = useState('');
   const [isAnswerCorrect, setIsAnswerCorrect] = useState(false);
-  const [numLives, setNumLives] = useState(5);
+  const [numLives, setNumLives] = useState(lives);
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // Add timer state
+  const [questionStartTime, setQuestionStartTime] = useState(Date.now());
 
   //Effects
   useEffect(() => {
@@ -30,7 +34,15 @@ export default function QuestionsTracker({ questions }) {
     }
   }, [answer]);
 
+  // Set start time when question changes
+  useEffect(() => {
+    setQuestionStartTime(Date.now());
+  }, [currQuestion]);
+
   const setLocalStorage = () => {
+    // Calculate time elapsed in seconds
+    const timeElapsed = Math.round((Date.now() - questionStartTime) / 1000);
+
     const questionsObj = JSON.parse(localStorage.getItem('questionsObj')) || [];
 
     questionsObj.push({
@@ -39,9 +51,8 @@ export default function QuestionsTracker({ questions }) {
       answer: answer,
       isCorrect: isAnswerCorrect,
       actualAnswer: currAnswers.find((answer) => answer.isCorrect == true),
+      timeElapsed: timeElapsed, // Add time elapsed in seconds
     });
-
-    localStorage.setItem('questionsObj', questionsObj);
 
     localStorage.setItem('questionsObj', JSON.stringify(questionsObj));
   };
@@ -65,12 +76,14 @@ export default function QuestionsTracker({ questions }) {
     setAnswer('');
     setIsAnswerCorrect(false);
 
-    if (currentStep === allQuestions.length) {
-      redirect('/end-screen');
+    if (currentStep >= allQuestions.length) {
+      submitCallback(); // Call the callback to notify the parent component
+      return;
     }
 
     setCurrQuestion(allQuestions[currentStep]);
     setCurrAnswers(allQuestions[currentStep].answers || []);
+    // Note: questionStartTime will be updated by the useEffect above
   };
 
   return (

@@ -150,3 +150,14 @@ export async function fetchAllTopics() {
   const res = await axiosInstance.get('/topics');
   return res.data.topics;
 }
+
+// 12. GET /questions/random
+
+export async function fetchRandomQuestions(level) {
+  const res = await axiosInstance.get('/questions/random', {
+    params: {
+      level,
+    },
+  });
+  return res.data;
+}

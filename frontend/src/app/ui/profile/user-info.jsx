@@ -5,7 +5,7 @@ export default function UserInfo({ ranking, xp }) {
       <div className="flex flex-col items-center">
         <h4 className="text-lg font-bold">Ranking</h4>
         <Trophy size={34} stroke="#FF8000" fill="#FF8000" className="m-2" />
-        <p>{ranking} place</p>
+        <p>Coming soon</p>
       </div>
       <div className="flex flex-col items-center">
         <h4 className="text-lg font-bold">League</h4>

@@ -10,11 +10,19 @@ import { calculateSinglePlayerXP } from './singlePlayer.js';
 import { supabase } from '../database/supabaseClient.js';
 import { backendMathValidator } from './mathValidator.js';
 
+import { createServer } from 'http';
+import { Server } from 'socket.io';
+
+//Change this import to ES6
+import socketsHandlers from './sockets.js';
+
 // Load environment variables
 dotenv.config();
 
 const app = express();
 const PORT = process.env.PORT || 3000;
+
+const server = createServer(app);
 
 // Middleware
 app.use(cors());
@@ -1051,6 +1059,71 @@ app.get('/practice/type/:questionType', async (req, res) => {
   }
 });
 
+app.get('/questions/random', async (req, res) => {
+  try {
+    const level = req.query.level;
+    if (!level) {
+      return res.status(400).json({ error: 'level is required' });
+    }
+
+    // Fetch 15 random questions for this level
+    const { data: questions, error: qError } = await supabase
+      .from('Questions')
+      .select('*')
+      .eq('level', level);
+
+    if (qError) {
+      //console.log(qError);
+      return res
+        .status(500)
+        .json({ error: 'Failed to fetch questions', details: qError.message });
+    }
+
+    if (!questions || questions.length === 0) {
+      return res
+        .status(404)
+        .json({ error: 'No questions found for this level' });
+    }
+
+    //shuffle and pick 15
+    const shuffled = questions.sort(() => 0.5 - Math.random());
+    const selected = shuffled.slice(0, 5);
+
+    //fetch the answers for the above questions
+    const questionIds = selected.map((q) => q.Q_id);
+    const { data: answers, error: aError } = await supabase
+      .from('Answers')
+      .select('*')
+      .in('question_id', questionIds);
+    if (aError) {
+      console.log('Database error:', aError);
+      io.to(gameId).emit('gameError', { error: 'Failed to fetch answers' });
+      return;
+    }
+
+    // Map answers to respective questions in the selected array
+    selected.forEach((q) => {
+      q.answers = answers.filter((a) => a.question_id === q.Q_id);
+    });
+
+    // //Map to clean structure
+    // const cleanQuestions = selected.map((q) => ({
+    //   id: q.Q_id,
+    //   topic: q.topic,
+    //   difficulty: q.difficulty,
+    //   level: q.level,
+    //   question: q.questionText,
+    //   xpGain: q.xpGain,
+    //   type: q.type,
+    // }));
+
+    return res.status(200).json({ questions: selected });
+  } catch (err) {
+    console.log(err);
+    return res.status(500).json({ error: 'Server error' });
+  }
+});
+
 // Start server
 // app.listen(PORT, () => {
 //   console.log(`Server is running on http://localhost:${PORT}`);
@@ -1059,10 +1132,24 @@ app.get('/practice/type/:questionType', async (req, res) => {
 // Only start the server if not testing - changed you may consult Monica
 
 if (process.env.NODE_ENV !== 'test') {
-  app.listen(PORT, () => {
+  server.listen(PORT, () => {
     console.log(`Server is running on http://localhost:${PORT}`);
   });
 }
+
+//Socket IO setup
+const io = new Server(server, {
+  cors: {
+    origin: '*',
+    methods: ['GET', 'POST'],
+  },
+});
+
+io.on('connection', (socket) => {
+  console.log('New client connected:', socket.id);
+  // add handlers for sockets.js here
+  socketsHandlers(io, socket);
+});
 
 // for Jest + Supertest
 export default app;

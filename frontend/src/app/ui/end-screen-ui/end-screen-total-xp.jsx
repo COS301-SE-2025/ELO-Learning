@@ -4,16 +4,29 @@ import { useEffect, useState } from 'react';
 export default function TotalXP() {
   const [totalXP, setTotalXP] = useState(0);
   useEffect(() => {
-    const questions = JSON.parse(localStorage.getItem('questionsObj'));
-    const correctAnswers = questions.filter(
-      (question) => question.isCorrect == true,
-    );
-    const totalXPSum = correctAnswers.reduce(
-      (accumulator, question) => accumulator + question.question.xpGain,
-      0,
-    );
+    // Check if we have ELO results from multiplayer match
+    const eloResults = localStorage.getItem('eloResults');
 
-    setTotalXP(totalXPSum);
+    if (eloResults) {
+      // Use ELO-based XP for multiplayer matches
+      const eloData = JSON.parse(eloResults);
+      console.log('Using ELO XP data:', eloData);
+      setTotalXP(eloData.xpEarned || 0);
+    } else {
+      // Fall back to single-player XP calculation
+      const questions = JSON.parse(
+        localStorage.getItem('questionsObj') || '[]',
+      );
+      const correctAnswers = questions.filter(
+        (question) => question.isCorrect == true,
+      );
+      const totalXPSum = correctAnswers.reduce(
+        (accumulator, question) => accumulator + question.question.xpGain,
+        0,
+      );
+      console.log('Using single-player XP calculation:', totalXPSum);
+      setTotalXP(totalXPSum);
+    }
   }, []);
   return (
     <div className="border-1 border-[#FF6E99] rounded-[10px] w-[90px]">

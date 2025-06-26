@@ -39,8 +39,26 @@ export default function GameClient({ game, level }) {
     function onEloResults(data) {
       console.log('ELO Results received:', data);
       console.log('Received by socket ID:', socket.id);
-      // Store ELO data for the endscreen
-      localStorage.setItem('eloResults', JSON.stringify(data));
+
+      // Verify that the ELO results are for the current user
+      const userInfo = JSON.parse(localStorage.getItem('user') || '{}');
+      if (data.userId && data.userId === userInfo.id) {
+        console.log('ELO results verified for current user ID:', data.userId);
+        // Store ELO data for the endscreen (only store XP and match result)
+        const eloData = {
+          xpEarned: data.xpEarned,
+          matchWinner: data.matchWinner,
+        };
+        localStorage.setItem('eloResults', JSON.stringify(eloData));
+        console.log('Stored ELO data:', eloData);
+      } else {
+        console.warn(
+          'ELO results received for different user. Expected:',
+          userInfo.id,
+          'Received:',
+          data.userId,
+        );
+      }
     }
 
     socket.on('gameReady', onGameReady);

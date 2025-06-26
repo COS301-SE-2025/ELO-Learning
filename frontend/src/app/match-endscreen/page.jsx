@@ -34,17 +34,29 @@ function MatchEndScreenContent() {
       const decodedUserData = decodeURIComponent(encodedUserData);
       const userData = JSON.parse(decodedUserData);
 
-      // Calculate XP earned using the same logic as TotalXP component
-      const questions = JSON.parse(
-        localStorage.getItem('questionsObj') || '[]'
-      );
-      const correctAnswers = questions.filter(
-        (question) => question.isCorrect == true
-      );
-      const xpEarned = correctAnswers.reduce(
-        (accumulator, question) => accumulator + question.question.xpGain,
-        0
-      );
+      // Calculate XP earned - use ELO data if available, otherwise fall back to single-player logic
+      let xpEarned = 0;
+      const eloResults = localStorage.getItem('eloResults');
+
+      if (eloResults) {
+        // Use ELO-based XP for multiplayer matches
+        const eloData = JSON.parse(eloResults);
+        xpEarned = eloData.xpEarned || 0;
+        console.log('Using ELO XP for database update:', xpEarned);
+      } else {
+        // Fall back to single-player XP calculation
+        const questions = JSON.parse(
+          localStorage.getItem('questionsObj') || '[]',
+        );
+        const correctAnswers = questions.filter(
+          (question) => question.isCorrect == true,
+        );
+        xpEarned = correctAnswers.reduce(
+          (accumulator, question) => accumulator + question.question.xpGain,
+          0,
+        );
+        console.log('Using single-player XP for database update:', xpEarned);
+      }
 
       if (xpEarned > 0) {
         // Calculate new total XP
@@ -56,13 +68,14 @@ function MatchEndScreenContent() {
         // Update the cookie with new XP value
         const updatedUserData = { ...userData, xp: newTotalXP };
         const updatedCookie = encodeURIComponent(
-          JSON.stringify(updatedUserData)
+          JSON.stringify(updatedUserData),
         );
         document.cookie = `user=${updatedCookie}; path=/`;
       }
 
       // Clear localStorage
       localStorage.removeItem('questionsObj');
+      localStorage.removeItem('eloResults'); // Clear ELO data as well
 
       // Redirect to dashboard
       router.push('/dashboard');
@@ -70,6 +83,7 @@ function MatchEndScreenContent() {
       console.error('Error claiming XP:', error);
       // Still redirect even if there's an error
       localStorage.removeItem('questionsObj');
+      localStorage.removeItem('eloResults'); // Clear ELO data as well
       router.push('/dashboard');
     } finally {
       setIsLoading(false);

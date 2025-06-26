@@ -291,100 +291,121 @@ export default (io, socket) => {
       console.log('Player 2 XP Earned:', eloMatchResult.player2XP);
       console.log('Match Winner:', eloMatchResult.matchResult);
 
-      // Send simplified ELO-based data to players
-      const eloData = {
+      // Get user IDs for both players
+      const firstPlayerUserId = gameData.userIds[0]; // First user ID in array
+      const secondPlayerUserId = gameData.userIds[1]; // Second user ID in array
+
+      console.log(
+        'First Player Socket:',
+        firstPlayer,
+        'User ID:',
+        firstPlayerUserId,
+      );
+      console.log(
+        'Second Player Socket:',
+        secondPlayer,
+        'User ID:',
+        secondPlayerUserId,
+      );
+
+      // Send ELO data with user ID and XP pairs to each player
+      const eloDataPlayer1 = {
+        userId: firstPlayerUserId,
         xpEarned: eloMatchResult.player1XP,
         matchWinner: eloMatchResult.matchResult,
       };
 
-      const eloData2 = {
+      const eloDataPlayer2 = {
+        userId: secondPlayerUserId,
         xpEarned: eloMatchResult.player2XP,
         matchWinner: eloMatchResult.matchResult,
       };
 
-      console.log('=== Sending ELO Data ===');
+      console.log('=== Sending ELO Data with User IDs ===');
       console.log(
-        'ELO Data for Player 1 - XP:',
-        eloMatchResult.player1XP,
-        'Winner:',
-        eloMatchResult.matchResult,
+        'Sending to Player 1 Socket:',
+        firstPlayer,
+        'Data:',
+        eloDataPlayer1,
       );
       console.log(
-        'ELO Data for Player 2 - XP:',
-        eloMatchResult.player2XP,
-        'Winner:',
-        eloMatchResult.matchResult,
+        'Sending to Player 2 Socket:',
+        secondPlayer,
+        'Data:',
+        eloDataPlayer2,
       );
 
-      // Emit ELO results to both players
-      io.to(firstPlayer).emit('eloResults', eloData);
-      io.to(secondPlayer).emit('eloResults', eloData2);
+      // Emit ELO results to both players with their user IDs
+      io.to(firstPlayer).emit('eloResults', eloDataPlayer1);
+      io.to(secondPlayer).emit('eloResults', eloDataPlayer2);
 
-      console.log('ELO results emitted to both players');
+      console.log('ELO results emitted to both players with user IDs');
 
-      // Update database with XP changes
+      // Update database with XP changes using the user IDs
       try {
         console.log('=== Updating Database with XP ===');
-
-        // We need to get the actual user IDs for the database update
-        // For now, we're using socket IDs, but we need to map to user IDs
+        console.log(
+          'Updating User ID:',
+          firstPlayerUserId,
+          'with XP:',
+          eloMatchResult.player1XP,
+        );
+        console.log(
+          'Updating User ID:',
+          secondPlayerUserId,
+          'with XP:',
+          eloMatchResult.player2XP,
+        );
         // The frontend sends userId in matchComplete, let's use that
 
-        // Get user IDs from the socket rooms or stored data
-        const gameData = matchMap.get(gameId);
-        if (gameData && gameData.userIds) {
-          const [userId1, userId2] = gameData.userIds;
+        // Update Player 1 XP in database
+        const { data: user1, error: error1 } = await supabase
+          .from('Users')
+          .select('xp')
+          .eq('id', firstPlayerUserId)
+          .single();
 
-          // Update Player 1 XP
-          const { data: user1, error: error1 } = await supabase
+        if (!error1 && user1) {
+          const newXP1 = user1.xp + eloMatchResult.player1XP;
+          const { error: updateError1 } = await supabase
             .from('Users')
-            .select('XP')
-            .eq('id', userId1)
-            .single();
+            .update({ xp: newXP1 })
+            .eq('id', firstPlayerUserId);
 
-          if (!error1 && user1) {
-            const newXP1 = user1.XP + eloMatchResult.player1XP;
-            const { error: updateError1 } = await supabase
-              .from('Users')
-              .update({ XP: newXP1 })
-              .eq('id', userId1);
-
-            if (updateError1) {
-              console.error('Error updating Player 1 XP:', updateError1);
-            } else {
-              console.log(
-                `Player 1 XP updated: ${user1.XP} -> ${newXP1} (+${eloMatchResult.player1XP})`,
-              );
-            }
-          }
-
-          // Update Player 2 XP
-          const { data: user2, error: error2 } = await supabase
-            .from('Users')
-            .select('XP')
-            .eq('id', userId2)
-            .single();
-
-          if (!error2 && user2) {
-            const newXP2 = user2.XP + eloMatchResult.player2XP;
-            const { error: updateError2 } = await supabase
-              .from('Users')
-              .update({ XP: newXP2 })
-              .eq('id', userId2);
-
-            if (updateError2) {
-              console.error('Error updating Player 2 XP:', updateError2);
-            } else {
-              console.log(
-                `Player 2 XP updated: ${user2.XP} -> ${newXP2} (+${eloMatchResult.player2XP})`,
-              );
-            }
+          if (updateError1) {
+            console.error('Error updating Player 1 XP:', updateError1);
+          } else {
+            console.log(
+              `Player 1 (${firstPlayerUserId}) XP updated: ${user1.xp} -> ${newXP1} (+${eloMatchResult.player1XP})`,
+            );
           }
         } else {
-          console.warn(
-            'Could not find user IDs for XP update. Game data:',
-            gameData,
-          );
+          console.error('Error fetching Player 1 current XP:', error1);
+        }
+
+        // Update Player 2 XP in database
+        const { data: user2, error: error2 } = await supabase
+          .from('Users')
+          .select('xp')
+          .eq('id', secondPlayerUserId)
+          .single();
+
+        if (!error2 && user2) {
+          const newXP2 = user2.xp + eloMatchResult.player2XP;
+          const { error: updateError2 } = await supabase
+            .from('Users')
+            .update({ xp: newXP2 })
+            .eq('id', secondPlayerUserId);
+
+          if (updateError2) {
+            console.error('Error updating Player 2 XP:', updateError2);
+          } else {
+            console.log(
+              `Player 2 (${secondPlayerUserId}) XP updated: ${user2.xp} -> ${newXP2} (+${eloMatchResult.player2XP})`,
+            );
+          }
+        } else {
+          console.error('Error fetching Player 2 current XP:', error2);
         }
       } catch (dbError) {
         console.error('=== Database Update Error ===');

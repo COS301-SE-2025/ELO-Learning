@@ -243,3 +243,10 @@ Shared Documentation
     <h3>zeroday0d4y@gmail.com</h3>
     <img src="https://drive.usercontent.google.com/download?id=1Py1pypOH4mMxOnsg2kw2PCKg340RuPTJ" width="300px"/>
 </div>
+<div height="500px"></div>
+
+## ♟️ Partner
+<div align="center">
+    <p>In collaboration with <a href="https://proking.solutions/">Proking Solutions</a></p>
+    <img src="https://drive.usercontent.google.com/download?id=1usb25gGHfheUws5oPzCXmuTKMUe-GAAQ"  width="300px"/>
+</div>

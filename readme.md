@@ -45,7 +45,8 @@ The platform encourages growth through competitive, skill-based challenges—suc
   <summary>
     Architectural Requirements
   </summary>
-  <a href="https://docs.google.com/document/d/1QqYa0kwkN3fPhvyjZu5W3-cpX-PQKAzK/edit?usp=sharing&ouid=111519098189217056979&rtpof=true&sd=true">Architectural Requirements</a>
+    | <a href="https://docs.google.com/document/d/1izYvZk-W59HGZy5bak7VuHOUFCfJNT3f/edit?usp=sharing&ouid=111519098189217056979&rtpof=true&sd=true">Architectural Requirements v1</a> |
+  <a href="https://docs.google.com/document/d/1QqYa0kwkN3fPhvyjZu5W3-cpX-PQKAzK/edit?usp=sharing&ouid=111519098189217056979&rtpof=true&sd=true">Architectural Requirements v2</a> |
 </details>
 
 <details>

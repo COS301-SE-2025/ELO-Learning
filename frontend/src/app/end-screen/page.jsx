@@ -118,11 +118,19 @@ function EndScreen() {
               Continue upskilling your maths! You are doing an amazing job!
             </p>
           </div>
-          <div className="flex flex-row items-center justify-center gap-8 my-7">
-            <TotalXP />
-            <Score />
-            <Time />
-          </div>
+          {mode === 'practice' && (
+            <div className="flex flex-row items-center justify-center gap-8 my-7">
+              <Score />
+              <Time />
+            </div>
+          )}
+          {mode === 'single-player' && (
+            <div className="flex flex-row items-center justify-center gap-8 my-7">
+              <TotalXP />
+              <Score />
+              <Time />
+            </div>
+          )}
         </div>
 
         <div className="flex flex-col gap-4 mb-5">

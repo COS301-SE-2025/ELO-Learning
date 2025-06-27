@@ -8,7 +8,12 @@ import QuestionTemplate from '@/app/ui/question-template';
 import QuestionFooter from '@/app/ui/questions/question-footer';
 import QuestionHeader from '@/app/ui/questions/question-header';
 
-export default function QuestionsTracker({ questions, submitCallback, lives }) {
+export default function QuestionsTracker({
+  questions,
+  submitCallback,
+  lives,
+  mode,
+}) {
   //Normal JS variables
   const allQuestions = questions;
   const totalSteps = allQuestions.length;
@@ -61,7 +66,7 @@ export default function QuestionsTracker({ questions, submitCallback, lives }) {
     if (!isAnswerCorrect) {
       setNumLives((prev) => prev - 1);
       if (numLives <= 1) {
-        redirect('/end-screen');
+        redirect(`/end-screen?mode=${mode}`);
       }
     }
   };

@@ -19,6 +19,7 @@ export default async function SinglePlayerGame() {
         questions={questions.questions}
         submitCallback={submitCallback}
         lives={5}
+        mode="single-player"
       />
     </div>
   );

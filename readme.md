@@ -21,6 +21,12 @@ The platform encourages growth through competitive, skill-based challenges—suc
 ## 🎥 Demo Videos
 <details>
   <summary>
+    Demo 1 Presentation Video (May 28, 2025)
+  </summary>
+  <a href="https://drive.google.com/file/d/1e2E4Jgxe9Kg_B71Dpo1kF9NmZOw2nZKu/view?usp=sharing">Watch Demo 1 Video</a>
+</details>
+<details>
+  <summary>
     Demo 2 Presentation Video (June 27, 2025)
   </summary>
   <a href="https://drive.google.com/file/d/1h8D7pI16n6AEnDAZ44I-xgcbYiTjGWAs/view?usp=sharing">Watch Demo 2 Video</a>

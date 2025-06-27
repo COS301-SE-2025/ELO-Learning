@@ -183,3 +183,77 @@ Query Parameters:
 - `topic` (required): Topic name
 
 Returns questions matching both level and topic.
+
+---
+
+### 🕹️ Single Player Attempt
+
+**POST /singleplayer**
+Description:
+Records a new question attempt, calculates XP earned, updates the user's XP and level, and returns the updated values.
+
+Request Body:
+
+```json
+{
+  "user_id": 7,
+  "question_id": 7,
+  "isCorrect": true,
+  "timeSpent": 18
+}
+```
+
+Example Response:
+
+```json
+{
+  "xpEarned": 22.45,
+  "leveledUp": false
+}
+```
+
+---
+
+### ⚔️ Multiplayer Match Attempt
+
+**POST /multiplayer**
+Description:
+Processes a multiplayer match between two players, calculates XP earned for each based on expected performance, updates both players’ XP (and level if applicable), and records the attempt.
+
+Request Body:
+
+```json
+{
+  "player1_id": 7,
+  "player2_id": 14,
+  "question_id": 22,
+  "score1": 1,
+  "xpTotal": 80
+}
+```
+
+Example Response:
+
+```json
+{
+  "message": "Multiplayer match processed successfully",
+  "players": [
+    {
+      "id": 7,
+      "xpEarned": 104,
+      "newXP": 1104,
+      "currentLevel": 6,
+      "leveledUp": false
+    },
+    {
+      "id": 14,
+      "xpEarned": 56,
+      "newXP": 906,
+      "currentLevel": 5,
+      "leveledUp": false
+    }
+  ]
+}
+```
+
+---

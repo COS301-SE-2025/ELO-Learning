@@ -1,14 +1,35 @@
+'use client';
+import { useState } from 'react';
 import ProgressBar from '@/app/ui/progress-bar';
 import Link from 'next/link';
-// import { FaGoogle } from 'react-icons/fa';
 import { X } from 'lucide-react';
+import { setRegistration, getRegistration } from './registrationUtils';
 
 const currentStep = 1;
 const totalSteps = 6;
 
 export default function Page() {
+  const [name, setName] = useState(getRegistration().name || '');
+  const [surname, setSurname] = useState(getRegistration().surname || '');
+  const [error, setError] = useState('');
+
+  const handleContinue = (e) => {
+    e.preventDefault();
+    if (!name.trim() || !surname.trim()) {
+      setError('Please enter both name and surname.');
+      return;
+    }
+    setRegistration({
+      name,
+      surname,
+      currentLevel: 5,
+      joinDate: new Date().toISOString(),
+    });
+    window.location.href = '/login-landing/signup/username';
+  };
+
   return (
-    <div className="full-screen w-full min-h-screen flex flex-col justify-between">
+    <div className="w-full min-h-screen flex flex-col justify-between p-3">
       <div>
         <div className="flex flex-row items-center justify-between w-full px-4 py-2">
           <Link href="/login-landing">
@@ -18,36 +39,37 @@ export default function Page() {
             <ProgressBar progress={currentStep / totalSteps} />
           </div>
         </div>
-        {/* A form to input a name and email */}
         <div>
-          <p>What is your name?</p>
-          <form className="m-10 mb-0">
-            <div className="flex flex-col items-center w-full gap-4">
+          <p className="text-lg text-center font-bold">What is your name?</p>
+          <form onSubmit={handleContinue}>
+            <div className="flex flex-col items-center w-full">
               <input
                 type="text"
                 placeholder="Name"
                 className="input-field md:w-1/2 top_form_input"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                required
               />
               <input
                 type="text"
                 placeholder="Surname"
                 className="input-field md:w-1/2 bottom_form_input"
+                value={surname}
+                onChange={(e) => setSurname(e.target.value)}
+                required
               />
+              {error && <p className="text-red-500">{error}</p>}
               <div className="break_small"></div>
-              <Link href="/login-landing/signup/username">
-                <button className="main-button px-2 py-8">Continue</button>
-              </Link>
+              <button className="main-button px-2 py-8" type="submit">
+                Continue
+              </button>
             </div>
           </form>
         </div>
       </div>
-      {/* Disclaimer is now spaced above the bottom */}
-      <div className="mb-8 px-4 text-center">
-        <div className="google-button flex items-center justify-around gap-10">
-          {/* <FaGoogle size={24} /> */}
-          <p>Sign in with Google</p>
-        </div>
-        <p className="disclaimer">
+      <div className="px-4 text-center">
+        <p className="disclaimer pt-5">
           Your data isn't shared with any third parties. View our terms and
           privacy policy here.
         </p>

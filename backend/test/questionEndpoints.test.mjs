@@ -1,12 +1,13 @@
+import { jest } from '@jest/globals';
 import request from 'supertest';
 import app from '../src/server.js';
-import { jest } from '@jest/globals';
 
 jest.setTimeout(20000); // for slow tests
 
 // Test data - adjust these to match your actual database
-const testLevel = 1;
+const testLevel = 4;
 const testTopic = 'Statistics';
+const testTopicId = '1';
 const testQuestionId = 22; // Make sure this exists in your Questions table
 
 describe('Question Endpoints Integration Tests', () => {
@@ -185,11 +186,11 @@ describe('Question Endpoints Integration Tests', () => {
   describe('GET /questions/level/topic', () => {
     it('should return questions filtered by both level and topic without auth', async () => {
       console.log(
-        `Running /questions/level/topic?level=${testLevel}&topic=${testTopic} test...`,
+        `Running /questions/level/topic?level=${testLevel}&topic=${testTopicId} test...`,
       );
 
       const res = await request(app).get(
-        `/questions/level/topic?level=${testLevel}&topic=${testTopic}`,
+        `/questions/level/topic?level=${testLevel}&topic=${testTopicId}`,
       );
 
       console.log('Response received:', res.statusCode);
@@ -232,7 +233,7 @@ describe('Question Endpoints Integration Tests', () => {
 
     it('should return empty array for non-existent level/topic combination', async () => {
       const res = await request(app).get(
-        '/questions/level/topic?level=999&topic=NonExistentTopic',
+        '/questions/level/topic?level=999&topic=-1',
       );
 
       expect(res.statusCode).toBe(200);
@@ -244,7 +245,7 @@ describe('Question Endpoints Integration Tests', () => {
     it('should work without any authentication', async () => {
       // Test that content-only endpoint works without Authorization header
       const res = await request(app).get(
-        `/questions/level/topic?level=${testLevel}&topic=${testTopic}`,
+        `/questions/level/topic?level=${testLevel}&topic=${testTopicId}`,
       );
 
       expect(res.statusCode).toBe(200);

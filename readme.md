@@ -35,6 +35,7 @@ The platform encourages growth through competitive, skill-based challenges—suc
 ## 📁 Documentation
 
 ### DEMO 1 Documentation (May 28, 2025)
+
 <details>
   <summary>
     Services Requirement Specification (SRS) v1
@@ -69,6 +70,7 @@ The platform encourages growth through competitive, skill-based challenges—suc
 </details>
 
 ### DEMO 2 Documentation (June 27, 2025)
+
 <details>
   <summary>
     Services Requirement Specification (SRS) v2
@@ -104,6 +106,7 @@ The platform encourages growth through competitive, skill-based challenges—suc
 </details>
 
 Shared Documentation
+
 <details>
   <summary>
     Coding Standards
@@ -265,6 +268,7 @@ Shared Documentation
 <div height="500px"></div>
 
 ## ♟️ Partner
+
 <div align="center">
     <p>In collaboration with <a href="https://proking.solutions/">Proking Solutions</a></p>
     <img src="https://drive.usercontent.google.com/download?id=1usb25gGHfheUws5oPzCXmuTKMUe-GAAQ"  width="300px"/>

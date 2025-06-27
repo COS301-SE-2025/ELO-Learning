@@ -1,16 +1,15 @@
 import { getCookie } from '@/app/lib/authCookie';
 import QuestionsTracker from '@/app/ui/questions/questions-tracker';
-import { fetchQuestionsByLevelAndTopic } from '@/services/api';
+import { fetchRandomQuestions } from '@/services/api';
 import { redirect } from 'next/navigation';
-export default async function PracticeTopic({ params }) {
-  const { topic } = await params;
+export default async function SinglePlayerGame() {
   const authCookie = await getCookie();
   const level = authCookie.user.currentLevel;
-  const questions = await fetchQuestionsByLevelAndTopic(level, topic);
+  const questions = await fetchRandomQuestions(level);
 
   const submitCallback = async () => {
     'use server';
-    redirect('/end-screen?mode=practice');
+    redirect('/end-screen?mode=single-player');
   };
 
   return (

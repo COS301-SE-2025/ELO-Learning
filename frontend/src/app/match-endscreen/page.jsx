@@ -69,6 +69,7 @@ function MatchEndScreenContent() {
         const updatedUserData = { ...userData, xp: newTotalXP };
         const updatedCookie = encodeURIComponent(
           JSON.stringify(updatedUserData),
+          JSON.stringify(updatedUserData),
         );
         document.cookie = `user=${updatedCookie}; path=/`;
       }

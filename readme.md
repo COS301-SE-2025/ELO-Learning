@@ -18,6 +18,14 @@ ELO Learning is an innovative educational app designed to make learning mathemat
 
 The platform encourages growth through competitive, skill-based challenges—such as ranked matches against peers—and a dynamic reward system that motivates progress. By breaking down traditional educational silos, ELO Learning empowers students to advance at their own pace and unlock their full potential.
 
+## 🎥 Demo Videos
+<details>
+  <summary>
+    Demo 2 Presentation Video (June 27, 2025)
+  </summary>
+  <a href="https://drive.google.com/file/d/1h8D7pI16n6AEnDAZ44I-xgcbYiTjGWAs/view?usp=sharing">Watch Demo 2 Video</a>
+</details>
+
 ## 📁 Documentation
 
 ### DEMO 1 Documentation (May 28, 2025)

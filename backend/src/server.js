@@ -315,7 +315,7 @@ app.get('/questions/topic', async (req, res) => {
 
   const { data, error } = await supabase
     .from('Questions')
-    .select('Q_id, topic, difficulty, level, questionText, xpGain')
+    .select('Q_id, topic, difficulty, level, questionText, xpGain, type')
     .eq('topic', topic);
 
   if (error) {

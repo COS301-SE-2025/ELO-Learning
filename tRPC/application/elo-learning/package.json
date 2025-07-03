@@ -13,8 +13,13 @@
     "lucide-react": "^0.525.0",
     "mathjs": "^14.5.3",
     "next": "15.3.4",
+    "axios": "^1.10.0",
+    "clsx": "^2.1.1",
     "react": "^19.0.0",
-    "react-dom": "^19.0.0"
+    "react-dom": "^19.0.0",
+    "react-katex": "^3.1.0",
+    "socket.io": "^4.8.1",
+    "socket.io-client": "^4.8.1"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",

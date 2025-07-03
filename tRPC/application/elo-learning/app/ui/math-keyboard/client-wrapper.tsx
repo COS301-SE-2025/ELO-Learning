@@ -56,8 +56,14 @@ export default function MathKeyboardWrapper({
 
   // Math input specific states
   const [studentAnswer, setStudentAnswer] = useState<string>('');
-  const [isAnswerCorrect, setIsAnswerCorrect] = useState<boolean>(false);
   const [isValidExpression, setIsValidExpression] = useState<boolean>(true);
+
+  // Callback function for MathInputTemplate (unused but required by interface)
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const setIsAnswerCorrect = (_isCorrect: boolean): void => {
+    // This callback is required by MathInputTemplate but not used in this component
+    // The answer correctness is determined by the backend API response
+  };
 
   // Feedback state
   const [showFeedback, setShowFeedback] = useState<boolean>(false);
@@ -68,6 +74,11 @@ export default function MathKeyboardWrapper({
   useEffect(() => {
     console.log('Student answer changed:', studentAnswer);
   }, [studentAnswer]);
+
+  // Enable/disable submit button based on math input validation
+  useEffect(() => {
+    setIsDisabled(!studentAnswer.trim() || !isValidExpression);
+  }, [studentAnswer, isValidExpression]);
 
   // Handle case where no math questions are available
   if (!mathQuestions || mathQuestions.length === 0) {
@@ -91,20 +102,15 @@ export default function MathKeyboardWrapper({
     );
   }
 
-  // Enable/disable submit button based on math input validation
-  useEffect(() => {
-    setIsDisabled(!studentAnswer.trim() || !isValidExpression);
-  }, [studentAnswer, isValidExpression]);
-
   const submitAnswer = async (): Promise<void> => {
     setIsSubmitting(true);
     setShowFeedback(false);
 
     try {
       const result: SubmitQuestionResponse = await submitQuestionAnswer(
-        currQuestion.Q_id,
+        parseInt(currQuestion.Q_id, 10),
         studentAnswer,
-        'current-user-id',
+        123, // TODO: Replace with actual user ID
       );
 
       if (result.success && result.data) {
@@ -139,7 +145,6 @@ export default function MathKeyboardWrapper({
     setCurrentStep((prev: number) => prev + 1);
     setIsDisabled(true);
     setStudentAnswer('');
-    setIsAnswerCorrect(false);
     setIsValidExpression(true);
     setShowFeedback(false);
     setFeedbackMessage('');

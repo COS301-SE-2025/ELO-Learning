@@ -29,15 +29,6 @@ interface AutoCompletion {
   description: string;
 }
 
-interface ValidationResult {
-  success: boolean;
-  data?: {
-    isValid: boolean;
-    message: string;
-  };
-  error?: string;
-}
-
 interface QuickValidationResult {
   success: boolean;
   data?: {
@@ -53,6 +44,19 @@ interface MathInputTemplateProps {
   setIsValidExpression: (isValid: boolean) => void;
   studentAnswer?: string;
 }
+
+// Auto-completion suggestions - moved outside component since it's static
+const autoCompletions: AutoCompletion[] = [
+  { trigger: 'sin', completion: 'sin()', description: 'Sine function' },
+  { trigger: 'cos', completion: 'cos()', description: 'Cosine function' },
+  { trigger: 'tan', completion: 'tan()', description: 'Tangent function' },
+  { trigger: 'log', completion: 'log()', description: 'Logarithm' },
+  { trigger: 'ln', completion: 'ln()', description: 'Natural log' },
+  { trigger: 'sqrt', completion: 'sqrt()', description: 'Square root' },
+  { trigger: 'abs', completion: 'abs()', description: 'Absolute value' },
+  { trigger: 'pi', completion: 'π', description: 'Pi constant' },
+  { trigger: 'inf', completion: '∞', description: 'Infinity' },
+];
 
 export default function MathInputTemplate({
   correctAnswer,
@@ -154,19 +158,6 @@ export default function MathInputTemplate({
     },
   };
 
-  // Auto-completion suggestions
-  const autoCompletions: AutoCompletion[] = [
-    { trigger: 'sin', completion: 'sin()', description: 'Sine function' },
-    { trigger: 'cos', completion: 'cos()', description: 'Cosine function' },
-    { trigger: 'tan', completion: 'tan()', description: 'Tangent function' },
-    { trigger: 'log', completion: 'log()', description: 'Logarithm' },
-    { trigger: 'ln', completion: 'ln()', description: 'Natural log' },
-    { trigger: 'sqrt', completion: 'sqrt()', description: 'Square root' },
-    { trigger: 'abs', completion: 'abs()', description: 'Absolute value' },
-    { trigger: 'pi', completion: 'π', description: 'Pi constant' },
-    { trigger: 'inf', completion: '∞', description: 'Infinity' },
-  ];
-
   // Real-time expression validation
   useEffect(() => {
     const validateExpression = async (): Promise<void> => {
@@ -193,14 +184,13 @@ export default function MathInputTemplate({
       }
 
       try {
-        const result: ValidationResult =
-          await validateMathExpression(inputValue);
+        const result = await validateMathExpression(inputValue);
         if (result.success && result.data) {
-          setLocalIsValidExpression(result.data.isValid);
-          setIsValidExpression?.(result.data.isValid);
-          setValidationMessage(result.data.message);
+          setLocalIsValidExpression(result.data.isCorrect);
+          setIsValidExpression?.(result.data.isCorrect);
+          setValidationMessage(result.data.message || '');
 
-          if (!result.data.isValid) {
+          if (!result.data.isCorrect) {
             setTimeout(() => {
               setShowErrorMessage(true);
             }, 1500);

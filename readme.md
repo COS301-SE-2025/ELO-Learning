@@ -6,7 +6,6 @@
 [![Issue Tracking](https://img.shields.io/badge/Issue_Tracking-GitHub_Issues-yellow)](https://github.com/COS301-SE-2025/ELO-Learning/issues)
 [![Build Status](https://img.shields.io/badge/Build_Status-GitHub_Actions-brightgreen)](https://github.com/COS301-SE-2025/ELO-Learning/actions/workflows/linter.yml)
 ![Uptime Robot status](https://img.shields.io/uptimerobot/status/m797015486-75c486778a8f87b141372bd7)
-[![codecov](https://codecov.io/gh/COS301-SE-2025/ELO-Learning/branch/development/graph/badge.svg)](https://codecov.io/gh/COS301-SE-2025/ELO-Learning/tree/development)
 ![Node.js Version](https://img.shields.io/badge/node-%3E%3D16.0.0-brightgreen)
 ![React](https://img.shields.io/badge/react-%2320232a.svg?style=flat&logo=react&logoColor=%2361DAFB)
 ![Next.js](https://img.shields.io/badge/Next-black?style=flat&logo=next.js&logoColor=white)
@@ -18,6 +17,21 @@
 ELO Learning is an innovative educational app designed to make learning mathematics engaging and enjoyable. Rather than grouping students strictly by age, ELO Learning focuses on individual skill development, offering a personalized learning experience that adapts to each learner's unique abilities.
 
 The platform encourages growth through competitive, skill-based challenges—such as ranked matches against peers—and a dynamic reward system that motivates progress. By breaking down traditional educational silos, ELO Learning empowers students to advance at their own pace and unlock their full potential.
+
+## 🎥 Demo Videos
+
+<details>
+  <summary>
+    Demo 1 Presentation Video (May 28, 2025)
+  </summary>
+  <a href="https://drive.google.com/file/d/1e2E4Jgxe9Kg_B71Dpo1kF9NmZOw2nZKu/view?usp=sharing">Watch Demo 1 Video</a>
+</details>
+<details>
+  <summary>
+    Demo 2 Presentation Video (June 27, 2025)
+  </summary>
+  <a href="https://drive.google.com/file/d/1h8D7pI16n6AEnDAZ44I-xgcbYiTjGWAs/view?usp=sharing">Watch Demo 2 Video</a>
+</details>
 
 ## 📁 Documentation
 

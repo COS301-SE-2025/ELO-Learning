@@ -1,0 +1,32 @@
+'use client';
+
+import { MoveLeft } from 'lucide-react';
+import { useRouter } from 'next/navigation';
+
+interface BackProps {
+  pagename: string;
+}
+
+export default function Back({ pagename }: BackProps) {
+  const router = useRouter();
+
+  const handleBack = (): void => {
+    router.back();
+  };
+
+  return (
+    <div className="flex flex-row items-center justify-between m-5">
+      <button
+        onClick={handleBack}
+        className="cursor-pointer hover:opacity-70 transition-opacity"
+        aria-label="Go back"
+      >
+        <MoveLeft size={24} />
+      </button>
+      <p className="text-2xl font-bold absolute left-1/2 transform -translate-x-1/2">
+        {pagename}
+      </p>
+      <div className="w-6"></div>
+    </div>
+  );
+}

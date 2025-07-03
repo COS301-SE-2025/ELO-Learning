@@ -65,7 +65,12 @@ class FrontendMathValidator {
             }
           },
 
-          integral: (expr: string, variable: string, from?: number, to?: number) => {
+          integral: (
+            expr: string,
+            variable: string,
+            from?: number,
+            to?: number,
+          ) => {
             try {
               if (from !== undefined && to !== undefined) {
                 return this.math.evaluate(
@@ -87,8 +92,10 @@ class FrontendMathValidator {
           },
 
           factorial: (n: number): number => this.math.factorial(n),
-          combination: (n: number, k: number): number => this.math.combinations(n, k),
-          permutation: (n: number, k: number): number => this.math.permutations(n, k),
+          combination: (n: number, k: number): number =>
+            this.math.combinations(n, k),
+          permutation: (n: number, k: number): number =>
+            this.math.permutations(n, k),
         };
 
         this.math.import(customFunctions);
@@ -484,7 +491,10 @@ class FrontendMathValidator {
         return false;
       }
     } catch (error) {
-      console.debug('Numerical equality check failed:', (error as Error).message);
+      console.debug(
+        'Numerical equality check failed:',
+        (error as Error).message,
+      );
       return false;
     }
   }
@@ -537,12 +547,18 @@ class FrontendMathValidator {
         return false;
       }
     } catch (error) {
-      console.debug('Algebraic equivalence check failed:', (error as Error).message);
+      console.debug(
+        'Algebraic equivalence check failed:',
+        (error as Error).message,
+      );
       return false;
     }
   }
 
-  private checkSimpleAlgebraicEquivalence(student: string, correct: string): boolean {
+  private checkSimpleAlgebraicEquivalence(
+    student: string,
+    correct: string,
+  ): boolean {
     try {
       const simplified1 = this.math.simplify(student);
       const simplified2 = this.math.simplify(correct);
@@ -571,12 +587,18 @@ class FrontendMathValidator {
 
       return false;
     } catch (error) {
-      console.debug('Advanced equivalence check failed:', (error as Error).message);
+      console.debug(
+        'Advanced equivalence check failed:',
+        (error as Error).message,
+      );
       return false;
     }
   }
 
-  private checkTrigonometricEquivalence(student: string, correct: string): boolean {
+  private checkTrigonometricEquivalence(
+    student: string,
+    correct: string,
+  ): boolean {
     try {
       // Test with common angle values
       const testValues: number[] = [
@@ -608,7 +630,10 @@ class FrontendMathValidator {
     }
   }
 
-  private checkLogarithmicEquivalence(student: string, correct: string): boolean {
+  private checkLogarithmicEquivalence(
+    student: string,
+    correct: string,
+  ): boolean {
     try {
       // Test with common values for logarithmic expressions
       const testValues: number[] = [1, 2, Math.E, 10, 100];
@@ -633,7 +658,10 @@ class FrontendMathValidator {
     }
   }
 
-  private checkExponentialEquivalence(student: string, correct: string): boolean {
+  private checkExponentialEquivalence(
+    student: string,
+    correct: string,
+  ): boolean {
     try {
       // Test with common values for exponential expressions
       const testValues: number[] = [0, 1, 2, 3, -1, -2];
@@ -666,11 +694,15 @@ if (!mathValidatorInstance) {
 const MathValidator: FrontendMathValidator = mathValidatorInstance;
 
 // Export functions for compatibility
-export const validateMathAnswer = (studentAnswer: string, correctAnswer: string): boolean =>
-  MathValidator.validateAnswer(studentAnswer, correctAnswer);
+export const validateMathAnswer = (
+  studentAnswer: string,
+  correctAnswer: string,
+): boolean => MathValidator.validateAnswer(studentAnswer, correctAnswer);
 
-export const quickValidateMath = (studentAnswer: string, correctAnswer: string): boolean =>
-  MathValidator.quickValidate(studentAnswer, correctAnswer);
+export const quickValidateMath = (
+  studentAnswer: string,
+  correctAnswer: string,
+): boolean => MathValidator.quickValidate(studentAnswer, correctAnswer);
 
 export const isValidMathExpression = (input: string): boolean =>
   MathValidator.isValidMathExpression(input);

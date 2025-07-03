@@ -63,7 +63,8 @@ export default function MathInputTemplate({
 }: MathInputTemplateProps) {
   const [inputValue, setInputValue] = useState<string>(studentAnswer);
   const [validationMessage, setValidationMessage] = useState<string>('');
-  const [localIsValidExpression, setLocalIsValidExpression] = useState<boolean>(true);
+  const [localIsValidExpression, setLocalIsValidExpression] =
+    useState<boolean>(true);
   const [showErrorMessage, setShowErrorMessage] = useState<boolean>(false);
   const [isChecking, setIsChecking] = useState<boolean>(false);
   const [activeTab, setActiveTab] = useState<string>('basic');
@@ -192,7 +193,8 @@ export default function MathInputTemplate({
       }
 
       try {
-        const result: ValidationResult = await validateMathExpression(inputValue);
+        const result: ValidationResult =
+          await validateMathExpression(inputValue);
         if (result.success && result.data) {
           setLocalIsValidExpression(result.data.isValid);
           setIsValidExpression?.(result.data.isValid);
@@ -244,7 +246,10 @@ export default function MathInputTemplate({
 
       setIsChecking(true);
       try {
-        const result: QuickValidationResult = await quickValidateMath(inputValue, correctAnswer);
+        const result: QuickValidationResult = await quickValidateMath(
+          inputValue,
+          correctAnswer,
+        );
         if (result.success && result.data) {
           setIsAnswerCorrect(result.data.isCorrect);
         } else {
@@ -268,19 +273,26 @@ export default function MathInputTemplate({
     return match ? match[0] : '';
   };
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>): void => {
+  const handleInputChange = (
+    e: React.ChangeEvent<HTMLTextAreaElement>,
+  ): void => {
     const value = e.target.value;
     setInputValue(value);
     setStudentAnswer(value);
     setCursorPosition(e.target.selectionStart || 0);
   };
 
-  const handleCursorPosition = (e: React.SyntheticEvent<HTMLTextAreaElement>): void => {
+  const handleCursorPosition = (
+    e: React.SyntheticEvent<HTMLTextAreaElement>,
+  ): void => {
     const target = e.target as HTMLTextAreaElement;
     setCursorPosition(target.selectionStart || 0);
   };
 
-  const insertSymbol = (symbol: string, shouldMoveCursor: boolean = true): void => {
+  const insertSymbol = (
+    symbol: string,
+    shouldMoveCursor: boolean = true,
+  ): void => {
     const input = inputRef.current;
     if (!input) return;
 

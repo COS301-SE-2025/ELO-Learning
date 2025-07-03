@@ -39,14 +39,18 @@ interface MathKeyboardWrapperProps {
   questions: Question[];
 }
 
-export default function MathKeyboardWrapper({ questions }: MathKeyboardWrapperProps) {
+export default function MathKeyboardWrapper({
+  questions,
+}: MathKeyboardWrapperProps) {
   // Remove frontend filtering since backend already filters
   const mathQuestions: Question[] = questions;
 
   const totalSteps: number = mathQuestions.length;
 
   const [currQuestion, setCurrQuestion] = useState<Question>(mathQuestions[0]);
-  const [currAnswers, setCurrAnswers] = useState<Answer[]>(currQuestion?.answers || []);
+  const [currAnswers, setCurrAnswers] = useState<Answer[]>(
+    currQuestion?.answers || [],
+  );
   const [currentStep, setCurrentStep] = useState<number>(1);
   const [isDisabled, setIsDisabled] = useState<boolean>(true);
 

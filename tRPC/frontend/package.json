@@ -1,0 +1,42 @@
+{
+  "name": "elo-learning",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev --turbopack -p 8080",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint",
+    "test:unit": "cypress run --spec 'cypress/unit/**/*.test.cy.js'",
+    "test:integration": "cypress run --spec 'cypress/integration/**/*.cy.js'",
+    "test:e2e": "cypress run --spec 'cypress/e2e/**/*.cy.jsx'",
+    "test:all": "cypress run"
+  },
+  "dependencies": {
+    "axios": "^1.10.0",
+    "clsx": "^2.1.1",
+    "katex": "^0.16.22",
+    "lucide-react": "^0.511.0",
+    "math-expression-evaluator": "^2.0.7",
+    "mathjs": "^14.5.2",
+    "next": "15.3.2",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "react-katex": "^3.1.0",
+    "socket.io": "^4.8.1",
+    "socket.io-client": "^4.8.1",
+    "typescript": "^5.8.3"
+  },
+  "devDependencies": {
+    "@eslint/eslintrc": "^3",
+    "@tailwindcss/postcss": "^4",
+    "@types/cypress": "^0.1.6",
+    "@types/react": "19.1.5",
+    "@types/sinon": "^17.0.4",
+    "cypress": "^14.4.0",
+    "eslint": "^9",
+    "eslint-config-next": "15.3.2",
+    "sinon": "^21.0.0",
+    "tailwindcss": "^4"
+  }
+}

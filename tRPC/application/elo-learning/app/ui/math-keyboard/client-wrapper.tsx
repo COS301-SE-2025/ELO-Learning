@@ -1,0 +1,287 @@
+'use client';
+
+import React, { useEffect, useState } from 'react';
+import MathInputTemplate from '@/app/ui/math-keyboard/math-input-template';
+// import ProgressBar from '@/app/ui/progress-bar'; // TODO: Add ProgressBar component later
+import { submitQuestionAnswer } from '@/utils/api';
+import { Heart, X } from 'lucide-react';
+import Link from 'next/link';
+import { redirect } from 'next/navigation';
+
+// Type definitions
+interface Answer {
+  isCorrect: boolean;
+  answerText?: string;
+  answer_text?: string;
+}
+
+interface Question {
+  Q_id: string;
+  questionText: string;
+  topic?: string;
+  difficulty?: string;
+  xpGain?: number;
+  correctAnswer?: string;
+  answers?: Answer[];
+}
+
+interface SubmitQuestionResponse {
+  success: boolean;
+  data?: {
+    message: string;
+    isCorrect: boolean;
+    xpAwarded: number;
+  };
+  error?: string;
+}
+
+interface MathKeyboardWrapperProps {
+  questions: Question[];
+}
+
+export default function MathKeyboardWrapper({
+  questions,
+}: MathKeyboardWrapperProps) {
+  // Remove frontend filtering since backend already filters
+  const mathQuestions: Question[] = questions;
+
+  const totalSteps: number = mathQuestions.length;
+
+  const [currQuestion, setCurrQuestion] = useState<Question>(mathQuestions[0]);
+  const [currAnswers, setCurrAnswers] = useState<Answer[]>(
+    currQuestion?.answers || [],
+  );
+  const [currentStep, setCurrentStep] = useState<number>(1);
+  const [isDisabled, setIsDisabled] = useState<boolean>(true);
+
+  // Math input specific states
+  const [studentAnswer, setStudentAnswer] = useState<string>('');
+  const [isValidExpression, setIsValidExpression] = useState<boolean>(true);
+
+  // Callback function for MathInputTemplate (unused but required by interface)
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const setIsAnswerCorrect = (_isCorrect: boolean): void => {
+    // This callback is required by MathInputTemplate but not used in this component
+    // The answer correctness is determined by the backend API response
+  };
+
+  // Feedback state
+  const [showFeedback, setShowFeedback] = useState<boolean>(false);
+  const [feedbackMessage, setFeedbackMessage] = useState<string>('');
+  const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
+
+  // Debug: Log state changes
+  useEffect(() => {
+    console.log('Student answer changed:', studentAnswer);
+  }, [studentAnswer]);
+
+  // Enable/disable submit button based on math input validation
+  useEffect(() => {
+    setIsDisabled(!studentAnswer.trim() || !isValidExpression);
+  }, [studentAnswer, isValidExpression]);
+
+  // Handle case where no math questions are available
+  if (!mathQuestions || mathQuestions.length === 0) {
+    return (
+      <div className="min-h-screen flex items-center justify-center ">
+        <div className="text-center p-8 max-w-md">
+          <h2 className="text-2xl font-bold mb-4">
+            No Math Questions Available
+          </h2>
+          <p className="text-gray-600 mb-6">
+            There are currently no math input questions available for practice.
+          </p>
+          <Link
+            href="/question-templates/multiple-choice"
+            className="inline-block px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+          >
+            Try Multiple Choice Instead
+          </Link>
+        </div>
+      </div>
+    );
+  }
+
+  const submitAnswer = async (): Promise<void> => {
+    setIsSubmitting(true);
+    setShowFeedback(false);
+
+    try {
+      const result: SubmitQuestionResponse = await submitQuestionAnswer(
+        parseInt(currQuestion.Q_id, 10),
+        studentAnswer,
+        123, // TODO: Replace with actual user ID
+      );
+
+      if (result.success && result.data) {
+        setFeedbackMessage(result.data.message);
+        setShowFeedback(true);
+
+        if (result.data.isCorrect && result.data.xpAwarded > 0) {
+          console.log(`Awarded ${result.data.xpAwarded} XP!`);
+        }
+      } else {
+        setFeedbackMessage(result.error || 'Failed to submit answer');
+        setShowFeedback(true);
+      }
+
+      setTimeout(() => {
+        moveToNextQuestion();
+      }, 2000);
+    } catch (error) {
+      console.error('Error submitting math answer:', error);
+      setFeedbackMessage('Error submitting answer. Please try again.');
+      setShowFeedback(true);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const moveToNextQuestion = (): void => {
+    if (currentStep >= totalSteps) {
+      redirect('/dashboard');
+    }
+
+    setCurrentStep((prev: number) => prev + 1);
+    setIsDisabled(true);
+    setStudentAnswer('');
+    setIsValidExpression(true);
+    setShowFeedback(false);
+    setFeedbackMessage('');
+
+    const nextQuestion: Question = mathQuestions[currentStep];
+    setCurrQuestion(nextQuestion);
+    setCurrAnswers(nextQuestion?.answers || []);
+  };
+
+  const getCorrectAnswer = (): string => {
+    return (
+      currQuestion.correctAnswer ||
+      currAnswers.find((a: Answer) => a.isCorrect)?.answerText ||
+      currAnswers.find((a: Answer) => a.isCorrect)?.answer_text ||
+      ''
+    );
+  };
+
+  return (
+    <div className="min-h-screen flex flex-col">
+      {/* Header */}
+      <div className="fixed top-0 left-0 w-full z-20 bg-[#201F1F]">
+        <div className="flex items-center justify-between w-full py-4 px-4 max-w-4xl mx-auto">
+          <Link href="/practice" className="p-2">
+            <X size={24} />
+          </Link>
+
+          <div className="flex-1 mx-4">
+            {/* TODO: Add ProgressBar component when converting UI components */}
+            {/* <div className="text-sm text-gray-700 mb-1 text-center font-medium">
+              Math Question {currentStep} of {totalSteps}
+            </div> */}
+            {/* <ProgressBar progress={currentStep / totalSteps} /> */}
+          </div>
+
+          <div className="flex items-center gap-2">
+            <Heart size={24} fill="#FF6E99" stroke="#FF6E99" />
+            <span className="font-semibold text-lg">5</span>
+          </div>
+        </div>
+      </div>
+
+      {/* Main Content */}
+      <div className="space-y-11 pb-35 md:pb-50 pt-24 max-w-4xl mx-auto">
+        {/* Question Section */}
+        <div className=" p-8 ">
+          <h2 className="text-2xl font-bold text-center leading-relaxed">
+            {currQuestion.questionText}
+          </h2>
+
+          {/* Question metadata */}
+          {/* <div className="flex justify-center gap-3 mt-6">
+            <span className="px-4 py-2 bg-blue-100 text-blue-800 rounded-full text-sm font-semibold">
+              📚 {currQuestion.topic}
+            </span>
+            <span className="px-4 py-2 bg-green-100 text-green-800 rounded-full text-sm font-semibold">
+              🎯 {currQuestion.difficulty}
+            </span>
+            <span className="px-4 py-2 bg-purple-100 text-purple-800 rounded-full text-sm font-semibold">
+              ⭐ {currQuestion.xpGain || 10} XP
+            </span>
+          </div> */}
+        </div>
+
+        {/* Math Input Section */}
+        <div className="">
+          <div className="mb-4">
+            <p className="">
+              Use the keyboard below or type your mathematical expression
+              directly
+            </p>
+          </div>
+
+          <MathInputTemplate
+            correctAnswer={getCorrectAnswer()}
+            setStudentAnswer={setStudentAnswer}
+            setIsAnswerCorrect={setIsAnswerCorrect}
+            setIsValidExpression={setIsValidExpression}
+            studentAnswer={studentAnswer}
+          />
+        </div>
+
+        {/* Feedback Section */}
+        {showFeedback && (
+          <div className="animate-fade-in">
+            <div
+              className={`p-6 rounded-xl text-center font-bold text-lg shadow-xl border-2 ${
+                feedbackMessage.includes('Correct') ||
+                feedbackMessage.includes('Well done')
+                  ? 'bg-green-50 text-green-800 border-green-300'
+                  : 'bg-red-50 text-red-800 border-red-300'
+              }`}
+            >
+              {feedbackMessage}
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Submit Button */}
+      <div className="flex fixed bottom-0 left-0 w-full z-10 px-4 py-4 bg-[#201F1F]">
+        <div className="flex flex-col justify-center md:m-auto max-w-2xl mx-auto">
+          <button
+            type="button"
+            disabled={isDisabled || isSubmitting}
+            onClick={submitAnswer}
+            className={`w-full md:m-auto ${
+              isDisabled || isSubmitting ? 'disabled_button' : 'main-button'
+            }`}
+          >
+            {isSubmitting ? (
+              <div className="flex items-center justify-center">
+                <div className="w-6 h-6 border-3 rounded-full animate-spin mr-3"></div>
+                SUBMITTING...
+              </div>
+            ) : (
+              'SUBMIT'
+            )}
+          </button>
+          {/* Status indicator */}
+          {/* <div className="mt-4 text-center">
+            {isValidExpression && studentAnswer.trim() ? (
+              <span className="text-green-600 font-semibold">
+                Ready to submit!
+              </span>
+            ) : !studentAnswer.trim() ? (
+              <span className="text-[#696969]">
+                Enter your mathematical expression above
+              </span>
+            ) : (
+              <span className="text-red-600 font-semibold">
+                Please check your expression format
+              </span>
+            )}
+          </div> */}
+        </div>
+      </div>
+    </div>
+  );
+}

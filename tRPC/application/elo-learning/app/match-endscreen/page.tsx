@@ -46,7 +46,7 @@ function MatchEndScreenContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const result = searchParams.get('result');
-  const [isWinner, setIsWinner] = useState(result === 'winner');
+  const isWinner = result === 'winner';
   const [isLoading, setIsLoading] = useState(false);
 
   const clearStorageAndRedirect = async () => {

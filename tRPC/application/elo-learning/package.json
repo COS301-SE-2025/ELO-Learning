@@ -9,10 +9,12 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "katex": "^0.16.22",
+    "lucide-react": "^0.525.0",
+    "mathjs": "^14.5.3",
+    "next": "15.3.4",
     "axios": "^1.10.0",
     "clsx": "^2.1.1",
-    "lucide-react": "^0.525.0",
-    "next": "15.3.4",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "react-katex": "^3.1.0",

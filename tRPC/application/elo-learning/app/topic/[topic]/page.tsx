@@ -39,19 +39,23 @@ export default async function PracticeTopic({
       return <div>No questions available for this topic.</div>;
     }
 
-    const questions = allQuestions.filter((q: ApiQuestion) => q.level <= level);
+    // Filter questions by level with fallback logic
+    let questions = allQuestions.filter((q: ApiQuestion) => q.level <= level);
+
+    // If no questions at or below current level, allow questions up to 2 levels above
+    if (questions.length === 0) {
+      questions = allQuestions.filter((q: ApiQuestion) => q.level <= level + 2);
+    }
+
+    // If still no questions, show all questions (last resort)
+    if (questions.length === 0) {
+      questions = allQuestions;
+    }
 
     if (questions.length === 0) {
       return (
         <div>
-          <p>
-            No questions available at your current level ({level}) for this
-            topic.
-          </p>
-          <p>
-            Available question levels:{' '}
-            {allQuestions.map((q) => q.level).join(', ')}
-          </p>
+          <p>No questions available for this topic.</p>
         </div>
       );
     }
@@ -73,6 +77,7 @@ export default async function PracticeTopic({
       </div>
     );
   } catch (error) {
+    console.error('Error loading questions:', error);
     return <div>Error loading questions. Please try again later.</div>;
   }
 }

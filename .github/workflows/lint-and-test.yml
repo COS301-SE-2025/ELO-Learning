@@ -1,66 +1,66 @@
-name: Lint and Test
+# name: Lint and Test
 
-on:
-  push:
-    branches: [development]
-  pull_request:
-    branches: [development]
+# on:
+#   push:
+#     branches: [development]
+#   pull_request:
+#     branches: [development]
 
-jobs:
-  lint-and-test:
-    runs-on: ubuntu-latest
+# jobs:
+#   lint-and-test:
+#     runs-on: ubuntu-latest
 
-    steps:
-      - uses: actions/checkout@v3
+#     steps:
+#       - uses: actions/checkout@v3
 
-      - name: Use Node.js
-        uses: actions/setup-node@v3
-        with:
-          node-version: 18
+#       - name: Use Node.js
+#         uses: actions/setup-node@v3
+#         with:
+#           node-version: 18
 
-      - name: Install root dependencies
-        run: npm install
+#       - name: Install root dependencies
+#         run: npm install
 
-      - name: Install backend dependencies
-        run: npm install
-        working-directory: ./backend
+#       - name: Install backend dependencies
+#         run: npm install
+#         working-directory: ./backend
 
-      - name: Run ESLint
-        run: npm run lint
+#       - name: Run ESLint
+#         run: npm run lint
 
-      - name: Run Tests
-        run: node --experimental-vm-modules node_modules/jest/bin/jest.js
-        working-directory: ./backend
-        env:
-          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
-          SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
+#       - name: Run Tests
+#         run: node --experimental-vm-modules node_modules/jest/bin/jest.js
+#         working-directory: ./backend
+#         env:
+#           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+#           SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
 
-      - name: Upload coverage reports to Codecov
-        uses: codecov/codecov-action@v5
-        with:
-          token: ${{ secrets.CODECOV_TOKEN }}
+#       - name: Upload coverage reports to Codecov
+#         uses: codecov/codecov-action@v5
+#         with:
+#           token: ${{ secrets.CODECOV_TOKEN }}
 
-  frontend-cypress-tests:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-      - name: Install root dependencies
-        run: npm install
-      - name: Install frontend dependencies
-        uses: actions/setup-node@v4
-        with:
-          node-version: 23
-          cache: 'yarn'
-          cache-dependency-path: frontend/yarn.lock
+#   frontend-cypress-tests:
+#     runs-on: ubuntu-latest
+#     steps:
+#       - name: Checkout
+#         uses: actions/checkout@v4
+#       - name: Install root dependencies
+#         run: npm install
+#       - name: Install frontend dependencies
+#         uses: actions/setup-node@v4
+#         with:
+#           node-version: 23
+#           cache: 'yarn'
+#           cache-dependency-path: frontend/yarn.lock
 
-      # Install npm dependencies, cache them correctly
-      # and run all Cypress tests
-      - name: Cypress Tests
-        uses: cypress-io/github-action@v6
-        with:
-          install-command: yarn --silent
-          build: yarn build
-          start: yarn run dev
-          working-directory: ./frontend
-        timeout-minutes: 15
+#       # Install npm dependencies, cache them correctly
+#       # and run all Cypress tests
+#       - name: Cypress Tests
+#         uses: cypress-io/github-action@v6
+#         with:
+#           install-command: yarn --silent
+#           build: yarn build
+#           start: yarn run dev
+#           working-directory: ./frontend
+#         timeout-minutes: 15

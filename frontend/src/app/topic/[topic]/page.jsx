@@ -20,6 +20,7 @@ export default async function PracticeTopic({ params }) {
         questions={questions.questions}
         submitCallback={submitCallback}
         lives={5}
+        mode="practice"
       />
     </div>
   );

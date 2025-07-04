@@ -12,7 +12,7 @@ export default function QuestionsTracker({
   questions,
   submitCallback,
   lives,
-  isMultiplayer = false,
+  mode,
 }) {
   //Normal JS variables
   const allQuestions = questions;
@@ -66,34 +66,38 @@ export default function QuestionsTracker({
     if (!isAnswerCorrect) {
       setNumLives((prev) => prev - 1);
       if (numLives <= 1) {
-        console.log(
-          'Player ran out of lives. Multiplayer mode:',
-          isMultiplayer,
-        );
-        if (isMultiplayer && submitCallback) {
-          // Use the callback for multiplayer to support proper match handling
-          console.log('Using multiplayer callback for lives end');
-          submitCallback();
-          return true; // Indicate that the game ended due to no lives
-        } else {
-          // Direct redirect for single-player
-          console.log('Using direct redirect for single-player lives end');
-          redirect('/end-screen');
-        }
+        redirect(`/end-screen?mode=${mode}`); // Redirect to end screen when lives run out
+        /*
+          console.log(
+            'Player ran out of lives. Multiplayer mode:',
+            isMultiplayer,
+          );
+          if (isMultiplayer && submitCallback) {
+            // Use the callback for multiplayer to support proper match handling
+            console.log('Using multiplayer callback for lives end');
+            submitCallback();
+            return true; // Indicate that the game ended due to no lives
+          } else {
+            // Direct redirect for single-player
+            console.log('Using direct redirect for single-player lives end');
+            redirect('/match-endscreen');
+          }*/
       }
     }
-    return false; // Game continues
+    // return false; // Game continues
   };
 
   const submitAnswer = () => {
     setLocalStorage();
-    const gameEndedFromLives = handleLives();
+    handleLives();
+    /*
+      const gameEndedFromLives = handleLives();
 
-    // If game ended due to no lives, don't continue processing
-    if (gameEndedFromLives) {
-      return;
-    }
-
+      // If game ended due to no lives, don't continue processing
+      if (gameEndedFromLives) {
+        return;
+      }
+*/
     // Increment the current step and reset states
     setCurrentStep((prev) => prev + 1);
     setIsDisabled(true);
@@ -101,15 +105,19 @@ export default function QuestionsTracker({
     setIsAnswerCorrect(false);
 
     if (currentStep >= allQuestions.length) {
-      console.log('All questions completed. Multiplayer mode:', isMultiplayer);
-      if (isMultiplayer && submitCallback) {
-        console.log('Using multiplayer callback for completion');
-        submitCallback(); // Call the callback for multiplayer
-      } else {
-        console.log('Using direct redirect for single-player completion');
-        redirect('/end-screen'); // Direct redirect for single-player
-      }
+      submitCallback();
       return;
+      /*
+        console.log('All questions completed. Multiplayer mode:', isMultiplayer);
+        if (isMultiplayer && submitCallback) {
+          console.log('Using multiplayer callback for completion');
+          submitCallback(); // Call the callback for multiplayer
+        } else {
+          console.log('Using direct redirect for single-player completion');
+          redirect('/end-screen'); // Direct redirect for single-player
+        }
+        return;
+        */
     }
 
     setCurrQuestion(allQuestions[currentStep]);

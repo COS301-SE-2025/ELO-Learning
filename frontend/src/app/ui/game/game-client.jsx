@@ -8,7 +8,7 @@ import { useEffect, useState } from 'react';
 export default function GameClient({ game, level }) {
   const [questions, setQuestions] = useState([]);
   const [isWaitingForOpponent, setIsWaitingForOpponent] = useState(false);
-  const [gameFinished, setGameFinished] = useState(false);
+  //const [gameFinished, setGameFinished] = useState(false);
 
   useEffect(() => {
     console.log('Game: ', game);
@@ -22,6 +22,9 @@ export default function GameClient({ game, level }) {
 
     function onMatchEnd(data) {
       console.log('Match ended:', data);
+      const result = data.isWinner ? 'winner' : 'loser';
+      redirect(`/match-endscreen?result=${result}`);
+      /*
       console.log('Game finished state:', gameFinished);
       // Only redirect if this player has finished their own game
       if (gameFinished) {
@@ -35,43 +38,53 @@ export default function GameClient({ game, level }) {
         // Store the match result for when this player finishes
         localStorage.setItem('pendingMatchResult', JSON.stringify(data));
       }
+        */
     }
-
-    function onEloResults(data) {
-      console.log('ELO Results received:', data);
-      console.log('Received by socket ID:', socket.id);
-
-      // Verify that the ELO results are for the current user
-      const userInfo = JSON.parse(localStorage.getItem('user') || '{}');
-      if (data.userId && data.userId === userInfo.id) {
-        console.log('ELO results verified for current user ID:', data.userId);
-        // Store ELO data for the endscreen (only store XP and match result)
-        const eloData = {
-          xpEarned: data.xpEarned,
-          matchWinner: data.matchWinner,
-        };
-        localStorage.setItem('eloResults', JSON.stringify(eloData));
-        console.log('Stored ELO data:', eloData);
-      } else {
-        console.warn(
-          'ELO results received for different user. Expected:',
-          userInfo.id,
-          'Received:',
-          data.userId,
-        );
-      }
-    }
-
     socket.on('gameReady', onGameReady);
     socket.on('matchEnd', onMatchEnd);
-    socket.on('eloResults', onEloResults);
 
     return () => {
       socket.off('gameReady', onGameReady);
       socket.off('matchEnd', onMatchEnd);
-      socket.off('eloResults', onEloResults);
     };
-  }, [gameFinished]);
+  }, []);
+
+  /*
+        function onEloResults(data) {
+          console.log('ELO Results received:', data);
+          console.log('Received by socket ID:', socket.id);
+
+          // Verify that the ELO results are for the current user
+          const userInfo = JSON.parse(localStorage.getItem('user') || '{}');
+          if (data.userId && data.userId === userInfo.id) {
+            console.log('ELO results verified for current user ID:', data.userId);
+            // Store ELO data for the endscreen (only store XP and match result)
+            const eloData = {
+              xpEarned: data.xpEarned,
+              matchWinner: data.matchWinner,
+            };
+            localStorage.setItem('eloResults', JSON.stringify(eloData));
+            console.log('Stored ELO data:', eloData);
+          } else {
+            console.warn(
+              'ELO results received for different user. Expected:',
+              userInfo.id,
+              'Received:',
+              data.userId,
+            );
+          }
+        }
+    */
+  //   socket.on('gameReady', onGameReady);
+  //   socket.on('matchEnd', onMatchEnd);
+  //   socket.on('eloResults', onEloResults);
+
+  //   return () => {
+  //     socket.off('gameReady', onGameReady);
+  //     socket.off('matchEnd', onMatchEnd);
+  //     socket.off('eloResults', onEloResults);
+  //   };
+  // }, [gameFinished]);
 
   const submitCallback = () => {
     console.log('Submit callback triggered - Match ended');
@@ -81,7 +94,7 @@ export default function GameClient({ game, level }) {
     console.log('Game ID:', game);
 
     // Mark that this player has finished
-    setGameFinished(true);
+    //setGameFinished(true);
 
     // Check what user info we have
     const userToken = localStorage.getItem('token');
@@ -124,6 +137,7 @@ export default function GameClient({ game, level }) {
               questions={questions}
               submitCallback={submitCallback}
               lives={15}
+              mode="multiplayer"
             />
           )}
         </div>

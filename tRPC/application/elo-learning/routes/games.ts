@@ -1,8 +1,8 @@
 // routes/game.ts
 import { Router, Request, Response } from 'express';
 import { supabase } from '../database/supabaseClient';
-import { calculateExpected, distributeXP } from '../multiPlayer';
-import { calculateSinglePlayerXP } from '../singlePlayer';
+import { calculateExpected, distributeXP } from '../services/multiPlayer';
+import { calculateSinglePlayerXP } from '../services/singlePlayer';
 
 const router = Router();
 

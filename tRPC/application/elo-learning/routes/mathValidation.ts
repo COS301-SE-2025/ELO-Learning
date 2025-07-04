@@ -1,32 +1,9 @@
 // routes/math.ts
 import { Router, Request, Response } from 'express';
 import { supabase } from '../database/supabaseClient';
+import { backendMathValidator } from '../services/mathValidator';
 
 const router = Router();
-
-// Placeholder for math validator - you'll need to implement this
-const backendMathValidator = {
-  validateAnswer: (studentAnswer: string, correctAnswer: string): boolean => {
-    // Simple comparison for now - replace with actual math validation logic
-    return (
-      studentAnswer.trim().toLowerCase() === correctAnswer.trim().toLowerCase()
-    );
-  },
-  quickValidate: (studentAnswer: string, correctAnswer: string): boolean => {
-    return (
-      studentAnswer.trim().toLowerCase() === correctAnswer.trim().toLowerCase()
-    );
-  },
-  isValidMathExpression: (expression: string): boolean => {
-    // Basic validation - replace with actual math expression validation
-    return expression.trim().length > 0;
-  },
-  getValidationMessage: (expression: string): string => {
-    return expression.trim().length > 0
-      ? 'Valid expression'
-      : 'Invalid expression';
-  },
-};
 
 interface ValidateAnswerRequest {
   studentAnswer: string;

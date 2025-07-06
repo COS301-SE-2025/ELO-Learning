@@ -1,8 +1,8 @@
 // routes/topics.ts
-import { Router, Request, Response } from 'express';
+import express, { Request, Response } from 'express';
 import { supabase } from '../database/supabaseClient';
 
-const router = Router();
+const router = express.Router();
 
 interface Topic {
   id: string;
@@ -10,7 +10,6 @@ interface Topic {
   description?: string;
 }
 
-// GET /topics - Get all topics
 router.get('/', async (req: Request, res: Response) => {
   try {
     const { data, error } = await supabase.from('Topics').select('*');

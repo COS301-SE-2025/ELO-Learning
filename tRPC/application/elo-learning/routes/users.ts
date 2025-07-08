@@ -34,7 +34,8 @@ router.get('/', async (req: Request, res: Response) => {
 
     if (error) {
       console.error('Error fetching users:', error.message);
-      return res.status(500).json({ error: 'Failed to fetch users' });
+      res.status(500).json({ error: 'Failed to fetch users' });
+      return;
     }
 
     res.status(200).json(data);
@@ -57,10 +58,12 @@ router.get('/:id', authMiddleware, async (req: Request, res: Response) => {
 
     if (error) {
       if (error.code === 'PGRST116') {
-        return res.status(404).json({ error: "User doesn't exist" });
+        res.status(404).json({ error: "User doesn't exist" });
+        return;
       }
       console.error('Error fetching user:', error.message);
-      return res.status(500).json({ error: 'Failed to fetch user' });
+      res.status(500).json({ error: 'Failed to fetch user' });
+      return;
     }
 
     res.status(200).json(data);
@@ -85,13 +88,15 @@ router.get(
 
       if (error) {
         console.error('Error fetching achievements:', error.message);
-        return res.status(500).json({ error: 'Failed to fetch achievements' });
+        res.status(500).json({ error: 'Failed to fetch achievements' });
+        return;
       }
 
       if (data.length === 0) {
-        return res
+        res
           .status(404)
           .json({ error: "User doesn't exist or has no achievements" });
+        return;
       }
 
       res.status(200).json({ achievements: data });
@@ -109,7 +114,8 @@ router.post('/:id/xp', authMiddleware, async (req: Request, res: Response) => {
     const { xp }: { xp: number } = req.body;
 
     if (typeof xp !== 'number') {
-      return res.status(400).json({ error: 'XP must be a number.' });
+      res.status(400).json({ error: 'XP must be a number.' });
+      return;
     }
 
     const { data, error } = await supabase
@@ -118,13 +124,14 @@ router.post('/:id/xp', authMiddleware, async (req: Request, res: Response) => {
       .eq('id', id)
       .select()
       .single();
-
     if (error) {
       if (error.code === 'PGRST116') {
-        return res.status(404).json({ error: "User doesn't exist" });
+        res.status(404).json({ error: "User doesn't exist" });
+        return;
       }
       console.error('Error updating XP:', error.message);
-      return res.status(500).json({ error: 'Failed to update XP' });
+      res.status(500).json({ error: 'Failed to update XP' });
+      return;
     }
 
     res.status(200).json(data);

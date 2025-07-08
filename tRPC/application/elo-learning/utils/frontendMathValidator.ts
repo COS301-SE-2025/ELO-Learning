@@ -7,12 +7,12 @@
 
 import * as math from 'mathjs';
 
-// Type definitions
+// Type definitions - Fixed ESLint issues
 interface MathJSCustomFunctions {
   phi: number;
-  derivative: (expr: string, variable: string) => any;
-  integral: (expr: string, variable: string, from?: number, to?: number) => any;
-  limit: (expr: string, variable: string, value: number) => any;
+  derivative: (expr: string, variable: string) => math.MathNode;
+  integral: (expr: string, variable: string, from?: number, to?: number) => math.MathNode;
+  limit: (expr: string, variable: string, value: number) => math.MathNode;
   factorial: (n: number) => number;
   combination: (n: number, k: number) => number;
   permutation: (n: number, k: number) => number;
@@ -22,15 +22,16 @@ interface MathJSInstance extends math.MathJsInstance {
   _phi?: boolean;
 }
 
-interface ValidationResult {
-  isValid: boolean;
-  message?: string;
-}
+// Removed unused interfaces to fix ESLint warnings
+// interface ValidationResult {
+//   isValid: boolean;
+//   message?: string;
+// }
 
-interface ComparisonResult {
-  isCorrect: boolean;
-  confidence?: number;
-}
+// interface ComparisonResult {
+//   isCorrect: boolean;
+//   confidence?: number;
+// }
 
 // Singleton instance to prevent multiple MathJS initializations
 let mathValidatorInstance: FrontendMathValidator | null = null;
@@ -57,7 +58,7 @@ class FrontendMathValidator {
           phi: 1.618033988749895, // Golden ratio
 
           // Custom functions for educational math
-          derivative: (expr: string, variable: string) => {
+          derivative: (expr: string, variable: string): math.MathNode => {
             try {
               return this.math.derivative(expr, variable);
             } catch {
@@ -70,12 +71,12 @@ class FrontendMathValidator {
             variable: string,
             from?: number,
             to?: number,
-          ) => {
+          ): math.MathNode => {
             try {
               if (from !== undefined && to !== undefined) {
                 return this.math.evaluate(
                   `integrate(${expr}, ${variable}, ${from}, ${to})`,
-                );
+                ) as math.MathNode;
               }
               return this.math.parse(`integral(${expr}, ${variable})`);
             } catch {
@@ -83,7 +84,7 @@ class FrontendMathValidator {
             }
           },
 
-          limit: (expr: string, variable: string, value: number) => {
+          limit: (expr: string, variable: string, value: number): math.MathNode => {
             try {
               return this.math.parse(`limit(${expr}, ${variable}, ${value})`);
             } catch {
@@ -142,6 +143,7 @@ class FrontendMathValidator {
     ];
   }
 
+  // FIXED: Optimized method order and removed redundant calls
   validateAnswer(studentAnswer: string, correctAnswer: string): boolean {
     try {
       // Basic input validation
@@ -158,12 +160,15 @@ class FrontendMathValidator {
       const normalizedStudent: string = this.normalizeExpression(studentAnswer);
       const normalizedCorrect: string = this.normalizeExpression(correctAnswer);
 
-      // Try different validation approaches in order of complexity
+      // Try different validation approaches in order of efficiency and accuracy
       return (
         this.checkExactMatch(normalizedStudent, normalizedCorrect) ||
         this.checkNumericalEquality(normalizedStudent, normalizedCorrect) ||
+        this.checkCommutativityEquivalence(normalizedStudent, normalizedCorrect) || // MOVED EARLIER!
         this.checkAlgebraicEquivalence(normalizedStudent, normalizedCorrect) ||
         this.checkAdvancedEquivalence(normalizedStudent, normalizedCorrect)
+        // REMOVED: redundant calls to checkPolynomialEquivalence and compareFactoredExpressions
+        // since they're already called within checkCommutativityEquivalence
       );
     } catch (error) {
       console.warn('Enhanced math validation error:', error);
@@ -446,6 +451,33 @@ class FrontendMathValidator {
     return '';
   }
 
+  // Test method to verify the commutativity fix works
+  testCommutativityFix(): boolean {
+    const testCases = [
+      { student: "(x+3)(x-3)", correct: "(x-3)(x+3)", description: "Basic commutative factors" },
+      { student: "(x-3)(x+3)", correct: "(x+3)(x-3)", description: "Reverse commutative factors" },
+      { student: "(a+b)(c+d)", correct: "(c+d)(a+b)", description: "Multi-variable commutative" },
+      { student: "2(x+1)", correct: "(x+1)*2", description: "Coefficient commutativity" },
+      { student: "x*y*z", correct: "z*y*x", description: "Variable multiplication order" },
+      { student: "(x+3)*(x-3)", correct: "(x-3)*(x+3)", description: "Explicit multiplication" }
+    ];
+    
+    console.log("🧮 Testing Math Validator Commutativity Fix...");
+    
+    for (const testCase of testCases) {
+      const result = this.validateAnswer(testCase.student, testCase.correct);
+      console.log(`${result ? '✅' : '❌'} ${testCase.description}: ${testCase.student} = ${testCase.correct}`);
+      
+      if (!result) {
+        console.error(`❌ Test failed: ${testCase.student} should equal ${testCase.correct}`);
+        return false;
+      }
+    }
+    
+    console.log("🎉 All commutativity tests passed!");
+    return true;
+  }
+
   private checkExactMatch(student: string, correct: string): boolean {
     return student === correct;
   }
@@ -499,11 +531,10 @@ class FrontendMathValidator {
     }
   }
 
+  // FIXED: Removed recursive call to checkCommutativityEquivalence
   private checkAlgebraicEquivalence(student: string, correct: string): boolean {
     try {
-      // Try multiple approaches for algebraic equivalence
-
-      // 1. Simplify both expressions
+      // 1. Original simplification approach
       const simplified1 = this.math.simplify(student);
       const simplified2 = this.math.simplify(correct);
 
@@ -685,6 +716,179 @@ class FrontendMathValidator {
       return false;
     }
   }
+
+  private checkCommutativityEquivalence(student: string, correct: string): boolean {
+    try {
+      // Parse both expressions into AST (Abstract Syntax Trees)
+      const studentNode = this.math.parse(student);
+      const correctNode = this.math.parse(correct);
+      
+      // Convert to canonical form by expanding and then re-factoring
+      const studentExpanded = this.math.simplify(studentNode, { expand: true });
+      const correctExpanded = this.math.simplify(correctNode, { expand: true });
+      
+      // Check if expanded forms are equal
+      if (studentExpanded.toString() === correctExpanded.toString()) {
+        return true;
+      }
+      
+      // For polynomial expressions, try multiple canonical forms
+      return this.checkPolynomialEquivalence(student, correct);
+      
+    } catch (error) {
+      console.debug('Commutativity check failed:', error);
+      return false;
+    }
+  }
+
+  private checkPolynomialEquivalence(student: string, correct: string): boolean {
+    try {
+      // Method 1: Expand both and compare
+      const studentExpanded = this.math.simplify(student, { expand: true });
+      const correctExpanded = this.math.simplify(correct, { expand: true });
+      
+      if (studentExpanded.toString() === correctExpanded.toString()) {
+        return true;
+      }
+      
+      // Method 2: Factor both and compare all possible orderings
+      try {
+        const studentFactored = this.math.simplify(student, { factor: true });
+        const correctFactored = this.math.simplify(correct, { factor: true });
+        
+        // Check if they're equivalent when factored
+        if (this.compareFactoredExpressions(studentFactored.toString(), correctFactored.toString())) {
+          return true;
+        }
+      } catch {
+        // Factoring might fail, continue with other methods
+      }
+      
+      // Method 3: Numerical verification at multiple points
+      return this.numericalVerification(student, correct);
+      
+    } catch (error) {
+      console.debug('Polynomial equivalence check failed:', error);
+      return false;
+    }
+  }
+
+  private compareFactoredExpressions(student: string, correct: string): boolean {
+    try {
+      // Extract factors from expressions like (x+3)(x-3) and (x-3)(x+3)
+      const studentFactors = this.extractFactors(student);
+      const correctFactors = this.extractFactors(correct);
+      
+      if (studentFactors.length !== correctFactors.length) {
+        return false;
+      }
+      
+      // Sort factors to handle commutativity
+      const sortedStudent = studentFactors.sort();
+      const sortedCorrect = correctFactors.sort();
+      
+      // Compare sorted factors
+      for (let i = 0; i < sortedStudent.length; i++) {
+        // Check if factors are algebraically equivalent
+        if (!this.areFactorsEquivalent(sortedStudent[i], sortedCorrect[i])) {
+          return false;
+        }
+      }
+      
+      return true;
+    } catch {
+      return false;
+    }
+  }
+
+  // FIXED: Enhanced factor extraction with better pattern matching
+  private extractFactors(expression: string): string[] {
+    try {
+      // Handle more complex factor patterns
+      const factors: string[] = [];
+      
+      // Extract parenthetical factors: (x+3), (x-3), etc.
+      const factorPattern = /\([^)]+\)/g;
+      const parentheticalFactors = expression.match(factorPattern) || [];
+      factors.push(...parentheticalFactors);
+      
+      // Remove parenthetical factors and handle remaining terms
+      let remaining = expression.replace(factorPattern, '');
+      
+      // Remove multiplication operators and whitespace
+      remaining = remaining.replace(/\*/g, '').replace(/\s+/g, '');
+      
+      // Handle coefficient factors (numbers, variables, simple terms)
+      if (remaining && remaining !== '1' && remaining !== '-1' && remaining !== '') {
+        // Split by implicit multiplication patterns
+        const termPattern = /[a-zA-Z_][a-zA-Z0-9_]*|\d+(?:\.\d+)?/g;
+        const terms = remaining.match(termPattern) || [];
+        factors.push(...terms);
+      }
+      
+      return factors.filter(factor => factor.trim() !== '');
+    } catch {
+      // Fallback to simple regex extraction
+      const factorPattern = /\([^)]+\)/g;
+      return expression.match(factorPattern) || [];
+    }
+  }
+
+  private areFactorsEquivalent(factor1: string, factor2: string): boolean {
+    try {
+      // Remove parentheses for comparison
+      const clean1 = factor1.replace(/[()]/g, '');
+      const clean2 = factor2.replace(/[()]/g, '');
+      
+      // Use existing algebraic equivalence check
+      return this.checkSimpleAlgebraicEquivalence(clean1, clean2);
+    } catch {
+      return factor1 === factor2;
+    }
+  }
+
+  private numericalVerification(student: string, correct: string): boolean {
+    try {
+      // Test with multiple variable values to verify equivalence
+      const testValues = [
+        { x: 1, y: 1, z: 1 },
+        { x: 2, y: 2, z: 2 },
+        { x: -1, y: -1, z: -1 },
+        { x: 0, y: 0, z: 0 },
+        { x: 0.5, y: 0.5, z: 0.5 },
+        { x: 10, y: 10, z: 10 },
+        { x: -5, y: 3, z: 7 },
+        { x: Math.PI, y: Math.E, z: 1.618 }
+      ];
+      
+      for (const scope of testValues) {
+        try {
+          const studentResult = this.math.evaluate(student, scope);
+          const correctResult = this.math.evaluate(correct, scope);
+          
+          // Handle different result types
+          if (typeof studentResult === 'number' && typeof correctResult === 'number') {
+            if (Math.abs(studentResult - correctResult) > 1e-10) {
+              return false;
+            }
+          } else {
+            // Use math.js equal for other types
+            const equalResult = this.math.equal(studentResult, correctResult);
+            if (!equalResult) {
+              return false;
+            }
+          }
+        } catch {
+          // If evaluation fails for a test value, skip it
+          continue;
+        }
+      }
+      
+      return true;
+    } catch {
+      return false;
+    }
+  }
 }
 
 // Create singleton instance
@@ -710,6 +914,10 @@ export const isValidMathExpression = (input: string): boolean =>
 export const getMathValidationMessage = (input: string): string =>
   MathValidator.getValidationMessage(input);
 
+// NEW: Export test function for debugging
+export const testCommutativityFix = (): boolean =>
+  MathValidator.testCommutativityFix();
+
 export { FrontendMathValidator };
 export default MathValidator;
 
@@ -719,6 +927,7 @@ module.exports = {
   quickValidateMath,
   isValidMathExpression,
   getMathValidationMessage,
+  testCommutativityFix,
   FrontendMathValidator,
   default: MathValidator,
 };

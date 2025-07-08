@@ -2,6 +2,7 @@
 import express, { Request, Response } from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
+import path from 'path';
 
 console.log('🚀 Starting ELO Learning Server...');
 dotenv.config();
@@ -22,12 +23,16 @@ app.get('/', (_req: Request, res: Response) => {
     endpoints: [
       'GET / - Health check',
       'GET /api/status - Status check',
-      'POST /api/math/validate - Math validation',
-      'POST /api/game/calculate-xp - Calculate single player XP',
-      'GET /api/topics - Get all topics',
-      'GET /api/users - Get all users',
       'POST /api/auth/login - User login',
       'POST /api/auth/register - User registration',
+      'POST /api/game/singleplayer - Single player game',
+      'POST /api/game/multiplayer - Multiplayer game',
+      'POST /api/math/validate-answer - Math validation',
+      'POST /api/math/quick-validate - Quick math validation',
+      'GET /api/questions - Get questions',
+      'GET /api/questions/random - Get random questions',
+      'GET /api/topics - Get all topics',
+      'GET /api/users - Get all users',
     ],
   });
 });
@@ -41,58 +46,138 @@ app.get('/api/status', (_req: Request, res: Response) => {
   });
 });
 
-// Try to load routes dynamically
-const loadRoute = (
-  routePath: string,
-  mountPath: string,
-  routeName: string,
-): boolean => {
-  try {
-    const routeModule = require(routePath);
-    const route = routeModule.default || routeModule;
-    app.use(mountPath, route);
-    console.log(`✅ ${routeName} routes loaded at ${mountPath}`);
-    return true;
-  } catch (error) {
-    console.log(
-      `⚠️  ${routeName} routes not found: ${(error as Error).message}`,
-    );
-    return false;
+// Dynamic route loading function
+const loadRoute = (routePaths: string[], mountPath: string, routeName: string): boolean => {
+  for (const routePath of routePaths) {
+    try {
+      const fullPath = path.resolve(__dirname, routePath);
+      console.log(`🔍 Trying to load ${routeName} from: ${fullPath}`);
+      
+      // Clear require cache
+      delete require.cache[require.resolve(fullPath)];
+      
+      const routeModule = require(fullPath);
+      const route = routeModule.default || routeModule;
+      
+      if (typeof route === 'function') {
+        app.use(mountPath, route);
+        console.log(`✅ ${routeName} routes loaded at ${mountPath} from ${routePath}`);
+        return true;
+      } else {
+        console.log(`⚠️  ${routeName} export is not a valid router function`);
+      }
+    } catch (error) {
+      console.log(`⚠️  ${routeName} not found at ${routePath}: ${(error as Error).message}`);
+    }
   }
+  return false;
 };
 
-// Load routes
+// Load routes with multiple possible paths
 const initializeRoutes = () => {
   console.log('🔄 Loading routes...');
+  console.log(`📁 Current directory: ${__dirname}`);
 
-  // Try to load existing routes
-  loadRoute(
-    './application/elo-learning/routes/topics',
-    '/api/topics',
-    'Topics',
-  );
-  loadRoute('./application/elo-learning/routes/users', '/api/users', 'Users');
-  loadRoute('./application/elo-learning/routes/auth', '/api/auth', 'Auth');
-  loadRoute(
-    './application/elo-learning/routes/questions',
-    '/api/questions',
-    'Questions',
-  );
-  loadRoute('./application/elo-learning/routes/games', '/api/game', 'Games');
-  loadRoute(
-    './application/elo-learning/routes/mathValidation',
-    '/api/math',
-    'Math Validation',
-  );
+  const routeConfigs = [
+    {
+      name: 'Auth',
+      paths: [
+        './application/elo-learning/routes/auth',
+        './routes/auth',
+        '../routes/auth', 
+        './auth',
+        '../auth',
+        '../../routes/auth',
+        './backend/routes/auth'
+      ],
+      mount: '/api/auth'
+    },
+    {
+      name: 'Game', 
+      paths: [
+        './application/elo-learning/routes/games',
+        './routes/game',
+        '../routes/game',
+        './game', 
+        '../game',
+        '../../routes/game',
+        './backend/routes/game'
+      ],
+      mount: '/api/game'
+    },
+    {
+      name: 'Math',
+      paths: [
+        './application/elo-learning/routes/mathValidation',
+        './routes/math',
+        '../routes/math',
+        './math',
+        '../math', 
+        '../../routes/math',
+        './backend/routes/math'
+      ],
+      mount: '/api/math'
+    },
+    {
+      name: 'Questions',
+      paths: [
+        './application/elo-learning/routes/question',
+        './routes/question',
+        '../routes/question',
+        './question',
+        '../question',
+        '../../routes/question', 
+        './backend/routes/question'
+      ],
+      mount: '/api/questions'
+    },
+    {
+      name: 'Topics',
+      paths: [
+        './application/elo-learning/routes/topics',
+        './routes/topics',
+        '../routes/topics',
+        './topics',
+        '../topics',
+        '../../routes/topics',
+        './backend/routes/topics'
+      ],
+      mount: '/api/topics'
+    },
+    {
+      name: 'Users',
+      paths: [
+        './application/elo-learning/routes/users',
+        './routes/users',
+        '../routes/users', 
+        './users',
+        '../users',
+        '../../routes/users',
+        './backend/routes/users'
+      ],
+      mount: '/api/users'
+    }
+  ];
 
-  // Create fallback endpoints
-  createFallbackRoutes();
+  let routesLoaded = 0;
+  for (const config of routeConfigs) {
+    if (loadRoute(config.paths, config.mount, config.name)) {
+      routesLoaded++;
+    }
+  }
+
+  console.log(`📊 Successfully loaded ${routesLoaded}/${routeConfigs.length} route modules`);
+  
+  if (routesLoaded === 0) {
+    console.log('⚠️  No routes found! Creating fallback endpoints...');
+    createFallbackRoutes();
+  }
 };
 
 const createFallbackRoutes = () => {
   console.log('🔄 Creating fallback routes...');
 
-  // Fallback auth routes
+  // Fallback auth routes (only if not already mounted)
   app.post('/api/auth/login', (req: Request, res: Response) => {
     const { email, password } = req.body;
     if (!email || !password) {
@@ -108,9 +193,7 @@ const createFallbackRoutes = () => {
   app.post('/api/auth/register', (req: Request, res: Response) => {
     const { email, password, username } = req.body;
     if (!email || !password || !username) {
-      return res
-        .status(400)
-        .json({ error: 'Email, password, and username required' });
+      return res.status(400).json({ error: 'Email, password, and username required' });
     }
     res.json({
       message: 'Registration endpoint (fallback)',
@@ -118,48 +201,75 @@ const createFallbackRoutes = () => {
     });
   });
 
-  // Fallback math validation
-  app.post('/api/math/validate', (req: Request, res: Response) => {
-    const { studentAnswer, correctAnswer } = req.body;
-    if (!studentAnswer || !correctAnswer) {
-      return res
-        .status(400)
-        .json({ error: 'studentAnswer and correctAnswer required' });
-    }
-
-    const isValid =
-      studentAnswer.toString().trim() === correctAnswer.toString().trim();
+  // Fallback game routes
+  app.post('/api/game/singleplayer', (req: Request, res: Response) => {
     res.json({
-      isValid,
+      message: 'Single player endpoint (fallback)',
+      xpEarned: 10,
+      leveledUp: false,
+    });
+  });
+
+  app.post('/api/game/multiplayer', (req: Request, res: Response) => {
+    res.json({
+      message: 'Multiplayer endpoint (fallback)',
+      players: [],
+    });
+  });
+
+  // Fallback math routes
+  app.post('/api/math/validate-answer', (req: Request, res: Response) => {
+    const { studentAnswer, correctAnswer } = req.body;
+    const isCorrect = studentAnswer?.toString().trim() === correctAnswer?.toString().trim();
+    res.json({
+      isCorrect,
       studentAnswer,
       correctAnswer,
-      method: 'fallback',
-      timestamp: new Date().toISOString(),
+      message: isCorrect ? 'Correct!' : 'Incorrect',
     });
   });
 
-  // Fallback XP calculation
-  app.post('/api/game/calculate-xp', (req: Request, res: Response) => {
-    const { CA, XPGain, actualTimeSeconds = 0, currentLevel = 1 } = req.body;
-
-    if (typeof CA !== 'number' || typeof XPGain !== 'number') {
-      return res.status(400).json({ error: 'CA and XPGain must be numbers' });
-    }
-
-    // Simple XP calculation
-    const timeBonus = Math.max(0, 30 - actualTimeSeconds) / 30;
-    const levelMultiplier = 1 + currentLevel * 0.1;
-    const calculatedXP = CA * XPGain * (1 + timeBonus) * levelMultiplier;
-
+  // Fallback questions routes
+  app.get('/api/questions', (req: Request, res: Response) => {
     res.json({
-      calculatedXP: Number(calculatedXP.toFixed(2)),
-      parameters: { CA, XPGain, actualTimeSeconds, currentLevel },
+      questions: [
+        {
+          Q_id: '1',
+          topic: 'Algebra',
+          difficulty: 'Easy',
+          level: 1,
+          questionText: 'What is 2 + 2?',
+          xpGain: 10,
+          type: 'multiple-choice'
+        }
+      ],
       method: 'fallback',
-      timestamp: new Date().toISOString(),
     });
   });
 
-  // Fallback topics
+  app.get('/api/questions/random', (req: Request, res: Response) => {
+    res.json({
+      questions: [
+        {
+          Q_id: '1',
+          topic: 'Algebra', 
+          difficulty: 'Easy',
+          level: 1,
+          questionText: 'What is 2 + 2?',
+          xpGain: 10,
+          type: 'multiple-choice',
+          answers: [
+            { id: '1', answer_text: '3', isCorrect: false },
+            { id: '2', answer_text: '4', isCorrect: true },
+            { id: '3', answer_text: '5', isCorrect: false }
+          ]
+        }
+      ],
+      method: 'fallback',
+    });
+  });
+
+  // Fallback topics routes
   app.get('/api/topics', (req: Request, res: Response) => {
     res.json({
       topics: [
@@ -171,42 +281,30 @@ const createFallbackRoutes = () => {
     });
   });
 
-  // Fallback users
+  // Fallback users routes
   app.get('/api/users', (req: Request, res: Response) => {
-    res.json({
-      users: [
-        {
-          id: '1',
-          username: 'testuser',
-          email: 'test@example.com',
-          level: 1,
-          xp: 100,
-        },
-      ],
-      method: 'fallback',
-    });
-  });
-
-  // Fallback questions
-  app.get('/api/questions', (req: Request, res: Response) => {
-    res.json({
-      questions: [
-        {
-          id: '1',
-          question_text: 'What is 2 + 2?',
-          correct_answer: '4',
-          difficulty: 1,
-          topic_id: '1',
-        },
-      ],
-      method: 'fallback',
-    });
+    res.json([
+      {
+        id: '1',
+        name: 'Test',
+        surname: 'User',
+        username: 'testuser',
+        email: 'test@example.com',
+        currentLevel: 1,
+        joinDate: new Date().toISOString(),
+        xp: 100,
+      },
+    ]);
   });
 
   console.log('✅ Fallback routes created');
 };
 
-// 404 handler
+// Initialize routes and start server
+console.log('🚀 Initializing application...');
+initializeRoutes();
+
+// 404 handler (MUST come after all routes)
 app.use('*', (req: Request, res: Response) => {
   res.status(404).json({
     error: 'Route not found',
@@ -217,11 +315,12 @@ app.use('*', (req: Request, res: Response) => {
       'GET /api/status',
       'POST /api/auth/login',
       'POST /api/auth/register',
-      'POST /api/math/validate',
-      'POST /api/game/calculate-xp',
+      'POST /api/game/singleplayer',
+      'POST /api/game/multiplayer',
+      'POST /api/math/validate-answer',
+      'GET /api/questions',
       'GET /api/topics',
       'GET /api/users',
-      'GET /api/questions',
     ],
   });
 });
@@ -236,19 +335,19 @@ app.use((err: any, _req: Request, res: Response, _next: any) => {
   });
 });
 
-// Initialize routes and start server
-console.log('🚀 Initializing application...');
-initializeRoutes();
-
 app.listen(PORT, () => {
   console.log(`✅ Server running at http://localhost:${PORT}`);
-  console.log(`📋 Test the endpoints:`);
+  console.log(`📋 Available endpoints:`);
   console.log(`   GET  http://localhost:${PORT}/`);
   console.log(`   GET  http://localhost:${PORT}/api/status`);
   console.log(`   POST http://localhost:${PORT}/api/auth/login`);
-  console.log(`   POST http://localhost:${PORT}/api/math/validate`);
-  console.log(`   POST http://localhost:${PORT}/api/game/calculate-xp`);
+  console.log(`   POST http://localhost:${PORT}/api/auth/register`);
+  console.log(`   POST http://localhost:${PORT}/api/game/singleplayer`);
+  console.log(`   POST http://localhost:${PORT}/api/game/multiplayer`);
+  console.log(`   POST http://localhost:${PORT}/api/math/validate-answer`);
+  console.log(`   GET  http://localhost:${PORT}/api/questions`);
   console.log(`   GET  http://localhost:${PORT}/api/topics`);
+  console.log(`   GET  http://localhost:${PORT}/api/users`);
 });
 
 export = app;

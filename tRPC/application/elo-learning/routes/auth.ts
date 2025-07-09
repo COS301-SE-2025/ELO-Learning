@@ -4,7 +4,7 @@ import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 import { supabase } from '../database/supabaseClient';
 
-const router = Router(); // Fixed: Remove express. prefix and type annotation
+const router = Router();
 
 interface RegisterRequest {
   name: string;
@@ -12,6 +12,7 @@ interface RegisterRequest {
   username: string;
   email: string;
   password: string;
+  currentLevel: number;  // Added this to match frontend
   joinDate?: string;
 }
 
@@ -32,7 +33,7 @@ interface UserData {
   pfpURL?: string;
 }
 
-// POST /register - Register new user
+// POST /register - FIXED to return RegisterResponse format
 router.post('/register', async (req: Request, res: Response) => {
   try {
     const {
@@ -41,6 +42,7 @@ router.post('/register', async (req: Request, res: Response) => {
       username,
       email,
       password,
+      currentLevel,  // Added this
       joinDate,
     }: RegisterRequest = req.body;
 
@@ -70,7 +72,7 @@ router.post('/register', async (req: Request, res: Response) => {
     // Hash password
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    const safeCurrentLevel = 5;
+    const safeCurrentLevel = currentLevel || 5;  // Use provided currentLevel
     const safeJoinDate = joinDate || new Date().toISOString();
     const safeXP = 1000;
 
@@ -119,10 +121,11 @@ router.post('/register', async (req: Request, res: Response) => {
       xp: data.xp,
     };
 
+    // FIXED: Return the exact format your frontend expects
     res.status(201).json({
-      message: 'User registered successfully',
-      token,
-      user: userResponse,
+      success: true,           // Added success property
+      user: userResponse,      // User object
+      token,                   // Token
     });
   } catch (err) {
     console.error('Unexpected error:', err);
@@ -130,7 +133,7 @@ router.post('/register', async (req: Request, res: Response) => {
   }
 });
 
-// POST /login - Login user
+// POST /login - FIXED to return LoginResponse format
 router.post('/login', async (req: Request, res: Response) => {
   try {
     const { email, password }: LoginRequest = req.body;
@@ -186,10 +189,10 @@ router.post('/login', async (req: Request, res: Response) => {
       pfpURL: user.pfpURL,
     };
 
+    // FIXED: Return the exact format the frontend expects
     res.status(200).json({
-      message: 'Login successful',
-      token,
-      user: userResponse,
+      token,              // Token first
+      user: userResponse, // User object second
     });
   } catch (err) {
     console.error('Unexpected error:', err);

@@ -1,4 +1,4 @@
-// routes/game.ts
+// routes/games.ts - FIXED ESLint empty object type warnings
 import { Router, Request, Response } from 'express';
 import { supabase } from '../database/supabaseClient';
 import { calculateExpected, distributeXP } from '../services/multiPlayer';
@@ -24,7 +24,7 @@ interface MultiPlayerRequest {
 // POST /singleplayer - Process single player game result
 router.post(
   '/singleplayer',
-  async (req: Request<{}, {}, SinglePlayerRequest>, res: Response) => {
+  async (req: Request<Record<string, never>, unknown, SinglePlayerRequest>, res: Response) => {
     try {
       const { user_id, question_id, isCorrect, timeSpent } = req.body;
 
@@ -148,7 +148,7 @@ router.post(
 // POST /multiplayer - Process multiplayer game result
 router.post(
   '/multiplayer',
-  async (req: Request<{}, {}, MultiPlayerRequest>, res: Response) => {
+  async (req: Request<Record<string, never>, unknown, MultiPlayerRequest>, res: Response) => {
     try {
       const { player1_id, player2_id, question_id, score1, xpTotal } = req.body;
 

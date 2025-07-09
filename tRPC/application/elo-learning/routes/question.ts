@@ -131,7 +131,8 @@ router.get('/practice', async (req: Request, res: Response) => {
             .status(500)
             .json({ error: 'Failed to fetch practice questions' });
         }
-        question.answers = answers;
+        // Fix: Cast question to the correct type before assigning answers
+        (question as Question).answers = answers || [];
       }
     }
 
@@ -174,7 +175,7 @@ router.get(
             return res.status(500).json({ error: 'Failed to fetch answers' });
           }
 
-          question.answers = answers;
+          (question as Question).answers = answers || [];
         }
       }
 
@@ -254,7 +255,7 @@ router.get('/level/topic', async (req: Request, res: Response) => {
             .status(500)
             .json({ error: 'Failed to fetch practice questions' });
         }
-        question.answers = answers;
+        (question as Question).answers = answers || [];
       }
     }
 
@@ -457,4 +458,5 @@ router.post(
     }
   },
 );
+
 export default router;

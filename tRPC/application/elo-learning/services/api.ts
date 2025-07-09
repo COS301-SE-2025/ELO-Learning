@@ -33,6 +33,7 @@ export interface Question {
   topic: string;
   type: string;
   xpGain: number;
+  difficulty?: string;
 }
 
 interface Topic {
@@ -56,6 +57,26 @@ interface RegisterResponse {
   success: boolean;
   user: User;
   token?: string;
+}
+
+// Backend response wrappers
+interface BackendResponse<T> {
+  success?: boolean;
+  data?: T;
+  message?: string;
+  // Add other common backend response properties
+}
+
+interface QuestionsResponse {
+  questions: Question[];
+}
+
+interface TopicsResponse {
+  topics: Topic[];
+}
+
+interface AnswersResponse {
+  answer: Answer[];
 }
 
 const BASE_URL = 'http://localhost:3000'; // Change this when deploying
@@ -97,7 +118,8 @@ const authHeader = {
 // 1. GET /users
 export async function fetchAllUsers(): Promise<User[]> {
   const res = await axiosInstance.get('/users');
-  return res.data;
+  const data = res.data as any;
+  return data.data || data as User[] || [];
 }
 
 // 2. GET /user/:id
@@ -105,7 +127,8 @@ export async function fetchUserById(id: number): Promise<User> {
   const res = await axiosInstance.get(`/user/${id}`, {
     headers: authHeader,
   });
-  return res.data;
+  const data = res.data as any;
+  return data.data || data as User;
 }
 
 // 3. GET /users/:id/achievements
@@ -115,7 +138,8 @@ export async function fetchUserAchievements(
   const res = await axiosInstance.get(`/users/${id}/achievements`, {
     headers: authHeader,
   });
-  return res.data;
+  const data = res.data as any;
+  return data.data || data as Achievement[] || [];
 }
 
 // 4. POST /user/:id/xp
@@ -128,13 +152,19 @@ export async function updateUserXP(
     { xp },
     { headers: authHeader },
   );
-  return res.data;
+  const data = res.data as any;
+  return {
+    success: data.success || true,
+    data: data.data,
+    message: data.message
+  };
 }
 
 // 5. GET /questions
 export async function fetchAllQuestions(): Promise<Question[]> {
   const res = await axiosInstance.get('/questions');
-  return res.data.questions;
+  const data = res.data as any;
+  return data.questions || [];
 }
 
 // 6. GET /question/:level
@@ -144,7 +174,8 @@ export async function fetchQuestionsByLevel(
   const res = await axiosInstance.get(`/question/${level}`, {
     headers: authHeader,
   });
-  return res.data.questions;
+  const data = res.data as any;
+  return data.questions || [];
 }
 
 // 7. GET /question/:id/answer
@@ -152,7 +183,12 @@ export async function fetchQuestionAnswer(id: number): Promise<Answer> {
   const res = await axiosInstance.get(`/question/${id}/answer`, {
     headers: authHeader,
   });
-  return res.data;
+  const data = res.data as any;
+  const answers = data.answer || [];
+  if (answers.length === 0) {
+    throw new Error('No answer found');
+  }
+  return answers[0];
 }
 
 // 8. GET /questions/topic?topic=Algebra
@@ -162,7 +198,8 @@ export async function fetchQuestionsByTopic(
   const res = await axiosInstance.get(`/questions/topic`, {
     params: { topic },
   });
-  return res.data.questions;
+  const data = res.data as any;
+  return data.questions || [];
 }
 
 // 9. GET /questions/level/topic?level=2&topic=Algebra
@@ -173,7 +210,8 @@ export async function fetchQuestionsByLevelAndTopic(
   const res = await axiosInstance.get('/questions/level/topic', {
     params: { level, topic },
   });
-  return res.data.questions;
+  const data = res.data as any;
+  return data.questions || [];
 }
 
 // 10. POST /question/:id/answer
@@ -184,7 +222,12 @@ export async function submitAnswer(
   const res = await axiosInstance.post(`/question/${id}/answer`, {
     question: [{ answer }],
   });
-  return res.data;
+  const data = res.data as any;
+  return {
+    success: data.success || true,
+    data: data.data,
+    message: data.message
+  };
 }
 
 export async function loginUser(
@@ -192,7 +235,11 @@ export async function loginUser(
   password: string,
 ): Promise<LoginResponse> {
   const res = await axiosInstance.post('/login', { email, password });
-  return res.data;
+  const data = res.data as any;
+  return {
+    token: data.token,
+    user: data.user
+  };
 }
 
 export async function registerUser(
@@ -213,7 +260,12 @@ export async function registerUser(
     currentLevel,
     joinDate,
   });
-  return res.data;
+  const data = res.data as any;
+  return {
+    success: data.success || true,
+    user: data.user,
+    token: data.token
+  };
 }
 
 export async function logoutUser(): Promise<void> {
@@ -224,7 +276,8 @@ export async function logoutUser(): Promise<void> {
 // 11. GET /topics
 export async function fetchAllTopics(): Promise<Topic[]> {
   const res = await axiosInstance.get('/topics');
-  return res.data.topics;
+  const data = res.data as any;
+  return data.topics || [];
 }
 
 // 12. GET /questions/random
@@ -234,7 +287,8 @@ export async function fetchRandomQuestions(level: number): Promise<Question[]> {
       level,
     },
   });
-  return res.data.questions;
+  const data = res.data as any;
+  return data.questions || [];
 }
 
 // 13. GET /questions/topic with answers - enhanced version
@@ -245,7 +299,8 @@ export async function fetchQuestionsWithAnswersByTopic(
     params: { topic },
   });
 
-  const questions = res.data.questions || res.data || [];
+  const data = res.data as any;
+  const questions = data.questions || [];
 
   if (!Array.isArray(questions) || questions.length === 0) {
     return [];
@@ -256,7 +311,8 @@ export async function fetchQuestionsWithAnswersByTopic(
     questions.map(async (question: any) => {
       try {
         const answersRes = await axiosInstance.get(`/answers/${question.Q_id}`);
-        const answers = answersRes.data.answer || [];
+        const answersData = answersRes.data as any;
+        const answers = answersData.answer || [];
 
         if (!Array.isArray(answers)) {
           console.error(

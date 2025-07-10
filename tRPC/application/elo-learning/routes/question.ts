@@ -115,6 +115,7 @@ router.get('/practice', async (req: Request, res: Response) => {
     }
 
     if (data) {
+      const questionsWithAnswers: Question[] = [];
       for (const question of data) {
         const { data: answers, error: answerError } = await supabase
           .from('Answers')
@@ -131,8 +132,12 @@ router.get('/practice', async (req: Request, res: Response) => {
             .status(500)
             .json({ error: 'Failed to fetch practice questions' });
         }
-        question.answers = answers;
+        questionsWithAnswers.push({
+          ...question,
+          answers: answers || [],
+        });
       }
+      return res.status(200).json({ questions: questionsWithAnswers });
     }
 
     res.status(200).json({ questions: data });
@@ -163,6 +168,7 @@ router.get(
       }
 
       if (data) {
+        const questionsWithAnswers: Question[] = [];
         for (const question of data) {
           const { data: answers, error: answerError } = await supabase
             .from('Answers')
@@ -174,8 +180,12 @@ router.get(
             return res.status(500).json({ error: 'Failed to fetch answers' });
           }
 
-          question.answers = answers;
+          questionsWithAnswers.push({
+            ...question,
+            answers: answers || [],
+          });
         }
+        return res.status(200).json({ questions: questionsWithAnswers });
       }
 
       res.status(200).json({ questions: data });
@@ -238,6 +248,7 @@ router.get('/level/topic', async (req: Request, res: Response) => {
     }
 
     if (data) {
+      const questionsWithAnswers: Question[] = [];
       for (const question of data) {
         const { data: answers, error: answerError } = await supabase
           .from('Answers')
@@ -254,8 +265,12 @@ router.get('/level/topic', async (req: Request, res: Response) => {
             .status(500)
             .json({ error: 'Failed to fetch practice questions' });
         }
-        question.answers = answers;
+        questionsWithAnswers.push({
+          ...question,
+          answers: answers || [],
+        });
       }
+      return res.status(200).json({ questions: questionsWithAnswers });
     }
 
     res.status(200).json({ questions: data });

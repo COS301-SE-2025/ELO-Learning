@@ -96,13 +96,13 @@ const authHeader = {
 
 // 1. GET /users
 export async function fetchAllUsers(): Promise<User[]> {
-  const res = await axiosInstance.get('/users');
+  const res = await axiosInstance.get('/api/users');
   return res.data;
 }
 
 // 2. GET /user/:id
 export async function fetchUserById(id: number): Promise<User> {
-  const res = await axiosInstance.get(`/user/${id}`, {
+  const res = await axiosInstance.get(`/api/users/${id}`, {
     headers: authHeader,
   });
   return res.data;
@@ -112,7 +112,7 @@ export async function fetchUserById(id: number): Promise<User> {
 export async function fetchUserAchievements(
   id: number,
 ): Promise<Achievement[]> {
-  const res = await axiosInstance.get(`/users/${id}/achievements`, {
+  const res = await axiosInstance.get(`/api/users/${id}/achievements`, {
     headers: authHeader,
   });
   return res.data;
@@ -124,7 +124,7 @@ export async function updateUserXP(
   xp: number,
 ): Promise<ApiResponse<User>> {
   const res = await axiosInstance.post(
-    `/user/${id}/xp`,
+    `/api/users/${id}/xp`,
     { xp },
     { headers: authHeader },
   );
@@ -133,7 +133,7 @@ export async function updateUserXP(
 
 // 5. GET /questions
 export async function fetchAllQuestions(): Promise<Question[]> {
-  const res = await axiosInstance.get('/questions');
+  const res = await axiosInstance.get('/api/questions');
   return res.data.questions;
 }
 
@@ -141,7 +141,7 @@ export async function fetchAllQuestions(): Promise<Question[]> {
 export async function fetchQuestionsByLevel(
   level: number,
 ): Promise<Question[]> {
-  const res = await axiosInstance.get(`/question/${level}`, {
+  const res = await axiosInstance.get(`/api/questions/${level}`, {
     headers: authHeader,
   });
   return res.data.questions;
@@ -149,7 +149,7 @@ export async function fetchQuestionsByLevel(
 
 // 7. GET /question/:id/answer
 export async function fetchQuestionAnswer(id: number): Promise<Answer> {
-  const res = await axiosInstance.get(`/question/${id}/answer`, {
+  const res = await axiosInstance.get(`/api/questions/${id}/answer`, {
     headers: authHeader,
   });
   return res.data;
@@ -159,7 +159,7 @@ export async function fetchQuestionAnswer(id: number): Promise<Answer> {
 export async function fetchQuestionsByTopic(
   topic: string,
 ): Promise<Question[]> {
-  const res = await axiosInstance.get(`/questions/topic`, {
+  const res = await axiosInstance.get(`/api/questions/topic`, {
     params: { topic },
   });
   return res.data.questions;
@@ -170,7 +170,7 @@ export async function fetchQuestionsByLevelAndTopic(
   level: number,
   topic: string,
 ): Promise<Question[]> {
-  const res = await axiosInstance.get('/questions/level/topic', {
+  const res = await axiosInstance.get('/api/questions/level/topic', {
     params: { level, topic },
   });
   return res.data.questions;
@@ -181,7 +181,7 @@ export async function submitAnswer(
   id: number,
   answer: string,
 ): Promise<ApiResponse<any>> {
-  const res = await axiosInstance.post(`/question/${id}/answer`, {
+  const res = await axiosInstance.post(`/api/questions/${id}/answer`, {
     question: [{ answer }],
   });
   return res.data;
@@ -191,7 +191,7 @@ export async function loginUser(
   email: string,
   password: string,
 ): Promise<LoginResponse> {
-  const res = await axiosInstance.post('/login', { email, password });
+  const res = await axiosInstance.post('/api/auth/login', { email, password });
   return res.data;
 }
 
@@ -204,7 +204,7 @@ export async function registerUser(
   currentLevel: number,
   joinDate: string,
 ): Promise<RegisterResponse> {
-  const res = await axiosInstance.post('/register', {
+  const res = await axiosInstance.post('/api/auth/register', {
     name,
     surname,
     username,
@@ -223,13 +223,13 @@ export async function logoutUser(): Promise<void> {
 
 // 11. GET /topics
 export async function fetchAllTopics(): Promise<Topic[]> {
-  const res = await axiosInstance.get('/topics');
+  const res = await axiosInstance.get('/api/topics');
   return res.data.topics;
 }
 
 // 12. GET /questions/random
 export async function fetchRandomQuestions(level: number): Promise<Question[]> {
-  const res = await axiosInstance.get('/questions/random', {
+  const res = await axiosInstance.get('/api/questions/random', {
     params: {
       level,
     },
@@ -241,7 +241,7 @@ export async function fetchRandomQuestions(level: number): Promise<Question[]> {
 export async function fetchQuestionsWithAnswersByTopic(
   topic: string,
 ): Promise<Question[]> {
-  const res = await axiosInstance.get(`/questions/topic`, {
+  const res = await axiosInstance.get(`/api/questions/topic`, {
     params: { topic },
   });
 
@@ -255,7 +255,9 @@ export async function fetchQuestionsWithAnswersByTopic(
   const questionsWithAnswers = await Promise.all(
     questions.map(async (question: any) => {
       try {
-        const answersRes = await axiosInstance.get(`/answers/${question.Q_id}`);
+        const answersRes = await axiosInstance.get(
+          `/api/questions/answers/${question.Q_id}`,
+        );
         const answers = answersRes.data.answer || [];
 
         if (!Array.isArray(answers)) {

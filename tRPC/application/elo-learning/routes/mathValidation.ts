@@ -1,4 +1,4 @@
-// routes/math.ts
+// routes/mathValidation.ts - FIXED import and compatibility
 import { Router, Request, Response } from 'express';
 import { supabase } from '../database/supabaseClient';
 import { backendMathValidator } from '../services/mathValidator';
@@ -27,7 +27,7 @@ interface SubmitQuestionAnswerRequest {
 // POST /validate-answer - Validate a math answer
 router.post(
   '/validate-answer',
-  async (req: Request<{}, {}, ValidateAnswerRequest>, res: Response) => {
+  async (req: Request<Record<string, never>, unknown, ValidateAnswerRequest>, res: Response) => {
     try {
       const { studentAnswer, correctAnswer } = req.body;
 
@@ -58,7 +58,7 @@ router.post(
 // POST /quick-validate - Quick validation for real-time feedback
 router.post(
   '/quick-validate',
-  async (req: Request<{}, {}, QuickValidateRequest>, res: Response) => {
+  async (req: Request<Record<string, never>, unknown, QuickValidateRequest>, res: Response) => {
     try {
       const { studentAnswer, correctAnswer } = req.body;
 
@@ -88,7 +88,7 @@ router.post(
 // POST /validate-expression - Validate math expression format
 router.post(
   '/validate-expression',
-  async (req: Request<{}, {}, ValidateExpressionRequest>, res: Response) => {
+  async (req: Request<Record<string, never>, unknown, ValidateExpressionRequest>, res: Response) => {
     try {
       const { expression } = req.body;
 
@@ -117,7 +117,7 @@ router.post(
 router.post(
   '/question/:id/submit',
   async (
-    req: Request<{ id: string }, {}, SubmitQuestionAnswerRequest>,
+    req: Request<{ id: string }, unknown, SubmitQuestionAnswerRequest>,
     res: Response,
   ) => {
     try {

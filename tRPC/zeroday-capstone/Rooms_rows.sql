@@ -1,0 +1,1 @@
+INSERT INTO "public"."Rooms" ("room_id", "created_at", "status", "topic") VALUES ('1', '2025-06-24 23:08:58.070844+00', 'active', null), ('2', '2025-06-24 23:09:12.580441+00', 'active', null), ('3', '2025-06-24 23:49:08.357494+00', 'active', null), ('4', '2025-06-25 00:08:16.731794+00', 'active', null), ('5', '2025-06-25 02:54:24.171828+00', 'active', null);

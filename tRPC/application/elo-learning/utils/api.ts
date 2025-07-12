@@ -52,7 +52,7 @@ const getAuthHeaders = (): AuthHeaders => {
 // Get all questions (no auth required)
 export const getAllQuestions = async (): Promise<ApiResponse<Question[]>> => {
   try {
-    const response = await fetch(`${API_BASE_URL}/questions`, {
+    const response = await fetch(`${API_BASE_URL}/api/questions`, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
@@ -81,7 +81,7 @@ export const getQuestionById = async (
   id: number,
 ): Promise<ApiResponse<Question>> => {
   try {
-    const response = await fetch(`${API_BASE_URL}/questionsById/${id}`, {
+    const response = await fetch(`${API_BASE_URL}/api/questions/ById/${id}`, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
@@ -111,12 +111,15 @@ export const getAllAnswers = async (
   id: number,
 ): Promise<ApiResponse<Answer[]>> => {
   try {
-    const response = await fetch(`${API_BASE_URL}/answers/${id}`, {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
+    const response = await fetch(
+      `${API_BASE_URL}/api/questions/answers/${id}`,
+      {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
       },
-    });
+    );
 
     const data = await response.json();
 
@@ -138,7 +141,7 @@ export const getAllAnswers = async (
 
 export const practiceQuestion = async (): Promise<ApiResponse<Question[]>> => {
   try {
-    const response = await fetch(`${API_BASE_URL}/practice`, {
+    const response = await fetch(`${API_BASE_URL}/api/questions/practice`, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
@@ -171,7 +174,7 @@ export const validateMathAnswer = async (
   correctAnswer: string,
 ): Promise<ApiResponse<ValidationResponse>> => {
   try {
-    const response = await fetch(`${API_BASE_URL}/validate-answer`, {
+    const response = await fetch(`${API_BASE_URL}/api/math/validate-answer`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -206,7 +209,7 @@ export const quickValidateMath = async (
   correctAnswer: string,
 ): Promise<ApiResponse<ValidationResponse>> => {
   try {
-    const response = await fetch(`${API_BASE_URL}/quick-validate`, {
+    const response = await fetch(`${API_BASE_URL}/api/math/quick-validate`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -240,15 +243,18 @@ export const validateMathExpression = async (
   expression: string,
 ): Promise<ApiResponse<ValidationResponse>> => {
   try {
-    const response = await fetch(`${API_BASE_URL}/validate-expression`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
+    const response = await fetch(
+      `${API_BASE_URL}/api/math/validate-expression`,
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          expression,
+        }),
       },
-      body: JSON.stringify({
-        expression,
-      }),
-    });
+    );
 
     const data = await response.json();
 
@@ -276,7 +282,7 @@ export const submitQuestionAnswer = async (
 ): Promise<ApiResponse<SubmissionResponse>> => {
   try {
     const response = await fetch(
-      `${API_BASE_URL}/question/${questionId}/submit`,
+      `${API_BASE_URL}/api/questions/${questionId}/submit`,
       {
         method: 'POST',
         headers: {
@@ -313,7 +319,7 @@ export const getQuestionsByType = async (
 ): Promise<ApiResponse<Question[]>> => {
   try {
     const response = await fetch(
-      `${API_BASE_URL}/practice/type/${questionType}`,
+      `${API_BASE_URL}/api/questions/practice/type/${questionType}`,
     );
     const data = await response.json();
 

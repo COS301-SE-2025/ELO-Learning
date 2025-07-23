@@ -1,6 +1,6 @@
 'use client';
 import { setCookie } from '@/app/lib/authCookie';
-import { X } from 'lucide-react';
+import { X, Eye, EyeOff } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
@@ -11,6 +11,7 @@ export default function Page() {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
   const router = useRouter();
 
   const handleSubmit = async (e) => {
@@ -36,6 +37,10 @@ export default function Page() {
     }
   };
 
+  const togglePasswordVisibility = () => {
+    setShowPassword(!showPassword);
+  };
+
   return (
     <div className="w-full min-h-screen flex flex-col justify-between p-3">
       <div>
@@ -58,14 +63,23 @@ export default function Page() {
               onChange={(e) => setEmail(e.target.value)}
               required
             />
-            <input
-              type="password"
-              placeholder="Password"
-              className="input-field md:w-1/2 bottom_form_input"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-            />
+            <div className="relative md:w-1/2 w-full">
+              <input
+                type={showPassword ? "text" : "password"}
+                placeholder="Password"
+                className="input-field w-full bottom_form_input pr-12"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+              />
+              <button
+                type="button"
+                onClick={togglePasswordVisibility}
+                className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700 focus:outline-none"
+              >
+                {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+              </button>
+            </div>
             <div className="break_small"></div>
             {error && (
               <p className="text-[#FF6666] text-center mb-4">{error}</p>

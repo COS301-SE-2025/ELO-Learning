@@ -1,1 +1,0 @@
-INSERT INTO "public"."Achievements" ("achievement_id", "user_id", "badgeName", "unlockedAt") VALUES ('1', '2', 'First Login', '2025-05-23'), ('2', '5', 'Math Whiz', '2025-05-21'), ('3', '9', 'Quiz Master', '2025-05-16'), ('4', '2', 'Streak Keeper', '2025-05-20'), ('5', '5', 'Fast Learner', '2025-05-18');

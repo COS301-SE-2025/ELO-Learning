@@ -17,12 +17,12 @@ export default function Page() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
+
     if (!email) {
       setError('Please enter your email address.');
       return;
     }
-    
+
     if (!validateEmail(email)) {
       setError('Please enter a valid email address.');
       return;
@@ -35,7 +35,9 @@ export default function Page() {
       await sendPasswordResetEmail(email);
       setSubmitted(true);
     } catch (err) {
-      setError(err?.response?.data?.error || 'Failed to send reset email. Try again.');
+      setError(
+        err?.response?.data?.error || 'Failed to send reset email. Try again.',
+      );
     } finally {
       setLoading(false);
     }
@@ -54,10 +56,14 @@ export default function Page() {
           {submitted ? (
             <div className="flex flex-col items-center w-full">
               <p className="text-center text-green-600 mt-4">
-                If an account with that email exists, a password reset link has been sent.
+                If an account with that email exists, a password reset link has
+                been sent.
               </p>
               <div className="break_small"></div>
-              <Link href="/login-landing/login" className="main-button px-2 py-8 text-center">
+              <Link
+                href="/login-landing/login"
+                className="main-button px-2 py-8 text-center"
+              >
                 Back to Login
               </Link>
             </div>

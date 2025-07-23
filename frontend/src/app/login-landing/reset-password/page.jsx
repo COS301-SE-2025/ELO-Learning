@@ -15,7 +15,7 @@ function validatePassword(password) {
 function ResetPasswordContent() {
   const searchParams = useSearchParams();
   const token = searchParams.get('token');
-  
+
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [error, setError] = useState('');
@@ -46,17 +46,17 @@ function ResetPasswordContent() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
+
     if (!password || !confirmPassword) {
       setError('Please fill in both password fields.');
       return;
     }
-    
+
     if (password !== confirmPassword) {
       setError('Passwords do not match.');
       return;
     }
-    
+
     if (!validatePassword(password)) {
       setError(
         'Password must be at least 8 characters, include an uppercase letter, a number, and a special character.',
@@ -71,7 +71,9 @@ function ResetPasswordContent() {
       await resetPassword(token, password);
       setSuccess(true);
     } catch (err) {
-      setError(err?.response?.data?.error || 'Failed to reset password. Try again.');
+      setError(
+        err?.response?.data?.error || 'Failed to reset password. Try again.',
+      );
     } finally {
       setLoading(false);
     }
@@ -103,7 +105,10 @@ function ResetPasswordContent() {
                 {error || 'Invalid or expired reset link.'}
               </p>
               <div className="break_small"></div>
-              <Link href="/login-landing/forgot-password" className="main-button px-2 py-8 text-center">
+              <Link
+                href="/login-landing/forgot-password"
+                className="main-button px-2 py-8 text-center"
+              >
                 Request New Reset Link
               </Link>
             </div>
@@ -135,7 +140,10 @@ function ResetPasswordContent() {
                 Your password has been successfully reset!
               </p>
               <div className="break_small"></div>
-              <Link href="/login-landing/login" className="main-button px-2 py-8 text-center">
+              <Link
+                href="/login-landing/login"
+                className="main-button px-2 py-8 text-center"
+              >
                 Login with New Password
               </Link>
             </div>

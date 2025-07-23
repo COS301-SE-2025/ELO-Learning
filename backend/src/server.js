@@ -1144,36 +1144,36 @@ app.post('/forgot-password', async (req, res) => {
 
     if (fetchError || !user) {
       // For security, don't reveal if email exists or not
-      return res.status(200).json({ 
-        message: 'If an account with that email exists, a reset link has been sent.' 
+      return res.status(200).json({
+        message:
+          'If an account with that email exists, a reset link has been sent.',
       });
     }
 
     // Generate reset token (valid for 1 hour)
     const now = Math.floor(Date.now() / 1000); // Current UTC timestamp in seconds
     const resetToken = jwt.sign(
-      { 
-        userId: user.id, 
-        email: user.email, 
+      {
+        userId: user.id,
+        email: user.email,
         type: 'password_reset',
         iat: now,
-        exp: now + TOKEN_EXPIRY
+        exp: now + TOKEN_EXPIRY,
       },
-      process.env.JWT_SECRET
+      process.env.JWT_SECRET,
     );
 
     // Store in database with explicit UTC timestamp
     const expiresAt = new Date();
     expiresAt.setTime(now * 1000 + TOKEN_EXPIRY * 1000);
-    
-    const { error: tokenError } = await supabase
-      .from('PasswordResets')
-      .insert([{
+
+    const { error: tokenError } = await supabase.from('PasswordResets').insert([
+      {
         user_id: user.id,
         token: resetToken,
         expires_at: expiresAt.toISOString(), // Stores in UTC
-      }]);
-
+      },
+    ]);
 
     if (tokenError) {
       console.error('Error storing reset token:', tokenError.message);
@@ -1183,14 +1183,14 @@ app.post('/forgot-password', async (req, res) => {
     // TODO: Send email with reset link
     // const resetLink = `${process.env.FRONTEND_URL}/login-landing/reset-password?token=${resetToken}`;
     // await sendPasswordResetEmail(user.email, user.name, resetLink);
-    
+
     console.log(`Password reset requested for: ${email}`);
     console.log(`Reset token: ${resetToken}`); // Remove in production
 
-    res.status(200).json({ 
-      message: 'If an account with that email exists, a reset link has been sent.' 
+    res.status(200).json({
+      message:
+        'If an account with that email exists, a reset link has been sent.',
     });
-
   } catch (error) {
     console.error('Error in forgot password:', error);
     res.status(500).json({ error: 'Internal server error' });
@@ -1203,13 +1203,15 @@ app.post('/reset-password', async (req, res) => {
     const { token, newPassword } = req.body;
 
     if (!token || !newPassword) {
-      return res.status(400).json({ error: 'Token and new password are required' });
+      return res
+        .status(400)
+        .json({ error: 'Token and new password are required' });
     }
 
     // Validate password strength (same as registration)
     if (newPassword.length < 8) {
-      return res.status(400).json({ 
-        error: 'Password must be at least 8 characters long' 
+      return res.status(400).json({
+        error: 'Password must be at least 8 characters long',
       });
     }
 
@@ -1238,13 +1240,10 @@ app.post('/reset-password', async (req, res) => {
     // Compare UTC timestamps
     const now = new Date();
     const expiresAt = new Date(resetEntry.expires_at);
-    
+
     if (now.getTime() > expiresAt.getTime()) {
       // Clean up expired token
-      await supabase
-        .from('PasswordResets')
-        .delete()
-        .eq('token', token);
+      await supabase.from('PasswordResets').delete().eq('token', token);
       return res.status(400).json({ error: 'Reset token has expired' });
     }
 
@@ -1263,15 +1262,11 @@ app.post('/reset-password', async (req, res) => {
     }
 
     // Delete used reset token
-    await supabase
-      .from('PasswordResets')
-      .delete()
-      .eq('token', token);
+    await supabase.from('PasswordResets').delete().eq('token', token);
 
-    res.status(200).json({ 
-      message: 'Password has been successfully reset' 
+    res.status(200).json({
+      message: 'Password has been successfully reset',
     });
-
   } catch (err) {
     console.error('Error in reset-password:', err);
     res.status(500).json({ error: 'Internal server error' });
@@ -1312,21 +1307,17 @@ app.get('/verify-reset-token/:token', async (req, res) => {
     // Check expiration
     const now = new Date();
     const expiresAt = new Date(resetRecord.expires_at);
-    
+
     if (now > expiresAt) {
       // Clean up expired token
-      await supabase
-        .from('PasswordResets')
-        .delete()
-        .eq('token', token);
+      await supabase.from('PasswordResets').delete().eq('token', token);
       return res.status(400).json({ error: 'Token has expired' });
     }
 
-    res.status(200).json({ 
+    res.status(200).json({
       message: 'Token is valid',
-      userId: decoded.userId 
+      userId: decoded.userId,
     });
-    
   } catch (error) {
     console.error('Error verifying reset token:', error);
     res.status(500).json({ error: 'Internal server error' });

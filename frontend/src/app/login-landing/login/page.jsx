@@ -67,7 +67,7 @@ export default function Page() {
             </div>
             <div className="relative w-[90vw] md:w-[500px]">
               <input
-                type={showPassword ? "text" : "password"}
+                type={showPassword ? 'text' : 'password'}
                 placeholder="Password"
                 className="input-field w-full bottom_form_input pr-14"
                 value={password}
@@ -84,7 +84,9 @@ export default function Page() {
             </div>
             <div className="break_small"></div>
             {error && (
-              <p className="text-[#FF6666] text-center mb-4 w-[90vw] md:w-[500px]">{error}</p>
+              <p className="text-[#FF6666] text-center mb-4 w-[90vw] md:w-[500px]">
+                {error}
+              </p>
             )}
             <button
               type="submit"

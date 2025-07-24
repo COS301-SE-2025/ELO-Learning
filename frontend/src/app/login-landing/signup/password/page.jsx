@@ -79,11 +79,11 @@ export default function Page() {
 
   const togglePasswordVisibility = () => {
     setShowPassword(!showPassword);
-  }
+  };
 
   const toggleConfirmPasswordVisibility = () => {
     setShowConfirmPassword(!showConfirmPassword);
-  }
+  };
 
   return (
     <div className="w-full min-h-screen flex flex-col justify-between p-3">
@@ -99,10 +99,14 @@ export default function Page() {
         <div>
           <p className="text-lg text-center font-bold">Choose a password</p>
           <form onSubmit={handleContinue}>
-            <div className="flex flex-col items-center w-full px-4 md:px-0"> {/* Added px-4 for mobile padding */}
-              <div className="relative w-[90vw] md:w-[500px]"> {/* Changed to match button width */}
+            <div className="flex flex-col items-center w-full px-4 md:px-0">
+              {' '}
+              {/* Added px-4 for mobile padding */}
+              <div className="relative w-[90vw] md:w-[500px]">
+                {' '}
+                {/* Changed to match button width */}
                 <input
-                  type={showPassword ? "text" : "password"}
+                  type={showPassword ? 'text' : 'password'}
                   placeholder="Enter a password"
                   className="input-field input-with-icon top_form_input w-full"
                   value={password}
@@ -117,9 +121,11 @@ export default function Page() {
                   {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
                 </button>
               </div>
-              <div className="relative w-[90vw] md:w-[500px]"> {/* Changed to match button width */}
+              <div className="relative w-[90vw] md:w-[500px]">
+                {' '}
+                {/* Changed to match button width */}
                 <input
-                  type={showConfirmPassword ? "text" : "password"}
+                  type={showConfirmPassword ? 'text' : 'password'}
                   placeholder="Confirm password"
                   className="input-field input-with-icon bottom_form_input w-full"
                   value={confirm}
@@ -131,10 +137,18 @@ export default function Page() {
                   onClick={toggleConfirmPasswordVisibility}
                   className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700 focus:outline-none"
                 >
-                  {showConfirmPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                  {showConfirmPassword ? (
+                    <EyeOff size={20} />
+                  ) : (
+                    <Eye size={20} />
+                  )}
                 </button>
               </div>
-              {error && <p className="text-red-500 mt-2 w-[90vw] md:w-[500px] text-center">{error}</p>}
+              {error && (
+                <p className="text-red-500 mt-2 w-[90vw] md:w-[500px] text-center">
+                  {error}
+                </p>
+              )}
               <div className="break_small"></div>
               <button
                 className="main-button px-2 py-8"

@@ -81,7 +81,7 @@ function ResetPasswordContent() {
     }
   };
 
-   const togglePasswordVisibility = () => {
+  const togglePasswordVisibility = () => {
     setShowPassword(!showPassword);
   };
 
@@ -162,7 +162,7 @@ function ResetPasswordContent() {
               <div className="flex flex-col items-center w-full px-4 md:px-0">
                 <div className="relative w-[90vw] md:w-[500px]">
                   <input
-                    type={showPassword ? "text" : "password"}
+                    type={showPassword ? 'text' : 'password'}
                     placeholder="Enter new password"
                     className="input-field w-full top_form_input pr-14"
                     value={password}
@@ -179,7 +179,7 @@ function ResetPasswordContent() {
                 </div>
                 <div className="relative w-[90vw] md:w-[500px]">
                   <input
-                    type={showConfirmPassword ? "text" : "password"}
+                    type={showConfirmPassword ? 'text' : 'password'}
                     placeholder="Confirm new password"
                     className="input-field w-full bottom_form_input pr-14"
                     value={confirmPassword}
@@ -191,10 +191,18 @@ function ResetPasswordContent() {
                     onClick={toggleConfirmPasswordVisibility}
                     className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700 focus:outline-none"
                   >
-                    {showConfirmPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                    {showConfirmPassword ? (
+                      <EyeOff size={20} />
+                    ) : (
+                      <Eye size={20} />
+                    )}
                   </button>
                 </div>
-                {error && <p className="text-red-500 mt-2 w-[90vw] md:w-[500px] text-center">{error}</p>}
+                {error && (
+                  <p className="text-red-500 mt-2 w-[90vw] md:w-[500px] text-center">
+                    {error}
+                  </p>
+                )}
                 <div className="break_small"></div>
                 <button
                   className="main-button px-2 py-8"

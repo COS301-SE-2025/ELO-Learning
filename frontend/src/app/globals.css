@@ -104,7 +104,7 @@ form {
 
 input,
 textarea {
-  width: 500px;
+  width: 100%; /* Changed from 500px to 100% */
   padding: 1%;
   background-color: transparent;
   border: none;
@@ -340,7 +340,7 @@ textarea:focus-visible {
 @media only screen and (max-width: 600px) {
   input,
   textarea {
-    width: 95%;
+    width: 100%;
     padding: 3%;
   }
 
@@ -492,5 +492,20 @@ textarea:focus-visible {
   .math-symbol-button {
     height: 48px;
     font-size: 16px;
+  }
+}
+
+.input-with-icon {
+  box-sizing: border-box;
+  padding-right: 3rem !important;
+  width: 100%;
+}
+
+/* Ensure responsive behavior matches your existing styles */
+@media only screen and (max-width: 600px) {
+  .input-with-icon {
+    box-sizing: border-box;
+    padding-right: 3rem !important;
+    width: 100%;
   }
 }

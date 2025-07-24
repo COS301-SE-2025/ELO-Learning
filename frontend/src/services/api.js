@@ -161,3 +161,21 @@ export async function fetchRandomQuestions(level) {
   });
   return res.data;
 }
+
+export async function sendPasswordResetEmail(email) {
+  const res = await axiosInstance.post('/forgot-password', { email });
+  return res.data;
+}
+
+export async function resetPassword(token, newPassword) {
+  const res = await axiosInstance.post('/reset-password', {
+    token,
+    newPassword,
+  });
+  return res.data;
+}
+
+export async function verifyResetToken(token) {
+  const res = await axiosInstance.get(`/verify-reset-token/${token}`);
+  return res.data;
+}

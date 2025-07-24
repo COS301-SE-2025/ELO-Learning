@@ -161,3 +161,11 @@ export async function fetchRandomQuestions(level) {
   });
   return res.data;
 }
+
+//13. POST /singleplayer
+export async function submitSinglePlayerAttempt(data) {
+  const res = await axiosInstance.post('/singleplayer', data, {
+    headers: authHeader,
+  });
+  return res.data;
+}

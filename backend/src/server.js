@@ -712,8 +712,9 @@ app.post('/singleplayer', async (req, res) => {
 
     // Return xp earned + leveled up
     return res.status(200).json({
-      xpEarned: parseFloat(xpEarned.toFixed(2)),
+      xpEarned: xpEarned,
       leveledUp,
+      totalXP: newXP,
     });
   } catch (err) {
     console.error('Error in /singleplayer:', err);

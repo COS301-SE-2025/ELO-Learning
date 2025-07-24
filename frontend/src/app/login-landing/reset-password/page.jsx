@@ -1,9 +1,9 @@
 'use client';
 import { resetPassword, verifyResetToken } from '@/services/api';
-import { X } from 'lucide-react';
+import { Eye, EyeOff, X } from 'lucide-react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
-import { useState, useEffect, Suspense } from 'react';
+import { Suspense, useEffect, useState } from 'react';
 
 function validatePassword(password) {
   // At least 1 uppercase, 1 number, 1 special char, min 8 chars
@@ -22,6 +22,8 @@ function ResetPasswordContent() {
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
   const [tokenValid, setTokenValid] = useState(null);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   // Verify token on component mount
   useEffect(() => {
@@ -77,6 +79,14 @@ function ResetPasswordContent() {
     } finally {
       setLoading(false);
     }
+  };
+
+   const togglePasswordVisibility = () => {
+    setShowPassword(!showPassword);
+  };
+
+  const toggleConfirmPasswordVisibility = () => {
+    setShowConfirmPassword(!showConfirmPassword);
   };
 
   // Show loading while verifying token
@@ -136,7 +146,7 @@ function ResetPasswordContent() {
           <p className="text-lg text-center font-bold">Reset Password</p>
           {success ? (
             <div className="flex flex-col items-center w-full">
-              <p className="text-center text-green-600 mt-4">
+              <p className="text-center text-green-600 mt-4 w-[90vw] md:w-[500px]">
                 Your password has been successfully reset!
               </p>
               <div className="break_small"></div>
@@ -149,24 +159,42 @@ function ResetPasswordContent() {
             </div>
           ) : (
             <form onSubmit={handleSubmit}>
-              <div className="flex flex-col items-center w-full">
-                <input
-                  type="password"
-                  placeholder="Enter new password"
-                  className="input-field md:w-1/2 top_form_input"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  required
-                />
-                <input
-                  type="password"
-                  placeholder="Confirm new password"
-                  className="input-field md:w-1/2 bottom_form_input"
-                  value={confirmPassword}
-                  onChange={(e) => setConfirmPassword(e.target.value)}
-                  required
-                />
-                {error && <p className="text-red-500">{error}</p>}
+              <div className="flex flex-col items-center w-full px-4 md:px-0">
+                <div className="relative w-[90vw] md:w-[500px]">
+                  <input
+                    type={showPassword ? "text" : "password"}
+                    placeholder="Enter new password"
+                    className="input-field w-full top_form_input pr-14"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    required
+                  />
+                  <button
+                    type="button"
+                    onClick={togglePasswordVisibility}
+                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700 focus:outline-none"
+                  >
+                    {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                  </button>
+                </div>
+                <div className="relative w-[90vw] md:w-[500px]">
+                  <input
+                    type={showConfirmPassword ? "text" : "password"}
+                    placeholder="Confirm new password"
+                    className="input-field w-full bottom_form_input pr-14"
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    required
+                  />
+                  <button
+                    type="button"
+                    onClick={toggleConfirmPasswordVisibility}
+                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700 focus:outline-none"
+                  >
+                    {showConfirmPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                  </button>
+                </div>
+                {error && <p className="text-red-500 mt-2 w-[90vw] md:w-[500px] text-center">{error}</p>}
                 <div className="break_small"></div>
                 <button
                   className="main-button px-2 py-8"

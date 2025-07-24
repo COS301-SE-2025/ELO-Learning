@@ -1,6 +1,6 @@
 'use client';
 import { setCookie } from '@/app/lib/authCookie';
-import { X, Eye, EyeOff } from 'lucide-react';
+import { Eye, EyeOff, X } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
@@ -54,20 +54,22 @@ export default function Page() {
         </div>
         {/* A form to input a name and email */}
         <form onSubmit={handleSubmit}>
-          <div className="flex flex-col items-center w-full">
-            <input
-              type="text"
-              placeholder="Username or email"
-              className="input-field md:w-1/2 top_form_input"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-            />
-            <div className="relative md:w-1/2 w-full">
+          <div className="flex flex-col items-center w-full px-4 md:px-0">
+            <div className="relative w-[90vw] md:w-[500px]">
+              <input
+                type="text"
+                placeholder="Username or email"
+                className="input-field w-full top_form_input"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+              />
+            </div>
+            <div className="relative w-[90vw] md:w-[500px]">
               <input
                 type={showPassword ? "text" : "password"}
                 placeholder="Password"
-                className="input-field w-full bottom_form_input pr-12"
+                className="input-field w-full bottom_form_input pr-14"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
@@ -82,7 +84,7 @@ export default function Page() {
             </div>
             <div className="break_small"></div>
             {error && (
-              <p className="text-[#FF6666] text-center mb-4">{error}</p>
+              <p className="text-[#FF6666] text-center mb-4 w-[90vw] md:w-[500px]">{error}</p>
             )}
             <button
               type="submit"
@@ -95,7 +97,7 @@ export default function Page() {
         </form>
         <div>
           <Link href="/login-landing/forgot-password">
-            <p className="text-center py-3 text-[#ff6e99] hover:text-[#ffffff] hover:font-bold hover:scale-1.1%">
+            <p className="text-center py-3 text-[#ff6e99] hover:text-[#ffffff] hover:font-bold hover:scale-1.1% w-[90vw] md:w-[500px] mx-auto">
               Forgot your password?
             </p>
           </Link>

@@ -66,7 +66,7 @@ export default function TotalXP() {
             // q.xpEarned = xpEarned;
 
             const { xpEarned, totalXP, leveledUp } = response;
-            q.xpEarned = xpEarned || 0;
+            q.xpEarned = Math.round(xpEarned) || 0;
 
             const updatedUser = {
               ...user,
@@ -94,7 +94,7 @@ export default function TotalXP() {
       );
 
       console.log('Total XPSum calculated:', totalXPSum);
-      setTotalXP(totalXPSum);
+      setTotalXP(Math.round(totalXPSum));
       // console.log('TotalXP:', totalXP);
       setIsLoading(false);
     }

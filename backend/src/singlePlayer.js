@@ -71,7 +71,7 @@ export async function calculateSinglePlayerXP({
     XP = 0;
   }
 
-  return Number(XP.toFixed(2));
+  return Number(XP.toFixed(0));
 }
 
 /*

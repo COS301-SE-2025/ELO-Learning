@@ -175,6 +175,20 @@ export async function resetPassword(token, newPassword) {
   return res.data;
 }
 
+export async function changePassword(currentPassword, newPassword) {
+  const user = JSON.parse(localStorage.getItem('user'));
+  if (!user || !user.id) {
+    throw new Error('User not authenticated');
+  }
+
+  const res = await axiosInstance.post('/change-password', {
+    userId: user.id,
+    currentPassword,
+    newPassword,
+  });
+  return res.data;
+}
+
 export async function verifyResetToken(token) {
   const res = await axiosInstance.get(`/verify-reset-token/${token}`);
   return res.data;

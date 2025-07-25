@@ -524,7 +524,7 @@ textarea:focus-visible {
     overflow: hidden;
     text-overflow: ellipsis;
     max-width: calc(100vw - 60px); /* Smaller margin for mobile */
-    font-size: 16px; /* Reduce font size if needed */
+    font-size: 16px;
   }
 }
 .middle_form_input {

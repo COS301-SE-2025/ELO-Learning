@@ -1324,6 +1324,63 @@ app.get('/verify-reset-token/:token', async (req, res) => {
   }
 });
 
+// Change password endpoint
+app.post('/change-password', async (req, res) => {
+  const { userId, currentPassword, newPassword } = req.body;
+
+  // Validate request
+  if (!userId || !currentPassword || !newPassword) {
+    return res.status(400).json({ error: 'All fields are required' });
+  }
+
+  // Validate new password strength
+  if (newPassword.length < 8) {
+    return res.status(400).json({
+      error: 'New password must be at least 8 characters long'
+    });
+  }
+
+  try {
+    // Get user's current password hash
+    const { data: user, error: fetchError } = await supabase
+      .from('Users')
+      .select('password')
+      .eq('id', userId)
+      .single();
+
+    if (fetchError || !user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    // Verify current password
+    const isCurrentPasswordValid = await bcrypt.compare(currentPassword, user.password);
+    if (!isCurrentPasswordValid) {
+      return res.status(401).json({ error: 'Current password is incorrect' });
+    }
+
+    // Hash new password
+    const hashedNewPassword = await bcrypt.hash(newPassword, 10);
+
+    // Update password in database
+    const { error: updateError } = await supabase
+      .from('Users')
+      .update({ password: hashedNewPassword })
+      .eq('id', userId);
+
+    if (updateError) {
+      console.error('Error updating password:', updateError.message);
+      return res.status(500).json({ error: 'Failed to update password' });
+    }
+
+    res.status(200).json({
+      message: 'Password successfully updated'
+    });
+  } catch (error) {
+    console.error('Error in change-password:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
 // Start server
 // app.listen(PORT, () => {
 //   console.log(`Server is running on http://localhost:${PORT}`);

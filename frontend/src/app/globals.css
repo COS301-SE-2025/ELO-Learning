@@ -508,3 +508,29 @@ textarea:focus-visible {
     width: 100%;
   }
 }
+
+.back-header-title {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: calc(100vw - 80px);
+}
+
+@media only screen and (max-width: 600px) {
+  .back-header-title,
+  .page-header,
+  .header-title {
+    white-space: nowrap !important;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: calc(100vw - 60px); /* Smaller margin for mobile */
+    font-size: 16px; /* Reduce font size if needed */
+  }
+}
+.middle_form_input {
+  border-top: none !important;
+  border-bottom: var(--form-outline) 1px solid !important;
+  border-left: var(--form-outline) 1px solid !important;
+  border-right: var(--form-outline) 1px solid !important;
+  border-radius: 0px !important;
+}

@@ -1336,7 +1336,7 @@ app.post('/change-password', async (req, res) => {
   // Validate new password strength
   if (newPassword.length < 8) {
     return res.status(400).json({
-      error: 'New password must be at least 8 characters long'
+      error: 'New password must be at least 8 characters long',
     });
   }
 
@@ -1353,7 +1353,10 @@ app.post('/change-password', async (req, res) => {
     }
 
     // Verify current password
-    const isCurrentPasswordValid = await bcrypt.compare(currentPassword, user.password);
+    const isCurrentPasswordValid = await bcrypt.compare(
+      currentPassword,
+      user.password,
+    );
     if (!isCurrentPasswordValid) {
       return res.status(401).json({ error: 'Current password is incorrect' });
     }
@@ -1373,7 +1376,7 @@ app.post('/change-password', async (req, res) => {
     }
 
     res.status(200).json({
-      message: 'Password successfully updated'
+      message: 'Password successfully updated',
     });
   } catch (error) {
     console.error('Error in change-password:', error);

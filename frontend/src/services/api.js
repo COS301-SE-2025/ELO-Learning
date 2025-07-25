@@ -180,7 +180,7 @@ export async function changePassword(currentPassword, newPassword) {
   if (!user || !user.id) {
     throw new Error('User not authenticated');
   }
-  
+
   const res = await axiosInstance.post('/change-password', {
     userId: user.id,
     currentPassword,

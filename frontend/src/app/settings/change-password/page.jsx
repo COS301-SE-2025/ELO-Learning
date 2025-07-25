@@ -54,7 +54,9 @@ export default function Page() {
         router.push('/settings');
       }, 2000);
     } catch (err) {
-      setError(err?.response?.data?.error || 'Failed to change password. Try again.');
+      setError(
+        err?.response?.data?.error || 'Failed to change password. Try again.',
+      );
     } finally {
       setLoading(false);
     }
@@ -78,7 +80,7 @@ export default function Page() {
               <div className="flex flex-col items-center w-full px-4 md:px-0">
                 <div className="relative w-[90vw] md:w-[500px]">
                   <input
-                    type={showCurrentPassword ? "text" : "password"}
+                    type={showCurrentPassword ? 'text' : 'password'}
                     placeholder="Current password"
                     className="input-field w-full top_form_input pr-14"
                     value={currentPassword}
@@ -90,12 +92,16 @@ export default function Page() {
                     onClick={() => setShowCurrentPassword(!showCurrentPassword)}
                     className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700 focus:outline-none"
                   >
-                    {showCurrentPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                    {showCurrentPassword ? (
+                      <EyeOff size={20} />
+                    ) : (
+                      <Eye size={20} />
+                    )}
                   </button>
                 </div>
                 <div className="relative w-[90vw] md:w-[500px]">
                   <input
-                    type={showNewPassword ? "text" : "password"}
+                    type={showNewPassword ? 'text' : 'password'}
                     placeholder="New password "
                     className="input-field w-full middle_form_input pr-14"
                     value={newPassword}
@@ -112,7 +118,7 @@ export default function Page() {
                 </div>
                 <div className="relative w-[90vw] md:w-[500px]">
                   <input
-                    type={showConfirmPassword ? "text" : "password"}
+                    type={showConfirmPassword ? 'text' : 'password'}
                     placeholder="Confirm new password"
                     className="input-field w-full bottom_form_input pr-14 border-t-[1px]"
                     value={confirmPassword}
@@ -124,7 +130,11 @@ export default function Page() {
                     onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                     className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700 focus:outline-none"
                   >
-                    {showConfirmPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                    {showConfirmPassword ? (
+                      <EyeOff size={20} />
+                    ) : (
+                      <Eye size={20} />
+                    )}
                   </button>
                 </div>
                 {error && (

@@ -55,7 +55,7 @@ export default function Page() {
           <p className="text-lg text-center font-bold">Forgot Password</p>
           {submitted ? (
             <div className="flex flex-col items-center w-full">
-              <p className="text-center text-green-600 mt-4">
+              <p className="text-center text-green-600 mt-4 w-[90vw] md:w-[500px]">
                 If an account with that email exists, a password reset link has
                 been sent.
               </p>
@@ -69,16 +69,22 @@ export default function Page() {
             </div>
           ) : (
             <form onSubmit={handleSubmit}>
-              <div className="flex flex-col items-center w-full">
-                <input
-                  type="email"
-                  placeholder="Enter your email"
-                  className="input-field md:w-1/2 top_form_input"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  required
-                />
-                {error && <p className="text-red-500">{error}</p>}
+              <div className="flex flex-col items-center w-full px-4 md:px-0">
+                <div className="relative w-[90vw] md:w-[500px]">
+                  <input
+                    type="email"
+                    placeholder="Enter your email"
+                    className="input-field w-full single_form_input"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    required
+                  />
+                </div>
+                {error && (
+                  <p className="text-red-500 mt-2 w-[90vw] md:w-[500px] text-center">
+                    {error}
+                  </p>
+                )}
                 <div className="break_small"></div>
                 <button
                   className="main-button px-2 py-8"

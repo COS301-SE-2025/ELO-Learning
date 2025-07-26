@@ -1,1 +1,0 @@
-INSERT INTO "public"."Topics" ("topic_id", "name", "description") VALUES ('1', 'Statistics', null), ('2', 'Probability', null), ('3', 'Data Visualization', null), ('4', 'Data Types', null), ('5', 'Sampling', null), ('6', 'Correlation', null), ('7', 'Survey Design', null), ('8', 'Algebra', 'Master equations, inequalities, and algebraic structures');

@@ -102,7 +102,24 @@ export default function TotalXP() {
   }, []);
 
   if (isLoading) {
-    return <div>Calculating XP...</div>;
+    return (
+      <div className="flex flex-col items-center justify-center">
+        <div className="flex flex-row items-center justify-center gap-5">
+          <div
+            className="animate-bounce rounded-full h-5 w-5 bg-[#FF6E99] mb-4"
+            style={{ animationDelay: '0ms' }}
+          ></div>
+          <div
+            className="animate-bounce rounded-full h-5 w-5 bg-[#FF6E99] mb-4"
+            style={{ animationDelay: '150ms' }}
+          ></div>
+          <div
+            className="animate-bounce rounded-full h-5 w-5 bg-[#FF6E99] mb-4"
+            style={{ animationDelay: '300ms' }}
+          ></div>
+        </div>
+      </div>
+    );
   }
 
   return (

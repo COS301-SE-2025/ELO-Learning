@@ -169,3 +169,35 @@ export async function submitSinglePlayerAttempt(data) {
   });
   return res.data;
 }
+
+export async function sendPasswordResetEmail(email) {
+  const res = await axiosInstance.post('/forgot-password', { email });
+  return res.data;
+}
+
+export async function resetPassword(token, newPassword) {
+  const res = await axiosInstance.post('/reset-password', {
+    token,
+    newPassword,
+  });
+  return res.data;
+}
+
+export async function changePassword(currentPassword, newPassword) {
+  const user = JSON.parse(localStorage.getItem('user'));
+  if (!user || !user.id) {
+    throw new Error('User not authenticated');
+  }
+
+  const res = await axiosInstance.post('/change-password', {
+    userId: user.id,
+    currentPassword,
+    newPassword,
+  });
+  return res.data;
+}
+
+export async function verifyResetToken(token) {
+  const res = await axiosInstance.get(`/verify-reset-token/${token}`);
+  return res.data;
+}

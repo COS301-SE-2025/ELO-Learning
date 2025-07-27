@@ -2,7 +2,7 @@
 import { setCookie } from '@/app/lib/authCookie';
 import ProgressBar from '@/app/ui/progress-bar';
 import { registerUser } from '@/services/api';
-import { X } from 'lucide-react';
+import { Eye, EyeOff, X } from 'lucide-react';
 import Link from 'next/link';
 import { useState } from 'react';
 import {
@@ -26,6 +26,8 @@ export default function Page() {
   const [confirm, setConfirm] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   const handleContinue = async (e) => {
     e.preventDefault();
@@ -75,6 +77,14 @@ export default function Page() {
     }
   };
 
+  const togglePasswordVisibility = () => {
+    setShowPassword(!showPassword);
+  };
+
+  const toggleConfirmPasswordVisibility = () => {
+    setShowConfirmPassword(!showConfirmPassword);
+  };
+
   return (
     <div className="w-full min-h-screen flex flex-col justify-between p-3">
       <div>
@@ -89,24 +99,56 @@ export default function Page() {
         <div>
           <p className="text-lg text-center font-bold">Choose a password</p>
           <form onSubmit={handleContinue}>
-            <div className="flex flex-col items-center w-full">
-              <input
-                type="password"
-                placeholder="Enter a password"
-                className="input-field md:w-1/2 top_form_input"
-                value={password}
-                onChange={(e) => setPasswordInput(e.target.value)}
-                required
-              />
-              <input
-                type="password"
-                placeholder="Confirm password"
-                className="input-field md:w-1/2 bottom_form_input"
-                value={confirm}
-                onChange={(e) => setConfirm(e.target.value)}
-                required
-              />
-              {error && <p className="text-red-500">{error}</p>}
+            <div className="flex flex-col items-center w-full px-4 md:px-0">
+              {' '}
+              {/* Added px-4 for mobile padding */}
+              <div className="relative w-[90vw] md:w-[500px]">
+                {' '}
+                {/* Changed to match button width */}
+                <input
+                  type={showPassword ? 'text' : 'password'}
+                  placeholder="Enter a password"
+                  className="input-field input-with-icon top_form_input w-full"
+                  value={password}
+                  onChange={(e) => setPasswordInput(e.target.value)}
+                  required
+                />
+                <button
+                  type="button"
+                  onClick={togglePasswordVisibility}
+                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700 focus:outline-none"
+                >
+                  {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                </button>
+              </div>
+              <div className="relative w-[90vw] md:w-[500px]">
+                {' '}
+                {/* Changed to match button width */}
+                <input
+                  type={showConfirmPassword ? 'text' : 'password'}
+                  placeholder="Confirm password"
+                  className="input-field input-with-icon bottom_form_input w-full"
+                  value={confirm}
+                  onChange={(e) => setConfirm(e.target.value)}
+                  required
+                />
+                <button
+                  type="button"
+                  onClick={toggleConfirmPasswordVisibility}
+                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700 focus:outline-none"
+                >
+                  {showConfirmPassword ? (
+                    <EyeOff size={20} />
+                  ) : (
+                    <Eye size={20} />
+                  )}
+                </button>
+              </div>
+              {error && (
+                <p className="text-red-500 mt-2 w-[90vw] md:w-[500px] text-center">
+                  {error}
+                </p>
+              )}
               <div className="break_small"></div>
               <button
                 className="main-button px-2 py-8"

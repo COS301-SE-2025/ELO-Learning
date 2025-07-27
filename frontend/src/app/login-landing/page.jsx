@@ -29,7 +29,7 @@ export default function Page() {
       </p>
       <div className="break"></div>
       <Link className="btn-link" href="/login-landing/signup">
-        <button className="main-button w-full">GET STARTED</button>
+        <button className="main-button-landing w-full">GET STARTED</button>
       </Link>
       <Link className="btn-link" href="/login-landing/login">
         <button className="secondary-button w-full">

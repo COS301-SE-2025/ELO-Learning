@@ -104,7 +104,7 @@ form {
 
 input,
 textarea {
-  width: 500px;
+  width: 100%; /* Changed from 500px to 100% */
   padding: 1%;
   background-color: transparent;
   border: none;
@@ -188,6 +188,21 @@ textarea:focus-visible {
   color: var(--white);
   font-size: 16px;
   width: 500px;
+  padding: 1%;
+  margin: 1.5% 0%;
+  border: var(--main-button-stroke) 1px solid;
+  box-shadow: 2px 2px 0px 0px var(--main-button-stroke);
+  border-radius: 5px;
+  font-weight: 1000;
+  letter-spacing: 3px;
+  transition: 0.3s ease-out;
+}
+
+.main-button-landing {
+  background-color: var(--main-button-color);
+  color: var(--white);
+  font-size: 16px;
+  width: 500px;
   padding: 3%;
   margin: 1.5% 0%;
   border: var(--main-button-stroke) 1px solid;
@@ -220,7 +235,18 @@ textarea:focus-visible {
   border: var(--blueprint-blue-light) 1px solid;
 }
 
+.main-button-landing:hover {
+  background-color: var(--blueprint-blue);
+  color: var(--white);
+  box-shadow: 2px 2px 0px 0px var(--blueprint-blue-light);
+  border: var(--blueprint-blue-light) 1px solid;
+}
+
 .main-button:active {
+  transform: translateY(5px);
+}
+
+.main-button-landing:active {
   transform: translateY(5px);
 }
 
@@ -314,7 +340,7 @@ textarea:focus-visible {
 @media only screen and (max-width: 600px) {
   input,
   textarea {
-    width: 95%;
+    width: 100%;
     padding: 3%;
   }
 
@@ -333,6 +359,13 @@ textarea:focus-visible {
   } */
 
   .main-button {
+    width: 90vw;
+    padding: 2.5%;
+    margin: 0% 0%;
+    letter-spacing: 1px;
+  }
+
+  .main-button-landing {
     width: 90vw;
     padding: 2.5%;
     margin: 0% 0%;
@@ -460,4 +493,44 @@ textarea:focus-visible {
     height: 48px;
     font-size: 16px;
   }
+}
+
+.input-with-icon {
+  box-sizing: border-box;
+  padding-right: 3rem !important;
+  width: 100%;
+}
+
+@media only screen and (max-width: 600px) {
+  .input-with-icon {
+    box-sizing: border-box;
+    padding-right: 3rem !important;
+    width: 100%;
+  }
+}
+
+.back-header-title {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: calc(100vw - 80px);
+}
+
+@media only screen and (max-width: 600px) {
+  .back-header-title,
+  .page-header,
+  .header-title {
+    white-space: nowrap !important;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: calc(100vw - 60px); /* Smaller margin for mobile */
+    font-size: 16px;
+  }
+}
+.middle_form_input {
+  border-top: none !important;
+  border-bottom: var(--form-outline) 1px solid !important;
+  border-left: var(--form-outline) 1px solid !important;
+  border-right: var(--form-outline) 1px solid !important;
+  border-radius: 0px !important;
 }

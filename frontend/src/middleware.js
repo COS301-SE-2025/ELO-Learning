@@ -10,8 +10,8 @@ export function middleware(request) {
 }
 
 export const config = {
-  //regexp to match all paths except login-landing
+  //regexp to match all paths except login-landing, static assets, and public files
   matcher: [
-    '/((?!api|_next/static|_next/image|favicon.ico|login-landing|$).*)',
+    '/((?!api|_next/static|_next/image|favicon.ico|login-landing|.*\\.png|.*\\.jpg|.*\\.jpeg|.*\\.gif|.*\\.svg|.*\\.webp|.*\\.ico|$).*)',
   ],
 };

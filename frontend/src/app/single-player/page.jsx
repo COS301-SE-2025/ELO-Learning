@@ -8,7 +8,9 @@ export default function Page() {
       </div>
       <div className="flex flex-col items-center gap-10">
         <Link href="/single-player-game">
-          <button className="main-button uppercase">Start playing</button>
+          <button className="main-button-landing uppercase">
+            Start playing
+          </button>
         </Link>
         <Link href="/dashboard">
           <button className="secondary-button uppercase">Cancel</button>

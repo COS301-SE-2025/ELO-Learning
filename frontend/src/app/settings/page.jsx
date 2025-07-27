@@ -30,6 +30,12 @@ export default function Page() {
               <div>Profile</div>
               <ChevronRight />
             </div>
+            <Link href="/settings/change-password">
+              <div className="flex flex-row justify-between p-3 border-b border-[#696969] hover:bg-[#1d1a34]">
+                <div>Change Password</div>
+                <ChevronRight />
+              </div>
+            </Link>
             <div className="flex flex-row justify-between p-3 border-b border-[#696969]">
               <div>Notifications</div>
               <ChevronRight />

@@ -1,6 +1,6 @@
 const alpha = 0.1; // Tuning constant, controls XP scaling of a level
 const beta = 0.05; //Adds more XP when you're further from next level
-const maxTimeSeconds = 20;
+const maxTimeSeconds = 30;
 const maxLevel = 10;
 
 function isValidNumber(n) {

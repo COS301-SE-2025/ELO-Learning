@@ -260,8 +260,9 @@ describe('Question Endpoints Integration Tests', () => {
         .get('/question/invalid')
         .set('Authorization', 'Bearer testtoken123');
 
-      // Should either return 404 or empty array, not crash
-      expect([200, 404, 500]).toContain(res.statusCode);
+      // Should return 400 for invalid level parameter
+      expect(res.statusCode).toBe(400);
+      expect(res.body.error).toContain('Invalid level parameter');
     });
 
     it('should handle invalid question ID for answer endpoint', async () => {
@@ -284,8 +285,10 @@ describe('Question Endpoints Integration Tests', () => {
     it('should handle empty topic parameter', async () => {
       const res = await request(app).get('/questions/topic?topic=');
 
-      expect(res.statusCode).toBe(400);
-      expect(res.body.error).toBe('Missing topic parameter');
+      expect(res.statusCode).toBe(200);
+      expect(res.body.questions).toBeDefined();
+      expect(Array.isArray(res.body.questions)).toBe(true);
+      // Should return empty array for empty topic parameter
     });
   });
 });

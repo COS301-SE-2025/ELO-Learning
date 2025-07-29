@@ -342,23 +342,38 @@ app.get('/questions/level/topic', async (req, res) => {
     .eq('level', level)
     .eq('topic_id', topic);
   if (data) {
-    for (const question of data) {
-      const { data, error } = await supabase
-        .from('Answers')
-        .select('*')
-        .eq('question_id', question.Q_id);
-      if (error) {
-        console.error(
-          'Error fetching practice questions:',
-          error.message,
-          question,
-        );
-        return res
-          .status(500)
-          .json({ error: 'Failed to fetch practice questions' });
-      }
-      question.answers = data;
+    //fetch the answers for the above questions
+    const questionIds = data.map((q) => q.Q_id);
+    const { data: answers, error: aError } = await supabase
+      .from('Answers')
+      .select('*')
+      .in('question_id', questionIds);
+    if (aError) {
+      console.log('Database error:', aError);
+      return res
+        .status(500)
+        .json({ error: 'Failed to fetch practice answers' });
     }
+    data.forEach((q) => {
+      q.answers = answers.filter((a) => a.question_id === q.Q_id);
+    });
+    // for (const question of data) {
+    //   const { data, error } = await supabase
+    //     .from('Answers')
+    //     .select('*')
+    //     .eq('question_id', question.Q_id);
+    //   if (error) {
+    //     console.error(
+    //       'Error fetching practice questions:',
+    //       error.message,
+    //       question,
+    //     );
+    //     return res
+    //       .status(500)
+    //       .json({ error: 'Failed to fetch practice questions' });
+    //   }
+    //   question.answers = data;
+    // }
   }
 
   if (error) {

@@ -239,10 +239,18 @@ app.get('/question/:level', async (req, res) => {
       .json({ error: 'You are unauthorized to make this request.' });
   }
 
+  // Validate that level is a valid number
+  const levelNum = parseInt(level, 10);
+  if (isNaN(levelNum) || levelNum < 1) {
+    return res.status(400).json({
+      error: 'Invalid level parameter. Level must be a positive number.',
+    });
+  }
+
   const { data, error } = await supabase
     .from('Questions')
     .select('Q_id, topic, difficulty, level, questionText, xpGain')
-    .eq('level', level);
+    .eq('level', levelNum);
 
   if (error) {
     console.error('Error fetching questions:', error.message);
@@ -311,7 +319,7 @@ app.get('/answers/:id', async (req, res) => {
 app.get('/questions/topic', async (req, res) => {
   const { topic } = req.query;
 
-  if (!topic) {
+  if (topic === undefined) {
     return res.status(400).json({ error: 'Missing topic parameter' });
   }
 
@@ -336,29 +344,52 @@ app.get('/questions/level/topic', async (req, res) => {
     return res.status(400).json({ error: 'Missing level or topic parameter' });
   }
 
+  // Validate that level is a valid number
+  const levelNum = parseInt(level, 10);
+  if (isNaN(levelNum) || levelNum < 1) {
+    return res.status(400).json({
+      error: 'Invalid level parameter. Level must be a positive number.',
+    });
+  }
+
   const { data, error } = await supabase
     .from('Questions')
     .select('Q_id, topic, difficulty, level, questionText, xpGain, type')
-    .eq('level', level)
+    .eq('level', levelNum)
     .eq('topic_id', topic);
   if (data) {
-    for (const question of data) {
-      const { data, error } = await supabase
-        .from('Answers')
-        .select('*')
-        .eq('question_id', question.Q_id);
-      if (error) {
-        console.error(
-          'Error fetching practice questions:',
-          error.message,
-          question,
-        );
-        return res
-          .status(500)
-          .json({ error: 'Failed to fetch practice questions' });
-      }
-      question.answers = data;
+    //fetch the answers for the above questions
+    const questionIds = data.map((q) => q.Q_id);
+    const { data: answers, error: aError } = await supabase
+      .from('Answers')
+      .select('*')
+      .in('question_id', questionIds);
+    if (aError) {
+      console.log('Database error:', aError);
+      return res
+        .status(500)
+        .json({ error: 'Failed to fetch practice answers' });
     }
+    data.forEach((q) => {
+      q.answers = answers.filter((a) => a.question_id === q.Q_id);
+    });
+    // for (const question of data) {
+    //   const { data, error } = await supabase
+    //     .from('Answers')
+    //     .select('*')
+    //     .eq('question_id', question.Q_id);
+    //   if (error) {
+    //     console.error(
+    //       'Error fetching practice questions:',
+    //       error.message,
+    //       question,
+    //     );
+    //     return res
+    //       .status(500)
+    //       .json({ error: 'Failed to fetch practice questions' });
+    //   }
+    //   question.answers = data;
+    // }
   }
 
   if (error) {
@@ -1069,11 +1100,19 @@ app.get('/questions/random', async (req, res) => {
       return res.status(400).json({ error: 'level is required' });
     }
 
+    // Validate that level is a valid number
+    const levelNum = parseInt(level, 10);
+    if (isNaN(levelNum) || levelNum < 1) {
+      return res.status(400).json({
+        error: 'Invalid level parameter. Level must be a positive number.',
+      });
+    }
+
     // Fetch 15 random questions for this level
     const { data: questions, error: qError } = await supabase
       .from('Questions')
       .select('*')
-      .eq('level', level);
+      .eq('level', levelNum);
 
     if (qError) {
       //console.log(qError);

@@ -6,7 +6,6 @@ import { calculateExpected, distributeXP } from './multiPlayer.js';
 import { calculateSinglePlayerXP } from './singlePlayer.js';
 
 import { supabase } from '../database/supabaseClient.js';
-import { backendMathValidator } from './mathValidator.js';
 
 import { createServer } from 'http';
 import { Server } from 'socket.io';
@@ -14,6 +13,10 @@ import { Server } from 'socket.io';
 //Change this import to ES6
 import socketsHandlers from './sockets.js';
 import userRoutes from './userRoutes.js';
+import practiceRoutes from './practiceRoutes.js';
+import questionRoutes from './questionRoutes.js';
+import answerRoutes from './answerRoutes.js';
+import validateRoutes from './validateRoutes.js';
 
 // Load environment variables
 dotenv.config();
@@ -29,6 +32,10 @@ app.use(express.json());
 
 // Routes
 app.use('/', userRoutes);
+app.use('/', practiceRoutes);
+app.use('/', questionRoutes);
+app.use('/', answerRoutes);
+app.use('/', validateRoutes);
 
 // Simple health check route
 app.get('/', (req, res) => {
@@ -626,270 +633,6 @@ app.post('/multiplayer', async (req, res) => {
   } catch (err) {
     console.error('Error in /multiplayer:', err);
     res.status(500).json({ error: 'Server error' });
-  }
-});
-// Math Validation Endpoints
-
-// Validate a math answer
-app.post('/validate-answer', async (req, res) => {
-  try {
-    const { studentAnswer, correctAnswer } = req.body;
-
-    if (!studentAnswer || !correctAnswer) {
-      return res.status(400).json({
-        error: 'Both studentAnswer and correctAnswer are required',
-      });
-    }
-
-    const isCorrect = backendMathValidator.validateAnswer(
-      studentAnswer,
-      correctAnswer,
-    );
-
-    res.status(200).json({
-      isCorrect,
-      studentAnswer,
-      correctAnswer,
-      message: isCorrect ? 'Answer is correct!' : 'Answer is incorrect.',
-    });
-  } catch (error) {
-    console.error('Error validating answer:', error);
-    res.status(500).json({ error: 'Failed to validate answer' });
-  }
-});
-
-// Quick validation for real-time feedback
-app.post('/quick-validate', async (req, res) => {
-  try {
-    const { studentAnswer, correctAnswer } = req.body;
-
-    if (!studentAnswer || !correctAnswer) {
-      return res.status(400).json({
-        error: 'Both studentAnswer and correctAnswer are required',
-      });
-    }
-
-    const isCorrect = backendMathValidator.quickValidate(
-      studentAnswer,
-      correctAnswer,
-    );
-
-    res.status(200).json({
-      isCorrect,
-      studentAnswer,
-      correctAnswer,
-    });
-  } catch (error) {
-    console.error('Error in quick validation:', error);
-    res.status(500).json({ error: 'Failed to perform quick validation' });
-  }
-});
-
-// Validate math expression format
-app.post('/validate-expression', async (req, res) => {
-  try {
-    const { expression } = req.body;
-
-    if (!expression) {
-      return res.status(400).json({
-        error: 'Expression is required',
-      });
-    }
-
-    const isValid = backendMathValidator.isValidMathExpression(expression);
-    const message = backendMathValidator.getValidationMessage(expression);
-
-    res.status(200).json({
-      isValid,
-      expression,
-      message,
-    });
-  } catch (error) {
-    console.error('Error validating expression:', error);
-    res.status(500).json({ error: 'Failed to validate expression' });
-  }
-});
-
-// Submit and validate answer for a specific question
-app.post('/question/:id/submit', async (req, res) => {
-  const { id } = req.params;
-  const { studentAnswer, userId } = req.body;
-
-  try {
-    // Fetch the correct answer from database
-    const { data: correctAnswerData, error: answerError } = await supabase
-      .from('Answers')
-      .select('answer_text')
-      .eq('question_id', id)
-      .eq('isCorrect', true)
-      .single();
-
-    if (answerError || !correctAnswerData) {
-      return res
-        .status(404)
-        .json({ error: 'Question or correct answer not found' });
-    }
-
-    const correctAnswer = correctAnswerData.answerText;
-    const isCorrect = backendMathValidator.validateAnswer(
-      studentAnswer,
-      correctAnswer,
-    );
-
-    // If correct and userId provided, award XP
-    let updatedUser = null;
-    if (isCorrect && userId) {
-      // Fetch question XP value
-      const { data: questionData, error: questionError } = await supabase
-        .from('Questions')
-        .select('xpGain')
-        .eq('Q_id', id)
-        .single();
-
-      if (!questionError && questionData) {
-        // Update user XP
-        const { data: currentUser, error: userError } = await supabase
-          .from('Users')
-          .select('xp')
-          .eq('id', userId)
-          .single();
-
-        if (!userError && currentUser) {
-          const newXp = (currentUser.xp || 0) + questionData.xpGain;
-
-          const { data: updated, error: updateError } = await supabase
-            .from('Users')
-            .update({ xp: newXp })
-            .eq('id', userId)
-            .select('id, xp')
-            .single();
-
-          if (!updateError) {
-            updatedUser = updated;
-          }
-        }
-      }
-    }
-
-    res.status(200).json({
-      isCorrect,
-      studentAnswer,
-      correctAnswer,
-      message: isCorrect ? 'Correct! Well done!' : 'Incorrect. Try again!',
-      xpAwarded:
-        isCorrect && updatedUser
-          ? updatedUser.xp - (updatedUser.xp - (questionData?.xpGain || 0))
-          : 0,
-      updatedUser,
-    });
-  } catch (error) {
-    console.error('Error submitting answer:', error);
-    res.status(500).json({ error: 'Failed to submit answer' });
-  }
-});
-
-// Get practice questions by type
-app.get('/practice/type/:questionType', async (req, res) => {
-  try {
-    const { questionType } = req.params;
-
-    const { data, error } = await supabase
-      .from('Questions')
-      .select('*')
-      .eq('type', questionType)
-      .limit(10);
-
-    if (error) {
-      console.error('Error fetching questions by type:', error.message);
-      return res
-        .status(500)
-        .json({ error: 'Failed to fetch questions by type' });
-    }
-
-    // Get answers for each question
-    for (const question of data) {
-      const { data: answers, error: answerError } = await supabase
-        .from('Answers')
-        .select('*')
-        .eq('question_id', question.Q_id);
-
-      if (answerError) {
-        console.error('Error fetching answers:', answerError.message);
-        return res.status(500).json({ error: 'Failed to fetch answers' });
-      }
-
-      question.answers = answers;
-    }
-
-    res.status(200).json({ questions: data });
-  } catch (err) {
-    console.error('Unexpected error:', err);
-    res.status(500).json({ error: 'Unexpected server error' });
-  }
-});
-
-app.get('/questions/random', async (req, res) => {
-  try {
-    const level = req.query.level;
-    if (!level) {
-      return res.status(400).json({ error: 'level is required' });
-    }
-
-    // Fetch 15 random questions for this level
-    const { data: questions, error: qError } = await supabase
-      .from('Questions')
-      .select('*')
-      .eq('level', level);
-
-    if (qError) {
-      //console.log(qError);
-      return res
-        .status(500)
-        .json({ error: 'Failed to fetch questions', details: qError.message });
-    }
-
-    if (!questions || questions.length === 0) {
-      return res
-        .status(404)
-        .json({ error: 'No questions found for this level' });
-    }
-
-    //shuffle and pick 15
-    const shuffled = questions.sort(() => 0.5 - Math.random());
-    const selected = shuffled.slice(0, 5);
-
-    //fetch the answers for the above questions
-    const questionIds = selected.map((q) => q.Q_id);
-    const { data: answers, error: aError } = await supabase
-      .from('Answers')
-      .select('*')
-      .in('question_id', questionIds);
-    if (aError) {
-      console.log('Database error:', aError);
-      io.to(gameId).emit('gameError', { error: 'Failed to fetch answers' });
-      return;
-    }
-
-    // Map answers to respective questions in the selected array
-    selected.forEach((q) => {
-      q.answers = answers.filter((a) => a.question_id === q.Q_id);
-    });
-
-    // //Map to clean structure
-    // const cleanQuestions = selected.map((q) => ({
-    //   id: q.Q_id,
-    //   topic: q.topic,
-    //   difficulty: q.difficulty,
-    //   level: q.level,
-    //   question: q.questionText,
-    //   xpGain: q.xpGain,
-    //   type: q.type,
-    // }));
-
-    return res.status(200).json({ questions: selected });
-  } catch (err) {
-    console.log(err);
-    return res.status(500).json({ error: 'Server error' });
   }
 });
 

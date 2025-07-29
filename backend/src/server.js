@@ -242,11 +242,9 @@ app.get('/question/:level', async (req, res) => {
   // Validate that level is a valid number
   const levelNum = parseInt(level, 10);
   if (isNaN(levelNum) || levelNum < 1) {
-    return res
-      .status(400)
-      .json({
-        error: 'Invalid level parameter. Level must be a positive number.',
-      });
+    return res.status(400).json({
+      error: 'Invalid level parameter. Level must be a positive number.',
+    });
   }
 
   const { data, error } = await supabase
@@ -349,11 +347,9 @@ app.get('/questions/level/topic', async (req, res) => {
   // Validate that level is a valid number
   const levelNum = parseInt(level, 10);
   if (isNaN(levelNum) || levelNum < 1) {
-    return res
-      .status(400)
-      .json({
-        error: 'Invalid level parameter. Level must be a positive number.',
-      });
+    return res.status(400).json({
+      error: 'Invalid level parameter. Level must be a positive number.',
+    });
   }
 
   const { data, error } = await supabase
@@ -1107,11 +1103,9 @@ app.get('/questions/random', async (req, res) => {
     // Validate that level is a valid number
     const levelNum = parseInt(level, 10);
     if (isNaN(levelNum) || levelNum < 1) {
-      return res
-        .status(400)
-        .json({
-          error: 'Invalid level parameter. Level must be a positive number.',
-        });
+      return res.status(400).json({
+        error: 'Invalid level parameter. Level must be a positive number.',
+      });
     }
 
     // Fetch 15 random questions for this level

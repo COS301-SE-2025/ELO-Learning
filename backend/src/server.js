@@ -11,11 +11,11 @@ import { createServer } from 'http';
 import { Server } from 'socket.io';
 
 //Change this import to ES6
-import socketsHandlers from './sockets.js';
-import userRoutes from './userRoutes.js';
+import answerRoutes from './answerRoutes.js';
 import practiceRoutes from './practiceRoutes.js';
 import questionRoutes from './questionRoutes.js';
-import answerRoutes from './answerRoutes.js';
+import socketsHandlers from './sockets.js';
+import userRoutes from './userRoutes.js';
 import validateRoutes from './validateRoutes.js';
 
 // Load environment variables

@@ -27,15 +27,15 @@ export default function AchievementDetailPage({ params }) {
   useEffect(() => {
     const userData = getUserFromCookie();
     setUser(userData);
-    
+
     if (userData?.id) {
       fetchUserAchievementsWithStatus(userData.id)
-        .then(data => {
-          const foundAchievement = data.find(a => a.id === parseInt(id));
+        .then((data) => {
+          const foundAchievement = data.find((a) => a.id === parseInt(id));
           setAchievement(foundAchievement);
           setLoading(false);
         })
-        .catch(error => {
+        .catch((error) => {
           console.error('Failed to fetch achievement:', error);
           setLoading(false);
         });
@@ -49,7 +49,7 @@ export default function AchievementDetailPage({ params }) {
     return new Date(dateString).toLocaleDateString('en-GB', {
       day: '2-digit',
       month: 'long',
-      year: 'numeric'
+      year: 'numeric',
     });
   };
 
@@ -57,13 +57,16 @@ export default function AchievementDetailPage({ params }) {
     if (achievement.unlocked) {
       return achievement.description;
     }
-    
+
     return achievement.description; // Show the actual requirement description
   };
 
   if (loading) {
     return (
-      <div className="h-screen text-white flex items-center justify-center" style={{ background: 'var(--background)' }}>
+      <div
+        className="h-screen text-white flex items-center justify-center"
+        style={{ background: 'var(--background)' }}
+      >
         <div>Loading achievement...</div>
       </div>
     );
@@ -71,16 +74,25 @@ export default function AchievementDetailPage({ params }) {
 
   if (!achievement) {
     return (
-      <div className="h-screen text-white flex items-center justify-center" style={{ background: 'var(--background)' }}>
+      <div
+        className="h-screen text-white flex items-center justify-center"
+        style={{ background: 'var(--background)' }}
+      >
         <div>Achievement not found</div>
       </div>
     );
   }
 
   return (
-    <div className="h-screen text-white overflow-y-auto" style={{ background: 'var(--background)' }}>
+    <div
+      className="h-screen text-white overflow-y-auto"
+      style={{ background: 'var(--background)' }}
+    >
       {/* Header */}
-      <div className="sticky top-0 z-10 px-4 py-4" style={{ background: 'var(--background)' }}>
+      <div
+        className="sticky top-0 z-10 px-4 py-4"
+        style={{ background: 'var(--background)' }}
+      >
         <div className="flex items-center justify-between">
           <button onClick={() => router.back()} className="p-2">
             <X size={24} />
@@ -113,7 +125,7 @@ export default function AchievementDetailPage({ params }) {
               {formatDate(achievement.unlocked_at)}
             </div>
           )}
-          
+
           <div className="text-center">
             <p className="text-white text-lg leading-relaxed">
               {getProgressText()}
@@ -124,11 +136,16 @@ export default function AchievementDetailPage({ params }) {
           {!achievement.unlocked && achievement.current_progress >= 0 && (
             <div className="w-full space-y-2">
               <div className="w-full bg-gray-700 rounded-full h-3">
-                <div 
+                <div
                   className="h-3 rounded-full transition-all duration-300"
-                  style={{ 
-                    width: `${Math.min(100, (achievement.current_progress / achievement.condition_value) * 100)}%`,
-                    background: 'var(--radical-rose)'
+                  style={{
+                    width: `${Math.min(
+                      100,
+                      (achievement.current_progress /
+                        achievement.condition_value) *
+                        100,
+                    )}%`,
+                    background: 'var(--radical-rose)',
                   }}
                 />
               </div>

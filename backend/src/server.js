@@ -1374,8 +1374,10 @@ app.get('/achievement-categories', async (req, res) => {
 app.get('/achievements', async (req, res) => {
   try {
     const { category_id } = req.query;
-    let query = supabase.from('Achievements').select('*, AchievementCategories(name)');
-    
+    let query = supabase
+      .from('Achievements')
+      .select('*, AchievementCategories(name)');
+
     if (category_id) {
       query = query.eq('category_id', category_id);
     }
@@ -1394,7 +1396,7 @@ app.get('/achievements', async (req, res) => {
 app.get('/users/:userId/achievements', async (req, res) => {
   try {
     const { userId } = req.params;
-    
+
     // Add authentication check
     const authHeader = req.headers.authorization;
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
@@ -1417,12 +1419,16 @@ app.get('/users/:userId/achievements', async (req, res) => {
 
     const { data: unlockedAchievements, error: unlockedError } = await supabase
       .from('UserAchievements')
-      .select('achievement_id, unlocked_at, Achievements(*, AchievementCategories(name))')
+      .select(
+        'achievement_id, unlocked_at, Achievements(*, AchievementCategories(name))',
+      )
       .eq('user_id', userId);
 
     if (unlockedError) {
       console.error('Unlocked achievements error:', unlockedError.message);
-      return res.status(500).json({ error: 'Failed to fetch unlocked achievements' });
+      return res
+        .status(500)
+        .json({ error: 'Failed to fetch unlocked achievements' });
     }
 
     // Get progress for locked achievements
@@ -1433,7 +1439,9 @@ app.get('/users/:userId/achievements', async (req, res) => {
 
     if (progressError) {
       console.error('Achievement progress error:', progressError.message);
-      return res.status(500).json({ error: 'Failed to fetch achievement progress' });
+      return res
+        .status(500)
+        .json({ error: 'Failed to fetch achievement progress' });
     }
 
     // Initialize empty arrays if no data
@@ -1441,10 +1449,15 @@ app.get('/users/:userId/achievements', async (req, res) => {
     const safeProgress = progress || [];
 
     // Combine unlocked achievements with progress data
-    const achievementsWithProgress = safeUnlockedAchievements.map(achievement => ({
-      ...achievement,
-      progress: safeProgress.find(p => p.achievement_id === achievement.achievement_id)?.current_value || 0
-    }));
+    const achievementsWithProgress = safeUnlockedAchievements.map(
+      (achievement) => ({
+        ...achievement,
+        progress:
+          safeProgress.find(
+            (p) => p.achievement_id === achievement.achievement_id,
+          )?.current_value || 0,
+      }),
+    );
 
     res.status(200).json({ achievements: achievementsWithProgress });
   } catch (err) {
@@ -1486,7 +1499,7 @@ app.post('/users/:userId/achievements/progress', async (req, res) => {
         user_id: userId,
         achievement_id,
         current_value: newValue,
-        updated_at: new Date().toISOString()
+        updated_at: new Date().toISOString(),
       })
       .select()
       .single();
@@ -1496,7 +1509,7 @@ app.post('/users/:userId/achievements/progress', async (req, res) => {
     // Check if achievement should be unlocked (removed XP logic)
     const { data: achievement, error: achievementError } = await supabase
       .from('Achievements')
-      .select('condition_value')  // Removed xp_reward from select
+      .select('condition_value') // Removed xp_reward from select
       .eq('id', achievement_id)
       .single();
 
@@ -1511,21 +1524,21 @@ app.post('/users/:userId/achievements/progress', async (req, res) => {
         .insert({
           user_id: userId,
           achievement_id,
-          unlocked_at: new Date().toISOString()
+          unlocked_at: new Date().toISOString(),
         })
         .select()
         .single();
 
       // Ignore if already unlocked (unique constraint violation)
       if (unlockError && unlockError.code !== '23505') throw unlockError;
-      
+
       // Set flag if successfully unlocked (or if it was a duplicate)
       achievementUnlocked = true;
     }
 
     res.status(200).json({
       progress: updatedProgress,
-      achievement_unlocked: achievementUnlocked
+      achievement_unlocked: achievementUnlocked,
     });
   } catch (err) {
     console.error('Error updating achievement progress:', err.message);
@@ -1537,7 +1550,7 @@ app.post('/users/:userId/achievements/progress', async (req, res) => {
 app.get('/users/:userId/achievements/all', async (req, res) => {
   try {
     const { userId } = req.params;
-    
+
     // Add authentication check
     const authHeader = req.headers.authorization;
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
@@ -1571,16 +1584,26 @@ app.get('/users/:userId/achievements/all', async (req, res) => {
     if (progressError) throw progressError;
 
     // Combine all data
-    const achievementsWithStatus = allAchievements.map(achievement => {
-      const unlocked = userAchievements.find(ua => ua.achievement_id === achievement.id);
-      const progress = userProgress.find(up => up.achievement_id === achievement.id);
-      
+    const achievementsWithStatus = allAchievements.map((achievement) => {
+      const unlocked = userAchievements.find(
+        (ua) => ua.achievement_id === achievement.id,
+      );
+      const progress = userProgress.find(
+        (up) => up.achievement_id === achievement.id,
+      );
+
       return {
         ...achievement,
         unlocked: !!unlocked,
         unlocked_at: unlocked?.unlocked_at || null,
         current_progress: progress?.current_value || 0,
-        progress_percentage: Math.min(100, Math.round(((progress?.current_value || 0) / achievement.condition_value) * 100))
+        progress_percentage: Math.min(
+          100,
+          Math.round(
+            ((progress?.current_value || 0) / achievement.condition_value) *
+              100,
+          ),
+        ),
       };
     });
 

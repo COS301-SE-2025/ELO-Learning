@@ -24,14 +24,14 @@ export default function Achievements() {
   useEffect(() => {
     const userData = getUserFromCookie();
     setUser(userData);
-    
+
     if (userData?.id) {
       fetchUserAchievements(userData.id)
-        .then(data => {
+        .then((data) => {
           setAchievements(data);
           setLoading(false);
         })
-        .catch(error => {
+        .catch((error) => {
           console.error('Failed to fetch achievements:', error);
           setLoading(false);
         });
@@ -53,14 +53,18 @@ export default function Achievements() {
   const hasMoreAchievements = achievements.length > 3;
 
   return (
-     <div className="m-4">
+    <div className="m-4">
       <div className="flex items-center justify-between mb-3">
         <h3 className="text-xl uppercase font-bold">Achievements</h3>
-        <Link href="/achievements" className="text-sm font-medium uppercase" style={{ color: '#FF6E99' }}>
+        <Link
+          href="/achievements"
+          className="text-sm font-medium uppercase"
+          style={{ color: '#FF6E99' }}
+        >
           VIEW ALL
         </Link>
       </div>
-      
+
       {achievements.length === 0 ? (
         <div className="bg-gray-800 rounded-lg p-4 border border-gray-700">
           <div className="flex justify-center items-center py-8">
@@ -76,7 +80,9 @@ export default function Achievements() {
                 </svg>
               </div>
               <p className="text-gray-400 text-sm">No achievements yet</p>
-              <p className="text-gray-500 text-xs">Start playing to earn badges!</p>
+              <p className="text-gray-500 text-xs">
+                Start playing to earn badges!
+              </p>
             </div>
           </div>
         </div>
@@ -94,7 +100,9 @@ export default function Achievements() {
             {hasMoreAchievements && (
               <Link href="/achievements" className="flex items-center">
                 <div className="w-16 h-20 flex items-center justify-center border-2 border-dashed border-gray-500 rounded-lg">
-                  <span className="text-gray-400 text-xs">+{achievements.length - 3}</span>
+                  <span className="text-gray-400 text-xs">
+                    +{achievements.length - 3}
+                  </span>
                 </div>
               </Link>
             )}

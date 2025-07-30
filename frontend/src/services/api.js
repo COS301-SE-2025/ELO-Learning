@@ -207,10 +207,17 @@ export async function fetchUserAchievementsWithStatus(userId) {
   return res.data.achievements;
 }
 
-export async function updateAchievementProgress(userId, achievementId, increment = 1) {
-  const res = await axiosInstance.post(`/users/${userId}/achievements/progress`, {
-    achievement_id: achievementId,
-    increment_by: increment
-  });
+export async function updateAchievementProgress(
+  userId,
+  achievementId,
+  increment = 1,
+) {
+  const res = await axiosInstance.post(
+    `/users/${userId}/achievements/progress`,
+    {
+      achievement_id: achievementId,
+      increment_by: increment,
+    },
+  );
   return res.data;
 }

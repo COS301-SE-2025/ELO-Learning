@@ -62,10 +62,16 @@ router.get('/question/:level', async (req, res) => {
       .json({ error: 'You are unauthorized to make this request.' });
   }
 
+  // Validate level parameter - must be a positive integer
+  const levelNum = parseInt(level, 10);
+  if (isNaN(levelNum) || levelNum <= 0 || !Number.isInteger(levelNum)) {
+    return res.status(400).json({ error: 'Invalid level parameter' });
+  }
+
   const { data, error } = await supabase
     .from('Questions')
     .select('Q_id, topic, difficulty, level, questionText, xpGain')
-    .eq('level', level);
+    .eq('level', levelNum);
 
   if (error) {
     console.error('Error fetching questions:', error.message);

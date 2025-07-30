@@ -118,8 +118,14 @@ router.get('/question/:id/answer', async (req, res) => {
 router.get('/questions/topic', async (req, res) => {
   const { topic } = req.query;
 
-  if (!topic) {
+  // Check if topic parameter is missing (undefined or null)
+  if (topic === undefined || topic === null) {
     return res.status(400).json({ error: 'Missing topic parameter' });
+  }
+
+  // If topic is empty string, return empty array
+  if (topic === '') {
+    return res.status(200).json({ questions: [] });
   }
 
   const { data, error } = await supabase

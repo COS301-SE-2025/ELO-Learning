@@ -81,7 +81,7 @@ export default function LeaderboardTable({ users = [] }) {
                   </span>
                 </td>
                 <td className="text-left p-2">{user.username}</td>
-                <td className="text-right p-2">{user.xp} XP</td>
+                <td className="text-right p-2">{user.xp.toFixed(0)} XP</td>
               </tr>
             );
           })}

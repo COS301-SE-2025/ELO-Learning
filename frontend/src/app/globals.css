@@ -104,7 +104,7 @@ form {
 
 input,
 textarea {
-  width: 500px;
+  width: 100%; /* Changed from 500px to 100% */
   padding: 1%;
   background-color: transparent;
   border: none;
@@ -340,7 +340,7 @@ textarea:focus-visible {
 @media only screen and (max-width: 600px) {
   input,
   textarea {
-    width: 95%;
+    width: 100%;
     padding: 3%;
   }
 
@@ -493,4 +493,44 @@ textarea:focus-visible {
     height: 48px;
     font-size: 16px;
   }
+}
+
+.input-with-icon {
+  box-sizing: border-box;
+  padding-right: 3rem !important;
+  width: 100%;
+}
+
+@media only screen and (max-width: 600px) {
+  .input-with-icon {
+    box-sizing: border-box;
+    padding-right: 3rem !important;
+    width: 100%;
+  }
+}
+
+.back-header-title {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: calc(100vw - 80px);
+}
+
+@media only screen and (max-width: 600px) {
+  .back-header-title,
+  .page-header,
+  .header-title {
+    white-space: nowrap !important;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: calc(100vw - 60px); /* Smaller margin for mobile */
+    font-size: 16px;
+  }
+}
+.middle_form_input {
+  border-top: none !important;
+  border-bottom: var(--form-outline) 1px solid !important;
+  border-left: var(--form-outline) 1px solid !important;
+  border-right: var(--form-outline) 1px solid !important;
+  border-radius: 0px !important;
 }

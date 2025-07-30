@@ -1,7 +1,7 @@
-let alpha = 0.05; // Tuning constant, controls XP scaling of a level
-let beta = 0.3; //Adds more XP when you're further from next level
-let maxTimeSeconds = 30;
-let maxLevel = 10;
+const alpha = 0.1; // Tuning constant, controls XP scaling of a level
+const beta = 0.05; //Adds more XP when you're further from next level
+const maxTimeSeconds = 30;
+const maxLevel = 10;
 
 function isValidNumber(n) {
   return typeof n === 'number' && !isNaN(n);
@@ -70,15 +70,8 @@ export async function calculateSinglePlayerXP({
   if (XP < 0) {
     XP = 0;
   }
+  //scale down
+  XP = XP * 0.3;
 
-  return Number(XP.toFixed(2));
+  return Number(XP.toFixed(0));
 }
-
-/*
-module.exports = {
-  calculateTimeReward,
-  calculateLevelReward,
-  calculateGateKeepingComponent,
-  calculateSinglePlayerXP,
-};
-*/

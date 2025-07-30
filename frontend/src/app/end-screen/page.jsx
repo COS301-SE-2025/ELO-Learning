@@ -52,6 +52,7 @@ function EndScreen() {
       const questions = JSON.parse(
         localStorage.getItem('questionsObj') || '[]',
       );
+      /*
       const correctAnswers = questions.filter(
         (question) => question.isCorrect == true,
       );
@@ -74,7 +75,7 @@ function EndScreen() {
         );
         document.cookie = `user=${updatedCookie}; path=/`;
       }
-
+*/
       // Clear localStorage
       localStorage.removeItem('questionsObj');
 

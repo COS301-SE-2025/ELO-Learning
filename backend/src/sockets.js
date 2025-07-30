@@ -5,8 +5,12 @@ const queue = [];
 const matchMap = new Map();
 
 export default (io, socket) => {
-  const queueForGame = () => {
-    console.log('Queueing for game:', socket.id);
+  const queueForGame = async (userData) => {
+    console.log('Queueing for game:', socket.id, 'User:', userData?.username);
+
+    // Store user data with the socket
+    socket.userData = userData;
+
     if (!queue.includes(socket)) {
       queue.push(socket);
     }
@@ -14,15 +18,39 @@ export default (io, socket) => {
     if (queue.length >= 2) {
       const player1 = queue.shift();
       const player2 = queue.shift();
-      //Write to the database
+
       console.log('Starting game between:', player1.id, 'and', player2.id);
+      console.log('Player 1:', player1.userData?.username);
+      console.log('Player 2:', player2.userData?.username);
+
       const gameId = uuidv4();
       player1.join(gameId);
       player2.join(gameId);
-      io.to(player1.id).emit('startGame', gameId);
-      io.to(player2.id).emit('startGame', gameId);
+
+      // Send game start with opponent data
+      io.to(player1.id).emit('startGame', {
+        gameId,
+        opponent: {
+          name: player2.userData?.name,
+          username: player2.userData?.username,
+          xp: player2.userData?.xp,
+        },
+      });
+      io.to(player2.id).emit('startGame', {
+        gameId,
+        opponent: {
+          name: player1.userData?.name,
+          username: player1.userData?.username,
+          xp: player1.userData?.xp,
+        },
+      });
+
       matchMap.set(gameId, {
         players: [player1.id, player2.id],
+        playerData: {
+          [player1.id]: player1.userData,
+          [player2.id]: player2.userData,
+        },
         levels: [],
         playerReadyCount: [],
         playerDoneCount: [],
@@ -44,9 +72,16 @@ export default (io, socket) => {
   };
 
   const startMatch = async (gameId, level) => {
-    console.log('Starting match for game:', gameId, 'with level:', level);
+    console.log(
+      'Starting match for game:',
+      gameId,
+      'with level:',
+      level,
+      'type:',
+      typeof level,
+    );
     const gameData = matchMap.get(gameId);
-    console.log(gameData);
+    console.log('Game data:', gameData);
     if (!gameData) {
       console.log('Game not found:', gameId);
       return;
@@ -57,9 +92,16 @@ export default (io, socket) => {
       gameData.playerReadyCount.push(socket.id);
     }
 
-    // Store user level data
-    if (!gameData.levels.includes(level)) {
-      gameData.levels.push(level);
+    console.log(
+      `Player ${socket.id} is ready. Ready count: ${gameData.playerReadyCount.length}/2`,
+    );
+
+    // Store user level data (ensure it's a number)
+    const numericLevel = Number(level);
+    console.log('Converting level to number:', level, '->', numericLevel);
+
+    if (!gameData.levels.includes(numericLevel)) {
+      gameData.levels.push(numericLevel);
     }
 
     // Update the matchMap with the modified data
@@ -68,14 +110,27 @@ export default (io, socket) => {
     if (gameData.playerReadyCount.length === 2) {
       console.log('Both players are ready for game:', gameId);
 
-      console.log('Game levels: ', gameData.levels);
+      console.log('Game levels before calculation: ', gameData.levels);
+      console.log(
+        'Levels data types:',
+        gameData.levels.map((l) => ({ value: l, type: typeof l })),
+      );
 
       try {
         // Calculate the average level from all players
-        const averageLevel = Math.round(
-          gameData.levels.reduce((sum, level) => sum + level, 0) /
-            gameData.levels.length,
-        );
+        const sum = gameData.levels.reduce((sum, level) => {
+          console.log(`Adding ${level} (type: ${typeof level}) to sum ${sum}`);
+          return sum + level;
+        }, 0);
+
+        console.log('Sum of levels:', sum);
+        console.log('Number of levels:', gameData.levels.length);
+
+        const rawAverage = sum / gameData.levels.length;
+        console.log('Raw average:', rawAverage);
+
+        const averageLevel = Math.round(rawAverage);
+        console.log('Rounded average level:', averageLevel);
 
         console.log(
           `Game ${gameId} - Player levels: ${gameData.levels}, Average level: ${averageLevel}`,
@@ -287,7 +342,7 @@ export default (io, socket) => {
     }
   });
 
-  socket.on('queue', queueForGame);
+  socket.on('queue', (data) => queueForGame(data?.userData));
   socket.on('cancelQueue', cancelQueue);
   socket.on('startMatch', (data) => startMatch(data.game, data.level));
   socket.on('matchComplete', (data) => {

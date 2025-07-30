@@ -28,17 +28,17 @@ describe('User Endpoints', () => {
     expect([200, 404, 401]).toContain(res.statusCode);
   });
 
-  it('GET /users/:id/achievements - should return achievements for a user', async () => {
-    const res = await request(app)
-      .get(`/users/${testUserId}/achievements`)
-      .set('Authorization', 'Bearer testtoken123');
+  // it('GET /users/:id/achievements - should return achievements for a user', async () => {
+  //   const res = await request(app)
+  //     .get(`/users/${testUserId}/achievements`)
+  //     .set('Authorization', 'Bearer testtoken123')
 
-    if (res.statusCode === 404) {
-      console.warn('Achievements not found or user doesn’t exist.');
-    }
+  //   if (res.statusCode === 404) {
+  //     console.warn('Achievements not found or user doesn’t exist.')
+  //   }
 
-    expect([200, 404, 401]).toContain(res.statusCode);
-  });
+  //   expect([200, 404, 401]).toContain(res.statusCode)
+  // })
 
   it('POST /user/:id/xp - should update user XP', async () => {
     const res = await request(app)

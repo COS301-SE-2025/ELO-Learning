@@ -56,7 +56,7 @@ export default function HeaderContent() {
         </div>
         <div className="flex items-center gap-2">
           <Shield size={24} fill="#4D5DED" stroke="#4D5DED" />
-          <p>{xp}xp</p>
+          <p>{Math.round(xp)}xp</p>
         </div>
         {/* <div className="flex items-center gap-2">
           <Gauge size={24} stroke="#309F04" />

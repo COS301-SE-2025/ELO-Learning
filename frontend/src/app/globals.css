@@ -534,3 +534,7 @@ textarea:focus-visible {
   border-right: var(--form-outline) 1px solid !important;
   border-radius: 0px !important;
 }
+
+.text-pink-custom {
+  color: #FF6E99;
+}

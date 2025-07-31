@@ -1108,17 +1108,6 @@ app.get('/questions/random', async (req, res) => {
       q.answers = answers.filter((a) => a.question_id === q.Q_id);
     });
 
-    // //Map to clean structure
-    // const cleanQuestions = selected.map((q) => ({
-    //   id: q.Q_id,
-    //   topic: q.topic,
-    //   difficulty: q.difficulty,
-    //   level: q.level,
-    //   question: q.questionText,
-    //   xpGain: q.xpGain,
-    //   type: q.type,
-    // }));
-
     return res.status(200).json({ questions: selected });
   } catch (err) {
     console.log(err);
@@ -1179,10 +1168,6 @@ app.post('/forgot-password', async (req, res) => {
       console.error('Error storing reset token:', tokenError.message);
       // Continue anyway - token is still valid via JWT
     }
-
-    // TODO: Send email with reset link
-    // const resetLink = `${process.env.FRONTEND_URL}/login-landing/reset-password?token=${resetToken}`;
-    // await sendPasswordResetEmail(user.email, user.name, resetLink);
 
     console.log(`Password reset requested for: ${email}`);
     console.log(`Reset token: ${resetToken}`); // Remove in production

@@ -273,3 +273,145 @@ export const getQuestionsByType = async (questionType) => {
     return { success: false, error: 'Network error' };
   }
 };
+
+// Get all achievement categories
+export const fetchAchievementCategories = async () => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/achievement-categories`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(data.error || 'Failed to fetch achievement categories');
+    }
+
+    return {
+      success: true,
+      data: data.categories,
+    };
+  } catch (error) {
+    return {
+      success: false,
+      error: error.message,
+    };
+  }
+};
+
+// Get all achievements (optionally filtered by category)
+export const fetchAllAchievements = async (categoryId = null) => {
+  try {
+    const url = categoryId 
+      ? `${API_BASE_URL}/achievements?category_id=${categoryId}`
+      : `${API_BASE_URL}/achievements`;
+    
+    const response = await fetch(url, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(data.error || 'Failed to fetch achievements');
+    }
+
+    return {
+      success: true,
+      data: data.achievements,
+    };
+  } catch (error) {
+    return {
+      success: false,
+      error: error.message,
+    };
+  }
+};
+
+// Get user's unlocked achievements
+export const fetchUserAchievements = async (userId) => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/users/${userId}/achievements`, {
+      method: 'GET',
+      headers: getAuthHeaders(),
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(data.error || 'Failed to fetch user achievements');
+    }
+
+    return {
+      success: true,
+      data: data.achievements,
+    };
+  } catch (error) {
+    return {
+      success: false,
+      error: error.message,
+    };
+  }
+};
+
+// Get all achievements with user's progress/unlock status
+export const fetchUserAchievementsWithStatus = async (userId) => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/users/${userId}/achievements/all`, {
+      method: 'GET',
+      headers: getAuthHeaders(),
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(data.error || 'Failed to fetch achievements with status');
+    }
+
+    return {
+      success: true,
+      data: data.achievements,
+    };
+  } catch (error) {
+    return {
+      success: false,
+      error: error.message,
+    };
+  }
+};
+
+// Update achievement progress (manual trigger)
+export const updateAchievementProgress = async (userId, achievementId, increment = 1) => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/users/${userId}/achievements/progress`, {
+      method: 'POST',
+      headers: getAuthHeaders(),
+      body: JSON.stringify({
+        achievement_id: achievementId,
+        increment_by: increment,
+      }),
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(data.error || 'Failed to update achievement progress');
+    }
+
+    return {
+      success: true,
+      data,
+    };
+  } catch (error) {
+    return {
+      success: false,
+      error: error.message,
+    };
+  }
+};

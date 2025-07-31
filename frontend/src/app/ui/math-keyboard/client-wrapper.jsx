@@ -2,6 +2,7 @@
 
 import MathInputTemplate from '@/app/ui/math-keyboard/math-input-template';
 import ProgressBar from '@/app/ui/progress-bar';
+import AchievementNotification from '@/app/ui/achievements/achievement-notification';
 import { submitQuestionAnswer } from '@/utils/api';
 import { Heart, X } from 'lucide-react';
 import Link from 'next/link';
@@ -28,6 +29,11 @@ export default function MathKeyboardWrapper({ questions }) {
   const [showFeedback, setShowFeedback] = useState(false);
   const [feedbackMessage, setFeedbackMessage] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // 🎉 Achievement notification state
+  const [currentAchievement, setCurrentAchievement] = useState(null);
+  const [showAchievementNotification, setShowAchievementNotification] = useState(false);
+  const [achievementQueue, setAchievementQueue] = useState([]);
 
   // Debug: Log state changes
   useEffect(() => {
@@ -61,6 +67,27 @@ export default function MathKeyboardWrapper({ questions }) {
     setIsDisabled(!studentAnswer.trim() || !isValidExpression);
   }, [studentAnswer, isValidExpression]);
 
+  // 🎉 Handle multiple achievement notifications
+  const showNextAchievement = () => {
+    if (achievementQueue.length > 0) {
+      const nextAchievement = achievementQueue[0];
+      setCurrentAchievement(nextAchievement);
+      setShowAchievementNotification(true);
+      setAchievementQueue(prev => prev.slice(1)); // Remove shown achievement from queue
+    }
+  };
+
+  // 🎉 Handle achievement notification close
+  const handleAchievementNotificationClose = () => {
+    setShowAchievementNotification(false);
+    setCurrentAchievement(null);
+    
+    // Show next achievement if any in queue
+    setTimeout(() => {
+      showNextAchievement();
+    }, 500);
+  };
+
   const submitAnswer = async () => {
     setIsSubmitting(true);
     setShowFeedback(false);
@@ -76,9 +103,31 @@ export default function MathKeyboardWrapper({ questions }) {
         setFeedbackMessage(result.data.message);
         setShowFeedback(true);
 
+        // 🎉 Handle achievement unlocks!
+        if (result.data.unlockedAchievements && result.data.unlockedAchievements.length > 0) {
+          console.log('🏆 Achievements unlocked:', result.data.unlockedAchievements);
+          
+          // Add achievements to queue and show first one
+          setAchievementQueue(result.data.unlockedAchievements);
+          setTimeout(() => {
+            showNextAchievement();
+          }, 1000); // Wait 1 second after feedback before showing achievement
+        }
+
+        // 🎯 Update user XP in localStorage
+        if (result.data.newXP) {
+          const user = JSON.parse(localStorage.getItem('user') || '{}');
+          const updatedUser = { ...user, xp: result.data.newXP };
+          localStorage.setItem('user', JSON.stringify(updatedUser));
+          console.log(`💰 XP updated: ${result.data.newXP}`);
+        }
+
         if (result.data.isCorrect && result.data.xpAwarded > 0) {
           console.log(`Awarded ${result.data.xpAwarded} XP!`);
         }
+      } else {
+        setFeedbackMessage(result.error || 'Error submitting answer');
+        setShowFeedback(true);
       }
 
       setTimeout(() => {
@@ -130,9 +179,6 @@ export default function MathKeyboardWrapper({ questions }) {
           </Link>
 
           <div className="flex-1 mx-4">
-            {/* <div className="text-sm text-gray-700 mb-1 text-center font-medium">
-              Math Question {currentStep} of {totalSteps}
-            </div> */}
             <ProgressBar progress={currentStep / totalSteps} />
           </div>
 
@@ -150,19 +196,6 @@ export default function MathKeyboardWrapper({ questions }) {
           <h2 className="text-2xl font-bold text-center leading-relaxed">
             {currQuestion.questionText}
           </h2>
-
-          {/* Question metadata */}
-          {/* <div className="flex justify-center gap-3 mt-6">
-            <span className="px-4 py-2 bg-blue-100 text-blue-800 rounded-full text-sm font-semibold">
-              📚 {currQuestion.topic}
-            </span>
-            <span className="px-4 py-2 bg-green-100 text-green-800 rounded-full text-sm font-semibold">
-              🎯 {currQuestion.difficulty}
-            </span>
-            <span className="px-4 py-2 bg-purple-100 text-purple-800 rounded-full text-sm font-semibold">
-              ⭐ {currQuestion.xpGain || 10} XP
-            </span>
-          </div> */}
         </div>
 
         {/* Math Input Section */}
@@ -220,24 +253,16 @@ export default function MathKeyboardWrapper({ questions }) {
               'SUBMIT'
             )}
           </button>
-          {/* Status indicator */}
-          {/* <div className="mt-4 text-center">
-            {isValidExpression && studentAnswer.trim() ? (
-              <span className="text-green-600 font-semibold">
-                Ready to submit!
-              </span>
-            ) : !studentAnswer.trim() ? (
-              <span className="text-[#696969]">
-                Enter your mathematical expression above
-              </span>
-            ) : (
-              <span className="text-red-600 font-semibold">
-                Please check your expression format
-              </span>
-            )}
-          </div> */}
         </div>
       </div>
+
+      {/* 🎉 Achievement Notification */}
+      <AchievementNotification
+        achievement={currentAchievement}
+        show={showAchievementNotification}
+        onClose={handleAchievementNotificationClose}
+        duration={4000}
+      />
     </div>
   );
 }

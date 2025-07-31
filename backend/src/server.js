@@ -501,6 +501,33 @@ app.post('/baseline/start', async (req, res) => {
   }
 });
 
+///baseline/answer
+app.post('/baseline/answer', async (req, res) => {
+  const { userId, correct } = req.body;
+
+  if (!userId || typeof correct !== 'boolean') {
+    return res.status(400).json({ error: 'Missing userId or correct flag' });
+  }
+
+  const session = baselineSessions.get(userId);
+  if (!session) {
+    return res.status(404).json({ error: 'Baseline session not found. Start with /baseline/start' });
+  }
+
+  try {
+    const next = await session.getNextQuestion(correct);
+    if (next.done) {
+      // You can store the ELO rating in DB here if needed
+      baselineSessions.delete(userId); // Session complete
+    }
+    res.json(next);
+  } catch (err) {
+    console.error('Error processing baseline answer:', err.message);
+    res.status(500).json({ error: 'Failed to process baseline answer' });
+  }
+});
+
+
 
 // Register new user
 app.post('/register', async (req, res) => {

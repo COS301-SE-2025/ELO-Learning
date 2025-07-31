@@ -265,14 +265,22 @@ router.get('/users/:userId/achievements/all', async (req, res) => {
 });
 
 // Helper function to trigger achievement progress
-export async function triggerAchievementProgress(userId, conditionType, increment = 1) {
+export async function triggerAchievementProgress(
+  userId,
+  conditionType,
+  increment = 1,
+) {
   try {
     // Find all achievements that match this condition type (exclude ELO for now)
     const { data: achievements, error: achievementsError } = await supabase
       .from('Achievements')
       .select('id, condition_type, condition_value')
       .eq('condition_type', conditionType)
-      .not('condition_type', 'in', '("ELO Rating Reached","Personal Best Achieved","Comeback Completed","Consecutive Improvements")');
+      .not(
+        'condition_type',
+        'in',
+        '("ELO Rating Reached","Personal Best Achieved","Comeback Completed","Consecutive Improvements")',
+      );
 
     if (achievementsError) {
       console.error('Error fetching achievements:', achievementsError.message);
@@ -284,27 +292,31 @@ export async function triggerAchievementProgress(userId, conditionType, incremen
     // Update progress for each matching achievement
     for (const achievement of achievements) {
       try {
-        const response = await fetch(`http://localhost:3000/users/${userId}/achievements/progress`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': 'Bearer system-internal' // You might want to handle this differently
+        const response = await fetch(
+          `http://localhost:3000/users/${userId}/achievements/progress`,
+          {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              Authorization: 'Bearer system-internal', // You might want to handle this differently
+            },
+            body: JSON.stringify({
+              achievement_id: achievement.id,
+              increment_by: increment,
+            }),
           },
-          body: JSON.stringify({
-            achievement_id: achievement.id,
-            increment_by: increment
-          })
-        });
+        );
 
         const result = await response.json();
-        
+
         if (result.achievement_unlocked) {
           // Get achievement details for notification
-          const { data: achievementDetails, error: detailsError } = await supabase
-            .from('Achievements')
-            .select('*, AchievementCategories(name)')
-            .eq('id', achievement.id)
-            .single();
+          const { data: achievementDetails, error: detailsError } =
+            await supabase
+              .from('Achievements')
+              .select('*, AchievementCategories(name)')
+              .eq('id', achievement.id)
+              .single();
 
           if (!detailsError && achievementDetails) {
             unlockedAchievements.push(achievementDetails);
@@ -325,18 +337,26 @@ export async function triggerAchievementProgress(userId, conditionType, incremen
 // Specific helper functions for different game events
 export async function checkQuestionAchievements(userId, isCorrect) {
   const results = [];
-  
+
   if (isCorrect) {
     // Trigger "Questions Answered" achievements
-    const questionResult = await triggerAchievementProgress(userId, 'Questions Answered', 1);
+    const questionResult = await triggerAchievementProgress(
+      userId,
+      'Questions Answered',
+      1,
+    );
     results.push(questionResult);
-    
+
     // Trigger "Problems Solved" achievements (for New Challenger)
-    const problemResult = await triggerAchievementProgress(userId, 'Problems Solved', 1);
+    const problemResult = await triggerAchievementProgress(
+      userId,
+      'Problems Solved',
+      1,
+    );
     results.push(problemResult);
   }
-  
-  return results.flatMap(r => r.unlockedAchievements);
+
+  return results.flatMap((r) => r.unlockedAchievements);
 }
 
 export async function checkMatchAchievements(userId) {
@@ -352,7 +372,11 @@ export async function checkStreakAchievements(userId, days) {
 
 export async function checkProfileAchievements(userId) {
   // For profile customization achievements
-  const result = await triggerAchievementProgress(userId, 'Customizations Unlocked', 1);
+  const result = await triggerAchievementProgress(
+    userId,
+    'Customizations Unlocked',
+    1,
+  );
   return result.unlockedAchievements;
 }
 

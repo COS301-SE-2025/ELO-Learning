@@ -126,10 +126,10 @@ export async function submitQuestionAnswer(questionId, studentAnswer, userId) {
     // This is a limitation - we need to get the answers first
     const answersResponse = await axiosInstance.get(`/answers/${questionId}`);
     const answers = answersResponse.data.answer;
-    
+
     // Find the correct answer (for now, we'll submit the first correct one)
     // In a real scenario, you'd need to validate the studentAnswer against all possible correct answers
-    const correctAnswer = answers.find(answer => answer.isCorrect);
+    const correctAnswer = answers.find((answer) => answer.isCorrect);
     if (!correctAnswer) {
       throw new Error('No correct answer found for this question');
     }
@@ -137,7 +137,7 @@ export async function submitQuestionAnswer(questionId, studentAnswer, userId) {
     const response = await axiosInstance.post('/submit-answer', {
       userId: actualUserId,
       questionId: questionId,
-      selectedAnswerId: correctAnswer.answer_id  // Use the correct column name
+      selectedAnswerId: correctAnswer.answer_id, // Use the correct column name
     });
 
     return {
@@ -147,14 +147,17 @@ export async function submitQuestionAnswer(questionId, studentAnswer, userId) {
         message: response.data.message,
         xpAwarded: response.data.newXP ? 10 : 0, // Calculate XP gained
         newXP: response.data.newXP,
-        unlockedAchievements: response.data.unlockedAchievements || []
-      }
+        unlockedAchievements: response.data.unlockedAchievements || [],
+      },
     };
   } catch (error) {
     console.error('Error submitting question answer:', error);
     return {
       success: false,
-      error: error.response?.data?.error || error.message || 'Failed to submit answer'
+      error:
+        error.response?.data?.error ||
+        error.message ||
+        'Failed to submit answer',
     };
   }
 }

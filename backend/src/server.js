@@ -402,10 +402,13 @@ app.post('/submit-answer', async (req, res) => {
 
     // NEW: Check for achievement unlocks (NON-ELO ONLY)
     let unlockedAchievements = [];
-    
+
     try {
       // Check question-based achievements only
-      const questionAchievements = await checkQuestionAchievements(userId, isCorrect);
+      const questionAchievements = await checkQuestionAchievements(
+        userId,
+        isCorrect,
+      );
       unlockedAchievements.push(...questionAchievements);
     } catch (achievementError) {
       console.error('Error checking achievements:', achievementError);
@@ -416,7 +419,7 @@ app.post('/submit-answer', async (req, res) => {
       correct: true,
       message: `Correct answer! +${xpToAdd} XP awarded.`,
       newXP: updatedUser.xp,
-      unlockedAchievements: unlockedAchievements // 🎯 NEW: Include unlocked achievements
+      unlockedAchievements: unlockedAchievements, // 🎯 NEW: Include unlocked achievements
     });
   } catch (err) {
     console.error('Unexpected error:', err);
@@ -535,10 +538,13 @@ app.post('/singleplayer', async (req, res) => {
 
     // 🎯 NEW: Check for achievement unlocks (NON-ELO ONLY)
     let unlockedAchievements = [];
-    
+
     try {
       // Check question-based achievements only
-      const questionAchievements = await checkQuestionAchievements(user_id, isCorrect);
+      const questionAchievements = await checkQuestionAchievements(
+        user_id,
+        isCorrect,
+      );
       unlockedAchievements.push(...questionAchievements);
     } catch (achievementError) {
       console.error('Error checking achievements:', achievementError);
@@ -550,7 +556,7 @@ app.post('/singleplayer', async (req, res) => {
       xpEarned: xpEarned,
       leveledUp,
       totalXP: newXP,
-      unlockedAchievements: unlockedAchievements // 🎯 NEW: Include unlocked achievements
+      unlockedAchievements: unlockedAchievements, // 🎯 NEW: Include unlocked achievements
     });
   } catch (err) {
     console.error('Error in /singleplayer:', err);

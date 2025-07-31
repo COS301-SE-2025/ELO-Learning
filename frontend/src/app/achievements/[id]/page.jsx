@@ -8,7 +8,7 @@ import AchievementBadge from '../../ui/achievements/achievement-badge';
 
 function getUserFromCookie() {
   if (typeof document === 'undefined') return null;
-  
+
   //FIRST: Check localStorage (where API updates go)
   try {
     const localUser = localStorage.getItem('user');
@@ -20,14 +20,14 @@ function getUserFromCookie() {
   } catch (e) {
     console.error('Error parsing localStorage user:', e);
   }
-  
+
   // FALLBACK: Check cookies
   const match = document.cookie.match(/user=([^;]+)/);
   if (!match) {
     console.log('❌ No user found in cookies or localStorage');
     return null;
   }
-  
+
   try {
     const cookieUser = JSON.parse(decodeURIComponent(match[1]));
     console.log('🍪 Found user in cookies:', cookieUser);

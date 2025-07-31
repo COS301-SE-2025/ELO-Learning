@@ -30,7 +30,9 @@ export default function QuestionsTracker({
 
   //React hooks
   const [currQuestion, setCurrQuestion] = useState(allQuestions[0]);
-  const [currAnswers, setCurrAnswers] = useState(allQuestions[0]?.answers || []);
+  const [currAnswers, setCurrAnswers] = useState(
+    allQuestions[0]?.answers || [],
+  );
 
   const [currentStep, setCurrentStep] = useState(1);
   const [isDisabled, setIsDisabled] = useState(true);

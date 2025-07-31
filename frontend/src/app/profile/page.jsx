@@ -10,7 +10,7 @@ import UsernameBlock from '../ui/profile/username-block';
 
 function getUserFromCookie() {
   if (typeof document === 'undefined') return null;
-  
+
   // FIRST: Check localStorage (where API updates go)
   try {
     const localUser = localStorage.getItem('user');
@@ -22,14 +22,14 @@ function getUserFromCookie() {
   } catch (e) {
     console.error('Error parsing localStorage user:', e);
   }
-  
+
   // FALLBACK: Check cookies
   const match = document.cookie.match(/user=([^;]+)/);
   if (!match) {
     console.log('❌ No user found in cookies or localStorage');
     return null;
   }
-  
+
   try {
     const cookieUser = JSON.parse(decodeURIComponent(match[1]));
     console.log('🍪 Found user in cookies:', cookieUser);
@@ -43,7 +43,7 @@ function getUserFromCookie() {
 export default function Page() {
   const [user, setUser] = useState(null);
 
-    // In app/profile/page.jsx, update the useEffect:
+  // In app/profile/page.jsx, update the useEffect:
   useEffect(() => {
     const loadUserData = () => {
       const userData = getUserFromCookie();

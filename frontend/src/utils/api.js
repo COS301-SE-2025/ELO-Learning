@@ -305,10 +305,10 @@ export const fetchAchievementCategories = async () => {
 // Get all achievements (optionally filtered by category)
 export const fetchAllAchievements = async (categoryId = null) => {
   try {
-    const url = categoryId 
+    const url = categoryId
       ? `${API_BASE_URL}/achievements?category_id=${categoryId}`
       : `${API_BASE_URL}/achievements`;
-    
+
     const response = await fetch(url, {
       method: 'GET',
       headers: {
@@ -337,10 +337,13 @@ export const fetchAllAchievements = async (categoryId = null) => {
 // Get user's unlocked achievements
 export const fetchUserAchievements = async (userId) => {
   try {
-    const response = await fetch(`${API_BASE_URL}/users/${userId}/achievements`, {
-      method: 'GET',
-      headers: getAuthHeaders(),
-    });
+    const response = await fetch(
+      `${API_BASE_URL}/users/${userId}/achievements`,
+      {
+        method: 'GET',
+        headers: getAuthHeaders(),
+      },
+    );
 
     const data = await response.json();
 
@@ -363,10 +366,13 @@ export const fetchUserAchievements = async (userId) => {
 // Get all achievements with user's progress/unlock status
 export const fetchUserAchievementsWithStatus = async (userId) => {
   try {
-    const response = await fetch(`${API_BASE_URL}/users/${userId}/achievements/all`, {
-      method: 'GET',
-      headers: getAuthHeaders(),
-    });
+    const response = await fetch(
+      `${API_BASE_URL}/users/${userId}/achievements/all`,
+      {
+        method: 'GET',
+        headers: getAuthHeaders(),
+      },
+    );
 
     const data = await response.json();
 
@@ -387,16 +393,23 @@ export const fetchUserAchievementsWithStatus = async (userId) => {
 };
 
 // Update achievement progress (manual trigger)
-export const updateAchievementProgress = async (userId, achievementId, increment = 1) => {
+export const updateAchievementProgress = async (
+  userId,
+  achievementId,
+  increment = 1,
+) => {
   try {
-    const response = await fetch(`${API_BASE_URL}/users/${userId}/achievements/progress`, {
-      method: 'POST',
-      headers: getAuthHeaders(),
-      body: JSON.stringify({
-        achievement_id: achievementId,
-        increment_by: increment,
-      }),
-    });
+    const response = await fetch(
+      `${API_BASE_URL}/users/${userId}/achievements/progress`,
+      {
+        method: 'POST',
+        headers: getAuthHeaders(),
+        body: JSON.stringify({
+          achievement_id: achievementId,
+          increment_by: increment,
+        }),
+      },
+    );
 
     const data = await response.json();
 

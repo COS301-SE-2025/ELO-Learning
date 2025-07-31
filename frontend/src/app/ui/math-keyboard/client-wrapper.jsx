@@ -32,7 +32,8 @@ export default function MathKeyboardWrapper({ questions }) {
 
   // 🎉 Achievement notification state
   const [currentAchievement, setCurrentAchievement] = useState(null);
-  const [showAchievementNotification, setShowAchievementNotification] = useState(false);
+  const [showAchievementNotification, setShowAchievementNotification] =
+    useState(false);
   const [achievementQueue, setAchievementQueue] = useState([]);
 
   // Debug: Log state changes
@@ -73,7 +74,7 @@ export default function MathKeyboardWrapper({ questions }) {
       const nextAchievement = achievementQueue[0];
       setCurrentAchievement(nextAchievement);
       setShowAchievementNotification(true);
-      setAchievementQueue(prev => prev.slice(1)); // Remove shown achievement from queue
+      setAchievementQueue((prev) => prev.slice(1)); // Remove shown achievement from queue
     }
   };
 
@@ -81,7 +82,7 @@ export default function MathKeyboardWrapper({ questions }) {
   const handleAchievementNotificationClose = () => {
     setShowAchievementNotification(false);
     setCurrentAchievement(null);
-    
+
     // Show next achievement if any in queue
     setTimeout(() => {
       showNextAchievement();
@@ -104,9 +105,15 @@ export default function MathKeyboardWrapper({ questions }) {
         setShowFeedback(true);
 
         // 🎉 Handle achievement unlocks!
-        if (result.data.unlockedAchievements && result.data.unlockedAchievements.length > 0) {
-          console.log('🏆 Achievements unlocked:', result.data.unlockedAchievements);
-          
+        if (
+          result.data.unlockedAchievements &&
+          result.data.unlockedAchievements.length > 0
+        ) {
+          console.log(
+            '🏆 Achievements unlocked:',
+            result.data.unlockedAchievements,
+          );
+
           // Add achievements to queue and show first one
           setAchievementQueue(result.data.unlockedAchievements);
           setTimeout(() => {

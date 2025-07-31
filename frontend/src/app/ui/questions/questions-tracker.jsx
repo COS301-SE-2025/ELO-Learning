@@ -14,13 +14,23 @@ export default function QuestionsTracker({
   lives,
   mode,
 }) {
+  if (!questions || questions.length === 0) {
+    return (
+      <div className="flex items-center justify-center h-full">
+        <div className="text-center">
+          <div>Loading questions...</div>
+        </div>
+      </div>
+    );
+  }
+
   //Normal JS variables
   const allQuestions = questions;
   const totalSteps = allQuestions.length;
 
   //React hooks
   const [currQuestion, setCurrQuestion] = useState(allQuestions[0]);
-  const [currAnswers, setCurrAnswers] = useState(currQuestion.answers || []);
+  const [currAnswers, setCurrAnswers] = useState(allQuestions[0]?.answers || []);
 
   const [currentStep, setCurrentStep] = useState(1);
   const [isDisabled, setIsDisabled] = useState(true);

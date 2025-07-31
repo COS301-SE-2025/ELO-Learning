@@ -492,6 +492,7 @@ app.post('/singleplayer', async (req, res) => {
     const eloChange = parseFloat((newElo - currentElo).toFixed(2));
 
     // Insert into QuestionAttempts
+    //console.log(`Attempt received: user ${user_id}, question ${question_id}`);
     const { error: insertError } = await supabase
       .from('QuestionAttempts')
       .insert([

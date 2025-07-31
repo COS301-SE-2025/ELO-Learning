@@ -6,6 +6,7 @@ import { calculateExpected, distributeXP } from './multiPlayer.js';
 //import { calculateSinglePlayerXP } from './singlePlayer.js';
 import { calculateSinglePlayerXP } from './utils/xpCalculator.js';
 import { updateSinglePlayerElo } from './utils/eloCalculator.js';
+import { checkAndUpdateRankAndLevel } from './utils/userProgression.js';
 
 import { supabase } from '../database/supabaseClient.js';
 
@@ -474,6 +475,7 @@ app.post('/singleplayer', async (req, res) => {
 
     const newXP = currentXP + xpEarned;
 
+    /*
     // Determine level up
     let newLevel = currentLevel;
     let leveledUp = false;
@@ -481,7 +483,7 @@ app.post('/singleplayer', async (req, res) => {
       newLevel = currentLevel + 1;
       leveledUp = true;
     }
-
+*/
     //Calculate ELO update
     const newElo = updateSinglePlayerElo({
       playerRating: currentElo,
@@ -491,7 +493,16 @@ app.post('/singleplayer', async (req, res) => {
 
     const eloChange = parseFloat((newElo - currentElo).toFixed(2));
 
+    //Determine new rank and level
+    const { newLevel, newRank } = await checkAndUpdateRankAndLevel({
+      user_id,
+      newXP,
+      newElo,
+      supabase,
+    });
+
     // Insert into QuestionAttempts
+
     //console.log(`Attempt received: user ${user_id}, question ${question_id}`);
     const { error: insertError } = await supabase
       .from('QuestionAttempts')
@@ -522,7 +533,12 @@ app.post('/singleplayer', async (req, res) => {
     // Update user record
     const { error: updateError } = await supabase
       .from('Users')
-      .update({ xp: newXP, currentLevel: newLevel, elo_rating: newElo })
+      .update({
+        xp: newXP,
+        currentLevel: newLevel,
+        elo_rating: newElo,
+        rank: newRank,
+      })
       .eq('id', user_id);
 
     if (updateError) {

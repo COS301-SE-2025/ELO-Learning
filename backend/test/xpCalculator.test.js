@@ -5,12 +5,17 @@ import {
   calculateSinglePlayerXP,
 } from '../src/utils/xpCalculator';
 
+const alpha = 0.1;
+const beta = 0.05;
+const maxTimeSeconds = 30;
+const maxLevel = 10;
+
 describe('XP Calculator - Subfunction Tests', () => {
   describe('calculateTimeReward', () => {
     test('returns correct rewards for valid times', () => {
       expect(calculateTimeReward(0)).toBe(1);
       expect(calculateTimeReward(15)).toBeCloseTo(0.5);
-      expect(calculateTimeReward(30)).toBe(0);
+      expect(calculateTimeReward(maxTimeSeconds)).toBe(0);
       expect(calculateTimeReward(3)).toBeCloseTo(0.9);
       expect(calculateTimeReward(28)).toBeCloseTo(0.067, 2);
     });
@@ -26,8 +31,10 @@ describe('XP Calculator - Subfunction Tests', () => {
   describe('calculateLevelReward', () => {
     test('returns scaled value for levels within bounds', () => {
       expect(calculateLevelReward(0)).toBeCloseTo(1);
-      expect(calculateLevelReward(4)).toBeCloseTo(1 / (1 + 0.1 * 4));
-      expect(calculateLevelReward(10)).toBeCloseTo(1 / (1 + 0.1 * 10));
+      expect(calculateLevelReward(4)).toBeCloseTo(1 / (1 + alpha * 4));
+      expect(calculateLevelReward(maxLevel)).toBeCloseTo(
+        1 / (1 + alpha * maxLevel),
+      );
     });
 
     test('returns 0 for invalid levels', () => {
@@ -39,8 +46,8 @@ describe('XP Calculator - Subfunction Tests', () => {
 
   describe('calculateGateKeepingComponent', () => {
     test('returns correct scaled value', () => {
-      expect(calculateGateKeepingComponent(100, 200)).toBeCloseTo(0.05 * 0.5);
-      expect(calculateGateKeepingComponent(0, 400)).toBeCloseTo(0.05);
+      expect(calculateGateKeepingComponent(100, 200)).toBeCloseTo(beta * 0.5);
+      expect(calculateGateKeepingComponent(0, 400)).toBeCloseTo(beta);
       expect(calculateGateKeepingComponent(400, 400)).toBeCloseTo(0);
     });
 
@@ -58,7 +65,7 @@ describe('XP Calculator - calculateSinglePlayerXP', () => {
     const result = await calculateSinglePlayerXP({
       CA: 1,
       XPGain: 20,
-      actualTimeSeconds: 10,
+      actualTimeSeconds: maxLevel,
       currentLevel: 2,
       currentXP: 100,
       nextLevelXP: 200,
@@ -72,7 +79,7 @@ describe('XP Calculator - calculateSinglePlayerXP', () => {
     const result = await calculateSinglePlayerXP({
       CA: 0,
       XPGain: 20,
-      actualTimeSeconds: 10,
+      actualTimeSeconds: maxLevel,
       currentLevel: 2,
       currentXP: 100,
       nextLevelXP: 200,
@@ -85,7 +92,7 @@ describe('XP Calculator - calculateSinglePlayerXP', () => {
     const result1 = await calculateSinglePlayerXP({
       CA: 'not-a-number',
       XPGain: 20,
-      actualTimeSeconds: 10,
+      actualTimeSeconds: maxLevel,
       currentLevel: 2,
       currentXP: 100,
       nextLevelXP: 200,
@@ -94,7 +101,7 @@ describe('XP Calculator - calculateSinglePlayerXP', () => {
     const result2 = await calculateSinglePlayerXP({
       CA: 1,
       XPGain: -50,
-      actualTimeSeconds: 10,
+      actualTimeSeconds: maxLevel,
       currentLevel: 2,
       currentXP: 100,
       nextLevelXP: 200,

@@ -2,45 +2,57 @@
 
 import clsx from 'clsx';
 import { Shield } from 'lucide-react';
+import { useSession } from 'next-auth/react';
 import { useEffect, useState } from 'react';
 
 export default function HeaderContent() {
+  const { data: session, status } = useSession();
   const [xp, setXp] = useState('0');
   const [username, setUsername] = useState('');
 
   useEffect(() => {
-    // Function to get cookie value by name
-    const getCookie = (name) => {
-      const value = `; ${document.cookie}`;
-      const parts = value.split(`; ${name}=`);
-      if (parts.length === 2) return parts.pop().split(';').shift();
-      return null;
-    };
+    console.log('Session data:', session);
+    console.log('Status:', status);
+    if (status === 'authenticated' && session?.user) {
+      // Use session data from NextAuth, prioritizing username over name
+      setUsername(
+        session.user.username ||
+          session.user.name ||
+          session.user.email ||
+          'User'
+      );
 
-    try {
-      // Get the encoded cookie (adjust cookie name as needed)
-      const encodedUserData = getCookie('userData') || getCookie('user');
-
-      if (encodedUserData) {
-        // Decode the URL-encoded JSON
-        const decodedData = decodeURIComponent(encodedUserData);
-        const userData = JSON.parse(decodedData);
-
-        // Extract XP from the user data
-        setXp(userData.xp?.toString() || '0');
-        setUsername(userData.username || '');
-      }
-    } catch (error) {
-      console.error('Error parsing user data from cookie:', error);
+      // Use XP from session data
+      setXp(session.user.xp?.toString() || '0');
+    } else if (status === 'unauthenticated') {
+      // Reset values when not authenticated
+      setUsername('');
       setXp('0');
     }
-  }, []);
+  }, [session, status]);
+
+  // Show loading state while session is being loaded
+  if (status === 'loading') {
+    return (
+      <div className="w-full md:w-auto">
+        <div
+          className={clsx(
+            'flex h-[48px] w-full items-start justify-center gap-6 rounded-md p-3 text-sm font-medium md:flex-col md:h-auto md:gap-4 md:justify-start md:p-2 md:px-5 md:w-auto'
+          )}
+        >
+          <div className="flex items-center gap-2">
+            <p className="text-lg font-bold">Loading...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="w-full md:w-auto">
       <div
         className={clsx(
-          'flex h-[48px] w-full items-start justify-center gap-6 rounded-md p-3 text-sm font-medium md:flex-col md:h-auto md:gap-4 md:justify-start md:p-2 md:px-5 md:w-auto',
+          'flex h-[48px] w-full items-start justify-center gap-6 rounded-md p-3 text-sm font-medium md:flex-col md:h-auto md:gap-4 md:justify-start md:p-2 md:px-5 md:w-auto'
         )}
       >
         {/* <div className="flex items-center gap-2">

@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { submitSinglePlayerAttempt } from '@/services/api';
 
-export default function TotalXP() {
+export default function TotalXP({ onLoadComplete }) {
   const [totalXP, setTotalXP] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -131,6 +131,9 @@ export default function TotalXP() {
       setTotalXP(Math.round(totalXPSum));
       // console.log('TotalXP:', totalXP);
       setIsLoading(false);
+      if (onLoadComplete) {
+        onLoadComplete();
+      }
     }
     calculateTotalXP();
   }, []);

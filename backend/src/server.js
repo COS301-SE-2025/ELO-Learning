@@ -17,6 +17,8 @@ import questionRoutes from './questionRoutes.js';
 import socketsHandlers from './sockets.js';
 import userRoutes from './userRoutes.js';
 import validateRoutes from './validateRoutes.js';
+import achievementRoutes from './achievementRoutes.js';
+import { checkQuestionAchievements } from './achievementRoutes.js';
 
 // Load environment variables
 dotenv.config();
@@ -36,6 +38,7 @@ app.use('/', practiceRoutes);
 app.use('/', questionRoutes);
 app.use('/', answerRoutes);
 app.use('/', validateRoutes);
+app.use('/', achievementRoutes);
 
 // Simple health check route
 app.get('/', (req, res) => {
@@ -339,7 +342,7 @@ app.post('/submit-answer', async (req, res) => {
     const { data: answer, error: answerError } = await supabase
       .from('Answers')
       .select('isCorrect')
-      .eq('id', selectedAnswerId)
+      .eq('answer_id', selectedAnswerId)
       .eq('question_id', questionId)
       .single();
 
@@ -397,10 +400,23 @@ app.post('/submit-answer', async (req, res) => {
       return res.status(500).json({ error: 'Failed to update XP' });
     }
 
+    // NEW: Check for achievement unlocks (NON-ELO ONLY)
+    let unlockedAchievements = [];
+    
+    try {
+      // Check question-based achievements only
+      const questionAchievements = await checkQuestionAchievements(userId, isCorrect);
+      unlockedAchievements.push(...questionAchievements);
+    } catch (achievementError) {
+      console.error('Error checking achievements:', achievementError);
+      // Don't fail the whole request if achievements fail
+    }
+
     return res.status(200).json({
       correct: true,
       message: `Correct answer! +${xpToAdd} XP awarded.`,
       newXP: updatedUser.xp,
+      unlockedAchievements: unlockedAchievements // 🎯 NEW: Include unlocked achievements
     });
   } catch (err) {
     console.error('Unexpected error:', err);
@@ -517,11 +533,24 @@ app.post('/singleplayer', async (req, res) => {
       });
     }
 
-    // Return xp earned + leveled up
+    // 🎯 NEW: Check for achievement unlocks (NON-ELO ONLY)
+    let unlockedAchievements = [];
+    
+    try {
+      // Check question-based achievements only
+      const questionAchievements = await checkQuestionAchievements(user_id, isCorrect);
+      unlockedAchievements.push(...questionAchievements);
+    } catch (achievementError) {
+      console.error('Error checking achievements:', achievementError);
+      // Don't fail the whole request if achievements fail
+    }
+
+    // Return xp earned + leveled up + achievements
     return res.status(200).json({
       xpEarned: xpEarned,
       leveledUp,
       totalXP: newXP,
+      unlockedAchievements: unlockedAchievements // 🎯 NEW: Include unlocked achievements
     });
   } catch (err) {
     console.error('Error in /singleplayer:', err);

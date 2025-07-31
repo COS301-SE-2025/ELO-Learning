@@ -16,6 +16,12 @@ import { Server } from 'socket.io';
 //Change this import to ES6
 import socketsHandlers from './sockets.js';
 
+//baselie
+import BaselineTest from './decisionTree.js';
+
+const baselineSessions = new Map(); // Maps userId => BaselineTest instance
+
+
 // Load environment variables
 dotenv.config();
 
@@ -475,6 +481,26 @@ app.post('/submit-answer', async (req, res) => {
     return res.status(500).json({ error: 'Unexpected server error' });
   }
 });
+
+//baseline routes:
+//this one: /baseline/start
+app.post('/baseline/start', async (req, res) => {
+  const { userId } = req.body;
+
+  if (!userId) return res.status(400).json({ error: 'Missing userId' });
+
+  try {
+    const session = new BaselineTest(userId);
+    baselineSessions.set(userId, session);
+
+    const firstQuestion = await session.getNextQuestion();
+    res.json(firstQuestion);
+  } catch (err) {
+    console.error('Error starting baseline:', err.message);
+    res.status(500).json({ error: 'Failed to start baseline test' });
+  }
+});
+
 
 // Register new user
 app.post('/register', async (req, res) => {

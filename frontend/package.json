@@ -20,6 +20,7 @@
     "math-expression-evaluator": "^2.0.7",
     "mathjs": "^14.5.2",
     "next": "^15.4.3",
+    "next-auth": "^4.24.11",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "react-katex": "^3.1.0",

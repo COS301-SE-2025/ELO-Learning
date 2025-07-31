@@ -1,6 +1,7 @@
 'use client';
 import { setCookie } from '@/app/lib/authCookie';
 import { Eye, EyeOff, X } from 'lucide-react';
+import { signIn } from 'next-auth/react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
@@ -107,7 +108,12 @@ export default function Page() {
       </div>
       {/* Disclaimer is now spaced above the bottom */}
       <div className="px-4 text-center">
-        <div className="google-button flex items-center justify-around gap-10 m-2">
+        <div
+          className="google-button flex items-center justify-around gap-10 m-2"
+          onClick={() =>
+            signIn('google', { callbackUrl: 'http://localhost:8080/dashboard' })
+          }
+        >
           {/* <FaGoogle size={24} /> */}
           <p className="p-3">Sign in with Google</p>
         </div>

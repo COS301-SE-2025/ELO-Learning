@@ -3,7 +3,11 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 import express from 'express';
 import { calculateExpected, distributeXP } from './multiPlayer.js';
-import { calculateSinglePlayerXP } from './singlePlayer.js';
+//import { calculateSinglePlayerXP } from './singlePlayer.js';
+import { calculateSinglePlayerXP } from './utils/xpCalculator.js';
+import { updateSinglePlayerElo } from './utils/eloCalculator.js';
+import { checkAndUpdateRankAndLevel } from './utils/userProgression.js';
+import { checkRankAndLevelOnly } from './utils/userProgression.js';
 
 import { supabase } from '../database/supabaseClient.js';
 
@@ -55,10 +59,10 @@ app.post('/singleplayer', async (req, res) => {
       return res.status(400).json({ error: 'Missing required fields!' });
     }
 
-    // Fetch current user XP & level
+    // Fetch current user XP, level, and ELO
     const { data: userData, error: userError } = await supabase
       .from('Users')
-      .select('xp, currentLevel')
+      .select('xp, currentLevel, elo_rating')
       .eq('id', user_id)
       .single();
 
@@ -66,7 +70,7 @@ app.post('/singleplayer', async (req, res) => {
       return res.status(404).json({ error: 'User not found' });
     }
 
-    const { xp: currentXP, currentLevel } = userData;
+    const { xp: currentXP, currentLevel, elo_rating: currentElo } = userData;
 
     // Fetch next level's minXP
     const { data: levelData, error: levelError } = await supabase
@@ -81,10 +85,10 @@ app.post('/singleplayer', async (req, res) => {
 
     const nextLevelXP = levelData.minXP;
 
-    // Fetch question xpGain
+    // Fetch question xpGain and questionELO
     const { data: questionData, error: qError } = await supabase
       .from('Questions')
-      .select('xpGain')
+      .select('xpGain, elo_rating')
       .eq('Q_id', question_id)
       .single();
 
@@ -106,15 +110,26 @@ app.post('/singleplayer', async (req, res) => {
 
     const newXP = currentXP + xpEarned;
 
-    // Determine level up
-    let newLevel = currentLevel;
-    let leveledUp = false;
-    if (newXP >= nextLevelXP) {
-      newLevel = currentLevel + 1;
-      leveledUp = true;
-    }
+    //Calculate ELO update
+    const newElo = updateSinglePlayerElo({
+      playerRating: currentElo,
+      questionRating: questionData.elo_rating ?? 5.0,
+      isCorrect: isCorrect,
+    });
+
+    const eloChange = parseFloat((newElo - currentElo).toFixed(2));
+
+    //Determine new rank and level
+    const { newLevel, newRank } = await checkAndUpdateRankAndLevel({
+      user_id,
+      newXP,
+      newElo,
+      supabase,
+    });
 
     // Insert into QuestionAttempts
+
+    //console.log(`Attempt received: user ${user_id}, question ${question_id}`);
     const { error: insertError } = await supabase
       .from('QuestionAttempts')
       .insert([
@@ -126,6 +141,9 @@ app.post('/singleplayer', async (req, res) => {
           ratingBefore: currentXP,
           ratingAfter: newXP,
           ratingChange: xpEarned,
+          eloBefore: currentElo,
+          eloAfter: newElo,
+          eloChange: eloChange,
           attemptDate: new Date(),
           attemptType: 'single',
         },
@@ -141,7 +159,12 @@ app.post('/singleplayer', async (req, res) => {
     // Update user record
     const { error: updateError } = await supabase
       .from('Users')
-      .update({ xp: newXP, currentLevel: newLevel })
+      .update({
+        xp: newXP,
+        currentLevel: newLevel,
+        elo_rating: newElo,
+        rank: newRank,
+      })
       .eq('id', user_id);
 
     if (updateError) {
@@ -151,11 +174,16 @@ app.post('/singleplayer', async (req, res) => {
       });
     }
 
+    const leveledUp = newLevel > currentLevel;
     // Return xp earned + leveled up
     return res.status(200).json({
       xpEarned: xpEarned,
+      eloChange,
+      newElo,
       leveledUp,
+      newRank,
       totalXP: newXP,
+      newLevel,
     });
   } catch (err) {
     console.error('Error in /singleplayer:', err);

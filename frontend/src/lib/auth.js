@@ -29,9 +29,12 @@ export const authOptions = {
                             id: response.user.id,
                             email: response.user.email,
                             name: response.user.name || response.user.username,
+                            surname: response.user.surname,
                             username: response.user.username,
                             xp: response.user.xp,
                             currentLevel: response.user.currentLevel,
+                            joinDate: response.user.joinDate,
+                            pfpURL: response.user.pfpURL,
                             // Add any other fields your backend returns
                         }
                     } else {
@@ -118,6 +121,16 @@ export const authOptions = {
             }
 
             return session
+        },
+    },
+    pages: {
+        signIn: '/login-landing',
+        error: '/auth/error', // Error code passed in query string as ?error=
+    },
+    events: {
+        async signOut(message) {
+            // This runs when user signs out
+            console.log('User signed out:', message)
         },
     },
 }

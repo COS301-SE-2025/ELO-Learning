@@ -141,6 +141,8 @@ export async function registerUser(
 }
 
 export async function logoutUser() {
+  // This function is kept for backward compatibility
+  // For new implementations, use performLogout from @/lib/logout
   localStorage.removeItem('token')
   localStorage.removeItem('user')
 }

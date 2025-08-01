@@ -1,6 +1,5 @@
 'use client';
 
-import { quickValidateMath, validateMathExpression } from '@/utils/api';
 import 'katex/dist/katex.min.css';
 import { ChevronDown, ChevronUp } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
@@ -135,7 +134,7 @@ export default function MathInputTemplate({
       const currentWord = getCurrentWord(inputValue, cursorPosition);
       if (currentWord.length > 1) {
         const matchingSuggestions = autoCompletions.filter((ac) =>
-          ac.trigger.startsWith(currentWord.toLowerCase()),
+          ac.trigger.startsWith(currentWord.toLowerCase())
         );
         setSuggestions(matchingSuggestions);
         setShowSuggestions(matchingSuggestions.length > 0);
@@ -143,27 +142,31 @@ export default function MathInputTemplate({
         setShowSuggestions(false);
       }
 
+      // Use frontend validation for instant feedback - no API calls!
       try {
-        const result = await validateMathExpression(inputValue);
-        if (result.success) {
-          setLocalIsValidExpression(result.data.isValid);
-          setIsValidExpression?.(result.data.isValid);
-          setValidationMessage(result.data.message);
+        const isValid = localValidateExpression(inputValue);
+        const message = localGetValidationMessage(inputValue);
 
-          if (!result.data.isValid) {
-            setTimeout(() => {
-              setShowErrorMessage(true);
-            }, 1500);
-          } else {
-            setShowErrorMessage(false);
-          }
+        setLocalIsValidExpression(isValid);
+        setIsValidExpression?.(isValid);
+        setValidationMessage(message);
+
+        if (!isValid && message) {
+          setTimeout(() => {
+            setShowErrorMessage(true);
+          }, 800); // Reduced delay
+        } else {
+          setShowErrorMessage(false);
         }
       } catch (error) {
-        console.error('Validation error:', error);
+        console.error('Frontend validation error:', error);
+        // Fallback to true for better UX
+        setLocalIsValidExpression(true);
+        setIsValidExpression?.(true);
       }
     };
 
-    const timeoutId = setTimeout(validateExpression, 300);
+    const timeoutId = setTimeout(validateExpression, 150); // Reduced debounce time
     return () => clearTimeout(timeoutId);
   }, [inputValue, cursorPosition, setIsValidExpression]);
 
@@ -179,9 +182,9 @@ export default function MathInputTemplate({
     }
   }, [inputValue]);
 
-  // Quick validation against correct answer
+  // Quick validation against correct answer - using frontend validator
   useEffect(() => {
-    const quickCheck = async () => {
+    const quickCheck = () => {
       if (!inputValue.trim() || !correctAnswer || !localIsValidExpression) {
         setIsAnswerCorrect(false);
         return;
@@ -189,10 +192,9 @@ export default function MathInputTemplate({
 
       setIsChecking(true);
       try {
-        const result = await quickValidateMath(inputValue, correctAnswer);
-        if (result.success) {
-          setIsAnswerCorrect(result.data.isCorrect);
-        }
+        // Use frontend validator - instant response!
+        const isCorrect = localQuickValidate(inputValue, correctAnswer);
+        setIsAnswerCorrect(isCorrect);
       } catch (error) {
         console.error('Quick validation error:', error);
         setIsAnswerCorrect(false);
@@ -201,7 +203,8 @@ export default function MathInputTemplate({
       }
     };
 
-    const timeoutId = setTimeout(quickCheck, 500);
+    // Reduced timeout for faster feedback
+    const timeoutId = setTimeout(quickCheck, 200);
     return () => clearTimeout(timeoutId);
   }, [inputValue, correctAnswer, localIsValidExpression]);
 
@@ -320,8 +323,8 @@ export default function MathInputTemplate({
             !localIsValidExpression
               ? 'border-red-500 focus:border-red-600'
               : isChecking
-                ? 'border-yellow-500 focus:border-yellow-600'
-                : 'border-gray-300 focus:border-blue-500'
+              ? 'border-yellow-500 focus:border-yellow-600'
+              : 'border-gray-300 focus:border-blue-500'
           }`}
           rows={2}
         />

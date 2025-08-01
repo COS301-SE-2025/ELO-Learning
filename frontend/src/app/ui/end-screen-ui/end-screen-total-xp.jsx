@@ -1,9 +1,11 @@
 'use client';
 
-import { useEffect, useState } from 'react';
 import { submitSinglePlayerAttempt } from '@/services/api';
+import { useSession } from 'next-auth/react';
+import { useEffect, useState } from 'react';
 
 export default function TotalXP() {
+  const { data: session } = useSession();
   const [totalXP, setTotalXP] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -23,18 +25,13 @@ export default function TotalXP() {
 
   useEffect(() => {
     async function calculateTotalXP() {
-      const questions = JSON.parse(localStorage.getItem('questionsObj')) || [];
-
-      const userCookie = document.cookie
-        .split('; ')
-        .find((row) => row.startsWith('user='));
-
-      if (!userCookie) {
-        console.error('User cookie not found');
+      if (!session?.user) {
+        console.error('User not authenticated');
         return;
       }
 
-      const user = JSON.parse(decodeURIComponent(userCookie.split('=')[1]));
+      const questions = JSON.parse(localStorage.getItem('questionsObj')) || [];
+      const user = session.user;
       const user_id = user.id;
 
       if (!user_id) {
@@ -48,7 +45,7 @@ export default function TotalXP() {
           console.log(
             `Submitted question ${q.question.id || q.question.Q_id}: earned ${
               q.xpEarned
-            }`,
+            }`
           );
           continue; // skip this one
         }
@@ -68,20 +65,17 @@ export default function TotalXP() {
             const { xpEarned, totalXP, leveledUp } = response;
             q.xpEarned = Math.round(xpEarned) || 0;
 
-            const updatedUser = {
-              ...user,
-              xp: totalXP,
-              currentLevel: leveledUp
-                ? user.currentLevel + 1
-                : user.currentLevel,
-            };
-            document.cookie = `user=${encodeURIComponent(
-              JSON.stringify(updatedUser),
-            )}; path=/`;
+            // Note: Session data will be updated on next page load
+            // You might want to trigger a session refresh here if needed
+            console.log('XP updated successfully', {
+              user: user.username,
+              newXP: totalXP,
+              leveledUp: leveledUp ? user.currentLevel + 1 : user.currentLevel,
+            });
           } catch (err) {
             console.error(
               `Failed to submit question ${q.question.id || q.question.Q_id}:`,
-              err.response?.data || err.message,
+              err.response?.data || err.message
             );
           }
         } else {
@@ -90,7 +84,7 @@ export default function TotalXP() {
       }
       const totalXPSum = questions.reduce(
         (acc, q) => acc + (q.xpEarned ?? 0),
-        0,
+        0
       );
 
       console.log('Total XPSum calculated:', totalXPSum);
@@ -99,7 +93,7 @@ export default function TotalXP() {
       setIsLoading(false);
     }
     calculateTotalXP();
-  }, []);
+  }, [session]);
 
   if (isLoading) {
     return (

@@ -1,3 +1,4 @@
+import { useSession } from 'next-auth/react';
 import { useEffect, useRef, useState } from 'react';
 
 // Utility to pick a color based on the user's name
@@ -19,24 +20,16 @@ function getColor(name) {
   return colors[code % colors.length];
 }
 
-// Helper to get current user from cookie
-function getCurrentUserFromCookie() {
-  const match = document.cookie.match(/user=([^;]+)/);
-  if (!match) return null;
-  try {
-    return JSON.parse(decodeURIComponent(match[1]));
-  } catch {
-    return null;
-  }
-}
-
 export default function LeaderboardTable({ users = [] }) {
+  const { data: session } = useSession();
   const [currentUser, setCurrentUser] = useState(null);
   const currentUserRowRef = useRef(null);
 
   useEffect(() => {
-    setCurrentUser(getCurrentUserFromCookie());
-  }, []);
+    if (session?.user) {
+      setCurrentUser(session.user);
+    }
+  }, [session]);
 
   useEffect(() => {
     if (currentUserRowRef.current) {
@@ -74,7 +67,7 @@ export default function LeaderboardTable({ users = [] }) {
                 <td className="p-2">
                   <span
                     className={`inline-flex items-center justify-center rounded-full w-8 h-8 font-bold text-lg ${getColor(
-                      user.username,
+                      user.username
                     )}`}
                   >
                     {user.username.charAt(0)}

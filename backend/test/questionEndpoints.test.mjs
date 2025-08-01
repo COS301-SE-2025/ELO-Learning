@@ -6,7 +6,7 @@ jest.setTimeout(20000); // for slow tests
 
 // Test data - adjust these to match your actual database
 const testLevel = 4;
-const testTopic = 'Statistics';
+const testTopic = 'Statistics & Probability'; // Ensure this topic exists in your Topics table
 const testTopicId = '1';
 const testQuestionId = 22; // Make sure this exists in your Questions table
 

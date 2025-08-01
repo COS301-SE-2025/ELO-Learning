@@ -209,10 +209,12 @@ Example Response:
 {
   "xpEarned": 6,
   "eloChange": 0.02,
-  "newElo": 2.76,
+  "newElo": 3.01,
   "leveledUp": false,
-  "newRank": "Bronze",
-  "totalXP": 860,
+  "newRank": "Silver",
+  "rankUp": true,
+  "rankDown": false,
+  "totalXP": 878,
   "newLevel": 5
 }
 ```

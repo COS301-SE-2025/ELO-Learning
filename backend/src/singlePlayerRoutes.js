@@ -138,4 +138,8 @@ router.post('/singleplayer', async (req, res) => {
   }
 });
 
+<<<<<<< HEAD
 export default router;
+=======
+export default router;
+>>>>>>> 59c007197b64f7c7b66fce7568638f2e3a551c46

@@ -4,14 +4,10 @@ import { submitSinglePlayerAttempt } from '@/services/api';
 import { useSession } from 'next-auth/react';
 import { useEffect, useState } from 'react';
 
-<<<<<<< HEAD
-export default function TotalXP() {
-  const { data: session } = useSession();
-=======
 export default function TotalXP({ onLoadComplete }) {
->>>>>>> 59c007197b64f7c7b66fce7568638f2e3a551c46
   const [totalXP, setTotalXP] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
+  const { data: session } = useSession();
 
   /*   useEffect(() => {
     const questions = JSON.parse(localStorage.getItem('questionsObj'));
@@ -29,28 +25,17 @@ export default function TotalXP({ onLoadComplete }) {
 
   useEffect(() => {
     async function calculateTotalXP() {
-<<<<<<< HEAD
       if (!session?.user) {
         console.error('User not authenticated');
-=======
+        return;
+      }
+
       //Prevent duplicate submissions
       if (sessionStorage.getItem('submittedOnce') === 'true') {
         //console.log('Already submitted, skipping...');
         return;
       }
       sessionStorage.setItem('submittedOnce', 'true');
-
-      const questions = JSON.parse(localStorage.getItem('questionsObj')) || [];
-
-      const userCookie = document.cookie
-        .split('; ')
-        .find((row) => row.startsWith('user='));
-
-      if (!userCookie) {
-        console.error('User cookie not found');
->>>>>>> 59c007197b64f7c7b66fce7568638f2e3a551c46
-        return;
-      }
 
       const questions = JSON.parse(localStorage.getItem('questionsObj')) || [];
       const user = session.user;
@@ -122,12 +107,12 @@ export default function TotalXP({ onLoadComplete }) {
             currentLevel: leveledUp ? user.currentLevel + 1 : user.currentLevel,
           };
           document.cookie = `user=${encodeURIComponent(
-            JSON.stringify(updatedUser),
+            JSON.stringify(updatedUser)
           )}; path=/`;
         } catch (err) {
           console.error(
             `Failed to submit question ${q.question.id || q.question.Q_id}:`,
-            err.response?.data || err.message,
+            err.response?.data || err.message
           );
         }
       }

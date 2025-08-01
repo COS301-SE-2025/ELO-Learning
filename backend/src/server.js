@@ -110,15 +110,6 @@ app.post('/singleplayer', async (req, res) => {
 
     const newXP = currentXP + xpEarned;
 
-    /*
-    // Determine level up
-    let newLevel = currentLevel;
-    let leveledUp = false;
-    if (newXP >= nextLevelXP) {
-      newLevel = currentLevel + 1;
-      leveledUp = true;
-    }
-*/
     //Calculate ELO update
     const newElo = updateSinglePlayerElo({
       playerRating: currentElo,
@@ -190,6 +181,7 @@ app.post('/singleplayer', async (req, res) => {
       eloChange,
       newElo,
       leveledUp,
+      newRank,
       totalXP: newXP,
       newLevel,
     });

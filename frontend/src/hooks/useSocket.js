@@ -9,15 +9,13 @@ export function useSocket() {
     const { data: session, status } = useSession()
 
     useEffect(() => {
-        console.log('🔧 useSocket effect - status:', status, 'user:', session?.user?.username)
-
         // Add socket event listeners for debugging
         const onConnect = () => {
-            console.log('✅ Socket connected successfully')
+            // Socket connected successfully
         }
 
         const onDisconnect = (reason) => {
-            console.log('❌ Socket disconnected:', reason)
+            // Socket disconnected
         }
 
         const onConnectError = (error) => {
@@ -29,8 +27,6 @@ export function useSocket() {
         socket.on('connect_error', onConnectError)
 
         if (status === 'authenticated' && session?.user) {
-            console.log('🔌 Connecting socket with user:', session.user.username)
-
             // Set user data for socket connection
             socket.auth = {
                 userId: session.user.id,
@@ -40,23 +36,17 @@ export function useSocket() {
 
             // Connect socket if not already connected
             if (!socket.connected) {
-                console.log('🔌 Socket not connected, connecting...')
                 socket.connect()
-            } else {
-                console.log('🔌 Socket already connected')
             }
 
             // Store user data on socket for backward compatibility
             socket.userData = session.user
 
         } else if (status === 'unauthenticated') {
-            console.log('🔌 Disconnecting socket - user unauthenticated')
             // Disconnect socket if user is not authenticated
             if (socket.connected) {
                 socket.disconnect()
             }
-        } else if (status === 'loading') {
-            console.log('🔧 Session loading...')
         }
 
         return () => {

@@ -99,16 +99,6 @@ export default function Page() {
         <h2 className="text-2xl font-bold">Ready to start a match?</h2>
       </div>
 
-      {/* Debug Info - Remove this later */}
-      {process.env.NODE_ENV === 'development' && (
-        <div className="bg-gray-800 p-4 rounded text-sm">
-          <div>Status: {status}</div>
-          <div>User: {session?.user?.username || 'None'}</div>
-          <div>Socket Connected: {isConnected ? 'Yes' : 'No'}</div>
-          <div>Socket Instance: {socket ? 'Yes' : 'No'}</div>
-        </div>
-      )}
-
       {/* Loading State */}
       {status === 'loading' && (
         <div className="text-center">
@@ -120,13 +110,6 @@ export default function Page() {
       {status === 'unauthenticated' && (
         <div className="text-center">
           <p>Please sign in to access matchmaking.</p>
-        </div>
-      )}
-
-      {/* Authenticated but no socket connection */}
-      {status === 'authenticated' && !isConnected && (
-        <div className="text-center text-yellow-500">
-          <p>Connecting to game server...</p>
         </div>
       )}
 

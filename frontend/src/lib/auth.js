@@ -1,4 +1,4 @@
-import { loginUser } from '@/services/api'
+import { handleOAuthUser, loginUser } from '@/services/api'
 import CredentialsProvider from "next-auth/providers/credentials"
 import GoogleProvider from "next-auth/providers/google"
 
@@ -25,7 +25,6 @@ export const authOptions = {
 
                     if (response.user) {
                         // Return user object if authentication successful
-                        console.log('User authenticated:', response.user)
                         return {
                             id: response.user.id,
                             email: response.user.email,
@@ -47,14 +46,40 @@ export const authOptions = {
         })
     ],
     callbacks: {
-        async jwt({ token, account, user }) {
-            console.log('🔧 JWT Callback:', {
-                hasAccount: !!account,
-                hasUser: !!user,
-                userKeys: user ? Object.keys(user) : [],
-                accountProvider: account?.provider
-            })
+        async signIn({ user, account, profile }) {
+            // Handle OAuth providers (Google, etc.)
+            if (account?.provider === 'google') {
+                try {
 
+                    // Call our backend to handle OAuth user creation/retrieval
+                    const response = await handleOAuthUser(
+                        user.email,
+                        user.name,
+                        user.image,
+                        account.provider
+                    )
+
+                    // Attach database user data to the user object
+                    // This will be available in the JWT callback
+                    user.id = response.user.id
+                    user.username = response.user.username
+                    user.surname = response.user.surname
+                    user.xp = response.user.xp
+                    user.currentLevel = response.user.currentLevel
+                    user.joinDate = response.user.joinDate
+                    user.pfpURL = response.user.pfpURL
+
+                    return true
+                } catch (error) {
+                    console.error('🚫 Error handling OAuth user:', error)
+                    return false // This will prevent sign in
+                }
+            }
+
+            // For credentials provider, no additional processing needed
+            return true
+        },
+        async jwt({ token, account, user }) {
             // Persist the OAuth access_token to the token right after signin
             if (account) {
                 token.accessToken = account.access_token
@@ -65,25 +90,17 @@ export const authOptions = {
                 token.id = user.id
                 token.email = user.email
                 token.name = user.name
+                token.surname = user.surname // Add surname for OAuth users
                 token.username = user.username || user.name || user.email?.split('@')[0] // Fallback for Google users
                 token.xp = user.xp || 0 // Default XP for new users
                 token.currentLevel = user.currentLevel || 1 // Default level
-
-                console.log('🔧 JWT - Stored user data:', {
-                    id: token.id,
-                    username: token.username,
-                    xp: token.xp
-                })
+                token.joinDate = user.joinDate // Add join date
+                token.pfpURL = user.pfpURL || user.image // Use database pfpURL or OAuth image
             }
 
             return token
         },
         async session({ session, token }) {
-            console.log('🔧 Session Callback:', {
-                hasToken: !!token,
-                tokenKeys: token ? Object.keys(token) : []
-            })
-
             // Send properties to the client, getting data from the token
             session.accessToken = token.accessToken
 
@@ -92,15 +109,12 @@ export const authOptions = {
                 session.user.id = token.id
                 session.user.email = token.email
                 session.user.name = token.name
+                session.user.surname = token.surname
                 session.user.username = token.username
                 session.user.xp = token.xp
                 session.user.currentLevel = token.currentLevel
-
-                console.log('🔧 Session - Final user data:', {
-                    id: session.user.id,
-                    username: session.user.username,
-                    xp: session.user.xp
-                })
+                session.user.joinDate = token.joinDate
+                session.user.pfpURL = token.pfpURL
             }
 
             return session

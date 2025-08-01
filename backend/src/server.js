@@ -7,6 +7,7 @@ import { calculateExpected, distributeXP } from './multiPlayer.js';
 import { calculateSinglePlayerXP } from './utils/xpCalculator.js';
 import { updateSinglePlayerElo } from './utils/eloCalculator.js';
 import { checkAndUpdateRankAndLevel } from './utils/userProgression.js';
+import { checkRankAndLevelOnly } from './utils/userProgression.js';
 
 import { supabase } from '../database/supabaseClient.js';
 
@@ -548,6 +549,7 @@ app.post('/singleplayer', async (req, res) => {
       });
     }
 
+    const leveledUp = newLevel > currentLevel;
     // Return xp earned + leveled up
     return res.status(200).json({
       xpEarned: xpEarned,

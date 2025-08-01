@@ -45,3 +45,22 @@ export async function checkAndUpdateRankAndLevel({
     newRank,
   };
 }
+
+//Only checks the current rank and level without updating them
+export async function checkRankAndLevelOnly({ user_id, supabase }) {
+  // Fetch current level and rank
+  const { data: user, error: userError } = await supabase
+    .from('Users')
+    .select('currentLevel, rank')
+    .eq('id', user_id)
+    .single();
+
+  if (userError || !user) {
+    throw new Error('User not found');
+  }
+
+  return {
+    currentLevel: user.currentLevel,
+    currentRank: user.rank ?? 'Unranked',
+  };
+}

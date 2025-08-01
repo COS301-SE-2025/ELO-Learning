@@ -207,15 +207,15 @@ Example Response:
 
 ```json
 {
-    "xpEarned": 6,
-    "eloChange": 0.02,
-    "newElo": 3.01,
-    "leveledUp": false,
-    "newRank": "Silver",
-    "rankUp": true,
-    "rankDown": false,
-    "totalXP": 878,
-    "newLevel": 5
+  "xpEarned": 6,
+  "eloChange": 0.02,
+  "newElo": 3.01,
+  "leveledUp": false,
+  "newRank": "Silver",
+  "rankUp": true,
+  "rankDown": false,
+  "totalXP": 878,
+  "newLevel": 5
 }
 ```
 

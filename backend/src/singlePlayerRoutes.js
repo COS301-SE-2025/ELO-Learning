@@ -4,7 +4,6 @@ import { calculateSinglePlayerXP } from './utils/xpCalculator.js';
 import { updateSinglePlayerElo } from './utils/eloCalculator.js';
 import { checkAndUpdateRankAndLevel } from './utils/userProgression.js';
 
-
 const router = express.Router();
 
 router.post('/singleplayer', async (req, res) => {
@@ -26,9 +25,15 @@ router.post('/singleplayer', async (req, res) => {
       .eq('id', user_id)
       .single();
 
-    if (userError || !userData) return res.status(404).json({ error: 'User not found' });
+    if (userError || !userData)
+      return res.status(404).json({ error: 'User not found' });
 
-    const { xp: currentXP, currentLevel, elo_rating: currentElo, rank: currentRank } = userData;
+    const {
+      xp: currentXP,
+      currentLevel,
+      elo_rating: currentElo,
+      rank: currentRank,
+    } = userData;
 
     const { data: levelData, error: levelError } = await supabase
       .from('Levels')
@@ -44,7 +49,8 @@ router.post('/singleplayer', async (req, res) => {
       .eq('Q_id', question_id)
       .single();
 
-    if (qError || !questionData) return res.status(404).json({ error: 'Question not found' });
+    if (qError || !questionData)
+      return res.status(404).json({ error: 'Question not found' });
 
     const xpEarned = await calculateSinglePlayerXP({
       CA: isCorrect ? 1 : 0,
@@ -72,7 +78,8 @@ router.post('/singleplayer', async (req, res) => {
       supabase,
     });
 
-    let rankUp = false, rankDown = false;
+    let rankUp = false,
+      rankDown = false;
     if (currentRank !== newRank) {
       const { data: allRanks } = await supabase
         .from('Ranks')
@@ -87,22 +94,25 @@ router.post('/singleplayer', async (req, res) => {
       else if (newIndex < oldIndex) rankDown = true;
     }
 
-    await supabase.from('QuestionAttempts').insert([{
-      question_id,
-      user_id,
-      isCorrect,
-      timeSpent,
-      ratingBefore: currentXP,
-      ratingAfter: newXP,
-      ratingChange: xpEarned,
-      eloBefore: currentElo,
-      eloAfter: newElo,
-      eloChange,
-      attemptDate: new Date(),
-      attemptType: 'single',
-    }]);
+    await supabase.from('QuestionAttempts').insert([
+      {
+        question_id,
+        user_id,
+        isCorrect,
+        timeSpent,
+        ratingBefore: currentXP,
+        ratingAfter: newXP,
+        ratingChange: xpEarned,
+        eloBefore: currentElo,
+        eloAfter: newElo,
+        eloChange,
+        attemptDate: new Date(),
+        attemptType: 'single',
+      },
+    ]);
 
-    await supabase.from('Users')
+    await supabase
+      .from('Users')
       .update({
         xp: newXP,
         currentLevel: newLevel,
@@ -122,7 +132,6 @@ router.post('/singleplayer', async (req, res) => {
       totalXP: newXP,
       newLevel,
     });
-
   } catch (err) {
     console.error('Error in /singleplayer:', err);
     res.status(500).json({ error: 'Server error' });

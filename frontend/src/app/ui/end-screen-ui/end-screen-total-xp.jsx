@@ -53,7 +53,7 @@ export default function TotalXP({ onLoadComplete }) {
           console.log(
             `Submitted question ${q.question.id || q.question.Q_id}: earned ${
               q.xpEarned
-            }`
+            }`,
           );
           continue; // skip this one
         }
@@ -107,18 +107,18 @@ export default function TotalXP({ onLoadComplete }) {
             currentLevel: leveledUp ? user.currentLevel + 1 : user.currentLevel,
           };
           document.cookie = `user=${encodeURIComponent(
-            JSON.stringify(updatedUser)
+            JSON.stringify(updatedUser),
           )}; path=/`;
         } catch (err) {
           console.error(
             `Failed to submit question ${q.question.id || q.question.Q_id}:`,
-            err.response?.data || err.message
+            err.response?.data || err.message,
           );
         }
       }
       const totalXPSum = questions.reduce(
         (acc, q) => acc + (q.xpEarned ?? 0),
-        0
+        0,
       );
 
       console.log('Total XPSum calculated:', totalXPSum);

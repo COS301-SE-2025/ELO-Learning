@@ -30,7 +30,7 @@ const HeaderContent = memo(function HeaderContent() {
       <div className="w-full md:w-auto">
         <div
           className={clsx(
-            'flex h-[48px] w-full items-start justify-center gap-6 rounded-md p-3 text-sm font-medium md:flex-col md:h-auto md:gap-4 md:justify-start md:p-2 md:px-5 md:w-auto'
+            'flex h-[48px] w-full items-start justify-center gap-6 rounded-md p-3 text-sm font-medium md:flex-col md:h-auto md:gap-4 md:justify-start md:p-2 md:px-5 md:w-auto',
           )}
         >
           <div className="flex items-center gap-2">
@@ -50,7 +50,7 @@ const HeaderContent = memo(function HeaderContent() {
     <div className="w-full md:w-auto">
       <div
         className={clsx(
-          'flex h-[48px] w-full items-start justify-center gap-6 rounded-md p-3 text-sm font-medium md:flex-col md:h-auto md:gap-4 md:justify-start md:p-2 md:px-5 md:w-auto'
+          'flex h-[48px] w-full items-start justify-center gap-6 rounded-md p-3 text-sm font-medium md:flex-col md:h-auto md:gap-4 md:justify-start md:p-2 md:px-5 md:w-auto',
         )}
       >
         <div className="flex items-center gap-2">

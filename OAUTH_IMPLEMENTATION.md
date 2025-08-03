@@ -72,7 +72,7 @@ To test the OAuth implementation:
 
 ## Environment Variables Required
 
-```
+```env
 GOOGLE_CLIENT_ID=your_google_client_id
 GOOGLE_CLIENT_SECRET=your_google_client_secret
 NEXTAUTH_URL=http://localhost:8080

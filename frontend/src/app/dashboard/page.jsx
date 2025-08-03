@@ -78,7 +78,7 @@ export default function Page() {
         </div>
       </div>
     ),
-    []
+    [],
   );
 
   if (loading) return LoadingComponent;

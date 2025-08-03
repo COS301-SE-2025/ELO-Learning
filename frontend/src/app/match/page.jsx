@@ -12,17 +12,6 @@ export default function Page() {
   const [gameId, setGameId] = useState(null);
   const router = useRouter();
 
-  // Debug logging
-  useEffect(() => {
-    console.log('🔍 Match Page Debug:', {
-      status,
-      user: session?.user?.username,
-      isConnected,
-      socket: !!socket,
-      socketConnected: socket?.connected,
-    });
-  }, [status, session, isConnected, socket]);
-
   // Update connection color based on socket status
   useEffect(() => {
     setColor(isConnected ? '#40E001' : '#FF6666');

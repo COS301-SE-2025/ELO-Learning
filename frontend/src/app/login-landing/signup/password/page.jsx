@@ -1,9 +1,10 @@
 'use client';
-import { setCookie } from '@/app/lib/authCookie';
 import ProgressBar from '@/app/ui/progress-bar';
 import { registerUser } from '@/services/api';
 import { Eye, EyeOff, X } from 'lucide-react';
+import { signIn } from 'next-auth/react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import {
   clearRegistration,
@@ -28,6 +29,7 @@ export default function Page() {
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const router = useRouter();
 
   const handleContinue = async (e) => {
     e.preventDefault();
@@ -55,6 +57,7 @@ export default function Page() {
     setRegistration({ password });
 
     try {
+      // First register the user
       const response = await registerUser(
         reg.name,
         reg.surname,
@@ -64,13 +67,34 @@ export default function Page() {
         reg.currentLevel,
         reg.joinDate,
       );
-      // Save token and user to localStorage
-      if (response.token && response.user) {
-        await setCookie(response);
-      }
+
+      console.log('Registration successful:', response);
+
+      // Clear registration data
       clearRegistration();
-      window.location.href = '/dashboard';
+
+      // Now sign in with NextAuth to establish session
+      const signInResult = await signIn('credentials', {
+        email: reg.email,
+        password: password,
+        redirect: false, // Don't redirect automatically
+      });
+
+      if (signInResult?.ok) {
+        // Successfully signed in with NextAuth - redirect to dashboard
+        router.push('/dashboard');
+      } else {
+        // If NextAuth sign in fails, show error but don't prevent user from proceeding
+        console.error(
+          'NextAuth sign in failed after registration:',
+          signInResult?.error,
+        );
+        setError('Registration successful, but please sign in manually.');
+        // Redirect to login page
+        router.push('/login-landing/login');
+      }
     } catch (err) {
+      console.error('Registration failed:', err);
       setError(err?.response?.data?.error || 'Registration failed. Try again.');
     } finally {
       setLoading(false);

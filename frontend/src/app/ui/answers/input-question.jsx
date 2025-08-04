@@ -1,5 +1,10 @@
 'use client';
 
+import { validateAnswer, quickValidate } from '@/utils/answerValidator';
+import {
+  getMathValidationMessage,
+  isValidMathExpression,
+} from '@/utils/frontendMathValidator';
 import 'katex/dist/katex.min.css';
 import { ChevronDown, ChevronUp } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
@@ -165,8 +170,8 @@ export default function MathInputTemplate({
 
       // Use frontend validation for instant feedback - no API calls!
       try {
-        const isValid = localValidateExpression(inputValue);
-        const message = localGetValidationMessage(inputValue);
+        const isValid = isValidMathExpression(inputValue);
+        const message = getMathValidationMessage(inputValue);
 
         setLocalIsValidExpression(isValid);
         setIsValidExpression?.(isValid);
@@ -203,7 +208,7 @@ export default function MathInputTemplate({
     }
   }, [inputValue]);
 
-  // Quick validation against correct answer - using frontend validator
+  // Quick validation against correct answer - using your new answerValidator
   useEffect(() => {
     const quickCheck = () => {
       if (!inputValue.trim() || !correctAnswer || !localIsValidExpression) {
@@ -213,8 +218,8 @@ export default function MathInputTemplate({
 
       setIsChecking(true);
       try {
-        // Use frontend validator - instant response!
-        const isCorrect = localQuickValidate(inputValue, correctAnswer);
+        // Use your new answerValidator with Math Input type
+        const isCorrect = validateAnswer(inputValue, correctAnswer, '', 'Math Input');
         setIsAnswerCorrect(isCorrect);
       } catch (error) {
         console.error('Quick validation error:', error);
@@ -227,7 +232,7 @@ export default function MathInputTemplate({
     // Reduced timeout for faster feedback
     const timeoutId = setTimeout(quickCheck, 200);
     return () => clearTimeout(timeoutId);
-  }, [inputValue, correctAnswer, localIsValidExpression]);
+  }, [inputValue, correctAnswer, localIsValidExpression, setIsAnswerCorrect]);
 
   const getCurrentWord = (text, position) => {
     const beforeCursor = text.substring(0, position);
@@ -327,6 +332,7 @@ export default function MathInputTemplate({
 
   return (
     <div className="w-full space-y-6">
+
       {/* Enhanced Input Field */}
       <div className="relative">
         <textarea

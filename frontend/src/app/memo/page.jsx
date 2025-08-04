@@ -7,21 +7,34 @@ import QuestionNumber from '@/app/ui/memo/question-num';
 import RightAnswer from '@/app/ui/memo/right-answer';
 import WrongAnswer from '@/app/ui/memo/wrong-answer';
 import QuestionTemplate from '@/app/ui/question-template';
+
 export default function Page() {
-  const [questions, setQuestions] = useState([]);
+  const [questions, setQuestions] = useState([]); // Start with empty array
   const [currQuestion, setCurrQuestion] = useState(null);
   const [answer, setAnswer] = useState(null);
   const [correctAnswer, setCorrectAnswer] = useState(null);
   const [isCorrect, setIsCorrect] = useState(false);
   const [index, setIndex] = useState(0);
+  const [isLoading, setIsLoading] = useState(true); // Add loading state
 
   useEffect(() => {
-    const tempQuestions = JSON.parse(localStorage.getItem('questionsObj'));
-    setQuestions(tempQuestions);
-    setCurrQuestion(tempQuestions[index]);
-    setCorrectAnswer(tempQuestions[index].actualAnswer);
-    setAnswer(tempQuestions[index].answer);
-    setIsCorrect(tempQuestions[index].isCorrect);
+    // Only run on client side
+    if (typeof window !== 'undefined') {
+      const tempQuestions = JSON.parse(localStorage.getItem('questionsObj') || '[]'); // Fallback to empty array
+      
+      if (tempQuestions.length === 0) {
+        // No questions found, redirect to dashboard
+        redirect('/dashboard');
+        return;
+      }
+      
+      setQuestions(tempQuestions);
+      setCurrQuestion(tempQuestions[0]);
+      setCorrectAnswer(tempQuestions[0].actualAnswer);
+      setAnswer(tempQuestions[0].answer);
+      setIsCorrect(tempQuestions[0].isCorrect);
+      setIsLoading(false);
+    }
   }, []);
 
   const nextPage = () => {
@@ -37,13 +50,24 @@ export default function Page() {
   };
 
   useEffect(() => {
-    if (questions.length > 0) {
+    if (questions.length > 0 && questions[index]) {
       setCurrQuestion(questions[index]);
       setCorrectAnswer(questions[index].actualAnswer);
       setAnswer(questions[index].answer);
       setIsCorrect(questions[index].isCorrect);
     }
-  }, [index]);
+  }, [index, questions]);
+
+  // Show loading state during SSR and initial client load
+  if (isLoading || !currQuestion) {
+    return (
+      <div className="full-screen w-full h-full flex items-center justify-center">
+        <div className="text-center">
+          <div className="text-2xl">Loading...</div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="full-screen w-full h-full flex flex-col justify-between">

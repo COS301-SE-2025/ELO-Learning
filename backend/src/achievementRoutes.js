@@ -380,4 +380,95 @@ export async function checkProfileAchievements(userId) {
   return result.unlockedAchievements;
 }
 
+export async function checkEloAchievements(userId, newEloRating) {
+  try {
+    if (!newEloRating || typeof newEloRating !== 'number') {
+      return [];
+    }
+
+    console.log(`🎯 Checking ELO achievements for user ${userId} with rating ${newEloRating}`);
+
+    // Get all ELO rating achievements
+    const { data: eloAchievements, error: achievementsError } = await supabase
+      .from('Achievements')
+      .select('id, name, condition_value, description')
+      .eq('condition_type', 'ELO Rating Reached')
+      .order('condition_value', { ascending: true });
+
+    if (achievementsError) {
+      console.error('Error fetching ELO achievements:', achievementsError.message);
+      return [];
+    }
+
+    if (!eloAchievements || eloAchievements.length === 0) {
+      console.log('No ELO achievements found');
+      return [];
+    }
+
+    // Get user's already unlocked achievements to avoid duplicates
+    const { data: userAchievements, error: userError } = await supabase
+      .from('UserAchievements')
+      .select('achievement_id')
+      .eq('user_id', userId)
+      .in('achievement_id', eloAchievements.map(a => a.id));
+
+    if (userError) {
+      console.error('Error fetching user achievements:', userError.message);
+      return [];
+    }
+
+    const unlockedIds = (userAchievements || []).map(ua => ua.achievement_id);
+    const newlyUnlockedAchievements = [];
+
+    // Check each ELO achievement
+    for (const achievement of eloAchievements) {
+      // Skip if already unlocked
+      if (unlockedIds.includes(achievement.id)) {
+        continue;
+      }
+
+      // Check if user's ELO rating meets the requirement
+      if (newEloRating >= achievement.condition_value) {
+        try {
+          // Unlock the achievement
+          const { error: unlockError } = await supabase
+            .from('UserAchievements')
+            .insert({
+              user_id: userId,
+              achievement_id: achievement.id,
+              unlocked_at: new Date().toISOString(),
+            });
+
+          // Ignore duplicate errors (achievement already unlocked)
+          if (unlockError && unlockError.code !== '23505') {
+            console.error(`Error unlocking achievement ${achievement.id}:`, unlockError.message);
+            continue;
+          }
+
+          // Get full achievement details for response
+          const { data: fullAchievement, error: detailsError } = await supabase
+            .from('Achievements')
+            .select('*, AchievementCategories(name)')
+            .eq('id', achievement.id)
+            .single();
+
+          if (!detailsError && fullAchievement) {
+            newlyUnlockedAchievements.push(fullAchievement);
+            console.log(`✅ Unlocked ELO achievement: ${achievement.name} (Rating ${achievement.condition_value})`);
+          }
+        } catch (error) {
+          console.error(`Error processing achievement ${achievement.id}:`, error);
+        }
+      }
+    }
+
+    console.log(`🏆 Unlocked ${newlyUnlockedAchievements.length} new ELO achievements`);
+    return newlyUnlockedAchievements;
+
+  } catch (error) {
+    console.error('Error in checkEloAchievements:', error);
+    return [];
+  }
+}
+
 export default router;

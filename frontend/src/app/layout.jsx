@@ -1,6 +1,7 @@
 import { Geist, Geist_Mono } from 'next/font/google';
 import './globals.css';
 import AchievementNotificationManager from '@/app/ui/achievements/achievement-notification-manager';
+import Providers from './providers';
 
 const geistSans = Geist({
   variable: '--font-geist-sans',

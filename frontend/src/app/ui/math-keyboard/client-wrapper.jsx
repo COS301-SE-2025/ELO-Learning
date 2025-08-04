@@ -10,12 +10,30 @@ import { redirect } from 'next/navigation';
 import { useEffect, useState } from 'react';
 
 export default function MathKeyboardWrapper({ questions }) {
-  // Remove frontend filtering since backend already filters
-  const mathQuestions = questions;
+  // ✅ Add client-side mounting check to prevent SSR issues
+  const [mounted, setMounted] = useState(false);
+  
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
+  // ✅ During SSR or before mounting, show loading
+  if (!mounted) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center p-8">
+          <div className="text-2xl text-gray-600">Loading questions...</div>
+        </div>
+      </div>
+    );
+  }
+
+  // ✅ Safe array handling
+  const mathQuestions = questions || [];
   const totalSteps = mathQuestions.length;
 
-  const [currQuestion, setCurrQuestion] = useState(mathQuestions[0]);
+  // ✅ Safe initialization with null check
+  const [currQuestion, setCurrQuestion] = useState(mathQuestions[0] || null);
   const [currAnswers, setCurrAnswers] = useState(currQuestion?.answers || []);
   const [currentStep, setCurrentStep] = useState(1);
   const [isDisabled, setIsDisabled] = useState(true);
@@ -41,11 +59,12 @@ export default function MathKeyboardWrapper({ questions }) {
     console.log('Student answer changed:', studentAnswer);
   }, [studentAnswer]);
 
-  // Handle case where no math questions are available
+  // ✅ Handle case where no math questions are available
   if (!mathQuestions || mathQuestions.length === 0) {
     return (
-      <div className="min-h-screen flex items-center justify-center ">
+      <div className="min-h-screen flex items-center justify-center">
         <div className="text-center p-8 max-w-md">
+          <div className="text-4xl mb-4">📝</div>
           <h2 className="text-2xl font-bold mb-4">
             No Math Questions Available
           </h2>
@@ -58,6 +77,17 @@ export default function MathKeyboardWrapper({ questions }) {
           >
             Try Multiple Choice Instead
           </Link>
+        </div>
+      </div>
+    );
+  }
+
+  // ✅ Handle case where currQuestion is null (safety check)
+  if (!currQuestion) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center p-8">
+          <div className="text-2xl text-gray-600">Loading question...</div>
         </div>
       </div>
     );
@@ -162,14 +192,15 @@ export default function MathKeyboardWrapper({ questions }) {
     setShowFeedback(false);
     setFeedbackMessage('');
 
-    const nextQuestion = mathQuestions[currentStep];
+    // ✅ Safe access to next question
+    const nextQuestion = mathQuestions[currentStep] || null;
     setCurrQuestion(nextQuestion);
     setCurrAnswers(nextQuestion?.answers || []);
   };
 
   const getCorrectAnswer = () => {
     return (
-      currQuestion.correctAnswer ||
+      currQuestion?.correctAnswer ||
       currAnswers.find((a) => a.isCorrect)?.answerText ||
       currAnswers.find((a) => a.isCorrect)?.answer_text ||
       ''
@@ -199,9 +230,9 @@ export default function MathKeyboardWrapper({ questions }) {
       {/* Main Content */}
       <div className="space-y-11 pb-35 md:pb-50 pt-24 max-w-4xl mx-auto">
         {/* Question Section */}
-        <div className=" p-8 ">
+        <div className="p-8">
           <h2 className="text-2xl font-bold text-center leading-relaxed">
-            {currQuestion.questionText}
+            {currQuestion?.questionText || 'Loading question...'}
           </h2>
         </div>
 

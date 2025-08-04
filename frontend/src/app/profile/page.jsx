@@ -1,80 +1,29 @@
 'use client';
 import Picture from '@/app/ui/profile/picture-block';
 import { Cog } from 'lucide-react';
+import { useSession } from 'next-auth/react';
 import Link from 'next/link';
-import { useEffect, useState } from 'react';
 import Achievements from '../ui/profile/achievements';
 import MatchStats from '../ui/profile/match-stats';
 import UserInfo from '../ui/profile/user-info';
 import UsernameBlock from '../ui/profile/username-block';
 
-function getUserFromCookie() {
-  if (typeof document === 'undefined') return null;
-
-  // FIRST: Check localStorage (where API updates go)
-  try {
-    const localUser = localStorage.getItem('user');
-    if (localUser) {
-      const parsedUser = JSON.parse(localUser);
-      console.log('📱 Found user in localStorage:', parsedUser);
-      return parsedUser;
-    }
-  } catch (e) {
-    console.error('Error parsing localStorage user:', e);
-  }
-
-  // FALLBACK: Check cookies
-  const match = document.cookie.match(/user=([^;]+)/);
-  if (!match) {
-    console.log('❌ No user found in cookies or localStorage');
-    return null;
-  }
-
-  try {
-    const cookieUser = JSON.parse(decodeURIComponent(match[1]));
-    console.log('🍪 Found user in cookies:', cookieUser);
-    return cookieUser;
-  } catch {
-    console.log('❌ Error parsing cookie user data');
-    return null;
-  }
-}
-
 export default function Page() {
-  const [user, setUser] = useState(null);
+  const { data: session, status } = useSession();
 
-  // In app/profile/page.jsx, update the useEffect:
-  useEffect(() => {
-    const loadUserData = () => {
-      const userData = getUserFromCookie();
-      setUser(userData);
-    };
+  if (status === 'loading') return <div>Loading...</div>;
+  if (status === 'unauthenticated')
+    return <div>Please sign in to view your profile.</div>;
+  if (!session?.user) return <div>No user data available.</div>;
 
-    // Load initially
-    loadUserData();
-
-    // Refresh when page becomes visible (user navigates back)
-    const handleVisibilityChange = () => {
-      if (!document.hidden) {
-        loadUserData();
-      }
-    };
-
-    document.addEventListener('visibilitychange', handleVisibilityChange);
-
-    return () => {
-      document.removeEventListener('visibilitychange', handleVisibilityChange);
-    };
-  }, []);
-
-  if (!user) return <div>Loading...</div>;
+  const user = session.user;
 
   return (
     <div className="h-full">
       <div className="bg-[#FF6E99] flex items-center justify-between px-4">
         <div className="flex-1"></div>
         <div className="flex-2 flex justify-center">
-          <Picture src={user.pfpURL} />
+          <Picture src={user.pfpURL || '/user.svg'} />
         </div>
         <div className="flex-1 flex justify-center">
           <Link href="settings">
@@ -87,15 +36,19 @@ export default function Page() {
           username={user.username}
           name={user.name}
           surname={user.surname}
-          date_joined={new Date(user.joinDate).toLocaleDateString('en-GB', {
-            day: 'numeric',
-            month: 'long',
-            year: 'numeric',
-          })}
+          date_joined={
+            user.joinDate
+              ? new Date(user.joinDate).toLocaleDateString('en-GB', {
+                  day: 'numeric',
+                  month: 'long',
+                  year: 'numeric',
+                })
+              : 'N/A'
+          }
         />
       </div>
       <div className="flex flex-col justify-between">
-        <UserInfo ranking="1st" xp={user.xp} />
+        <UserInfo ranking="1st" xp={user.xp || 0} />
         <MatchStats />
         <Achievements />
       </div>

@@ -2,15 +2,17 @@
 import cors from 'cors';
 import dotenv from 'dotenv';
 import express from 'express';
-import { supabase } from '../database/supabaseClient.js';
 
 import { createServer } from 'http';
 import { Server } from 'socket.io';
 
 //Change this import to ES6
 import answerRoutes from './answerRoutes.js';
+import multiPlayerRoutes from './multiPlayerRoute.js';
+import oauthRoutes from './oauthRoutes.js';
 import practiceRoutes from './practiceRoutes.js';
 import questionRoutes from './questionRoutes.js';
+import singlePlayerRoutes from './singlePlayerRoutes.js';
 import socketsHandlers from './sockets.js';
 import userRoutes from './userRoutes.js';
 import validateRoutes from './validateRoutes.js';
@@ -40,6 +42,7 @@ app.use('/', validateRoutes);
 app.use('/', singlePlayerRoutes);
 app.use('/', multiPlayerRoutes);
 app.use('/', achievementRoutes);
+app.use('/', oauthRoutes);
 
 // Simple health check route
 app.get('/', (req, res) => {

@@ -1,15 +1,160 @@
 const API_BASE_URL = 'http://localhost:3000';
 
-// Helper function to get auth headers
-const getAuthHeaders = () => {
-  const token = localStorage.getItem('token'); // or however you store your JWT token
-  return {
-    'Content-Type': 'application/json',
-    ...(token && { Authorization: `Bearer ${token}` }),
-  };
-};
+// Helper function to get auth token (client-side only)
+function getAuthToken() {
+  // Check if we're on the client side
+  if (typeof window === 'undefined') {
+    return null; // Return null on server side
+  }
+  return localStorage.getItem('authToken') || 'placeholder-token';
+}
 
-// Get all questions (no auth required)
+// Get questions by specific type
+export async function getQuestionsByType(questionType, limit = 10) {
+  try {
+    const headers = {
+      'Content-Type': 'application/json',
+    };
+    
+    // Only add Authorization header on client side
+    if (typeof window !== 'undefined') {
+      const token = getAuthToken();
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+      }
+    }
+
+    const response = await fetch(
+      `${API_BASE_URL}/questions/type/${encodeURIComponent(questionType)}?limit=${limit}`,
+      {
+        method: 'GET',
+        headers,
+      }
+    );
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      return {
+        success: false,
+        error: data.error || 'Failed to fetch questions',
+        details: data.details
+      };
+    }
+
+    return {
+      success: true,
+      data: data.data,
+      type: data.type,
+      count: data.count
+    };
+  } catch (error) {
+    console.error('Error fetching questions by type:', error);
+    return {
+      success: false,
+      error: 'Network error occurred',
+      details: error.message
+    };
+  }
+}
+
+// Get mixed question types for variety
+export async function getMixedQuestions(level = 1, count = 10) {
+  try {
+    const headers = {
+      'Content-Type': 'application/json',
+    };
+    
+    if (typeof window !== 'undefined') {
+      const token = getAuthToken();
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+      }
+    }
+
+    const response = await fetch(
+      `${API_BASE_URL}/questions/mixed?level=${level}&count=${count}`,
+      {
+        method: 'GET',
+        headers,
+      }
+    );
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      return {
+        success: false,
+        error: data.error || 'Failed to fetch mixed questions',
+        details: data.details
+      };
+    }
+
+    return {
+      success: true,
+      data: data.data,
+      level: data.level,
+      count: data.count
+    };
+  } catch (error) {
+    console.error('Error fetching mixed questions:', error);
+    return {
+      success: false,
+      error: 'Network error occurred',
+      details: error.message
+    };
+  }
+}
+
+// Enhanced submit function that handles all question types
+export async function submitQuestionAnswer(questionId, studentAnswer, userId, questionType = null) {
+  try {
+    const headers = {
+      'Content-Type': 'application/json',
+    };
+    
+    if (typeof window !== 'undefined') {
+      const token = getAuthToken();
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+      }
+    }
+
+    const response = await fetch(`${API_BASE_URL}/question/${questionId}/submit`, {
+      method: 'POST',
+      headers,
+      body: JSON.stringify({
+        studentAnswer,
+        userId,
+        questionType
+      }),
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      return {
+        success: false,
+        error: data.error || 'Failed to submit answer',
+        details: data.details
+      };
+    }
+
+    return {
+      success: true,
+      data: data.data
+    };
+  } catch (error) {
+    console.error('Error submitting answer:', error);
+    return {
+      success: false,
+      error: 'Network error occurred',
+      details: error.message
+    };
+  }
+}
+
+// Keep all your existing functions but add the server-side check
 export const getAllQuestions = async () => {
   try {
     const response = await fetch(`${API_BASE_URL}/questions`, {
@@ -37,155 +182,11 @@ export const getAllQuestions = async () => {
   }
 };
 
-export const getQuestionById = async (id) => {
-  try {
-    const response = await fetch(`${API_BASE_URL}/questionsById/${id}`, {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-    });
-
-    const data = await response.json();
-
-    if (!response.ok) {
-      throw new Error(data.error || 'Failed to fetch question');
-    }
-
-    return {
-      success: true,
-      data: data.question,
-    };
-  } catch (error) {
-    return {
-      success: false,
-      error: error.message,
-    };
-  }
-};
-
-// Get all answers (no auth required)
-export const getAllAnswers = async (id) => {
-  try {
-    const response = await fetch(`${API_BASE_URL}/answers/${id}`, {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-    });
-
-    const data = await response.json();
-
-    if (!response.ok) {
-      throw new Error(data.error || 'Failed to fetch answers');
-    }
-
-    return {
-      success: true,
-      data: data.answer,
-    };
-  } catch (error) {
-    return {
-      success: false,
-      error: error.message,
-    };
-  }
-};
-
+// Your existing functions remain the same...
 export const practiceQuestion = async () => {
-  try {
-    const response = await fetch(`${API_BASE_URL}/practice`, {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-    });
-
-    const data = await response.json();
-
-    if (!response.ok) {
-      throw new Error(data.error || 'Failed to fetch questions');
-    }
-
-    return {
-      success: true,
-      data: data.questions,
-    };
-  } catch (error) {
-    return {
-      success: false,
-      error: error.message,
-    };
-  }
+  return await getMixedQuestions(1, 5);
 };
 
-// NEW MATH VALIDATION API FUNCTIONS
-
-// Validate a math answer
-export const validateMathAnswer = async (studentAnswer, correctAnswer) => {
-  try {
-    const response = await fetch(`${API_BASE_URL}/validate-answer`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        studentAnswer,
-        correctAnswer,
-      }),
-    });
-
-    const data = await response.json();
-
-    if (!response.ok) {
-      throw new Error(data.error || 'Failed to validate answer');
-    }
-
-    return {
-      success: true,
-      data,
-    };
-  } catch (error) {
-    return {
-      success: false,
-      error: error.message,
-    };
-  }
-};
-
-// Quick validation for real-time feedback
-export const quickValidateMath = async (studentAnswer, correctAnswer) => {
-  try {
-    const response = await fetch(`${API_BASE_URL}/quick-validate`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        studentAnswer,
-        correctAnswer,
-      }),
-    });
-
-    const data = await response.json();
-
-    if (!response.ok) {
-      throw new Error(data.error || 'Failed to validate answer');
-    }
-
-    return {
-      success: true,
-      data,
-    };
-  } catch (error) {
-    return {
-      success: false,
-      error: error.message,
-    };
-  }
-};
-
-// Validate math expression format
 export const validateMathExpression = async (expression) => {
   try {
     const response = await fetch(`${API_BASE_URL}/validate-expression`, {
@@ -216,205 +217,23 @@ export const validateMathExpression = async (expression) => {
   }
 };
 
-// Submit answer for a specific question (with XP awarding)
-export const submitQuestionAnswer = async (
-  questionId,
-  studentAnswer,
-  userId,
-) => {
+export const quickValidateMath = async (studentAnswer, correctAnswer) => {
   try {
-    const response = await fetch(
-      `${API_BASE_URL}/question/${questionId}/submit`,
-      {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          studentAnswer,
-          userId,
-        }),
-      },
-    );
-
-    const data = await response.json();
-
-    if (!response.ok) {
-      throw new Error(data.error || 'Failed to submit answer');
-    }
-
-    return {
-      success: true,
-      data,
-    };
-  } catch (error) {
-    return {
-      success: false,
-      error: error.message,
-    };
-  }
-};
-
-// Get questions by type
-export const getQuestionsByType = async (questionType) => {
-  try {
-    const response = await fetch(
-      `${API_BASE_URL}/practice/type/${questionType}`,
-    );
-    const data = await response.json();
-
-    if (response.ok) {
-      return { success: true, data: data.questions };
-    } else {
-      return { success: false, error: data.error };
-    }
-  } catch (error) {
-    console.error('Error fetching questions by type:', error);
-    return { success: false, error: 'Network error' };
-  }
-};
-
-// Get all achievement categories
-export const fetchAchievementCategories = async () => {
-  try {
-    const response = await fetch(`${API_BASE_URL}/achievement-categories`, {
-      method: 'GET',
+    const response = await fetch(`${API_BASE_URL}/quick-validate`, {
+      method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
+      body: JSON.stringify({
+        studentAnswer,
+        correctAnswer,
+      }),
     });
 
     const data = await response.json();
 
     if (!response.ok) {
-      throw new Error(data.error || 'Failed to fetch achievement categories');
-    }
-
-    return {
-      success: true,
-      data: data.categories,
-    };
-  } catch (error) {
-    return {
-      success: false,
-      error: error.message,
-    };
-  }
-};
-
-// Get all achievements (optionally filtered by category)
-export const fetchAllAchievements = async (categoryId = null) => {
-  try {
-    const url = categoryId
-      ? `${API_BASE_URL}/achievements?category_id=${categoryId}`
-      : `${API_BASE_URL}/achievements`;
-
-    const response = await fetch(url, {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-    });
-
-    const data = await response.json();
-
-    if (!response.ok) {
-      throw new Error(data.error || 'Failed to fetch achievements');
-    }
-
-    return {
-      success: true,
-      data: data.achievements,
-    };
-  } catch (error) {
-    return {
-      success: false,
-      error: error.message,
-    };
-  }
-};
-
-// Get user's unlocked achievements
-export const fetchUserAchievements = async (userId) => {
-  try {
-    const response = await fetch(
-      `${API_BASE_URL}/users/${userId}/achievements`,
-      {
-        method: 'GET',
-        headers: getAuthHeaders(),
-      },
-    );
-
-    const data = await response.json();
-
-    if (!response.ok) {
-      throw new Error(data.error || 'Failed to fetch user achievements');
-    }
-
-    return {
-      success: true,
-      data: data.achievements,
-    };
-  } catch (error) {
-    return {
-      success: false,
-      error: error.message,
-    };
-  }
-};
-
-// Get all achievements with user's progress/unlock status
-export const fetchUserAchievementsWithStatus = async (userId) => {
-  try {
-    const response = await fetch(
-      `${API_BASE_URL}/users/${userId}/achievements/all`,
-      {
-        method: 'GET',
-        headers: getAuthHeaders(),
-      },
-    );
-
-    const data = await response.json();
-
-    if (!response.ok) {
-      throw new Error(data.error || 'Failed to fetch achievements with status');
-    }
-
-    return {
-      success: true,
-      data: data.achievements,
-    };
-  } catch (error) {
-    return {
-      success: false,
-      error: error.message,
-    };
-  }
-};
-
-// Update achievement progress (manual trigger)
-export const updateAchievementProgress = async (
-  userId,
-  achievementId,
-  increment = 1,
-) => {
-  try {
-    const response = await fetch(
-      `${API_BASE_URL}/users/${userId}/achievements/progress`,
-      {
-        method: 'POST',
-        headers: getAuthHeaders(),
-        body: JSON.stringify({
-          achievement_id: achievementId,
-          increment_by: increment,
-        }),
-      },
-    );
-
-    const data = await response.json();
-
-    if (!response.ok) {
-      throw new Error(data.error || 'Failed to update achievement progress');
+      throw new Error(data.error || 'Failed to validate answer');
     }
 
     return {

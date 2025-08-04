@@ -51,7 +51,7 @@ export default (io, socket) => {
           [player1.id]: player1.userData,
           [player2.id]: player2.userData,
         },
-        levels: [],
+        playerLevels: {},
         playerReadyCount: [],
         playerDoneCount: [],
         playerResults: [],
@@ -100,9 +100,11 @@ export default (io, socket) => {
     const numericLevel = Number(level);
     console.log('Converting level to number:', level, '->', numericLevel);
 
-    if (!gameData.levels.includes(numericLevel)) {
-      gameData.levels.push(numericLevel);
+    // Store level for this specific player (use socket.id as key to avoid duplicates)
+    if (!gameData.playerLevels) {
+      gameData.playerLevels = {};
     }
+    gameData.playerLevels[socket.id] = numericLevel;
 
     // Update the matchMap with the modified data
     matchMap.set(gameId, gameData);
@@ -110,30 +112,32 @@ export default (io, socket) => {
     if (gameData.playerReadyCount.length === 2) {
       console.log('Both players are ready for game:', gameId);
 
-      console.log('Game levels before calculation: ', gameData.levels);
+      // Get levels from all players
+      const playerLevels = Object.values(gameData.playerLevels);
+      console.log('Player levels:', playerLevels);
       console.log(
-        'Levels data types:',
-        gameData.levels.map((l) => ({ value: l, type: typeof l })),
+        'Player levels data types:',
+        playerLevels.map((l) => ({ value: l, type: typeof l })),
       );
 
       try {
         // Calculate the average level from all players
-        const sum = gameData.levels.reduce((sum, level) => {
+        const sum = playerLevels.reduce((sum, level) => {
           console.log(`Adding ${level} (type: ${typeof level}) to sum ${sum}`);
           return sum + level;
         }, 0);
 
         console.log('Sum of levels:', sum);
-        console.log('Number of levels:', gameData.levels.length);
+        console.log('Number of players:', playerLevels.length);
 
-        const rawAverage = sum / gameData.levels.length;
+        const rawAverage = sum / playerLevels.length;
         console.log('Raw average:', rawAverage);
 
         const averageLevel = Math.round(rawAverage);
         console.log('Rounded average level:', averageLevel);
 
         console.log(
-          `Game ${gameId} - Player levels: ${gameData.levels}, Average level: ${averageLevel}`,
+          `Game ${gameId} - Player levels: ${playerLevels}, Average level: ${averageLevel}`,
         );
 
         // Fetch 15 random questions for the calculated average level

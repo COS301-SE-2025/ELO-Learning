@@ -189,6 +189,8 @@ export async function registerUser(
 }
 
 export async function logoutUser() {
+  // This function is kept for backward compatibility
+  // For new implementations, use performLogout from @/lib/logout
   localStorage.removeItem('token');
   localStorage.removeItem('user');
 }
@@ -231,14 +233,13 @@ export async function resetPassword(token, newPassword) {
   return res.data;
 }
 
-export async function changePassword(currentPassword, newPassword) {
-  const user = JSON.parse(localStorage.getItem('user'));
-  if (!user || !user.id) {
-    throw new Error('User not authenticated');
+export async function changePassword(userId, currentPassword, newPassword) {
+  if (!userId) {
+    throw new Error('User ID is required');
   }
 
   const res = await axiosInstance.post('/change-password', {
-    userId: user.id,
+    userId,
     currentPassword,
     newPassword,
   });
@@ -247,6 +248,17 @@ export async function changePassword(currentPassword, newPassword) {
 
 export async function verifyResetToken(token) {
   const res = await axiosInstance.get(`/verify-reset-token/${token}`);
+  return res.data;
+}
+
+// Handle OAuth user creation/retrieval
+export async function handleOAuthUser(email, name, image, provider) {
+  const res = await axiosInstance.post('/oauth/user', {
+    email,
+    name,
+    image,
+    provider,
+  });
   return res.data;
 }
 

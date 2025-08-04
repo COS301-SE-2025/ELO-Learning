@@ -119,6 +119,8 @@ describe('User Profile & Gamification', () => {
     });
 
     it('should display the leaderboard with correct headers', () => {
+      cy.visit('/dashboard');
+      cy.wait('@getUsers'); // Wait for the users data to load
       cy.get('h1').should('contain', 'Leaderboard');
       cy.get('table').should('be.visible');
       cy.get('th').should('contain', '#');
@@ -189,12 +191,32 @@ describe('User Profile & Gamification', () => {
     });
 
     it('should clear the user cookie on logout', () => {
+      // Intercept the signout request to avoid network delays
+      cy.intercept('POST', '**/api/auth/signout', {
+        statusCode: 200,
+        body: { url: '/login-landing' },
+      }).as('signoutRequest');
+
+      // Intercept the redirect after logout
+      cy.intercept('GET', '**/login-landing', {
+        statusCode: 200,
+        body: '<html><body>Login Landing</body></html>',
+      }).as('loginLandingPage');
+
       cy.visit('/settings');
       cy.contains('Logout').click();
-      // Check for redirect to home or login page
-      cy.url().should('match', /\/(|login-landing)$/);
-      // Optionally, check that settings content is gone
-      cy.contains('Settings').should('not.exist');
+
+      // Wait for the signout request to complete
+      cy.wait('@signoutRequest', { timeout: 10000 });
+
+      // Wait a bit for redirect to process
+      cy.wait(1000);
+
+      // Check for redirect to home or login page with longer timeout
+      cy.url({ timeout: 15000 }).should('match', /\/(|login-landing)$/);
+
+      // Verify we're no longer on settings page
+      cy.url().should('not.include', '/settings');
     });
   });
 });

@@ -2,9 +2,6 @@
 import cors from 'cors';
 import dotenv from 'dotenv';
 import express from 'express';
-import { calculateExpected, distributeXP } from './multiPlayer.js';
-import { calculateSinglePlayerXP } from './singlePlayer.js';
-
 import { supabase } from '../database/supabaseClient.js';
 
 import { createServer } from 'http';
@@ -17,8 +14,9 @@ import questionRoutes from './questionRoutes.js';
 import socketsHandlers from './sockets.js';
 import userRoutes from './userRoutes.js';
 import validateRoutes from './validateRoutes.js';
-import achievementRoutes from './achievementRoutes.js';
-import { checkQuestionAchievements } from './achievementRoutes.js';
+import singlePlayerRoutes from './singlePlayerRoutes.js';
+import multiPlayerRoutes from './multiPlayerRoute.js';
+import { single } from 'rxjs';
 
 // Load environment variables
 dotenv.config();
@@ -38,7 +36,8 @@ app.use('/', practiceRoutes);
 app.use('/', questionRoutes);
 app.use('/', answerRoutes);
 app.use('/', validateRoutes);
-app.use('/', achievementRoutes);
+app.use('/', singlePlayerRoutes);
+app.use('/', multiPlayerRoutes);
 
 // Simple health check route
 app.get('/', (req, res) => {

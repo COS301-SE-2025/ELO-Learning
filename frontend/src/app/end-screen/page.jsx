@@ -13,6 +13,7 @@ function EndScreen() {
   const router = useRouter();
   const mode = searchParams.get('mode');
   const [isLoading, setIsLoading] = useState(false);
+  const [xpReady, setXpReady] = useState(false);
 
   const [mistakes, setMistakes] = useState(0);
   useEffect(() => {
@@ -127,7 +128,7 @@ function EndScreen() {
           )}
           {mode === 'single-player' && (
             <div className="flex flex-row items-center justify-center gap-8 my-7">
-              <TotalXP />
+              <TotalXP onLoadComplete={() => setXpReady(true)} />
               <Score />
               <Time />
             </div>
@@ -154,9 +155,13 @@ function EndScreen() {
             <button
               className="secondary-button w-full uppercase"
               onClick={calculateXP}
-              disabled={isLoading}
+              disabled={isLoading || !xpReady}
             >
-              {isLoading ? 'Claiming XP...' : 'Claim XP'}
+              {isLoading
+                ? 'Claiming XP...'
+                : !xpReady
+                  ? 'Calculating...'
+                  : 'Claim XP'}
             </button>
           )}
         </div>

@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { submitSinglePlayerAttempt } from '@/services/api';
 
-export default function TotalXP() {
+export default function TotalXP({ onLoadComplete }) {
   const [totalXP, setTotalXP] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -23,6 +23,13 @@ export default function TotalXP() {
 
   useEffect(() => {
     async function calculateTotalXP() {
+      //Prevent duplicate submissions
+      if (sessionStorage.getItem('submittedOnce') === 'true') {
+        //console.log('Already submitted, skipping...');
+        return;
+      }
+      sessionStorage.setItem('submittedOnce', 'true');
+
       const questions = JSON.parse(localStorage.getItem('questionsObj')) || [];
 
       const userCookie = document.cookie
@@ -42,6 +49,7 @@ export default function TotalXP() {
         return;
       }
 
+      //  console.log('Sending questions to backend:', questions);
       for (const q of questions) {
         // Sanity checks
         if (!q.question || (!q.question.id && !q.question.Q_id)) {
@@ -52,7 +60,7 @@ export default function TotalXP() {
           );
           continue; // skip this one
         }
-
+        /*
         if (q.isCorrect) {
           try {
             const response = await submitSinglePlayerAttempt({
@@ -87,6 +95,32 @@ export default function TotalXP() {
         } else {
           q.xpEarned = 0;
         }
+    */
+
+        try {
+          const response = await submitSinglePlayerAttempt({
+            user_id,
+            question_id: q.question.id || q.question.Q_id,
+            isCorrect: q.isCorrect,
+            timeSpent: q.timeTaken || 30,
+          });
+          const { xpEarned, totalXP, leveledUp } = response;
+          q.xpEarned = Math.round(xpEarned) || 0;
+
+          const updatedUser = {
+            ...user,
+            xp: totalXP,
+            currentLevel: leveledUp ? user.currentLevel + 1 : user.currentLevel,
+          };
+          document.cookie = `user=${encodeURIComponent(
+            JSON.stringify(updatedUser),
+          )}; path=/`;
+        } catch (err) {
+          console.error(
+            `Failed to submit question ${q.question.id || q.question.Q_id}:`,
+            err.response?.data || err.message,
+          );
+        }
       }
       const totalXPSum = questions.reduce(
         (acc, q) => acc + (q.xpEarned ?? 0),
@@ -97,6 +131,9 @@ export default function TotalXP() {
       setTotalXP(Math.round(totalXPSum));
       // console.log('TotalXP:', totalXP);
       setIsLoading(false);
+      if (onLoadComplete) {
+        onLoadComplete();
+      }
     }
     calculateTotalXP();
   }, []);

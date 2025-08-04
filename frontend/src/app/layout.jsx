@@ -1,6 +1,6 @@
+import AchievementNotificationManager from '@/app/ui/achievements/achievement-notification-manager';
 import { Geist, Geist_Mono } from 'next/font/google';
 import './globals.css';
-import AchievementNotificationManager from '@/app/ui/achievements/achievement-notification-manager';
 import Providers from './providers';
 
 const geistSans = Geist({
@@ -24,9 +24,11 @@ export default function RootLayout({ children }) {
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        {children}
-        {/* Achievement notifications - appears above all content */}
-        <AchievementNotificationManager />
+        <Providers>
+          {children}
+          {/* Achievement notifications - appears above all content */}
+          <AchievementNotificationManager />
+        </Providers>
       </body>
     </html>
   );

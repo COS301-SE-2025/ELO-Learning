@@ -6,7 +6,7 @@ import { useSession } from 'next-auth/react';
 import { memo, useMemo } from 'react';
 
 const HeaderContent = memo(function HeaderContent() {
-  const { data: session, status } = useSession();
+  const { data: session, status } = useSession() || {};
 
   // Memoize all user data processing to avoid recalculations
   const userData = useMemo(() => {

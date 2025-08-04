@@ -17,6 +17,7 @@ import validateRoutes from './validateRoutes.js';
 import singlePlayerRoutes from './singlePlayerRoutes.js';
 import multiPlayerRoutes from './multiPlayerRoute.js';
 import { single } from 'rxjs';
+import achievementRoutes from './achievementRoutes.js';
 
 // Load environment variables
 dotenv.config();
@@ -38,6 +39,7 @@ app.use('/', answerRoutes);
 app.use('/', validateRoutes);
 app.use('/', singlePlayerRoutes);
 app.use('/', multiPlayerRoutes);
+app.use('/', achievementRoutes);
 
 // Simple health check route
 app.get('/', (req, res) => {

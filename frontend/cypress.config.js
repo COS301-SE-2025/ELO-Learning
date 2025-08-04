@@ -1,6 +1,6 @@
-import { defineConfig } from 'cypress';
+const { defineConfig } = require('cypress')
 
-export default defineConfig({
+module.exports = defineConfig({
   component: {
     devServer: {
       framework: 'next',
@@ -21,4 +21,4 @@ export default defineConfig({
       // implement node event listeners here
     },
   },
-});
+})

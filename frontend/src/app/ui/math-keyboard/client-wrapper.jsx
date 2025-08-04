@@ -29,11 +29,6 @@ export default function MathKeyboardWrapper({ questions }) {
   const [feedbackMessage, setFeedbackMessage] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Debug: Log state changes
-  useEffect(() => {
-    console.log('Student answer changed:', studentAnswer);
-  }, [studentAnswer]);
-
   // Handle case where no math questions are available
   if (!mathQuestions || mathQuestions.length === 0) {
     return (

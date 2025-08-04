@@ -3,6 +3,7 @@ import { supabase } from '../database/supabaseClient.js';
 import { calculateSinglePlayerXP } from './utils/xpCalculator.js';
 import { updateSinglePlayerElo } from './utils/eloCalculator.js';
 import { checkAndUpdateRankAndLevel } from './utils/userProgression.js';
+import { checkQuestionAchievements, checkEloAchievements } from './achievementRoutes.js';
 
 const router = express.Router();
 
@@ -121,6 +122,24 @@ router.post('/singleplayer', async (req, res) => {
       })
       .eq('id', user_id);
 
+    // 🎯 NEW: Check for achievements
+    let unlockedAchievements = [];
+
+    try {
+      // Check question-based achievements (existing)
+      const questionAchievements = await checkQuestionAchievements(user_id, isCorrect);
+      unlockedAchievements.push(...questionAchievements);
+
+      // 🆕 Check ELO-based achievements (NEW!)
+      const eloAchievements = await checkEloAchievements(user_id, newElo);
+      unlockedAchievements.push(...eloAchievements);
+
+      console.log(`🏆 Total achievements unlocked: ${unlockedAchievements.length}`);
+    } catch (achievementError) {
+      console.error('Error checking achievements:', achievementError);
+      // Don't fail the whole request if achievements fail
+    }
+
     return res.status(200).json({
       xpEarned,
       eloChange,
@@ -131,6 +150,7 @@ router.post('/singleplayer', async (req, res) => {
       rankDown,
       totalXP: newXP,
       newLevel,
+      unlockedAchievements: unlockedAchievements, // 🎯 Include achievements in response
     });
   } catch (err) {
     console.error('Error in /singleplayer:', err);

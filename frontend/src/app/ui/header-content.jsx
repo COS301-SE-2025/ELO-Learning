@@ -9,31 +9,43 @@ export default function HeaderContent() {
   const [username, setUsername] = useState('');
 
   useEffect(() => {
-    // Function to get cookie value by name
-    const getCookie = (name) => {
-      const value = `; ${document.cookie}`;
-      const parts = value.split(`; ${name}=`);
-      if (parts.length === 2) return parts.pop().split(';').shift();
-      return null;
+    const getUserData = () => {
+      try {
+        // Try to get user data from cache first
+        const cachedUser = cache.get(CACHE_KEYS.USER);
+        if (cachedUser) {
+          setXp(cachedUser.xp?.toString() || '0');
+          setUsername(cachedUser.username || '');
+          return;
+        }
+
+        // Fallback to cookie if cache misses
+        const getCookie = (name) => {
+          const value = `; ${document.cookie}`;
+          const parts = value.split(`; ${name}=`);
+          if (parts.length === 2) return parts.pop().split(';').shift();
+          return null;
+        };
+
+        const encodedUserData = getCookie('userData') || getCookie('user');
+
+        if (encodedUserData) {
+          const decodedData = decodeURIComponent(encodedUserData);
+          const userData = JSON.parse(decodedData);
+          
+          // Cache the user data for future use
+          cache.set(CACHE_KEYS.USER, userData, CACHE_EXPIRY.LONG);
+          
+          setXp(userData.xp?.toString() || '0');
+          setUsername(userData.username || '');
+        }
+      } catch (error) {
+        console.error('Error getting user data:', error);
+        setXp('0');
+      }
     };
 
-    try {
-      // Get the encoded cookie (adjust cookie name as needed)
-      const encodedUserData = getCookie('userData') || getCookie('user');
-
-      if (encodedUserData) {
-        // Decode the URL-encoded JSON
-        const decodedData = decodeURIComponent(encodedUserData);
-        const userData = JSON.parse(decodedData);
-
-        // Extract XP from the user data
-        setXp(userData.xp?.toString() || '0');
-        setUsername(userData.username || '');
-      }
-    } catch (error) {
-      console.error('Error parsing user data from cookie:', error);
-      setXp('0');
-    }
+    getUserData();
   }, []);
 
   return (

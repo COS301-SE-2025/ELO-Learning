@@ -44,12 +44,7 @@ export default function Page() {
         if (response.error) {
           setError('Username or password incorrect, please try again');
         } else {
-          // // Store the token and user data
-          // setCookie(response);
-          // localStorage.setItem('token', response.token);
-          localStorage.setItem('user', JSON.stringify(response.user));
-
-          // // Redirect to dashboard
+          // NextAuth handles the session automatically
           router.push('/dashboard');
           console.log('Login successful:', response);
         }

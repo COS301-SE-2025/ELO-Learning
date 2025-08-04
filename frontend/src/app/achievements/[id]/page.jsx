@@ -2,55 +2,25 @@
 'use client';
 import { fetchUserAchievementsWithStatus } from '@/services/api';
 import { X } from 'lucide-react';
+import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { use, useEffect, useState } from 'react';
 import AchievementBadge from '../../ui/achievements/achievement-badge';
 
-function getUserFromCookie() {
-  if (typeof document === 'undefined') return null;
-
-  //FIRST: Check localStorage (where API updates go)
-  try {
-    const localUser = localStorage.getItem('user');
-    if (localUser) {
-      const parsedUser = JSON.parse(localUser);
-      console.log('📱 Found user in localStorage:', parsedUser);
-      return parsedUser;
-    }
-  } catch (e) {
-    console.error('Error parsing localStorage user:', e);
-  }
-
-  // FALLBACK: Check cookies
-  const match = document.cookie.match(/user=([^;]+)/);
-  if (!match) {
-    console.log('❌ No user found in cookies or localStorage');
-    return null;
-  }
-
-  try {
-    const cookieUser = JSON.parse(decodeURIComponent(match[1]));
-    console.log('🍪 Found user in cookies:', cookieUser);
-    return cookieUser;
-  } catch {
-    console.log('❌ Error parsing cookie user data');
-    return null;
-  }
-}
-
 export default function AchievementDetailPage({ params }) {
   const [achievement, setAchievement] = useState(null);
-  const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const router = useRouter();
   const { id } = use(params);
+  const { data: session, status } = useSession();
 
   useEffect(() => {
-    const userData = getUserFromCookie();
-    setUser(userData);
+    if (status === 'loading') {
+      return; // Wait for session to load
+    }
 
-    if (userData?.id) {
-      fetchUserAchievementsWithStatus(userData.id)
+    if (status === 'authenticated' && session?.user?.id) {
+      fetchUserAchievementsWithStatus(session.user.id)
         .then((data) => {
           const foundAchievement = data.find((a) => a.id === parseInt(id));
           setAchievement(foundAchievement);
@@ -63,7 +33,7 @@ export default function AchievementDetailPage({ params }) {
     } else {
       setLoading(false);
     }
-  }, [id]);
+  }, [id, session, status]);
 
   const formatDate = (dateString) => {
     if (!dateString) return null;
@@ -82,7 +52,7 @@ export default function AchievementDetailPage({ params }) {
     return achievement.description; // Show the actual requirement description
   };
 
-  if (loading) {
+  if (loading || status === 'loading') {
     return (
       <div
         className="h-screen text-white flex items-center justify-center"

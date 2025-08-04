@@ -1,54 +1,25 @@
 'use client';
 import { fetchUserAchievementsWithStatus } from '@/services/api';
 import { ArrowLeft } from 'lucide-react';
+import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import AchievementBadge from '../ui/achievements/achievement-badge';
 
-function getUserFromCookie() {
-  if (typeof document === 'undefined') return null;
-
-  // FIRST: Check localStorage (where API updates go)
-  try {
-    const localUser = localStorage.getItem('user');
-    if (localUser) {
-      const parsedUser = JSON.parse(localUser);
-      console.log('📱 Found user in localStorage:', parsedUser);
-      return parsedUser;
-    }
-  } catch (e) {
-    console.error('Error parsing localStorage user:', e);
-  }
-
-  // FALLBACK: Check cookies
-  const match = document.cookie.match(/user=([^;]+)/);
-  if (!match) {
-    console.log('❌ No user found in cookies or localStorage');
-    return null;
-  }
-
-  try {
-    const cookieUser = JSON.parse(decodeURIComponent(match[1]));
-    console.log('🍪 Found user in cookies:', cookieUser);
-    return cookieUser;
-  } catch {
-    console.log('❌ Error parsing cookie user data');
-    return null;
-  }
-}
 export default function AchievementsPage() {
   const [achievements, setAchievements] = useState([]);
-  const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState('all'); // 'all', 'unlocked', 'locked'
   const router = useRouter();
+  const { data: session, status } = useSession();
 
   useEffect(() => {
-    const userData = getUserFromCookie();
-    setUser(userData);
+    if (status === 'loading') {
+      return; // Wait for session to load
+    }
 
-    if (userData?.id) {
-      fetchUserAchievementsWithStatus(userData.id)
+    if (status === 'authenticated' && session?.user?.id) {
+      fetchUserAchievementsWithStatus(session.user.id)
         .then((data) => {
           // Group achievements by category
           const grouped = data.reduce((acc, achievement) => {
@@ -67,7 +38,7 @@ export default function AchievementsPage() {
     } else {
       setLoading(false);
     }
-  }, []);
+  }, [session, status]);
 
   const handleAchievementClick = (achievement) => {
     router.push(`/achievements/${achievement.id}`);
@@ -85,7 +56,7 @@ export default function AchievementsPage() {
     return categoryAchievements;
   };
 
-  if (loading) {
+  if (loading || status === 'loading') {
     return (
       <div
         className="h-screen text-white flex items-center justify-center"

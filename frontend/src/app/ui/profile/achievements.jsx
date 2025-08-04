@@ -1,53 +1,23 @@
 // app/ui/profile/achievements.jsx
 'use client';
 import { fetchUserAchievements } from '@/services/api';
+import { useSession } from 'next-auth/react';
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import AchievementBadge from '../achievements/achievement-badge';
 
-function getUserFromCookie() {
-  if (typeof document === 'undefined') return null;
-
-  // FIRST: Check localStorage (where API updates go)
-  try {
-    const localUser = localStorage.getItem('user');
-    if (localUser) {
-      const parsedUser = JSON.parse(localUser);
-      console.log('📱 Found user in localStorage:', parsedUser);
-      return parsedUser;
-    }
-  } catch (e) {
-    console.error('Error parsing localStorage user:', e);
-  }
-
-  // FALLBACK: Check cookies
-  const match = document.cookie.match(/user=([^;]+)/);
-  if (!match) {
-    console.log('❌ No user found in cookies or localStorage');
-    return null;
-  }
-
-  try {
-    const cookieUser = JSON.parse(decodeURIComponent(match[1]));
-    console.log('🍪 Found user in cookies:', cookieUser);
-    return cookieUser;
-  } catch {
-    console.log('❌ Error parsing cookie user data');
-    return null;
-  }
-}
-
 export default function Achievements() {
   const [achievements, setAchievements] = useState([]);
-  const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
+  const { data: session, status } = useSession();
 
   useEffect(() => {
-    const userData = getUserFromCookie();
-    setUser(userData);
+    if (status === 'loading') {
+      return; // Wait for session to load
+    }
 
-    if (userData?.id) {
-      fetchUserAchievements(userData.id)
+    if (status === 'authenticated' && session?.user?.id) {
+      fetchUserAchievements(session.user.id)
         .then((data) => {
           setAchievements(data);
           setLoading(false);
@@ -59,9 +29,9 @@ export default function Achievements() {
     } else {
       setLoading(false);
     }
-  }, []);
+  }, [session, status]);
 
-  if (loading) {
+  if (loading || status === 'loading') {
     return (
       <div className="m-4">
         <h3 className="text-xl uppercase font-bold">Achievements</h3>

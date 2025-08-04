@@ -1,4 +1,5 @@
 import axios from 'axios';
+import { cache, CACHE_EXPIRY, CACHE_KEYS } from '../utils/cache';
 
 const BASE_URL = 'http://localhost:3000'; // Change this when deploying
 
@@ -38,7 +39,16 @@ const authHeader = {
 
 // 1. GET /users
 export async function fetchAllUsers() {
+  // Try to get from cache first
+  const cachedUsers = cache.get(CACHE_KEYS.LEADERBOARD);
+  if (cachedUsers) {
+    return cachedUsers;
+  }
+
+  // If not in cache or expired, fetch from API
   const res = await axiosInstance.get('/users');
+  // Cache the response with 5-minute expiry
+  cache.set(CACHE_KEYS.LEADERBOARD, res.data, CACHE_EXPIRY.SHORT);
   return res.data;
 }
 
@@ -70,7 +80,15 @@ export async function updateUserXP(id, xp) {
 
 // 5. GET /questions
 export async function fetchAllQuestions() {
+  // Try to get from cache first
+  const cachedQuestions = cache.get(CACHE_KEYS.QUESTIONS);
+  if (cachedQuestions) {
+    return cachedQuestions;
+  }
+
   const res = await axiosInstance.get('/questions');
+  // Cache for 30 minutes
+  cache.set(CACHE_KEYS.QUESTIONS, res.data, CACHE_EXPIRY.MEDIUM);
   return res.data;
 }
 
@@ -116,6 +134,12 @@ export async function submitAnswer(id, answer) {
 
 export async function loginUser(email, password) {
   const res = await axiosInstance.post('/login', { email, password });
+  // Cache the user data and token
+  cache.set(CACHE_KEYS.TOKEN, res.data.token, CACHE_EXPIRY.LONG);
+  cache.set(CACHE_KEYS.USER, res.data.user, CACHE_EXPIRY.LONG);
+  // Still store in localStorage for persistence
+  localStorage.setItem('token', res.data.token);
+  localStorage.setItem('user', JSON.stringify(res.data.user));
   return res.data;
 }
 
@@ -137,10 +161,18 @@ export async function registerUser(
     currentLevel,
     joinDate,
   });
+  // Cache the user data and token
+  cache.set(CACHE_KEYS.TOKEN, res.data.token, CACHE_EXPIRY.LONG);
+  cache.set(CACHE_KEYS.USER, res.data.user, CACHE_EXPIRY.LONG);
+  // Store in localStorage for persistence
+  localStorage.setItem('token', res.data.token);
+  localStorage.setItem('user', JSON.stringify(res.data.user));
   return res.data;
 }
 
 export async function logoutUser() {
+  // Clear both cache and localStorage
+  cache.clear();
   localStorage.removeItem('token');
   localStorage.removeItem('user');
 }

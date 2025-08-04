@@ -1,10 +1,9 @@
 'use client';
-import { setCookie } from '@/app/lib/authCookie';
 import { Eye, EyeOff, X } from 'lucide-react';
+import { signIn } from 'next-auth/react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
-import { loginUser } from '../../../services/api';
 
 export default function Page() {
   const [email, setEmail] = useState('');
@@ -16,25 +15,49 @@ export default function Page() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setError('');
-    setIsLoading(true);
+    // setError('');
+    // setIsLoading(true);
 
-    try {
-      const response = await loginUser(email, password);
-      await setCookie(response);
+    // try {
+    //   const response = await loginUser(email, password);
+    //   await setCookie(response);
 
-      // Store the token and user data
-      localStorage.setItem('token', response.token);
-      localStorage.setItem('user', JSON.stringify(response.user));
+    //   // Store the token and user data
+    //   localStorage.setItem('token', response.token);
+    //   localStorage.setItem('user', JSON.stringify(response.user));
 
-      // Redirect to dashboard
-      router.push('/dashboard');
-    } catch (err) {
-      console.error('Login failed:', err);
-      setError('Username or password incorrect, please try again');
-    } finally {
-      setIsLoading(false);
-    }
+    //   // Redirect to dashboard
+    //   router.push('/dashboard');
+    // } catch (err) {
+    //   console.error('Login failed:', err);
+    //   setError('Username or password incorrect, please try again');
+    // } finally {
+    //   setIsLoading(false);
+    // }
+    signIn('credentials', {
+      callbackUrl: 'http://localhost:8080/dashboard',
+      email,
+      password,
+      redirect: false,
+    })
+      .then((response) => {
+        if (response.error) {
+          setError('Username or password incorrect, please try again');
+        } else {
+          // // Store the token and user data
+          // setCookie(response);
+          // localStorage.setItem('token', response.token);
+          localStorage.setItem('user', JSON.stringify(response.user));
+
+          // // Redirect to dashboard
+          router.push('/dashboard');
+          console.log('Login successful:', response);
+        }
+      })
+      .catch((err) => {
+        console.error('Login failed:', err);
+        setError('Username or password incorrect, please try again');
+      });
   };
 
   const togglePasswordVisibility = () => {
@@ -107,7 +130,12 @@ export default function Page() {
       </div>
       {/* Disclaimer is now spaced above the bottom */}
       <div className="px-4 text-center">
-        <div className="google-button flex items-center justify-around gap-10 m-2">
+        <div
+          className="google-button flex items-center justify-around gap-10 m-2"
+          onClick={() =>
+            signIn('google', { callbackUrl: 'http://localhost:8080/dashboard' })
+          }
+        >
           {/* <FaGoogle size={24} /> */}
           <p className="p-3">Sign in with Google</p>
         </div>

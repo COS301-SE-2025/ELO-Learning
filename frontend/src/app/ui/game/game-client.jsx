@@ -1,21 +1,33 @@
 'use client';
 
 import QuestionsTracker from '@/app/ui/questions/questions-tracker';
-import { socket } from '@/socket';
+import { useSocket } from '@/socket';
 import { redirect } from 'next/navigation';
 import { useEffect, useState } from 'react';
 
 export default function GameClient({ game, level }) {
+  const { socket, session, status } = useSocket();
   const [questions, setQuestions] = useState([]);
   const [isWaitingForOpponent, setIsWaitingForOpponent] = useState(false);
   const [error, setError] = useState(null);
 
   useEffect(() => {
+    if (status === 'loading') return; // Wait for session
+    if (status === 'unauthenticated') {
+      redirect('/api/auth/signin');
+    }
+
     console.log('GameClient mounted with:', { game, level });
 
     if (!game || !level) {
       console.error('Missing game or level data:', { game, level });
       setError('Missing game data');
+      return;
+    }
+
+    if (!socket || !socket.connected) {
+      console.error('Socket not connected');
+      setError('Connection error');
       return;
     }
 
@@ -52,7 +64,7 @@ export default function GameClient({ game, level }) {
       socket.off('gameError', onGameError);
       socket.off('matchEnd', onMatchEnd);
     };
-  }, []);
+  }, [game, level, socket, status]);
 
   const submitCallback = () => {
     console.log('Submit callback triggered - Match ended');

@@ -1,42 +1,20 @@
-import { getCookie } from '@/app/lib/authCookie';
 import QuestionsTracker from '@/app/ui/questions/questions-tracker';
+import { authOptions } from '@/lib/auth';
 import { fetchQuestionsByLevelAndTopic } from '@/services/api';
+import { getServerSession } from 'next-auth/next';
 import { redirect } from 'next/navigation';
+
 
 export default async function PracticeTopic({ params }) {
   const { topic } = await params;
-  const authCookie = await getCookie();
-  const userLevel = authCookie.user.currentLevel;
-  
-  console.log('User level:', userLevel, 'Topic:', topic);
-  
-  // Try to fetch questions from multiple levels (current level and below)
-  let allQuestions = [];
-  const levelsToTry = [];
-  
-  // Create array of levels to try (current level down to 1, but also include higher levels)
-  for (let i = Math.max(1, userLevel - 2); i <= userLevel + 2; i++) {
-    levelsToTry.push(i);
+  const session = await getServerSession(authOptions);
+
+  if (!session?.user) {
+    redirect('/api/auth/signin');
   }
-  
-  console.log('Trying levels:', levelsToTry);
-  
-  // Fetch questions from multiple levels
-  for (const level of levelsToTry) {
-    try {
-      const questions = await fetchQuestionsByLevelAndTopic(level, topic);
-      if (questions?.questions && questions.questions.length > 0) {
-        console.log(`Found ${questions.questions.length} questions at level ${level}`);
-        allQuestions = [...allQuestions, ...questions.questions];
-      }
-    } catch (error) {
-      console.log(`No questions found for level ${level}:`, error.message);
-    }
-  }
-  
-  console.log('Total questions found:', allQuestions.length);
-  console.log('First question:', allQuestions[0]);
-  console.log('First question answers:', allQuestions[0]?.answers);
+
+  const level = session.user.currentLevel || 1;
+  const questions = await fetchQuestionsByLevelAndTopic(level, topic);
 
   const submitCallback = async () => {
     'use server';

@@ -9,18 +9,20 @@ import WrongAnswer from '@/app/ui/memo/wrong-answer';
 import QuestionTemplate from '@/app/ui/question-template';
 
 export default function Page() {
-  const [questions, setQuestions] = useState([]); // Start with empty array
+  const [questions, setQuestions] = useState([]);
   const [currQuestion, setCurrQuestion] = useState(null);
   const [answer, setAnswer] = useState(null);
   const [correctAnswer, setCorrectAnswer] = useState(null);
   const [isCorrect, setIsCorrect] = useState(false);
   const [index, setIndex] = useState(0);
-  const [isLoading, setIsLoading] = useState(true); // Add loading state
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     // Only run on client side
     if (typeof window !== 'undefined') {
-      const tempQuestions = JSON.parse(localStorage.getItem('questionsObj') || '[]'); // Fallback to empty array
+      const tempQuestions = JSON.parse(localStorage.getItem('questionsObj') || '[]');
+      
+      console.log('Loaded questions from localStorage:', tempQuestions);
       
       if (tempQuestions.length === 0) {
         // No questions found, redirect to dashboard
@@ -29,10 +31,15 @@ export default function Page() {
       }
       
       setQuestions(tempQuestions);
-      setCurrQuestion(tempQuestions[0]);
-      setCorrectAnswer(tempQuestions[0].actualAnswer);
-      setAnswer(tempQuestions[0].answer);
-      setIsCorrect(tempQuestions[0].isCorrect);
+      
+      // Set initial question data - no re-validation needed!
+      if (tempQuestions[0]) {
+        setCurrQuestion(tempQuestions[0]);
+        setCorrectAnswer(tempQuestions[0].actualAnswer);
+        setAnswer(tempQuestions[0].answer);
+        setIsCorrect(tempQuestions[0].isCorrect);
+      }
+      
       setIsLoading(false);
     }
   }, []);
@@ -51,10 +58,18 @@ export default function Page() {
 
   useEffect(() => {
     if (questions.length > 0 && questions[index]) {
-      setCurrQuestion(questions[index]);
-      setCorrectAnswer(questions[index].actualAnswer);
-      setAnswer(questions[index].answer);
-      setIsCorrect(questions[index].isCorrect);
+      const currentQ = questions[index];
+      setCurrQuestion(currentQ);
+      setCorrectAnswer(currentQ.actualAnswer);
+      setAnswer(currentQ.answer);
+      setIsCorrect(currentQ.isCorrect);
+      
+      console.log('📄 Displaying question:', {
+        index,
+        studentAnswer: currentQ.answer,
+        correctAnswer: currentQ.actualAnswer?.answer_text,
+        isCorrect: currentQ.isCorrect
+      });
     }
   }, [index, questions]);
 

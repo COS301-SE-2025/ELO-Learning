@@ -7,6 +7,7 @@ import AnswerWrapper from '@/app/ui/answers/answer-wrapper';
 import QuestionTemplate from '@/app/ui/question-template';
 import QuestionFooter from '@/app/ui/questions/question-footer';
 import QuestionHeader from '@/app/ui/questions/question-header';
+import { validateAnswer } from '@/utils/answerValidator';
 
 export default function QuestionsTracker({
   questions,
@@ -71,13 +72,33 @@ export default function QuestionsTracker({
     const timeElapsed = Math.round((Date.now() - questionStartTime) / 1000);
 
     const questionsObj = JSON.parse(localStorage.getItem('questionsObj') || '[]');
+    
+    // Find the correct answer
+    const correctAnswerObj = currAnswers.find((ans) => ans.isCorrect === true);
+    const correctAnswerText = correctAnswerObj?.answer_text || correctAnswerObj;
+
+    // ✅ Re-validate with new validator before storing
+    const revalidatedResult = validateAnswer(
+      answer,
+      correctAnswerText,
+      currQuestion?.questionText || '',
+      currQuestion?.type || 'Math Input'  // Use question type if available, fallback to Math Input
+    );
+
+    console.log('💾 Storing question with validation:', {
+      studentAnswer: answer,
+      correctAnswer: correctAnswerText,
+      oldIsCorrect: isAnswerCorrect,
+      newIsCorrect: revalidatedResult,
+      questionText: currQuestion?.questionText?.substring(0, 50) + '...'
+    });
 
     questionsObj.push({
       question: currQuestion,
       q_index: currentStep,
       answer: answer,
-      isCorrect: isAnswerCorrect,
-      actualAnswer: currAnswers.find((answer) => answer.isCorrect == true),
+      isCorrect: revalidatedResult,  // ✅ Use fresh validation instead of isAnswerCorrect
+      actualAnswer: correctAnswerObj,
       timeElapsed: timeElapsed,
     });
 

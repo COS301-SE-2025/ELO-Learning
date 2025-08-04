@@ -11,6 +11,7 @@ import answerRoutes from './answerRoutes.js';
 import multiPlayerRoutes from './multiPlayerRoute.js';
 import oauthRoutes from './oauthRoutes.js';
 import practiceRoutes from './practiceRoutes.js';
+import pushNotificationRoutes from './pushNotificationRoutes.js';
 import questionRoutes from './questionRoutes.js';
 import singlePlayerRoutes from './singlePlayerRoutes.js';
 import socketsHandlers from './sockets.js';
@@ -38,6 +39,7 @@ app.use('/', validateRoutes);
 app.use('/', singlePlayerRoutes);
 app.use('/', multiPlayerRoutes);
 app.use('/', oauthRoutes);
+app.use('/notifications', pushNotificationRoutes);
 
 // Simple health check route
 app.get('/', (req, res) => {

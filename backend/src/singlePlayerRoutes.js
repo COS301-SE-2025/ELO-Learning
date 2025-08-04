@@ -3,6 +3,7 @@ import { supabase } from '../database/supabaseClient.js';
 import { calculateSinglePlayerXP } from './utils/xpCalculator.js';
 import { updateSinglePlayerElo } from './utils/eloCalculator.js';
 import { checkAndUpdateRankAndLevel } from './utils/userProgression.js';
+import pushNotificationService from './services/pushNotificationService.js';
 
 const router = express.Router();
 
@@ -120,6 +121,39 @@ router.post('/singleplayer', async (req, res) => {
         rank: newRank,
       })
       .eq('id', user_id);
+
+    // Send push notifications for achievements
+    try {
+      // Send level up notification
+      if (newLevel > currentLevel) {
+        await pushNotificationService.sendLevelUpNotification(
+          user_id,
+          newLevel,
+        );
+      }
+
+      // Send rank up notification
+      if (rankUp) {
+        await pushNotificationService.sendToUser(
+          user_id,
+          {
+            title: '🏆 Rank Up!',
+            body: `Congratulations! You've been promoted to ${newRank}!`,
+            clickAction: '/profile',
+          },
+          {
+            type: 'rank_up',
+            newRank,
+          },
+        );
+      }
+    } catch (notificationError) {
+      // Don't fail the main request if notifications fail
+      console.warn(
+        'Failed to send push notification:',
+        notificationError.message,
+      );
+    }
 
     return res.status(200).json({
       xpEarned,

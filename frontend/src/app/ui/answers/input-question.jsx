@@ -30,6 +30,27 @@ export default function MathInputTemplate({
 
   // Advanced math symbol categories
   const mathCategories = {
+    numbers: {
+      label: 'Numbers',
+      icon: 'ℕ',
+      symbols: [
+        { symbol: '0', label: '0', description: 'Zero' },
+        { symbol: '1', label: '1', description: 'One' },
+        { symbol: '2', label: '2', description: 'Two' },
+        { symbol: '3', label: '3', description: 'Three' },
+        { symbol: '4', label: '4', description: 'Four' },
+        { symbol: '5', label: '5', description: 'Five' },
+        { symbol: '6', label: '6', description: 'Six' },
+        { symbol: '7', label: '7', description: 'Seven' },
+        { symbol: '8', label: '8', description: 'Eight' },
+        { symbol: '9', label: '9', description: 'Nine' },
+        { symbol: '.', label: '.', description: 'Decimal point' },
+        { symbol: ',', label: ',', description: 'Comma' },
+        { symbol: 'x', label: 'x', description: 'Variable x' },
+        { symbol: 'y', label: 'y', description: 'Variable y' },
+        { symbol: 'z', label: 'z', description: 'Variable z' },
+      ],
+    },
     basic: {
       label: 'Basic',
       icon: '±',
@@ -303,9 +324,6 @@ export default function MathInputTemplate({
 
   return (
     <div className="w-full space-y-6">
-      <p className="">
-        Use the keyboard below or type your mathematical expression directly
-      </p>
       {/* Enhanced Input Field */}
       <div className="relative">
         <textarea
@@ -314,7 +332,7 @@ export default function MathInputTemplate({
           onChange={handleInputChange}
           onSelect={handleCursorPosition}
           onKeyDown={handleKeyDown}
-          placeholder="Enter your mathematical expression..."
+          placeholder="Write your answer"
           style={{ border: '1px solid' }} // Force black text
           className={`math-input w-full p-4 text-lg border rounded-lg resize-none min-h-[80px] font-mono ${
             !localIsValidExpression
@@ -432,7 +450,11 @@ export default function MathInputTemplate({
 
         {/* Symbol grid */}
         <div className="p-4">
-          <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-3">
+          <div className={`grid gap-3 ${
+    activeTab === 'numbers' 
+    ? 'grid-cols-5' 
+    : 'grid-cols-3 sm:grid-cols-4 md:grid-cols-5'
+}`}>
             {mathCategories[activeTab].symbols.map((item, index) => (
               <button
                 key={index}

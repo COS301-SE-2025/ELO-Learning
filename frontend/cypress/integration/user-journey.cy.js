@@ -7,36 +7,36 @@ describe('User Journey', () => {
    */
   it('should allow a new user to sign up and land on the dashboard', () => {
     // --- 1. Start on the landing page and navigate to signup ---
-    cy.visit('/')
-    cy.contains('button', 'GET STARTED').first().click()
-    cy.url().should('include', '/login-landing/signup')
+    cy.visit('/');
+    cy.contains('button', 'GET STARTED').first().click();
+    cy.url().should('include', '/login-landing/signup');
 
     // --- 2. Complete the multi-step signup process ---
     // Step 1: Name and Surname
-    cy.get('input[placeholder="Name"]').type('New')
-    cy.get('input[placeholder="Surname"]').type('User')
-    cy.contains('button', 'Continue').click()
-    cy.url().should('include', '/signup/username')
+    cy.get('input[placeholder="Name"]').type('New');
+    cy.get('input[placeholder="Surname"]').type('User');
+    cy.contains('button', 'Continue').click();
+    cy.url().should('include', '/signup/username');
 
     // Step 2: Username
-    cy.get('input[placeholder="Username"]').type('newuser')
-    cy.contains('button', 'Continue').click()
-    cy.url().should('include', '/signup/age')
+    cy.get('input[placeholder="Username"]').type('newuser');
+    cy.contains('button', 'Continue').click();
+    cy.url().should('include', '/signup/age');
 
     // Step 3: Age
-    cy.get('input[placeholder="Age"]').type('25')
-    cy.contains('button', 'Continue').click()
-    cy.url().should('include', '/signup/grade')
+    cy.get('input[placeholder="Age"]').type('25');
+    cy.contains('button', 'Continue').click();
+    cy.url().should('include', '/signup/grade');
 
     // Step 4: Grade
-    cy.get('input[placeholder="Grade"]').type('University Year 3')
-    cy.contains('button', 'Continue').click()
-    cy.url().should('include', '/signup/email')
+    cy.get('input[placeholder="Grade"]').type('University Year 3');
+    cy.contains('button', 'Continue').click();
+    cy.url().should('include', '/signup/email');
 
     // Step 5: Email
-    cy.get('input[placeholder="Email"]').type('newuserjourney@example.com')
-    cy.contains('button', 'Continue').click()
-    cy.url().should('include', '/signup/password')
+    cy.get('input[placeholder="Email"]').type('newuserjourney@example.com');
+    cy.contains('button', 'Continue').click();
+    cy.url().should('include', '/signup/password');
 
     // Step 6: Password
     cy.intercept('POST', '**/register', {
@@ -45,7 +45,7 @@ describe('User Journey', () => {
         token: 'fake-jwt-token-for-new-user',
         user: { id: 3, email: 'newuserjourney@example.com', name: 'New User' },
       },
-    }).as('registerRequest')
+    }).as('registerRequest');
 
     // Mock the users API call for the leaderboard
     cy.intercept('GET', '**/users', {
@@ -55,15 +55,15 @@ describe('User Journey', () => {
         { id: 2, username: 'TestUser2', xp: 900 },
         { id: 3, username: 'New User', xp: 800 },
       ],
-    }).as('getUsers')
+    }).as('getUsers');
 
-    cy.get('input[placeholder="Enter a password"]').type('Password123!')
-    cy.get('input[placeholder="Confirm password"]').type('Password123!')
-    cy.contains('button', 'Continue').click()
+    cy.get('input[placeholder="Enter a password"]').type('Password123!');
+    cy.get('input[placeholder="Confirm password"]').type('Password123!');
+    cy.contains('button', 'Continue').click();
 
     // --- 3. Land on the dashboard and verify ---
     // The application should automatically redirect to the dashboard upon successful registration.
-    cy.url().should('include', '/dashboard')
-    cy.contains('h1', 'Leaderboard').should('be.visible')
-  })
-})
+    cy.url().should('include', '/dashboard');
+    cy.contains('h1', 'Leaderboard').should('be.visible');
+  });
+});

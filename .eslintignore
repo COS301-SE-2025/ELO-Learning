@@ -1,0 +1,30 @@
+# ESLint ignore patterns
+
+# Dependencies
+node_modules/
+**/node_modules/
+
+# Build outputs
+.next/
+out/
+build/
+dist/
+coverage/
+
+# Package files
+package-lock.json
+yarn.lock
+
+# Documentation
+*.md
+PUSH_NOTIFICATIONS_SETUP.md
+
+# Logs
+*.log
+
+# Environment files
+.env*
+
+# IDE files
+.vscode/
+.idea/

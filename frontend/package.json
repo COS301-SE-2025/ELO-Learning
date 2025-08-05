@@ -15,6 +15,7 @@
   "dependencies": {
     "axios": "1.11.0",
     "clsx": "^2.1.1",
+    "firebase": "^12.0.0",
     "katex": "^0.16.22",
     "lucide-react": "^0.511.0",
     "math-expression-evaluator": "^2.0.7",

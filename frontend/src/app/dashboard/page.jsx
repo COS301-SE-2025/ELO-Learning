@@ -2,6 +2,7 @@
 import { fetchAllUsers } from '@/services/api';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import LeaderboardTable from '../ui/leaderboard-table';
+import { NotificationSettings } from '@/components/NotificationSettings';
 
 export default function Page() {
   const [users, setUsers] = useState([]);

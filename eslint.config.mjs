@@ -5,6 +5,18 @@ import prettierConfig from 'eslint-config-prettier';
 export default [
   {
     files: ['**/*.js'],
+    ignores: [
+      '**/node_modules/**',
+      '**/build/**',
+      '**/dist/**',
+      '**/.next/**',
+      '**/out/**',
+      '**/coverage/**',
+      '**/package-lock.json',
+      '**/yarn.lock',
+      '**/*.md',
+      '**/PUSH_NOTIFICATIONS_SETUP.md',
+    ],
     languageOptions: {
       ecmaVersion: 2022,
       sourceType: 'module',

@@ -2,7 +2,7 @@
   "name": "ELO Learning",
   "short_name": "ELO Learning",
   "description": "Transform the way you engage with math practice through gamified, adaptive learning experiences.",
-  "start_url": "/",
+  "start_url": "/login-landing",
   "display": "standalone",
   "background_color": "#000000",
   "theme_color": "#BD86F8",

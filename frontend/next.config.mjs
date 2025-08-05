@@ -38,6 +38,14 @@ const config = process.env.NODE_ENV === 'production'
       document: '/offline',
     },
   })(nextConfig)
-  : nextConfig
+  : withPWA({
+    dest: 'public',
+    register: true,
+    skipWaiting: true,
+    disable: false, // Enable PWA in development too
+    fallbacks: {
+      document: '/offline',
+    },
+  })(nextConfig)
 
 export default config

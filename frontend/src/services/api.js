@@ -17,14 +17,44 @@ axiosInstance.interceptors.request.use(async (config) => {
   if (isServer) {
     const { cookies } = await import('next/headers');
     const awaitedCookies = await cookies();
-    const cookiesString = awaitedCookies
+    
+    // Try to get NextAuth session token first
+    const nextAuthToken = awaitedCookies
       .getAll()
-      .filter((item) => item.name === 'token')
-      .map((item) => item.value);
-    config.headers.Authorization = `Bearer ${cookiesString}`;
+      .find((item) => item.name === 'next-auth.session-token' || item.name === '__Secure-next-auth.session-token');
+    
+    if (nextAuthToken) {
+      config.headers.Authorization = `Bearer ${nextAuthToken.value}`;
+    } else {
+      // Fallback to regular token
+      const tokenCookie = awaitedCookies
+        .getAll()
+        .filter((item) => item.name === 'token')
+        .map((item) => item.value);
+      if (tokenCookie.length > 0) {
+        config.headers.Authorization = `Bearer ${tokenCookie}`;
+      }
+    }
     return config;
   } else {
-    const token = localStorage.getItem('token');
+    // Client-side: Check NextAuth session first, then fallback to cached tokens
+    let token = null;
+    
+    // Try to get NextAuth session token from cache or localStorage
+    const nextAuthSession = cache.get(CACHE_KEYS.NEXTAUTH_SESSION);
+    if (nextAuthSession?.accessToken) {
+      token = nextAuthSession.accessToken;
+    } else {
+      // Fallback to our cached tokens
+      const provider = cache.get(CACHE_KEYS.AUTH_PROVIDER) || 'credentials';
+      
+      if (provider === 'google' || provider === 'oauth') {
+        token = cache.get(CACHE_KEYS.OAUTH_TOKEN) || localStorage.getItem('oauth_token');
+      } else {
+        token = cache.get(CACHE_KEYS.TOKEN) || localStorage.getItem('token');
+      }
+    }
+    
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }

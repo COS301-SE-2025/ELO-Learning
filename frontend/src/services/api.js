@@ -50,7 +50,7 @@ axiosInstance.interceptors.request.use(async (config) => {
       token = nextAuthSession.accessToken;
     } else {
       // Fallback to our cached tokens
-      const provider = cache.get(CACHE_KEYS.AUTH_PROVIDER) || 'credentials';
+      const provider = cache.get('auth_provider') || 'credentials';
 
       if (provider === 'google' || provider === 'oauth') {
         token =

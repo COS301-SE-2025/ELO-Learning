@@ -38,7 +38,7 @@ const HeaderContent = memo(function HeaderContent() {
   }
 
   // Don't render anything if not authenticated
-  if (status !== 'authenticated' || !userData) {
+  if (session.status !== 'authenticated' || !userData) {
     return null;
   }
 

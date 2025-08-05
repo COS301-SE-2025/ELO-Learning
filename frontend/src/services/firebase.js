@@ -73,17 +73,20 @@ export const onMessageListener = () => {
 // Function to register FCM token with your backend
 export const registerFCMToken = async (userId, token) => {
   try {
-    const response = await fetch('/api/notifications/register-token', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${localStorage.getItem('authToken')}`, // Adjust based on your auth system
+    const response = await fetch(
+      `${process.env.NEXT_PUBLIC_API_URL}/notifications/register-token`,
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${localStorage.getItem('authToken')}`, // Adjust based on your auth system
+        },
+        body: JSON.stringify({
+          userId,
+          fcmToken: token,
+        }),
       },
-      body: JSON.stringify({
-        userId,
-        fcmToken: token,
-      }),
-    });
+    );
 
     if (!response.ok) {
       throw new Error('Failed to register FCM token');
@@ -100,14 +103,17 @@ export const registerFCMToken = async (userId, token) => {
 // Function to remove FCM token (on logout)
 export const removeFCMToken = async (userId) => {
   try {
-    const response = await fetch('/api/notifications/remove-token', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${localStorage.getItem('authToken')}`,
+    const response = await fetch(
+      `${process.env.NEXT_PUBLIC_API_URL}/notifications/remove-token`,
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${localStorage.getItem('authToken')}`,
+        },
+        body: JSON.stringify({ userId }),
       },
-      body: JSON.stringify({ userId }),
-    });
+    );
 
     if (!response.ok) {
       throw new Error('Failed to remove FCM token');

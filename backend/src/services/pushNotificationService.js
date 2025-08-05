@@ -26,7 +26,6 @@ class PushNotificationService {
         notification: {
           title: notification.title,
           body: notification.body,
-          icon: notification.icon || '/ELO-Logo-Horizontal.png',
         },
         data: {
           ...data,
@@ -34,6 +33,9 @@ class PushNotificationService {
         },
         token: fcmToken,
         webpush: {
+          notification: {
+            icon: notification.icon || '/ELO-Logo-Horizontal.png',
+          },
           fcmOptions: {
             link: notification.clickAction || '/',
           },
@@ -65,7 +67,6 @@ class PushNotificationService {
         notification: {
           title: notification.title,
           body: notification.body,
-          icon: notification.icon || '/ELO-Logo-Horizontal.png',
         },
         data: {
           ...data,
@@ -73,6 +74,9 @@ class PushNotificationService {
         },
         tokens: fcmTokens,
         webpush: {
+          notification: {
+            icon: notification.icon || '/ELO-Logo-Horizontal.png',
+          },
           fcmOptions: {
             link: notification.clickAction || '/',
           },

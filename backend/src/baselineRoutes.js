@@ -60,8 +60,8 @@ router.post('/answer', async (req, res) => {
   const next = await engine.nextQuestion(isCorrect);
 
   if (next.done) {
-    // Finalize ELO
-    const finalElo = next.rating * 100;
+    // Finalised ELO -  this is the difficulty level for now, will change when elo_rating values change
+    const finalElo = next.rating;
     await supabase.from('Users').update({ elo_rating: finalElo }).eq('id', userId);
 
     baselineSessions.delete(userId);
@@ -71,7 +71,7 @@ router.post('/answer', async (req, res) => {
       rating: finalElo,
       correctCount: engine.correctCount,
       totalQuestions: engine.questionCount,
-      message: `Baseline complete. ELO rating: ${finalElo}`,
+      message: `Baseline complete. ELO rating is: ${finalElo}`,
     });
   }
 

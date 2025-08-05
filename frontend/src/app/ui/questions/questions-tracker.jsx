@@ -1,36 +1,59 @@
 'use client';
 
-import { redirect } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 
 import AnswerWrapper from '@/app/ui/answers/answer-wrapper';
 import QuestionTemplate from '@/app/ui/question-template';
 import QuestionFooter from '@/app/ui/questions/question-footer';
 import QuestionHeader from '@/app/ui/questions/question-header';
+import { validateAnswerEnhanced } from '@/utils/answerValidator';
 
 export default function QuestionsTracker({
   questions,
-  submitCallback,
   lives,
   mode,
 }) {
-  //Normal JS variables
-  const allQuestions = questions;
+  const router = useRouter();
+
+  // ✅ Safe array handling
+  const allQuestions = questions || [];
   const totalSteps = allQuestions.length;
 
-  //React hooks
-  const [currQuestion, setCurrQuestion] = useState(allQuestions[0]);
-  const [currAnswers, setCurrAnswers] = useState(currQuestion.answers || []);
-
+  // ✅ Safe initialization
+  const [currQuestion, setCurrQuestion] = useState(allQuestions[0] || null);
+  const [currAnswers, setCurrAnswers] = useState(currQuestion?.answers || []);
   const [currentStep, setCurrentStep] = useState(1);
   const [isDisabled, setIsDisabled] = useState(true);
   const [answer, setAnswer] = useState('');
   const [isAnswerCorrect, setIsAnswerCorrect] = useState(false);
-  const [numLives, setNumLives] = useState(lives);
+  const [numLives, setNumLives] = useState(lives || 5);
   const [isSubmitting, setIsSubmitting] = useState(false);
-
-  // Add timer state
   const [questionStartTime, setQuestionStartTime] = useState(Date.now());
+
+  // ✅ Early return if no questions
+  if (!allQuestions || allQuestions.length === 0) {
+    return (
+      <div className="flex items-center justify-center h-full">
+        <div className="text-center p-8">
+          <div className="text-4xl mb-4">📝</div>
+          <h2 className="text-xl font-bold text-gray-800 mb-2">No Questions Available</h2>
+          <p className="text-gray-600">No questions found for this practice session.</p>
+        </div>
+      </div>
+    );
+  }
+
+  // ✅ Handle case where current question is null
+  if (!currQuestion) {
+    return (
+      <div className="flex items-center justify-center h-full">
+        <div className="text-center p-8">
+          <div className="text-2xl text-gray-600">Loading question...</div>
+        </div>
+      </div>
+    );
+  }
 
   //Effects
   useEffect(() => {
@@ -44,36 +67,84 @@ export default function QuestionsTracker({
     setQuestionStartTime(Date.now());
   }, [currQuestion]);
 
-  const setLocalStorage = () => {
+  const setLocalStorage = async () => {
     // Calculate time elapsed in seconds
     const timeElapsed = Math.round((Date.now() - questionStartTime) / 1000);
 
-    const questionsObj = JSON.parse(localStorage.getItem('questionsObj')) || [];
+    const questionsObj = JSON.parse(localStorage.getItem('questionsObj') || '[]');
+    
+    // Find the correct answer
+    const correctAnswerObj = currAnswers.find((ans) => ans.isCorrect === true);
+    const correctAnswerText = correctAnswerObj?.answer_text || correctAnswerObj;
+
+    // ✅ Re-validate with new validator before storing
+    const revalidatedResult = await validateAnswerEnhanced(
+      answer,
+      correctAnswerText,
+      currQuestion?.questionText || '',
+      currQuestion?.type || 'Math Input'  // Use question type if available, fallback to Math Input
+    );
+
+    console.log('💾 Storing question with validation:', {
+      studentAnswer: answer,
+      correctAnswer: correctAnswerText,
+      oldIsCorrect: isAnswerCorrect,
+      newIsCorrect: revalidatedResult,
+      questionText: currQuestion?.questionText?.substring(0, 50) + '...'
+    });
 
     questionsObj.push({
       question: currQuestion,
       q_index: currentStep,
       answer: answer,
-      isCorrect: isAnswerCorrect,
-      actualAnswer: currAnswers.find((answer) => answer.isCorrect == true),
-      timeElapsed: timeElapsed, // Add time elapsed in seconds
+      isCorrect: revalidatedResult,  // ✅ Use fresh validation instead of isAnswerCorrect
+      actualAnswer: correctAnswerObj,
+      timeElapsed: timeElapsed,
     });
 
     localStorage.setItem('questionsObj', JSON.stringify(questionsObj));
   };
 
-  const handleLives = () => {
-    if (!isAnswerCorrect) {
+  const handleLives = (validationResult) => {
+    // Use the passed validation result instead of the old state
+    if (!validationResult) {
       setNumLives((prev) => prev - 1);
       if (numLives <= 1) {
-        redirect(`/end-screen?mode=${mode}`);
+        router.push(`/end-screen?mode=${mode}`);
+        return true;
       }
     }
+    return false;
   };
 
-  const submitAnswer = () => {
-    setLocalStorage();
-    handleLives();
+  const handleQuizComplete = () => {
+    router.push(`/end-screen?mode=${mode}`);
+  };
+
+  const submitAnswer = async () => {
+    // Get fresh validation result before handling lives
+    const correctAnswerObj = currAnswers.find((ans) => ans.isCorrect === true);
+    const correctAnswerText = correctAnswerObj?.answer_text || correctAnswerObj;
+    
+    const freshValidationResult = await validateAnswerEnhanced(
+      answer,
+      correctAnswerText,
+      currQuestion?.questionText || '',
+      currQuestion?.type || 'Math Input'
+    );
+
+    console.log('🔄 Fresh validation for life calculation:', {
+      studentAnswer: answer,
+      correctAnswer: correctAnswerText,
+      isCorrect: freshValidationResult
+    });
+
+    await setLocalStorage();
+    const gameOver = handleLives(freshValidationResult); // Pass fresh result
+    
+    if (gameOver) {
+      return;
+    }
 
     // Increment the current step and reset states
     setCurrentStep((prev) => prev + 1);
@@ -82,13 +153,14 @@ export default function QuestionsTracker({
     setIsAnswerCorrect(false);
 
     if (currentStep >= allQuestions.length) {
-      submitCallback(); // Call the callback to notify the parent component
+      handleQuizComplete();
       return;
     }
 
-    setCurrQuestion(allQuestions[currentStep]);
-    setCurrAnswers(allQuestions[currentStep].answers || []);
-    // Note: questionStartTime will be updated by the useEffect above
+    // ✅ Safe access to next question
+    const nextQuestion = allQuestions[currentStep] || null;
+    setCurrQuestion(nextQuestion);
+    setCurrAnswers(nextQuestion?.answers || []);
   };
 
   return (
@@ -100,7 +172,7 @@ export default function QuestionsTracker({
           numLives={numLives}
         />
         <div>
-          <QuestionTemplate question={currQuestion.questionText} />
+          <QuestionTemplate question={currQuestion?.questionText || 'Loading...'} />
         </div>
         <div>
           <AnswerWrapper

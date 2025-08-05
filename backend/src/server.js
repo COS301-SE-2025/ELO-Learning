@@ -16,6 +16,8 @@ import singlePlayerRoutes from './singlePlayerRoutes.js';
 import socketsHandlers from './sockets.js';
 import userRoutes from './userRoutes.js';
 import validateRoutes from './validateRoutes.js';
+import baselineRoutes from './baselineRoutes.js';
+
 
 // Load environment variables
 dotenv.config();
@@ -38,6 +40,8 @@ app.use('/', validateRoutes);
 app.use('/', singlePlayerRoutes);
 app.use('/', multiPlayerRoutes);
 app.use('/', oauthRoutes);
+app.use('/baseline', baselineRoutes);
+
 
 // Simple health check route
 app.get('/', (req, res) => {

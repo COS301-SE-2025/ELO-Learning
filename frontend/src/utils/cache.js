@@ -1,6 +1,7 @@
 const CACHE_KEYS = {
   USER: 'user',
   TOKEN: 'token',
+  NEXTAUTH_SESSION: 'nextauth_session', // For NextAuth session data
   QUESTIONS: 'cached_questions',
   LEADERBOARD: 'cached_leaderboard',
   USER_ACHIEVEMENTS: 'user_achievements',
@@ -68,6 +69,36 @@ export const cache = {
       return true;
     } catch (error) {
       console.error('Cache clear error:', error);
+      return false;
+    }
+  },
+
+  // NextAuth-specific methods
+  setNextAuthSession: (session) => {
+    try {
+      cache.set(CACHE_KEYS.NEXTAUTH_SESSION, session, CACHE_EXPIRY.LONG);
+      // Also cache user data separately for easier access
+      if (session?.user) {
+        cache.set(CACHE_KEYS.USER, session.user, CACHE_EXPIRY.LONG);
+      }
+      return true;
+    } catch (error) {
+      console.error('NextAuth session cache error:', error);
+      return false;
+    }
+  },
+
+  getNextAuthSession: () => {
+    return cache.get(CACHE_KEYS.NEXTAUTH_SESSION);
+  },
+
+  clearNextAuthSession: () => {
+    try {
+      cache.remove(CACHE_KEYS.NEXTAUTH_SESSION);
+      cache.remove(CACHE_KEYS.USER);
+      return true;
+    } catch (error) {
+      console.error('NextAuth session clear error:', error);
       return false;
     }
   }

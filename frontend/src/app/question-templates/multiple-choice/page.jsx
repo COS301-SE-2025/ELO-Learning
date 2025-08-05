@@ -3,7 +3,7 @@ import { getQuestionsByType } from '@/utils/api';
 
 export default async function MultipleChoicePage() {
   const result = await getQuestionsByType('Multiple Choice');
-  
+
   if (!result.success) {
     return <div>Error loading questions</div>;
   }

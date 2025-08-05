@@ -30,8 +30,10 @@ export function useSessionWithCache() {
     },
     getUsername: () => {
       const user = session?.user || cache.get(CACHE_KEYS.USER);
-      return user?.username || user?.name || user?.email?.split('@')[0] || 'User';
-    }
+      return (
+        user?.username || user?.name || user?.email?.split('@')[0] || 'User'
+      );
+    },
   };
 
   return enhancedSession;
@@ -47,16 +49,20 @@ export const sessionManager = {
         ...cachedSession,
         user: {
           ...cachedSession.user,
-          ...updatedUserData
-        }
+          ...updatedUserData,
+        },
       };
       cache.setNextAuthSession(updatedSession);
     }
-    
+
     // Also update the standalone user cache
     const cachedUser = cache.get(CACHE_KEYS.USER);
     if (cachedUser) {
-      cache.set(CACHE_KEYS.USER, { ...cachedUser, ...updatedUserData }, CACHE_EXPIRY.LONG);
+      cache.set(
+        CACHE_KEYS.USER,
+        { ...cachedUser, ...updatedUserData },
+        CACHE_EXPIRY.LONG,
+      );
     }
   },
 
@@ -80,13 +86,13 @@ export const sessionManager = {
     // Clear our cache first
     cache.clearNextAuthSession();
     cache.clear(); // Clear all cached data
-    
+
     // Then use NextAuth signOut
     return signOut({
       callbackUrl: '/login-landing',
-      ...options
+      ...options,
     });
-  }
+  },
 };
 
 export default useSessionWithCache;

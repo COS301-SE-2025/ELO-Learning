@@ -6,13 +6,13 @@ const CACHE_KEYS = {
   LEADERBOARD: 'cached_leaderboard',
   USER_ACHIEVEMENTS: 'user_achievements',
   USER_PROGRESS: 'user_progress',
-  LAST_FETCH: 'last_fetch_timestamp'
+  LAST_FETCH: 'last_fetch_timestamp',
 };
 
 const CACHE_EXPIRY = {
   SHORT: 5 * 60 * 1000, // 5 minutes
   MEDIUM: 30 * 60 * 1000, // 30 minutes
-  LONG: 24 * 60 * 60 * 1000 // 24 hours
+  LONG: 24 * 60 * 60 * 1000, // 24 hours
 };
 
 export const cache = {
@@ -21,7 +21,7 @@ export const cache = {
       const item = {
         data,
         timestamp: Date.now(),
-        expiryTime
+        expiryTime,
       };
       localStorage.setItem(key, JSON.stringify(item));
       return true;
@@ -63,7 +63,7 @@ export const cache = {
 
   clear: () => {
     try {
-      Object.values(CACHE_KEYS).forEach(key => {
+      Object.values(CACHE_KEYS).forEach((key) => {
         localStorage.removeItem(key);
       });
       return true;
@@ -101,8 +101,7 @@ export const cache = {
       console.error('NextAuth session clear error:', error);
       return false;
     }
-  }
+  },
 };
 
 export { CACHE_EXPIRY, CACHE_KEYS };
-

@@ -2,7 +2,11 @@
 
 import { useState } from 'react';
 
-export default function MultipleChoiceTemplate({ answers, setAnswer, setIsAnswerCorrect }) {
+export default function MultipleChoiceTemplate({
+  answers,
+  setAnswer,
+  setIsAnswerCorrect,
+}) {
   const [selectedAnswerId, setSelectedAnswerId] = useState(null);
 
   const handleAnswerSelect = (answer) => {
@@ -24,11 +28,13 @@ export default function MultipleChoiceTemplate({ answers, setAnswer, setIsAnswer
           }`}
         >
           <div className="flex items-center gap-3">
-            <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center ${
-              selectedAnswerId === answer.id 
-                ? 'border-white bg-white' 
-                : 'border-gray-400'
-            }`}>
+            <div
+              className={`w-6 h-6 rounded-full border-2 flex items-center justify-center ${
+                selectedAnswerId === answer.id
+                  ? 'border-white bg-white'
+                  : 'border-gray-400'
+              }`}
+            >
               {selectedAnswerId === answer.id && (
                 <div className="w-3 h-3 rounded-full bg-[#7D32CE]"></div>
               )}

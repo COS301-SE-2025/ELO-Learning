@@ -22,14 +22,17 @@ export default function MixedQuestionsPage() {
         }
 
         const fetchedQuestions = result.data || [];
-        
+
         if (fetchedQuestions.length === 0) {
           console.warn('No mixed questions found');
           setError('No questions found for this level.');
           return;
         }
 
-        console.log('Mixed questions fetched successfully:', fetchedQuestions.length);
+        console.log(
+          'Mixed questions fetched successfully:',
+          fetchedQuestions.length,
+        );
         setQuestions(fetchedQuestions);
         setError(null);
       } catch (err) {
@@ -49,8 +52,12 @@ export default function MixedQuestionsPage() {
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center p-8">
           <div className="w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-          <h2 className="text-xl font-semibold text-gray-800">Loading Questions...</h2>
-          <p className="text-gray-600 mt-2">Preparing your mixed practice questions...</p>
+          <h2 className="text-xl font-semibold text-gray-800">
+            Loading Questions...
+          </h2>
+          <p className="text-gray-600 mt-2">
+            Preparing your mixed practice questions...
+          </p>
         </div>
       </div>
     );
@@ -62,17 +69,19 @@ export default function MixedQuestionsPage() {
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center p-8 max-w-md">
           <div className="text-4xl mb-4">⚠️</div>
-          <h2 className="text-2xl font-bold mb-4 text-red-600">Error Loading Questions</h2>
+          <h2 className="text-2xl font-bold mb-4 text-red-600">
+            Error Loading Questions
+          </h2>
           <p className="text-gray-600 mb-6">{error}</p>
           <div className="space-y-3">
-            <button 
-              onClick={() => window.location.reload()} 
+            <button
+              onClick={() => window.location.reload()}
               className="block w-full px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
             >
               Try Again
             </button>
-            <a 
-              href="/practice" 
+            <a
+              href="/practice"
               className="block px-6 py-3 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 transition-colors"
             >
               Back to Practice

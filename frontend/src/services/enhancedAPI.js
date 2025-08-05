@@ -8,19 +8,19 @@ export const enhancedAPI = {
     try {
       // Call the original API
       const result = await apiUpdateUserXP(userId, newXP);
-      
+
       if (result) {
         // Update NextAuth session cache
         const { sessionManager } = await import('../hooks/useSessionWithCache');
         sessionManager.updateCachedUserData({ xp: newXP });
-        
+
         // Also update standalone user cache
         const cachedUser = cache.get(CACHE_KEYS.USER);
         if (cachedUser) {
           cache.set(CACHE_KEYS.USER, { ...cachedUser, xp: newXP });
         }
       }
-      
+
       return result;
     } catch (error) {
       console.error('Failed to update user XP:', error);
@@ -69,7 +69,7 @@ export const enhancedAPI = {
     if (nextAuthSession?.accessToken) {
       return nextAuthSession.accessToken;
     }
-    
+
     // Fallback to localStorage token
     return localStorage.getItem('token');
   },
@@ -78,7 +78,7 @@ export const enhancedAPI = {
   async fetchUserDataWithCache(userId) {
     const cacheKey = `user_${userId}`;
     const cachedData = cache.get(cacheKey);
-    
+
     if (cachedData) {
       return cachedData;
     }
@@ -86,10 +86,10 @@ export const enhancedAPI = {
     try {
       const { fetchUserById } = await import('./api');
       const userData = await fetchUserById(userId);
-      
+
       // Cache for 5 minutes
       cache.set(cacheKey, userData, 5 * 60 * 1000);
-      
+
       return userData;
     } catch (error) {
       console.error('Failed to fetch user data:', error);
@@ -101,12 +101,12 @@ export const enhancedAPI = {
   clearUserCache() {
     cache.clear();
     // Also clear any user-specific cache keys
-    Object.keys(localStorage).forEach(key => {
+    Object.keys(localStorage).forEach((key) => {
       if (key.startsWith('user_') || key.startsWith('cache_')) {
         localStorage.removeItem(key);
       }
     });
-  }
+  },
 };
 
 export default enhancedAPI;

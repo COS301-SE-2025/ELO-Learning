@@ -219,7 +219,12 @@ export default function MathInputTemplate({
       setIsChecking(true);
       try {
         // Use synchronous validation for real-time feedback
-        const isCorrect = validateAnswerSync(inputValue, correctAnswer, '', 'Math Input');
+        const isCorrect = validateAnswerSync(
+          inputValue,
+          correctAnswer,
+          '',
+          'Math Input',
+        );
         setIsAnswerCorrect(isCorrect);
       } catch (error) {
         console.error('Quick validation error:', error);
@@ -332,7 +337,6 @@ export default function MathInputTemplate({
 
   return (
     <div className="w-full space-y-6">
-
       {/* Enhanced Input Field */}
       <div className="relative">
         <textarea
@@ -459,11 +463,13 @@ export default function MathInputTemplate({
 
         {/* Symbol grid */}
         <div className="p-4">
-          <div className={`grid gap-3 ${
-    activeTab === 'numbers' 
-    ? 'grid-cols-5' 
-    : 'grid-cols-3 sm:grid-cols-4 md:grid-cols-5'
-}`}>
+          <div
+            className={`grid gap-3 ${
+              activeTab === 'numbers'
+                ? 'grid-cols-5'
+                : 'grid-cols-3 sm:grid-cols-4 md:grid-cols-5'
+            }`}
+          >
             {mathCategories[activeTab].symbols.map((item, index) => (
               <button
                 key={index}

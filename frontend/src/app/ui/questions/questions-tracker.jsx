@@ -9,11 +9,7 @@ import QuestionFooter from '@/app/ui/questions/question-footer';
 import QuestionHeader from '@/app/ui/questions/question-header';
 import { validateAnswerEnhanced } from '@/utils/answerValidator';
 
-export default function QuestionsTracker({
-  questions,
-  lives,
-  mode,
-}) {
+export default function QuestionsTracker({ questions, lives, mode }) {
   const router = useRouter();
 
   // ✅ Safe array handling
@@ -37,8 +33,12 @@ export default function QuestionsTracker({
       <div className="flex items-center justify-center h-full">
         <div className="text-center p-8">
           <div className="text-4xl mb-4">📝</div>
-          <h2 className="text-xl font-bold text-gray-800 mb-2">No Questions Available</h2>
-          <p className="text-gray-600">No questions found for this practice session.</p>
+          <h2 className="text-xl font-bold text-gray-800 mb-2">
+            No Questions Available
+          </h2>
+          <p className="text-gray-600">
+            No questions found for this practice session.
+          </p>
         </div>
       </div>
     );
@@ -71,8 +71,10 @@ export default function QuestionsTracker({
     // Calculate time elapsed in seconds
     const timeElapsed = Math.round((Date.now() - questionStartTime) / 1000);
 
-    const questionsObj = JSON.parse(localStorage.getItem('questionsObj') || '[]');
-    
+    const questionsObj = JSON.parse(
+      localStorage.getItem('questionsObj') || '[]',
+    );
+
     // Find the correct answer
     const correctAnswerObj = currAnswers.find((ans) => ans.isCorrect === true);
     const correctAnswerText = correctAnswerObj?.answer_text || correctAnswerObj;
@@ -82,7 +84,7 @@ export default function QuestionsTracker({
       answer,
       correctAnswerText,
       currQuestion?.questionText || '',
-      currQuestion?.type || 'Math Input'  // Use question type if available, fallback to Math Input
+      currQuestion?.type || 'Math Input', // Use question type if available, fallback to Math Input
     );
 
     console.log('💾 Storing question with validation:', {
@@ -90,14 +92,14 @@ export default function QuestionsTracker({
       correctAnswer: correctAnswerText,
       oldIsCorrect: isAnswerCorrect,
       newIsCorrect: revalidatedResult,
-      questionText: currQuestion?.questionText?.substring(0, 50) + '...'
+      questionText: currQuestion?.questionText?.substring(0, 50) + '...',
     });
 
     questionsObj.push({
       question: currQuestion,
       q_index: currentStep,
       answer: answer,
-      isCorrect: revalidatedResult,  // ✅ Use fresh validation instead of isAnswerCorrect
+      isCorrect: revalidatedResult, // ✅ Use fresh validation instead of isAnswerCorrect
       actualAnswer: correctAnswerObj,
       timeElapsed: timeElapsed,
     });
@@ -125,23 +127,23 @@ export default function QuestionsTracker({
     // Get fresh validation result before handling lives
     const correctAnswerObj = currAnswers.find((ans) => ans.isCorrect === true);
     const correctAnswerText = correctAnswerObj?.answer_text || correctAnswerObj;
-    
+
     const freshValidationResult = await validateAnswerEnhanced(
       answer,
       correctAnswerText,
       currQuestion?.questionText || '',
-      currQuestion?.type || 'Math Input'
+      currQuestion?.type || 'Math Input',
     );
 
     console.log('🔄 Fresh validation for life calculation:', {
       studentAnswer: answer,
       correctAnswer: correctAnswerText,
-      isCorrect: freshValidationResult
+      isCorrect: freshValidationResult,
     });
 
     await setLocalStorage();
     const gameOver = handleLives(freshValidationResult); // Pass fresh result
-    
+
     if (gameOver) {
       return;
     }
@@ -172,7 +174,9 @@ export default function QuestionsTracker({
           numLives={numLives}
         />
         <div>
-          <QuestionTemplate question={currQuestion?.questionText || 'Loading...'} />
+          <QuestionTemplate
+            question={currQuestion?.questionText || 'Loading...'}
+          />
         </div>
         <div>
           <AnswerWrapper

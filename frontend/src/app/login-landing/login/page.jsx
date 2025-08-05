@@ -32,7 +32,7 @@ export default function Page() {
         // Clear any existing cache before redirecting
         const { cache } = await import('../../../utils/cache');
         cache.clear();
-        
+
         // Redirect to dashboard
         router.push('/dashboard');
         console.log('Login successful:', result);
@@ -121,8 +121,10 @@ export default function Page() {
             // Clear cache before OAuth sign in
             const { cache } = await import('../../../utils/cache');
             cache.clear();
-            
-            signIn('google', { callbackUrl: 'http://localhost:8080/dashboard' });
+
+            signIn('google', {
+              callbackUrl: 'http://localhost:8080/dashboard',
+            });
           }}
         >
           {/* <FaGoogle size={24} /> */}

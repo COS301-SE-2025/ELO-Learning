@@ -15,7 +15,7 @@ export async function getQuestionsByType(questionType, limit = 10) {
     const headers = {
       'Content-Type': 'application/json',
     };
-    
+
     // Only add Authorization header on client side
     if (typeof window !== 'undefined') {
       const token = getAuthToken();
@@ -25,11 +25,13 @@ export async function getQuestionsByType(questionType, limit = 10) {
     }
 
     const response = await fetch(
-      `${API_BASE_URL}/questions/type/${encodeURIComponent(questionType)}?limit=${limit}`,
+      `${API_BASE_URL}/questions/type/${encodeURIComponent(
+        questionType,
+      )}?limit=${limit}`,
       {
         method: 'GET',
         headers,
-      }
+      },
     );
 
     const data = await response.json();
@@ -38,7 +40,7 @@ export async function getQuestionsByType(questionType, limit = 10) {
       return {
         success: false,
         error: data.error || 'Failed to fetch questions',
-        details: data.details
+        details: data.details,
       };
     }
 
@@ -46,14 +48,14 @@ export async function getQuestionsByType(questionType, limit = 10) {
       success: true,
       data: data.data,
       type: data.type,
-      count: data.count
+      count: data.count,
     };
   } catch (error) {
     console.error('Error fetching questions by type:', error);
     return {
       success: false,
       error: 'Network error occurred',
-      details: error.message
+      details: error.message,
     };
   }
 }
@@ -64,7 +66,7 @@ export async function getMixedQuestions(level = 1, count = 10) {
     const headers = {
       'Content-Type': 'application/json',
     };
-    
+
     if (typeof window !== 'undefined') {
       const token = getAuthToken();
       if (token) {
@@ -77,7 +79,7 @@ export async function getMixedQuestions(level = 1, count = 10) {
       {
         method: 'GET',
         headers,
-      }
+      },
     );
 
     const data = await response.json();
@@ -86,7 +88,7 @@ export async function getMixedQuestions(level = 1, count = 10) {
       return {
         success: false,
         error: data.error || 'Failed to fetch mixed questions',
-        details: data.details
+        details: data.details,
       };
     }
 
@@ -94,25 +96,30 @@ export async function getMixedQuestions(level = 1, count = 10) {
       success: true,
       data: data.data,
       level: data.level,
-      count: data.count
+      count: data.count,
     };
   } catch (error) {
     console.error('Error fetching mixed questions:', error);
     return {
       success: false,
       error: 'Network error occurred',
-      details: error.message
+      details: error.message,
     };
   }
 }
 
 // Enhanced submit function that handles all question types
-export async function submitQuestionAnswer(questionId, studentAnswer, userId, questionType = null) {
+export async function submitQuestionAnswer(
+  questionId,
+  studentAnswer,
+  userId,
+  questionType = null,
+) {
   try {
     const headers = {
       'Content-Type': 'application/json',
     };
-    
+
     if (typeof window !== 'undefined') {
       const token = getAuthToken();
       if (token) {
@@ -120,15 +127,18 @@ export async function submitQuestionAnswer(questionId, studentAnswer, userId, qu
       }
     }
 
-    const response = await fetch(`${API_BASE_URL}/question/${questionId}/submit`, {
-      method: 'POST',
-      headers,
-      body: JSON.stringify({
-        studentAnswer,
-        userId,
-        questionType
-      }),
-    });
+    const response = await fetch(
+      `${API_BASE_URL}/question/${questionId}/submit`,
+      {
+        method: 'POST',
+        headers,
+        body: JSON.stringify({
+          studentAnswer,
+          userId,
+          questionType,
+        }),
+      },
+    );
 
     const data = await response.json();
 
@@ -136,20 +146,20 @@ export async function submitQuestionAnswer(questionId, studentAnswer, userId, qu
       return {
         success: false,
         error: data.error || 'Failed to submit answer',
-        details: data.details
+        details: data.details,
       };
     }
 
     return {
       success: true,
-      data: data.data
+      data: data.data,
     };
   } catch (error) {
     console.error('Error submitting answer:', error);
     return {
       success: false,
       error: 'Network error occurred',
-      details: error.message
+      details: error.message,
     };
   }
 }

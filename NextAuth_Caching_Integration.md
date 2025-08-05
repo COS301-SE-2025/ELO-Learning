@@ -1,22 +1,26 @@
 # NextAuth + Caching Integration Guide
 
 ## Overview
+
 The OAuth implementation uses **NextAuth.js** with Google OAuth and credentials providers. This guide shows how the caching system has been integrated with NextAuth for optimal performance.
 
 ## ✅ What's Already Integrated
 
 ### 1. NextAuth Session Caching
+
 - **`useSessionWithCache`** hook automatically caches NextAuth session data
 - **Session data** is cached with 24-hour expiry
 - **User data** is separately cached for faster access
 - **Automatic cache updates** when session changes
 
-### 2. Enhanced API Integration  
+### 2. Enhanced API Integration
+
 - **Axios interceptor** works with NextAuth session tokens
 - **Cached API responses** for leaderboards, questions, and user data
 - **Smart token handling** - prioritizes NextAuth tokens, falls back to cached tokens
 
 ### 3. Session Management
+
 - **`sessionManager`** provides unified session operations
 - **Enhanced signout** clears both NextAuth session and cache
 - **User data updates** automatically sync with cached session
@@ -24,11 +28,13 @@ The OAuth implementation uses **NextAuth.js** with Google OAuth and credentials 
 ## 🔧 New Files Created
 
 ### Core Caching
+
 - ✅ `src/utils/cache.js` - Enhanced with NextAuth support
 - ✅ `src/hooks/useSessionWithCache.js` - NextAuth + caching hook
 - ✅ `src/services/enhancedAPI.js` - API functions with cache integration
 
 ### Examples & Components
+
 - ✅ `src/components/CachingExample.jsx` - Demo component
 - ✅ Updated login page with cache clearing
 - ✅ Updated header with cached session data
@@ -38,12 +44,13 @@ The OAuth implementation uses **NextAuth.js** with Google OAuth and credentials 
 ### 1. Replace useSession with useSessionWithCache
 
 **Before:**
+
 ```jsx
 import { useSession } from 'next-auth/react';
 
 function MyComponent() {
   const { data: session, status } = useSession();
-  
+
   return (
     <div>
       <p>XP: {session?.user?.xp || 0}</p>
@@ -54,12 +61,13 @@ function MyComponent() {
 ```
 
 **After:**
+
 ```jsx
 import { useSessionWithCache } from '../hooks/useSessionWithCache';
 
 function MyComponent() {
   const session = useSessionWithCache();
-  
+
   return (
     <div>
       <p>XP: {session.getXP()}</p>
@@ -72,6 +80,7 @@ function MyComponent() {
 ### 2. Update API Calls to Sync with Cache
 
 **Before:**
+
 ```jsx
 const updateXP = async (userId, newXP) => {
   await updateUserXP(userId, newXP);
@@ -81,6 +90,7 @@ const updateXP = async (userId, newXP) => {
 ```
 
 **After:**
+
 ```jsx
 import { enhancedAPI } from '../services/enhancedAPI';
 
@@ -93,6 +103,7 @@ const updateXP = async (userId, newXP) => {
 ### 3. Enhanced Logout
 
 **Before:**
+
 ```jsx
 import { signOut } from 'next-auth/react';
 
@@ -102,6 +113,7 @@ const handleLogout = () => {
 ```
 
 **After:**
+
 ```jsx
 import { sessionManager } from '../hooks/useSessionWithCache';
 
@@ -114,29 +126,34 @@ const handleLogout = async () => {
 ## 🎯 Key Benefits
 
 ### 1. **Performance**
+
 - ⚡ Faster component renders (cached session data)
 - ⚡ Reduced API calls (cached responses)
 - ⚡ Instant user data access
 
 ### 2. **Consistency**
+
 - 🔄 User data stays in sync across components
 - 🔄 Automatic cache updates when data changes
 - 🔄 Works seamlessly with both auth providers
 
 ### 3. **Reliability**
+
 - 💾 Data persists across page refreshes
 - 💾 Graceful fallbacks when cache expires
 - 💾 Automatic cleanup on logout
 
 ## 📋 Implementation Checklist
 
-### Current Status:
+### Current Status
+
 - ✅ NextAuth configuration working
 - ✅ Google OAuth functional
 - ✅ Credentials provider working
 - ✅ Basic session management in place
 
-### Caching Integration:
+### Caching Integration
+
 - ✅ Cache utilities created
 - ✅ Session caching hook ready
 - ✅ API interceptor updated
@@ -144,7 +161,8 @@ const handleLogout = async () => {
 - ✅ Login/logout updated
 - ✅ Header component updated
 
-### Next Steps (Optional):
+### Next Steps (Optional)
+
 - [ ] Replace `useSession` with `useSessionWithCache` in other components
 - [ ] Update API calls to use `enhancedAPI` functions
 - [ ] Add cache warming for critical data
@@ -153,6 +171,7 @@ const handleLogout = async () => {
 ## 🧪 Testing the Integration
 
 ### 1. **Login Flow**
+
 ```bash
 # Test both login methods
 1. Login with email/password
@@ -163,6 +182,7 @@ const handleLogout = async () => {
 ```
 
 ### 2. **Cache Persistence**
+
 ```bash
 1. Login and navigate around the app
 2. Refresh the page
@@ -171,6 +191,7 @@ const handleLogout = async () => {
 ```
 
 ### 3. **Data Updates**
+
 ```bash
 1. Perform actions that update user data (answer questions, etc.)
 2. Verify XP updates in header immediately
@@ -179,7 +200,8 @@ const handleLogout = async () => {
 
 ## 🔍 Debugging Cache Issues
 
-### Check Cache Status:
+### Check Cache Status
+
 ```javascript
 import { cache, CACHE_KEYS } from '../utils/cache';
 
@@ -189,13 +211,15 @@ console.log('User:', cache.get(CACHE_KEYS.USER));
 console.log('Leaderboard:', cache.get(CACHE_KEYS.LEADERBOARD));
 ```
 
-### Clear Cache Manually:
+### Clear Cache Manually
+
 ```javascript
 import { cache } from '../utils/cache';
 cache.clear(); // Clears all cached data
 ```
 
-### Monitor Cache in Dev Tools:
+### Monitor Cache in Dev Tools
+
 1. Open Browser Dev Tools
 2. Go to Application → Local Storage
 3. Look for keys starting with your cache prefixes
@@ -204,11 +228,13 @@ cache.clear(); // Clears all cached data
 ## 🚀 Performance Impact
 
 **Before Caching:**
+
 - Session data fetched on every component render
 - API calls repeated for same data
 - Slower page loads and interactions
 
 **After Caching:**
+
 - Session data cached for 24 hours
 - API responses cached (5-30 minutes based on data type)
 - ~50-80% reduction in network requests

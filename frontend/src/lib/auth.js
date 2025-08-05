@@ -16,8 +16,11 @@ export const authOptions = {
       },
       async authorize(credentials) {
         try {
-          console.log('🔐 Attempting credentials login for:', credentials.email);
-          
+          console.log(
+            '🔐 Attempting credentials login for:',
+            credentials.email,
+          );
+
           // Call your backend login endpoint directly
           const response = await fetch('http://localhost:3000/login', {
             method: 'POST',
@@ -31,7 +34,10 @@ export const authOptions = {
           });
 
           const data = await response.json();
-          console.log('🔐 Backend response:', { success: response.ok, status: response.status });
+          console.log('🔐 Backend response:', {
+            success: response.ok,
+            status: response.status,
+          });
 
           if (response.ok && data.user) {
             console.log('✅ Login successful for user:', data.user.username);

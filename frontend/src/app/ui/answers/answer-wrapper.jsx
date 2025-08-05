@@ -27,8 +27,8 @@ export default function AnswerWrapper({
 
     // Get ALL correct answers, not just the first one
     const correctAnswers = currAnswers
-      .filter(answer => answer.isCorrect)
-      .map(answer => answer.answer_text || answer.answerText)
+      .filter((answer) => answer.isCorrect)
+      .map((answer) => answer.answer_text || answer.answerText)
       .filter(Boolean); // Remove any null/undefined values
 
     if (correctAnswers.length === 0) {
@@ -40,7 +40,7 @@ export default function AnswerWrapper({
     console.log('Checking student answer against all correct answers:', {
       student: studentAnswer,
       correctAnswers: correctAnswers,
-      questionText: question.questionText
+      questionText: question.questionText,
     });
 
     // Check if student answer matches ANY of the correct answers
@@ -49,35 +49,35 @@ export default function AnswerWrapper({
 
     for (const correctAnswer of correctAnswers) {
       const individualResult = await validateAnswerEnhanced(
-        studentAnswer, 
-        correctAnswer, 
-        question.questionText || '', 
-        question.type || ''
+        studentAnswer,
+        correctAnswer,
+        question.questionText || '',
+        question.type || '',
       );
-      
+
       if (individualResult) {
         isCorrect = true;
         matchedAnswer = correctAnswer;
         break; // Found a match, no need to check further
       }
     }
-    
+
     console.log('Validation result:', {
       student: studentAnswer,
       correctAnswers: correctAnswers,
       questionText: question.questionText,
       isCorrect: isCorrect,
-      matchedAnswer: matchedAnswer
+      matchedAnswer: matchedAnswer,
     });
-    
+
     setIsAnswerCorrect(isCorrect);
   };
 
   // Helper function to get all correct answers as an array
   const getAllCorrectAnswers = () => {
     return currAnswers
-      .filter(answer => answer.isCorrect)
-      .map(answer => answer.answer_text || answer.answerText)
+      .filter((answer) => answer.isCorrect)
+      .map((answer) => answer.answer_text || answer.answerText)
       .filter(Boolean);
   };
 
@@ -137,18 +137,30 @@ export default function AnswerWrapper({
       {question.type === 'Fill-in-the-Blank' && (
         <div className="text-center py-8 bg-gray-50 rounded-lg border-2 border-dashed border-gray-300">
           <div className="text-4xl mb-4">📝</div>
-          <h3 className="text-lg font-semibold text-gray-700 mb-2">Fill in the Blank</h3>
+          <h3 className="text-lg font-semibold text-gray-700 mb-2">
+            Fill in the Blank
+          </h3>
           <p className="text-gray-600">Interactive blanks coming soon!</p>
         </div>
       )}
 
       {/* Fallback for Unknown Question Types */}
-      {!['Multiple Choice', 'Math Input', 'Open Response', 'Expression Builder', 'Fill-in-the-Blank'].includes(question.type) && (
+      {![
+        'Multiple Choice',
+        'Math Input',
+        'Open Response',
+        'Expression Builder',
+        'Fill-in-the-Blank',
+      ].includes(question.type) && (
         <div className="text-center py-8 bg-yellow-50 rounded-lg border border-yellow-200">
           <div className="text-4xl mb-4">❓</div>
-          <h3 className="text-lg font-semibold text-yellow-800 mb-2">Unknown Question Type</h3>
-          <p className="text-yellow-700">Question type "{question.type}" is not yet supported.</p>
-          
+          <h3 className="text-lg font-semibold text-yellow-800 mb-2">
+            Unknown Question Type
+          </h3>
+          <p className="text-yellow-700">
+            Question type "{question.type}" is not yet supported.
+          </p>
+
           {/* Basic fallback input with enhanced validation */}
           <div className="mt-4">
             <input

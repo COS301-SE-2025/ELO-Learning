@@ -11,7 +11,7 @@ import { useEffect, useState } from 'react';
 export default function MathKeyboardWrapper({ questions }) {
   // ✅ Add client-side mounting check to prevent SSR issues
   const [mounted, setMounted] = useState(false);
-  
+
   useEffect(() => {
     setMounted(true);
   }, []);

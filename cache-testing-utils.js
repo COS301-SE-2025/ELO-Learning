@@ -5,17 +5,17 @@
 function checkCache() {
   console.log('🔍 Current Cache Status:');
   console.log('========================');
-  
+
   const keys = [
     'nextauth_session',
-    'user', 
+    'user',
     'cached_leaderboard',
     'cached_questions',
     'user_achievements',
-    'user_progress'
+    'user_progress',
   ];
-  
-  keys.forEach(key => {
+
+  keys.forEach((key) => {
     const item = localStorage.getItem(key);
     if (item) {
       try {
@@ -23,8 +23,10 @@ function checkCache() {
         console.log(`✅ ${key}:`, {
           size: `${(item.length / 1024).toFixed(2)} KB`,
           timestamp: new Date(parsed.timestamp),
-          expiresIn: `${Math.round((parsed.expiryTime - (Date.now() - parsed.timestamp)) / 1000 / 60)} minutes`,
-          data: parsed.data
+          expiresIn: `${Math.round(
+            (parsed.expiryTime - (Date.now() - parsed.timestamp)) / 1000 / 60,
+          )} minutes`,
+          data: parsed.data,
         });
       } catch (e) {
         console.log(`❌ ${key}: Invalid JSON`);
@@ -33,7 +35,7 @@ function checkCache() {
       console.log(`⚪ ${key}: Not cached`);
     }
   });
-  
+
   // Total cache size
   let totalSize = 0;
   for (let key in localStorage) {
@@ -63,12 +65,16 @@ function testCacheExpiry(key) {
       const parsed = JSON.parse(item);
       const now = Date.now();
       const timeLeft = parsed.expiryTime - (now - parsed.timestamp);
-      
+
       console.log(`⏰ Cache expiry for ${key}:`);
       console.log(`   Expires in: ${Math.round(timeLeft / 1000 / 60)} minutes`);
       console.log(`   Created: ${new Date(parsed.timestamp).toLocaleString()}`);
-      console.log(`   Expires: ${new Date(parsed.timestamp + parsed.expiryTime).toLocaleString()}`);
-      
+      console.log(
+        `   Expires: ${new Date(
+          parsed.timestamp + parsed.expiryTime,
+        ).toLocaleString()}`,
+      );
+
       if (timeLeft <= 0) {
         console.log('   ⚠️ Cache has expired!');
       } else {
@@ -85,7 +91,7 @@ function testCacheExpiry(key) {
 // 4. Simulate cache operations
 function simulateXPUpdate() {
   console.log('🎮 Simulating XP update...');
-  
+
   // Get current user from cache
   const userCache = localStorage.getItem('user');
   if (userCache) {
@@ -93,12 +99,12 @@ function simulateXPUpdate() {
       const parsed = JSON.parse(userCache);
       const currentXP = parsed.data?.xp || 0;
       const newXP = currentXP + 100;
-      
+
       // Update cache
       parsed.data.xp = newXP;
       parsed.timestamp = Date.now(); // Update timestamp
       localStorage.setItem('user', JSON.stringify(parsed));
-      
+
       console.log(`✅ XP updated: ${currentXP} → ${newXP}`);
       console.log('🔄 Cache updated with new XP value');
     } catch (e) {
@@ -113,20 +119,22 @@ function simulateXPUpdate() {
 function monitorCache() {
   console.log('👀 Starting cache monitor...');
   console.log('Any localStorage changes will be logged below:');
-  
+
   const originalSetItem = localStorage.setItem;
   const originalRemoveItem = localStorage.removeItem;
-  
-  localStorage.setItem = function(key, value) {
-    console.log(`📝 Cache SET: ${key} (${(value.length / 1024).toFixed(2)} KB)`);
+
+  localStorage.setItem = function (key, value) {
+    console.log(
+      `📝 Cache SET: ${key} (${(value.length / 1024).toFixed(2)} KB)`,
+    );
     originalSetItem.apply(this, arguments);
   };
-  
-  localStorage.removeItem = function(key) {
+
+  localStorage.removeItem = function (key) {
     console.log(`🗑️ Cache REMOVE: ${key}`);
     originalRemoveItem.apply(this, arguments);
   };
-  
+
   console.log('✅ Cache monitor active');
 }
 

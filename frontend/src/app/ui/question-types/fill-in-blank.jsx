@@ -12,7 +12,7 @@ export default function FillInBlankTemplate({ question, setAnswer }) {
     const text = question.questionText || question.fillInText || '';
     const parts = text.split(/____|\[blank\d*\]/g);
     const blanks = text.match(/____|\[blank\d*\]/g) || [];
-    
+
     // Create question parts with blanks
     const parsedParts = [];
     for (let i = 0; i < parts.length; i++) {
@@ -21,7 +21,7 @@ export default function FillInBlankTemplate({ question, setAnswer }) {
         parsedParts.push({ type: 'blank', id: i });
       }
     }
-    
+
     setQuestionParts(parsedParts);
   }, [question]);
 
@@ -32,7 +32,7 @@ export default function FillInBlankTemplate({ question, setAnswer }) {
   };
 
   const getBlankCount = () => {
-    return questionParts.filter(part => part.type === 'blank').length;
+    return questionParts.filter((part) => part.type === 'blank').length;
   };
 
   return (
@@ -70,7 +70,10 @@ export default function FillInBlankTemplate({ question, setAnswer }) {
                 key={index}
                 onClick={() => {
                   // Insert into the first empty blank
-                  const firstEmptyBlank = Object.keys(blankAnswers).find(key => !blankAnswers[key]) || '0';
+                  const firstEmptyBlank =
+                    Object.keys(blankAnswers).find(
+                      (key) => !blankAnswers[key],
+                    ) || '0';
                   const currentValue = blankAnswers[firstEmptyBlank] || '';
                   handleBlankChange(firstEmptyBlank, currentValue + symbol);
                 }}
@@ -85,15 +88,23 @@ export default function FillInBlankTemplate({ question, setAnswer }) {
 
       {/* Progress Indicator */}
       <div className="text-sm">
-        {Object.keys(blankAnswers).length === getBlankCount() && 
-         Object.values(blankAnswers).every(val => val && val.trim()) ? (
+        {Object.keys(blankAnswers).length === getBlankCount() &&
+        Object.values(blankAnswers).every((val) => val && val.trim()) ? (
           <div className="text-green-600 flex items-center gap-2">
-            <span className="w-4 h-4 bg-green-500 rounded-full flex items-center justify-center text-white text-xs">✓</span>
-            All blanks filled ({Object.keys(blankAnswers).length}/{getBlankCount()})
+            <span className="w-4 h-4 bg-green-500 rounded-full flex items-center justify-center text-white text-xs">
+              ✓
+            </span>
+            All blanks filled ({Object.keys(blankAnswers).length}/
+            {getBlankCount()})
           </div>
         ) : (
           <div className="text-gray-500">
-            Progress: {Object.values(blankAnswers).filter(val => val && val.trim()).length}/{getBlankCount()} blanks filled
+            Progress:{' '}
+            {
+              Object.values(blankAnswers).filter((val) => val && val.trim())
+                .length
+            }
+            /{getBlankCount()} blanks filled
           </div>
         )}
       </div>

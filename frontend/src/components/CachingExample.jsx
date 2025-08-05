@@ -1,7 +1,10 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { sessionManager, useSessionWithCache } from '../hooks/useSessionWithCache';
+import {
+  sessionManager,
+  useSessionWithCache,
+} from '../hooks/useSessionWithCache';
 import { enhancedAPI } from '../services/enhancedAPI';
 import { cache, CACHE_KEYS } from '../utils/cache';
 
@@ -18,17 +21,17 @@ export default function CachingExample() {
 
   const handleUpdateXP = async () => {
     if (!session?.user?.id) return;
-    
+
     setLoading(true);
     try {
       const newXP = xp + 100; // Award 100 XP
-      
+
       // This will update both the API and the cached session data
       await enhancedAPI.updateUserXP(session.user.id, newXP);
-      
+
       // Update local state
       setXp(newXP);
-      
+
       console.log('XP updated successfully!');
     } catch (error) {
       console.error('Failed to update XP:', error);
@@ -55,14 +58,16 @@ export default function CachingExample() {
       <div className="p-4">
         <h2 className="text-xl font-bold mb-4">Not authenticated</h2>
         <p className="mb-4">Please log in to see this example.</p>
-        
+
         <div className="p-4 bg-yellow-50 border border-yellow-200 rounded">
           <h3 className="font-semibold mb-2">🔍 Debugging Info:</h3>
           <p className="text-sm mb-2">
-            If you're having login issues, check the browser console for error messages.
+            If you're having login issues, check the browser console for error
+            messages.
           </p>
           <p className="text-sm mb-2">
-            <strong>For email/password:</strong> Make sure you have an account created via the register page.
+            <strong>For email/password:</strong> Make sure you have an account
+            created via the register page.
           </p>
           <p className="text-sm">
             <strong>For Google OAuth:</strong> This should work immediately.
@@ -75,7 +80,7 @@ export default function CachingExample() {
   return (
     <div className="p-4 max-w-md mx-auto bg-white rounded-lg shadow-md">
       <h2 className="text-xl font-bold mb-4">NextAuth + Caching Example</h2>
-      
+
       <div className="space-y-4">
         <div className="p-4 bg-gray-100 rounded">
           <h3 className="font-semibold">Session Data</h3>
@@ -125,12 +130,16 @@ export default function CachingExample() {
         <div className="p-4 bg-blue-100 rounded">
           <h3 className="font-semibold mb-2">Cache Status</h3>
           <pre className="text-xs">
-            {JSON.stringify({
-              hasSession: !!cache.get(CACHE_KEYS.NEXTAUTH_SESSION),
-              hasUser: !!cache.get(CACHE_KEYS.USER),
-              hasLeaderboard: !!cache.get(CACHE_KEYS.LEADERBOARD),
-              hasQuestions: !!cache.get(CACHE_KEYS.QUESTIONS),
-            }, null, 2)}
+            {JSON.stringify(
+              {
+                hasSession: !!cache.get(CACHE_KEYS.NEXTAUTH_SESSION),
+                hasUser: !!cache.get(CACHE_KEYS.USER),
+                hasLeaderboard: !!cache.get(CACHE_KEYS.LEADERBOARD),
+                hasQuestions: !!cache.get(CACHE_KEYS.QUESTIONS),
+              },
+              null,
+              2,
+            )}
           </pre>
         </div>
       </div>

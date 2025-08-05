@@ -1,4 +1,5 @@
 import axios from 'axios';
+import { cache, CACHE_EXPIRY, CACHE_KEYS } from '../utils/cache';
 
 const BASE_URL = 'http://localhost:3000'; // Change this when deploying
 
@@ -16,14 +17,48 @@ axiosInstance.interceptors.request.use(async (config) => {
   if (isServer) {
     const { cookies } = await import('next/headers');
     const awaitedCookies = await cookies();
-    const cookiesString = awaitedCookies
+
+    // Try to get NextAuth session token first
+    const nextAuthToken = awaitedCookies
       .getAll()
-      .filter((item) => item.name === 'token')
-      .map((item) => item.value);
-    config.headers.Authorization = `Bearer ${cookiesString}`;
+      .find(
+        (item) =>
+          item.name === 'next-auth.session-token' ||
+          item.name === '__Secure-next-auth.session-token',
+      );
+
+    if (nextAuthToken) {
+      config.headers.Authorization = `Bearer ${nextAuthToken.value}`;
+    } else {
+      // Fallback to regular token
+      const tokenCookie = awaitedCookies
+        .getAll()
+        .filter((item) => item.name === 'token')
+        .map((item) => item.value);
+      if (tokenCookie.length > 0) {
+        config.headers.Authorization = `Bearer ${tokenCookie}`;
+      }
+    }
     return config;
   } else {
-    const token = localStorage.getItem('token');
+    // Client-side: Check NextAuth session first, then fallback to cached tokens
+    let token = null;
+
+    // Try to get NextAuth session token from cache or localStorage
+    const nextAuthSession = cache.get(CACHE_KEYS.NEXTAUTH_SESSION);
+    if (nextAuthSession?.accessToken) {
+      token = nextAuthSession.accessToken;
+    } else {
+      // Fallback to our cached tokens
+      const provider = cache.get('auth_provider') || 'credentials';
+
+      if (provider === 'google' || provider === 'oauth') {
+        token = cache.get('oauth_token') || localStorage.getItem('oauth_token');
+      } else {
+        token = cache.get(CACHE_KEYS.TOKEN) || localStorage.getItem('token');
+      }
+    }
+
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
@@ -38,7 +73,16 @@ const authHeader = {
 
 // 1. GET /users
 export async function fetchAllUsers() {
+  // Try to get from cache first
+  const cachedUsers = cache.get(CACHE_KEYS.LEADERBOARD);
+  if (cachedUsers) {
+    return cachedUsers;
+  }
+
+  // If not in cache or expired, fetch from API
   const res = await axiosInstance.get('/users');
+  // Cache the response with 5-minute expiry
+  cache.set(CACHE_KEYS.LEADERBOARD, res.data, CACHE_EXPIRY.SHORT);
   return res.data;
 }
 
@@ -70,7 +114,15 @@ export async function updateUserXP(id, xp) {
 
 // 5. GET /questions
 export async function fetchAllQuestions() {
+  // Try to get from cache first
+  const cachedQuestions = cache.get(CACHE_KEYS.QUESTIONS);
+  if (cachedQuestions) {
+    return cachedQuestions;
+  }
+
   const res = await axiosInstance.get('/questions');
+  // Cache for 30 minutes
+  cache.set(CACHE_KEYS.QUESTIONS, res.data, CACHE_EXPIRY.MEDIUM);
   return res.data;
 }
 
@@ -116,6 +168,12 @@ export async function submitAnswer(id, answer) {
 
 export async function loginUser(email, password) {
   const res = await axiosInstance.post('/login', { email, password });
+  // Cache the user data and token
+  cache.set(CACHE_KEYS.TOKEN, res.data.token, CACHE_EXPIRY.LONG);
+  cache.set(CACHE_KEYS.USER, res.data.user, CACHE_EXPIRY.LONG);
+  // Still store in localStorage for persistence
+  localStorage.setItem('token', res.data.token);
+  localStorage.setItem('user', JSON.stringify(res.data.user));
   return res.data;
 }
 
@@ -137,12 +195,18 @@ export async function registerUser(
     currentLevel,
     joinDate,
   });
+  // Cache the user data and token
+  cache.set(CACHE_KEYS.TOKEN, res.data.token, CACHE_EXPIRY.LONG);
+  cache.set(CACHE_KEYS.USER, res.data.user, CACHE_EXPIRY.LONG);
+  // Store in localStorage for persistence
+  localStorage.setItem('token', res.data.token);
+  localStorage.setItem('user', JSON.stringify(res.data.user));
   return res.data;
 }
 
 export async function logoutUser() {
-  // This function is kept for backward compatibility
-  // For new implementations, use performLogout from @/lib/logout
+  // Clear both cache and localStorage
+  cache.clear();
   localStorage.removeItem('token');
   localStorage.removeItem('user');
 }

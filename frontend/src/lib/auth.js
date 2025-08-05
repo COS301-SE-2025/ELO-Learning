@@ -16,36 +16,49 @@ export const authOptions = {
       },
       async authorize(credentials) {
         try {
-          // Add your authentication logic here
-          // This is where you would validate the user's credentials
-          // For example, check against your database or API
-
-          // Replace this with your actual authentication logic
-          const response = await loginUser(
+          console.log(
+            '🔐 Attempting credentials login for:',
             credentials.email,
-            credentials.password,
           );
 
-          if (response.user) {
+          // Call your backend login endpoint directly
+          const response = await fetch('http://localhost:3000/login', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              email: credentials.email,
+              password: credentials.password,
+            }),
+          });
+
+          const data = await response.json();
+          console.log('🔐 Backend response:', {
+            success: response.ok,
+            status: response.status,
+          });
+
+          if (response.ok && data.user) {
+            console.log('✅ Login successful for user:', data.user.username);
             // Return user object if authentication successful
             return {
-              id: response.user.id,
-              email: response.user.email,
-              name: response.user.name || response.user.username,
-              surname: response.user.surname,
-              username: response.user.username,
-              xp: response.user.xp,
-              currentLevel: response.user.currentLevel,
-              joinDate: response.user.joinDate,
-              pfpURL: response.user.pfpURL,
-              // Add any other fields your backend returns
+              id: data.user.id,
+              email: data.user.email,
+              name: data.user.name || data.user.username,
+              surname: data.user.surname,
+              username: data.user.username,
+              xp: data.user.xp || 0,
+              currentLevel: data.user.currentLevel || 1,
+              joinDate: data.user.joinDate,
+              pfpURL: data.user.pfpURL,
             };
           } else {
-            // Return null if authentication failed
+            console.log('❌ Login failed:', data.error || 'Unknown error');
             return null;
           }
         } catch (error) {
-          console.error('Authentication error:', error);
+          console.error('🚫 Authentication error:', error);
           return null;
         }
       },

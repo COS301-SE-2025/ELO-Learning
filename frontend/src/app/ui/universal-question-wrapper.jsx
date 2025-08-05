@@ -1,3 +1,5 @@
+// universal-question-wrapper.jsx
+
 'use client';
 
 import MathInputTemplate from '@/app/ui/math-keyboard/math-input-template';
@@ -8,37 +10,32 @@ import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { useEffect, useState } from 'react';
 
-export default function MathKeyboardWrapper({ questions }) {
-  // ✅ Add client-side mounting check to prevent SSR issues
-  const [mounted, setMounted] = useState(false);
+// Import all question type components
+import MultipleChoiceTemplate from '@/app/ui/question-types/multiple-choice';
+import OpenResponseTemplate from '@/app/ui/question-types/open-response';
+import ExpressionBuilderTemplate from '@/app/ui/question-types/expression-builder';
+import FillInBlankTemplate from '@/app/ui/question-types/fill-in-blank';
 
-  useEffect(() => {
-    setMounted(true);
-  }, []);
-
-  // ✅ During SSR or before mounting, show loading
-  if (!mounted) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center p-8">
-          <div className="text-2xl text-gray-600">Loading questions...</div>
-        </div>
-      </div>
-    );
-  }
-
+export default function UniversalQuestionWrapper({ questions }) {
   // ✅ Safe array handling
-  const mathQuestions = questions || [];
-  const totalSteps = mathQuestions.length;
+  const allQuestions = questions || [];
+  const totalSteps = allQuestions.length;
 
-  // ✅ Safe initialization with null check
-  const [currQuestion, setCurrQuestion] = useState(mathQuestions[0] || null);
+  // ✅ Safe initialization
+  const [currQuestion, setCurrQuestion] = useState(allQuestions[0] || null);
   const [currAnswers, setCurrAnswers] = useState(currQuestion?.answers || []);
   const [currentStep, setCurrentStep] = useState(1);
   const [isDisabled, setIsDisabled] = useState(true);
 
-  // Math input specific states
-  const [studentAnswer, setStudentAnswer] = useState('');
+  // 🔍 Debug logging
+  console.log('UniversalQuestionWrapper - currQuestion:', currQuestion);
+  console.log(
+    'UniversalQuestionWrapper - currQuestion.type:',
+    currQuestion?.type,
+  );
+
+  // Universal answer state - can handle any answer type
+  const [answer, setAnswer] = useState(null);
   const [isAnswerCorrect, setIsAnswerCorrect] = useState(false);
   const [isValidExpression, setIsValidExpression] = useState(true);
 
@@ -47,35 +44,28 @@ export default function MathKeyboardWrapper({ questions }) {
   const [feedbackMessage, setFeedbackMessage] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Debug: Log state changes
-  useEffect(() => {
-    console.log('Student answer changed:', studentAnswer);
-  }, [studentAnswer]);
-
-  // ✅ Handle case where no math questions are available
-  if (!mathQuestions || mathQuestions.length === 0) {
+  // ✅ Handle case where no questions are available
+  if (!allQuestions || allQuestions.length === 0) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center p-8 max-w-md">
           <div className="text-4xl mb-4">📝</div>
-          <h2 className="text-2xl font-bold mb-4">
-            No Math Questions Available
-          </h2>
+          <h2 className="text-2xl font-bold mb-4">No Questions Available</h2>
           <p className="text-gray-600 mb-6">
-            There are currently no math input questions available for practice.
+            There are currently no questions available for practice.
           </p>
           <Link
-            href="/question-templates/multiple-choice"
+            href="/practice"
             className="inline-block px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
           >
-            Try Multiple Choice Instead
+            Back to Practice
           </Link>
         </div>
       </div>
     );
   }
 
-  // ✅ Handle case where currQuestion is null (safety check)
+  // ✅ Handle case where currQuestion is null
   if (!currQuestion) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -86,10 +76,41 @@ export default function MathKeyboardWrapper({ questions }) {
     );
   }
 
-  // Enable/disable submit button based on math input validation
+  // Dynamic validation based on question type
   useEffect(() => {
-    setIsDisabled(!studentAnswer.trim() || !isValidExpression);
-  }, [studentAnswer, isValidExpression]);
+    // ✅ Safe access to question type
+    if (!currQuestion || !currQuestion.type) {
+      setIsDisabled(true);
+      return;
+    }
+
+    let isValid = false;
+
+    switch (currQuestion.type) {
+      case 'Multiple Choice':
+        isValid = answer !== null;
+        break;
+      case 'Math Input':
+        isValid = answer && answer.trim() && isValidExpression;
+        break;
+      case 'Open Response':
+        isValid = answer && answer.trim().length >= 10; // Minimum 10 characters
+        break;
+      case 'Expression Builder':
+        isValid = answer && answer.length > 0; // Has at least some tiles
+        break;
+      case 'Fill-in-the-Blank':
+        isValid =
+          answer &&
+          Object.keys(answer).length > 0 &&
+          Object.values(answer).every((val) => val && val.trim());
+        break;
+      default:
+        isValid = answer !== null;
+    }
+
+    setIsDisabled(!isValid);
+  }, [answer, isValidExpression, currQuestion]);
 
   const submitAnswer = async () => {
     setIsSubmitting(true);
@@ -98,8 +119,9 @@ export default function MathKeyboardWrapper({ questions }) {
     try {
       const result = await submitQuestionAnswer(
         currQuestion.Q_id,
-        studentAnswer,
+        answer,
         'current-user-id',
+        currQuestion.type,
       );
 
       if (result.success) {
@@ -115,7 +137,7 @@ export default function MathKeyboardWrapper({ questions }) {
         moveToNextQuestion();
       }, 2000);
     } catch (error) {
-      console.error('Error submitting math answer:', error);
+      console.error('Error submitting answer:', error);
       setFeedbackMessage('Error submitting answer. Please try again.');
       setShowFeedback(true);
     } finally {
@@ -130,14 +152,14 @@ export default function MathKeyboardWrapper({ questions }) {
 
     setCurrentStep((prev) => prev + 1);
     setIsDisabled(true);
-    setStudentAnswer('');
+    setAnswer(null);
     setIsAnswerCorrect(false);
     setIsValidExpression(true);
     setShowFeedback(false);
     setFeedbackMessage('');
 
     // ✅ Safe access to next question
-    const nextQuestion = mathQuestions[currentStep] || null;
+    const nextQuestion = allQuestions[currentStep] || null;
     setCurrQuestion(nextQuestion);
     setCurrAnswers(nextQuestion?.answers || []);
   };
@@ -149,6 +171,60 @@ export default function MathKeyboardWrapper({ questions }) {
       currAnswers.find((a) => a.isCorrect)?.answer_text ||
       ''
     );
+  };
+
+  // Render the appropriate question type component
+  const renderQuestionComponent = () => {
+    // ✅ Safe access to question type
+    if (!currQuestion || !currQuestion.type) {
+      return (
+        <div className="text-center p-8">
+          <div className="text-gray-600">Loading question content...</div>
+        </div>
+      );
+    }
+
+    const commonProps = {
+      question: currQuestion,
+      answers: currAnswers,
+      setAnswer,
+      setIsAnswerCorrect,
+      answer,
+    };
+
+    switch (currQuestion.type) {
+      case 'Multiple Choice':
+        return <MultipleChoiceTemplate {...commonProps} />;
+
+      case 'Math Input':
+        return (
+          <MathInputTemplate
+            correctAnswer={getCorrectAnswer()}
+            setStudentAnswer={setAnswer}
+            setIsAnswerCorrect={setIsAnswerCorrect}
+            setIsValidExpression={setIsValidExpression}
+            studentAnswer={answer || ''}
+          />
+        );
+
+      case 'Open Response':
+        return <OpenResponseTemplate {...commonProps} />;
+
+      case 'Expression Builder':
+        return <ExpressionBuilderTemplate {...commonProps} />;
+
+      case 'Fill-in-the-Blank':
+        return <FillInBlankTemplate {...commonProps} />;
+
+      default:
+        return (
+          <div className="text-center p-8">
+            <p className="text-red-600">
+              Unsupported question type: {currQuestion.type}
+            </p>
+          </div>
+        );
+    }
   };
 
   return (
@@ -172,35 +248,29 @@ export default function MathKeyboardWrapper({ questions }) {
       </div>
 
       {/* Main Content */}
-      <div className="space-y-11 pb-35 md:pb-50 pt-24 max-w-4xl mx-auto">
+      <div className="space-y-8 pb-35 md:pb-50 pt-24 max-w-4xl mx-auto px-4">
         {/* Question Section */}
         <div className="p-8">
+          <div className="flex items-center gap-3 mb-6">
+            <span className="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm font-semibold">
+              {currQuestion?.type || 'Loading...'}
+            </span>
+            <span className="px-3 py-1 bg-purple-100 text-purple-800 rounded-full text-sm font-semibold">
+              Question {currentStep} of {totalSteps}
+            </span>
+          </div>
+
           <h2 className="text-2xl font-bold text-center leading-relaxed">
             {currQuestion?.questionText || 'Loading question...'}
           </h2>
         </div>
 
-        {/* Math Input Section */}
-        <div className="">
-          <div className="mb-4">
-            <p className="">
-              Use the keyboard below or type your mathematical expression
-              directly
-            </p>
-          </div>
-
-          <MathInputTemplate
-            correctAnswer={getCorrectAnswer()}
-            setStudentAnswer={setStudentAnswer}
-            setIsAnswerCorrect={setIsAnswerCorrect}
-            setIsValidExpression={setIsValidExpression}
-            studentAnswer={studentAnswer}
-          />
-        </div>
+        {/* Question Type Component */}
+        <div className="px-4">{renderQuestionComponent()}</div>
 
         {/* Feedback Section */}
         {showFeedback && (
-          <div className="animate-fade-in">
+          <div className="animate-fade-in px-4">
             <div
               className={`p-6 rounded-xl text-center font-bold text-lg shadow-xl border-2 ${
                 feedbackMessage.includes('Correct') ||

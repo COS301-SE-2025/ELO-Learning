@@ -1,4 +1,4 @@
-import withPWA from 'next-pwa'
+import withPWA from 'next-pwa';
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
@@ -22,30 +22,31 @@ const nextConfig = {
     experimental: {
       turbo: {
         // Turbopack configuration can go here if needed
-      }
-    }
-  })
-}
+      },
+    },
+  }),
+};
 
 // Conditionally apply PWA only in production builds
-const config = process.env.NODE_ENV === 'production'
-  ? withPWA({
-    dest: 'public',
-    register: true,
-    skipWaiting: true,
-    disable: false,
-    fallbacks: {
-      document: '/offline',
-    },
-  })(nextConfig)
-  : withPWA({
-    dest: 'public',
-    register: true,
-    skipWaiting: true,
-    disable: false, // Enable PWA in development too
-    fallbacks: {
-      document: '/offline',
-    },
-  })(nextConfig)
+const config =
+  process.env.NODE_ENV === 'production'
+    ? withPWA({
+        dest: 'public',
+        register: true,
+        skipWaiting: true,
+        disable: false,
+        fallbacks: {
+          document: '/offline',
+        },
+      })(nextConfig)
+    : withPWA({
+        dest: 'public',
+        register: true,
+        skipWaiting: true,
+        disable: false, // Enable PWA in development too
+        fallbacks: {
+          document: '/offline',
+        },
+      })(nextConfig);
 
-export default config
+export default config;

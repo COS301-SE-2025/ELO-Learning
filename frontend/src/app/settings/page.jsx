@@ -35,10 +35,12 @@ export default function Page() {
                 <ChevronRight />
               </div>
             </Link>
-            <div className="flex flex-row justify-between p-3 border-b border-[#696969]">
-              <div>Notifications</div>
-              <ChevronRight />
-            </div>
+            <Link href="/settings/notifications">
+              <div className="flex flex-row justify-between p-3 border-b border-[#696969] hover:bg-[#1d1a34]">
+                <div>Notifications</div>
+                <ChevronRight />
+              </div>
+            </Link>
             <div
               className="flex flex-row justify-between p-3 cursor-pointer hover:bg-[#1d1a34]"
               onClick={handleLogout}

@@ -1,6 +1,6 @@
 // components/NotificationSettings.jsx
 import React, { useState } from 'react';
-import { usePushNotifications } from '../hooks/usePushNotifications';
+import { usePushNotifications } from '../hooks/usePushNotifications.jsx';
 
 const NotificationSettings = ({ userId }) => {
   const {

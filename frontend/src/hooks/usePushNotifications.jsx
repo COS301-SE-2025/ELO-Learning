@@ -1,11 +1,11 @@
 // hooks/usePushNotifications.jsx
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import {
   requestNotificationPermission,
   onMessageListener,
   registerFCMToken,
   removeFCMToken,
-} from '../services/firebase';
+} from '../services/firebase.js';
 
 export const usePushNotifications = (userId) => {
   const [fcmToken, setFcmToken] = useState(null);
@@ -109,18 +109,21 @@ export const usePushNotifications = (userId) => {
 
   const sendTestNotification = async () => {
     try {
-      const response = await fetch('/api/notifications/send-test', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${localStorage.getItem('authToken')}`,
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/notifications/send-test`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${localStorage.getItem('authToken')}`,
+          },
+          body: JSON.stringify({
+            userId,
+            title: '🧪 Test Notification',
+            body: 'This is a test notification from ELO Learning!',
+          }),
         },
-        body: JSON.stringify({
-          userId,
-          title: '🧪 Test Notification',
-          body: 'This is a test notification from ELO Learning!',
-        }),
-      });
+      );
 
       if (response.ok) {
         console.log('Test notification sent successfully');

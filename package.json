@@ -20,6 +20,7 @@
     "test": "node --experimental-vm-modules ./node_modules/jest/bin/jest.js"
   },
   "dependencies": {
+    "@humanwhocodes/retry": "^0.4.3",
     "@nestjs/common": "^11.1.1",
     "@nestjs/core": "^11.1.1",
     "@supabase/supabase-js": "^2.49.8",

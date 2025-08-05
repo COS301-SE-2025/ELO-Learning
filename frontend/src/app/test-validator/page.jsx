@@ -19,6 +19,10 @@ export default function TestValidatorPage() {
       { student: '(', correct: '(x + 3)(x - 3)', expected: false },
       { student: '(x-3)', correct: '(x + 3)(x - 3)', expected: false },
       { student: '(x-3)(x+3)', correct: '(x + 3)(x - 3)', expected: true },
+      // Add the new failing cases
+      { student: 'v', correct: 'x^2*e^x + 2*x*e^x', expected: false },
+      { student: 'h', correct: '5/12', expected: false },
+      { student: 'h', correct: '30', expected: false },
     ];
 
     let output = '🧪 Testing Problematic Cases:\n\n';

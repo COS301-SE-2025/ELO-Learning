@@ -346,13 +346,30 @@ export const quickValidate = (studentAnswer, correctAnswer, questionText = '') =
 
   // Use frontend math validator for quick validation only if both are valid
   try {
-    // Only use frontend validation if both are valid expressions
-    if (isValidExpression(studentAnswer) && isValidExpression(correctAnswer)) {
+    // Check if both expressions are valid first
+    const studentValid = isValidExpression(studentAnswer);
+    const correctValid = isValidExpression(correctAnswer);
+    
+    console.log('🔍 quickValidate expression validity:', { 
+      student: studentAnswer, 
+      studentValid, 
+      correct: correctAnswer, 
+      correctValid 
+    });
+
+    // If student answer is invalid, reject immediately
+    if (!studentValid) {
+      console.log('❌ Student answer is invalid expression, rejecting');
+      return false;
+    }
+
+    // Only proceed if both are valid expressions
+    if (studentValid && correctValid) {
       const frontendResult = frontendQuickValidate(studentAnswer, correctAnswer);
       if (frontendResult) return true;
     }
 
-    // Fall back to basic answer validation patterns
+    // Fall back to basic answer validation patterns ONLY for valid expressions
     const normalizeAnswer = (answer) => {
       return answer
         .toLowerCase()
@@ -375,7 +392,7 @@ export const quickValidate = (studentAnswer, correctAnswer, questionText = '') =
       return true;
     }
 
-    // Quick numerical comparison
+    // Quick numerical comparison only for valid expressions
     if (isMathExpression(studentAnswer) || isMathExpression(correctAnswer)) {
       return frontendValidateNumericalAnswer(studentAnswer, correctAnswer);
     }
@@ -432,11 +449,55 @@ export const validateAnswerSync = (studentAnswer, correctAnswer, questionText = 
 };
 
 /**
- * Check if expression is valid using frontend validator
+ * Check if expression is valid AND complete enough for comparison
+ * This prevents single variables from being accepted as complete answers
  */
 export const isValidExpression = (expression) => {
   try {
-    return isValidMathExpression(expression);
+    if (!expression || typeof expression !== 'string' || !expression.trim()) {
+      return false;
+    }
+
+    const cleaned = expression.trim();
+    
+    // First check if it's a valid math expression using the frontend validator
+    if (!isValidMathExpression(cleaned)) {
+      return false;
+    }
+
+    // Additional checks for completeness
+    // Reject single variables unless they are assignments or specific contexts
+    if (/^[a-zA-Z]$/.test(cleaned)) {
+      console.debug('Rejecting single variable:', cleaned);
+      return false;
+    }
+
+    // Reject expressions that are just a variable with operators but no operands
+    if (/^[a-zA-Z][+\-*/^=,\s]*$/.test(cleaned)) {
+      console.debug('Rejecting incomplete expression:', cleaned);
+      return false;
+    }
+
+    // Reject expressions ending with operators (except for special cases)
+    if (/[+\-*/^=,]\s*$/.test(cleaned) && !/[=]\s*$/.test(cleaned)) {
+      console.debug('Rejecting expression ending with operator:', cleaned);
+      return false;
+    }
+
+    // For system of equations, require both variables to have values
+    if (cleaned.includes('=') && cleaned.includes(',')) {
+      // This is likely a system solution like "x=7, y=3"
+      const parts = cleaned.split(',');
+      for (const part of parts) {
+        const trimmedPart = part.trim();
+        if (/^[a-zA-Z]\s*=\s*$/.test(trimmedPart)) {
+          console.debug('Rejecting incomplete equation:', trimmedPart);
+          return false;
+        }
+      }
+    }
+
+    return true;
   } catch (error) {
     console.debug('Expression validation failed:', error);
     return false;

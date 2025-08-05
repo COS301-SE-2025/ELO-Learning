@@ -193,3 +193,53 @@ export async function fetchRandomQuestions(level) {
   });
   return res.data;
 }
+
+//13. POST /singleplayer
+export async function submitSinglePlayerAttempt(data) {
+  const res = await axiosInstance.post('/singleplayer', data, {
+    headers: authHeader,
+  });
+  return res.data;
+}
+
+export async function sendPasswordResetEmail(email) {
+  const res = await axiosInstance.post('/forgot-password', { email });
+  return res.data;
+}
+
+export async function resetPassword(token, newPassword) {
+  const res = await axiosInstance.post('/reset-password', {
+    token,
+    newPassword,
+  });
+  return res.data;
+}
+
+export async function changePassword(userId, currentPassword, newPassword) {
+  if (!userId) {
+    throw new Error('User ID is required');
+  }
+
+  const res = await axiosInstance.post('/change-password', {
+    userId,
+    currentPassword,
+    newPassword,
+  });
+  return res.data;
+}
+
+export async function verifyResetToken(token) {
+  const res = await axiosInstance.get(`/verify-reset-token/${token}`);
+  return res.data;
+}
+
+// Handle OAuth user creation/retrieval
+export async function handleOAuthUser(email, name, image, provider) {
+  const res = await axiosInstance.post('/oauth/user', {
+    email,
+    name,
+    image,
+    provider,
+  });
+  return res.data;
+}

@@ -47,6 +47,16 @@ describe('User Journey', () => {
       },
     }).as('registerRequest');
 
+    // Mock the users API call for the leaderboard
+    cy.intercept('GET', '**/users', {
+      statusCode: 200,
+      body: [
+        { id: 1, username: 'TestUser1', xp: 1000 },
+        { id: 2, username: 'TestUser2', xp: 900 },
+        { id: 3, username: 'New User', xp: 800 },
+      ],
+    }).as('getUsers');
+
     cy.get('input[placeholder="Enter a password"]').type('Password123!');
     cy.get('input[placeholder="Confirm password"]').type('Password123!');
     cy.contains('button', 'Continue').click();

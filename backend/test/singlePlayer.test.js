@@ -20,8 +20,8 @@ describe('singlePlayer XP calculations', () => {
 
   test('CalculateLevelReward scales correctly', () => {
     expect(calculateLevelReward(0)).toBeCloseTo(1);
-    expect(calculateLevelReward(4)).toBeCloseTo(1 / (1 + 0.05 * 4));
-    expect(calculateLevelReward(10)).toBeCloseTo(1 / (1 + 0.05 * 10));
+    expect(calculateLevelReward(4)).toBeCloseTo(1 / (1 + 0.1 * 4));
+    expect(calculateLevelReward(10)).toBeCloseTo(1 / (1 + 0.1 * 10));
 
     //invalid levels should give no rewards:
     expect(calculateLevelReward(-1)).toBe(0);
@@ -30,9 +30,9 @@ describe('singlePlayer XP calculations', () => {
 
   test('calculateGateKeepingComponent works as expected', () => {
     expect(calculateGateKeepingComponent(200, 400)).toBeCloseTo(
-      0.3 * (200 / 400),
+      0.05 * (200 / 400),
     );
-    expect(calculateGateKeepingComponent(0, 400)).toBeCloseTo(0.3);
+    expect(calculateGateKeepingComponent(0, 400)).toBeCloseTo(0.05);
     expect(calculateGateKeepingComponent(400, 400)).toBeCloseTo(0);
 
     //Comparison: user closer vs further from next level

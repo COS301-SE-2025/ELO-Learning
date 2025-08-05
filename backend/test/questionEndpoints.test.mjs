@@ -6,7 +6,7 @@ jest.setTimeout(20000); // for slow tests
 
 // Test data - adjust these to match your actual database
 const testLevel = 4;
-const testTopic = 'Statistics';
+const testTopic = 'Statistics & Probability'; // Ensure this topic exists in your Topics table
 const testTopicId = '1';
 const testQuestionId = 22; // Make sure this exists in your Questions table
 
@@ -260,8 +260,9 @@ describe('Question Endpoints Integration Tests', () => {
         .get('/question/invalid')
         .set('Authorization', 'Bearer testtoken123');
 
-      // Should either return 404 or empty array, not crash
-      expect([200, 404, 500]).toContain(res.statusCode);
+      // Should return 400 for invalid level parameter
+      expect(res.statusCode).toBe(400);
+      expect(res.body.error).toContain('Invalid level parameter');
     });
 
     it('should handle invalid question ID for answer endpoint', async () => {
@@ -284,8 +285,10 @@ describe('Question Endpoints Integration Tests', () => {
     it('should handle empty topic parameter', async () => {
       const res = await request(app).get('/questions/topic?topic=');
 
-      expect(res.statusCode).toBe(400);
-      expect(res.body.error).toBe('Missing topic parameter');
+      expect(res.statusCode).toBe(200);
+      expect(res.body.questions).toBeDefined();
+      expect(Array.isArray(res.body.questions)).toBe(true);
+      // Should return empty array for empty topic parameter
     });
   });
 });

@@ -38,6 +38,8 @@ function MatchEndScreenContent() {
       const questions = JSON.parse(
         localStorage.getItem('questionsObj') || '[]',
       );
+
+      /*
       const correctAnswers = questions.filter(
         (question) => question.isCorrect == true,
       );
@@ -60,6 +62,7 @@ function MatchEndScreenContent() {
         );
         document.cookie = `user=${updatedCookie}; path=/`;
       }
+      */
 
       // Clear localStorage
       localStorage.removeItem('questionsObj');

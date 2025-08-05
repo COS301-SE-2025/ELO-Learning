@@ -2,4 +2,11 @@
 
 import { io } from 'socket.io-client';
 
-export const socket = io('http://localhost:3000');
+// Single socket instance - import this where you need the raw socket
+// But prefer using the useSocket hook for React components
+export const socket = io('http://localhost:3000', {
+  autoConnect: false, // We'll connect manually through useSocket hook
+});
+
+// Export useSocket hook for easy access
+export { useSocket } from './hooks/useSocket';

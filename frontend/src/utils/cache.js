@@ -7,6 +7,8 @@ const CACHE_KEYS = {
   USER_ACHIEVEMENTS: 'user_achievements',
   USER_PROGRESS: 'user_progress',
   LAST_FETCH: 'last_fetch_timestamp',
+  AUTH_PROVIDER: 'auth_provider',
+  OAUTH_TOKEN: 'oauth_token',
 };
 
 const CACHE_EXPIRY = {

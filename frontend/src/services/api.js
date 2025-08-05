@@ -54,7 +54,7 @@ axiosInstance.interceptors.request.use(async (config) => {
 
       if (provider === 'google' || provider === 'oauth') {
         token =
-          cache.get(CACHE_KEYS.OAUTH_TOKEN) ||
+          cache.get('oauth_token') ||
           localStorage.getItem('oauth_token');
       } else {
         token = cache.get(CACHE_KEYS.TOKEN) || localStorage.getItem('token');

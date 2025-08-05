@@ -67,7 +67,7 @@ export default function FillInBlankPage() {
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center p-8 max-w-md">
           <div className="text-4xl mb-4">⚠️</div>
-          <h2 className="text-2xl font-bold mb-4 text-red-red-600">
+          <h2 className="text-2xl font-bold mb-4 text-red-600">
             Error Loading Questions
           </h2>
           <p className="text-gray-600 mb-6">{error}</p>

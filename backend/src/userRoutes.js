@@ -11,7 +11,7 @@ const TOKEN_EXPIRY = 3600; // 1 hour in seconds
 router.get('/users', async (req, res) => {
   const { data, error } = await supabase
     .from('Users')
-    .select('id,name,surname,username,email,currentLevel,joinDate,xp');
+    .select('id,name,surname,username,email,currentLevel,joinDate,xp,pfpURL');
   if (error) {
     console.error('Error fetching users:', error.message);
     return res.status(500).json({ error: 'Failed to fetch users' });
@@ -34,7 +34,7 @@ router.get('/user/:id', async (req, res) => {
   // Fetch user from Supabase
   const { data, error } = await supabase
     .from('Users')
-    .select('id,name,surname,username,email,currentLevel,joinDate,xp')
+    .select('id,name,surname,username,email,currentLevel,joinDate,xp,pfpURL')
     .eq('id', id)
     .single();
 

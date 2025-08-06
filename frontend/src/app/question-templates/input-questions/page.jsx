@@ -10,7 +10,9 @@ export default async function Page() {
       <div className="full-screen w-full h-full flex items-center justify-center">
         <div className="text-center">
           <div className="text-2xl text-red-600 mb-4">⚠️</div>
-          <h2 className="text-xl font-bold text-gray-800 mb-2">Error Loading Questions</h2>
+          <h2 className="text-xl font-bold text-gray-800 mb-2">
+            Error Loading Questions
+          </h2>
           <p className="text-gray-600">{result.error}</p>
         </div>
       </div>
@@ -26,8 +28,12 @@ export default async function Page() {
       <div className="full-screen w-full h-full flex items-center justify-center">
         <div className="text-center">
           <div className="text-4xl mb-4">📝</div>
-          <h2 className="text-xl font-bold text-gray-800 mb-2">No Questions Available</h2>
-          <p className="text-gray-600">No Math Input questions found in the database.</p>
+          <h2 className="text-xl font-bold text-gray-800 mb-2">
+            No Questions Available
+          </h2>
+          <p className="text-gray-600">
+            No Math Input questions found in the database.
+          </p>
         </div>
       </div>
     );

@@ -2,30 +2,26 @@
 
 import clsx from 'clsx';
 import { Shield } from 'lucide-react';
-import { useSession } from 'next-auth/react';
 import { memo, useMemo } from 'react';
+import { useSessionWithCache } from '../../hooks/useSessionWithCache';
 
 const HeaderContent = memo(function HeaderContent() {
-  const { data: session, status } = useSession() || {};
+  const session = useSessionWithCache();
 
   // Memoize all user data processing to avoid recalculations
   const userData = useMemo(() => {
-    if (status !== 'authenticated' || !session?.user) {
+    if (session.status !== 'authenticated' || !session?.user) {
       return null;
     }
 
     return {
-      username:
-        session.user.username ||
-        session.user.name ||
-        session.user.email?.split('@')[0] ||
-        'User',
-      xp: Math.round(session.user.xp || 0),
+      username: session.getUsername(),
+      xp: Math.round(session.getXP()),
     };
-  }, [session, status]);
+  }, [session]);
 
   // Show loading state while session is being loaded
-  if (status === 'loading') {
+  if (session.status === 'loading') {
     return (
       <div className="w-full md:w-auto">
         <div
@@ -42,7 +38,7 @@ const HeaderContent = memo(function HeaderContent() {
   }
 
   // Don't render anything if not authenticated
-  if (status !== 'authenticated' || !userData) {
+  if (session.status !== 'authenticated' || !userData) {
     return null;
   }
 

@@ -18,8 +18,10 @@ export default function OpenResponseTemplate({
   useEffect(() => {
     const trimmedLength = inputValue.trim().length;
     setCharacterCount(trimmedLength);
-    setIsValidLength(trimmedLength >= MIN_LENGTH && trimmedLength <= MAX_LENGTH);
-    
+    setIsValidLength(
+      trimmedLength >= MIN_LENGTH && trimmedLength <= MAX_LENGTH,
+    );
+
     // Update parent components
     setAnswer(inputValue);
     setIsAnswerCorrect(trimmedLength >= MIN_LENGTH);
@@ -44,7 +46,7 @@ export default function OpenResponseTemplate({
         <label className="block text-sm font-medium text-gray-700">
           Write your detailed explanation or step-by-step solution:
         </label>
-        
+
         {/* Text Area */}
         <textarea
           value={inputValue}
@@ -54,18 +56,19 @@ export default function OpenResponseTemplate({
             !isValidLength && characterCount > 0
               ? 'border-red-500 focus:border-red-600'
               : isValidLength
-              ? 'border-green-500 focus:border-green-600'
-              : 'border-gray-300 focus:border-purple-500'
+                ? 'border-green-500 focus:border-green-600'
+                : 'border-gray-300 focus:border-purple-500'
           } focus:outline-none focus:ring-2 focus:ring-purple-500/20`}
           rows={8}
         />
-        
+
         {/* Character Counter and Validation */}
         <div className="flex justify-between items-center text-sm">
           <div className={getCharacterCountColor()}>
             {characterCount < MIN_LENGTH ? (
               <span>
-                {MIN_LENGTH - characterCount} more characters needed (minimum {MIN_LENGTH})
+                {MIN_LENGTH - characterCount} more characters needed (minimum{' '}
+                {MIN_LENGTH})
               </span>
             ) : (
               <span className="flex items-center gap-2">
@@ -76,7 +79,7 @@ export default function OpenResponseTemplate({
               </span>
             )}
           </div>
-          
+
           <div className={`${getCharacterCountColor()} font-mono`}>
             {characterCount}/{MAX_LENGTH}
           </div>
@@ -85,7 +88,9 @@ export default function OpenResponseTemplate({
 
       {/* Writing Tips */}
       <div className="bg-purple-50 border border-purple-200 rounded-lg p-4">
-        <h4 className="text-sm font-medium text-purple-800 mb-2">💡 Writing Tips:</h4>
+        <h4 className="text-sm font-medium text-purple-800 mb-2">
+          💡 Writing Tips:
+        </h4>
         <ul className="text-xs text-purple-700 space-y-1">
           <li>• Show your work step by step</li>
           <li>• Explain your reasoning clearly</li>

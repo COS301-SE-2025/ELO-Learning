@@ -1,5 +1,5 @@
-import axios from 'axios'
-import { getSession } from 'next-auth/react'
+import axios from 'axios';
+import { cache, CACHE_EXPIRY, CACHE_KEYS } from '../utils/cache';
 
 const BASE_URL = 'http://localhost:3000' // Change this when deploying
 
@@ -14,48 +14,54 @@ const axiosInstance = axios.create({
 
 axiosInstance.interceptors.request.use(async (config) => {
   if (isServer) {
-    try {
-      const { cookies } = await import('next/headers')
-      const awaitedCookies = await cookies()
-      const tokenCookie = awaitedCookies.get('token')
-      if (tokenCookie) {
-        config.headers.Authorization = `Bearer ${tokenCookie.value}`
-      } else {
-        // Fallback to test token for server-side requests
-        config.headers.Authorization = 'Bearer testtoken123'
+    const { cookies } = await import('next/headers');
+    const awaitedCookies = await cookies();
+
+    // Try to get NextAuth session token first
+    const nextAuthToken = awaitedCookies
+      .getAll()
+      .find(
+        (item) =>
+          item.name === 'next-auth.session-token' ||
+          item.name === '__Secure-next-auth.session-token',
+      );
+
+    if (nextAuthToken) {
+      config.headers.Authorization = `Bearer ${nextAuthToken.value}`;
+    } else {
+      // Fallback to regular token
+      const tokenCookie = awaitedCookies
+        .getAll()
+        .filter((item) => item.name === 'token')
+        .map((item) => item.value);
+      if (tokenCookie.length > 0) {
+        config.headers.Authorization = `Bearer ${tokenCookie}`;
       }
-    } catch (error) {
-      // Fallback to test token if cookie access fails
-      config.headers.Authorization = 'Bearer testtoken123'
-      console.log('Cookie access failed, using test token:', error.message)
     }
-    return config
+    return config;
   } else {
-    // Client-side: try to get token from multiple sources
-    let token = localStorage.getItem('token')
+    // Client-side: Check NextAuth session first, then fallback to cached tokens
+    let token = null;
 
-    // If no token in localStorage, try to get NextAuth session
-    if (!token) {
-      try {
-        const session = await getSession()
-        if (session?.accessToken) {
-          token = session.accessToken
-        } else if (session?.user?.id) {
-          // For NextAuth sessions, use test token (since backend only checks Bearer format)
-          token = 'testtoken123'
-        }
-      } catch (error) {
-        console.log('Failed to get NextAuth session:', error)
+    // Try to get NextAuth session token from cache or localStorage
+    const nextAuthSession = cache.get(CACHE_KEYS.NEXTAUTH_SESSION);
+    if (nextAuthSession?.accessToken) {
+      token = nextAuthSession.accessToken;
+    } else {
+      // Fallback to our cached tokens
+      const provider = cache.get('auth_provider') || 'credentials';
+
+      if (provider === 'google' || provider === 'oauth') {
+        token = cache.get('oauth_token') || localStorage.getItem('oauth_token');
+      } else {
+        token = cache.get(CACHE_KEYS.TOKEN) || localStorage.getItem('token');
       }
     }
 
-    // Fallback to test token if no other token found
-    if (!token) {
-      token = 'testtoken123'
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
     }
-
-    config.headers.Authorization = `Bearer ${token}`
-    return config
+    return config;
   }
 })
 
@@ -66,8 +72,17 @@ const authHeader = {
 
 // 1. GET /users
 export async function fetchAllUsers() {
-  const res = await axiosInstance.get('/users')
-  return res.data
+  // Try to get from cache first
+  const cachedUsers = cache.get(CACHE_KEYS.LEADERBOARD);
+  if (cachedUsers) {
+    return cachedUsers;
+  }
+
+  // If not in cache or expired, fetch from API
+  const res = await axiosInstance.get('/users');
+  // Cache the response with 5-minute expiry
+  cache.set(CACHE_KEYS.LEADERBOARD, res.data, CACHE_EXPIRY.SHORT);
+  return res.data;
 }
 
 // 2. GET /user/:id
@@ -90,8 +105,16 @@ export async function updateUserXP(id, xp) {
 
 // 5. GET /questions
 export async function fetchAllQuestions() {
-  const res = await axiosInstance.get('/questions')
-  return res.data
+  // Try to get from cache first
+  const cachedQuestions = cache.get(CACHE_KEYS.QUESTIONS);
+  if (cachedQuestions) {
+    return cachedQuestions;
+  }
+
+  const res = await axiosInstance.get('/questions');
+  // Cache for 30 minutes
+  cache.set(CACHE_KEYS.QUESTIONS, res.data, CACHE_EXPIRY.MEDIUM);
+  return res.data;
 }
 
 // 6. GET /question/:level
@@ -188,8 +211,14 @@ export async function submitQuestionAnswer(questionId, studentAnswer, userId) {
 }
 
 export async function loginUser(email, password) {
-  const res = await axiosInstance.post('/login', { email, password })
-  return res.data
+  const res = await axiosInstance.post('/login', { email, password });
+  // Cache the user data and token
+  cache.set(CACHE_KEYS.TOKEN, res.data.token, CACHE_EXPIRY.LONG);
+  cache.set(CACHE_KEYS.USER, res.data.user, CACHE_EXPIRY.LONG);
+  // Still store in localStorage for persistence
+  localStorage.setItem('token', res.data.token);
+  localStorage.setItem('user', JSON.stringify(res.data.user));
+  return res.data;
 }
 
 export async function registerUser(
@@ -209,15 +238,21 @@ export async function registerUser(
     password,
     currentLevel,
     joinDate,
-  })
-  return res.data
+  });
+  // Cache the user data and token
+  cache.set(CACHE_KEYS.TOKEN, res.data.token, CACHE_EXPIRY.LONG);
+  cache.set(CACHE_KEYS.USER, res.data.user, CACHE_EXPIRY.LONG);
+  // Store in localStorage for persistence
+  localStorage.setItem('token', res.data.token);
+  localStorage.setItem('user', JSON.stringify(res.data.user));
+  return res.data;
 }
 
 export async function logoutUser() {
-  // This function is kept for backward compatibility
-  // For new implementations, use performLogout from @/lib/logout
-  localStorage.removeItem('token')
-  localStorage.removeItem('user')
+  // Clear both cache and localStorage
+  cache.clear();
+  localStorage.removeItem('token');
+  localStorage.removeItem('user');
 }
 
 // 11. GET /topics

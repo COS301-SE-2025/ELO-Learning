@@ -1,6 +1,6 @@
-import { defineConfig } from 'cypress';
+const { defineConfig } = require('cypress');
 
-export default defineConfig({
+module.exports = defineConfig({
   component: {
     devServer: {
       framework: 'next',
@@ -12,6 +12,7 @@ export default defineConfig({
 
   e2e: {
     baseUrl: 'http://localhost:8080',
+    pageLoadTimeout: 30000, // Reduce from default 60s to 30s for faster feedback
     specPattern: [
       'cypress/e2e/**/*.cy.{js,jsx,ts,tsx}',
       'cypress/integration/**/*.cy.{js,jsx,ts,tsx}',

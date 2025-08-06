@@ -1,37 +1,58 @@
 // utils/answerValidator.js
 import { quickValidateMath } from '@/utils/api';
-import { quickValidateMath as frontendQuickValidate, isValidMathExpression, validateMathAnswer } from '@/utils/frontendMathValidator';
+import {
+  quickValidateMath as frontendQuickValidate,
+  isValidMathExpression,
+  validateMathAnswer,
+} from '@/utils/frontendMathValidator';
 
 /**
  * Main validation function - this is what your components should call
  * Combines frontend math validation with specialized answer validation
  */
-export const validateAnswer = async (studentAnswer, correctAnswer, questionText = '', questionType = '') => {
+export const validateAnswer = async (
+  studentAnswer,
+  correctAnswer,
+  questionText = '',
+  questionType = '',
+) => {
   if (!studentAnswer || !correctAnswer) return false;
 
   console.log('validateAnswer called with:', {
     student: studentAnswer,
     correct: correctAnswer,
     questionText: questionText.substring(0, 50) + '...',
-    type: questionType
+    type: questionType,
   });
 
   // First, try frontend math validation for Math Input types
-  if (questionType === 'Math Input' || isMathExpression(studentAnswer) || isMathExpression(correctAnswer)) {
+  if (
+    questionType === 'Math Input' ||
+    isMathExpression(studentAnswer) ||
+    isMathExpression(correctAnswer)
+  ) {
     console.log('🔍 Trying frontend math validation first');
     try {
       // Only use frontend validation if both answers are valid expressions
-      if (isValidExpression(studentAnswer) && isValidExpression(correctAnswer)) {
+      if (
+        isValidExpression(studentAnswer) &&
+        isValidExpression(correctAnswer)
+      ) {
         const frontendResult = validateMathAnswer(studentAnswer, correctAnswer);
         if (frontendResult) {
           console.log('✅ Frontend math validation successful');
           return true;
         }
       } else {
-        console.log('⚠️ Invalid expression detected, skipping frontend validation');
+        console.log(
+          '⚠️ Invalid expression detected, skipping frontend validation',
+        );
       }
     } catch (error) {
-      console.debug('Frontend math validation failed, falling back to other methods:', error);
+      console.debug(
+        'Frontend math validation failed, falling back to other methods:',
+        error,
+      );
     }
   }
 
@@ -42,12 +63,12 @@ export const validateAnswer = async (studentAnswer, correctAnswer, questionText 
       .trim()
       .replace(/\s+/g, '') // Remove all spaces
       .replace(/[()]/g, '') // Remove parentheses for some comparisons
-      .replace(/\*/g, '')   // Remove multiplication symbols
+      .replace(/\*/g, '') // Remove multiplication symbols
       .replace(/\s*=\s*/g, '=') // Normalize equals signs
       .replace(/\s*,\s*/g, ',') // Normalize commas
       .replace(/\s*;\s*/g, ',') // Convert semicolons to commas
-      .replace(/\bor\b/g, ',')  // Convert "or" to commas
-      .replace(/\band\b/g, ',') // Convert "and" to commas
+      .replace(/\bor\b/g, ',') // Convert "or" to commas
+      .replace(/\band\b/g, ','); // Convert "and" to commas
   };
 
   const normalizedStudent = normalizeAnswer(studentAnswer);
@@ -56,7 +77,7 @@ export const validateAnswer = async (studentAnswer, correctAnswer, questionText 
   console.log('Normalized comparison:', {
     student: normalizedStudent,
     correct: normalizedCorrect,
-    match: normalizedStudent === normalizedCorrect
+    match: normalizedStudent === normalizedCorrect,
   });
 
   // Direct match after normalization
@@ -66,8 +87,10 @@ export const validateAnswer = async (studentAnswer, correctAnswer, questionText 
   }
 
   // Check for systems of equations (contains x= and y=)
-  if (questionText.toLowerCase().includes('solve for x and y') || 
-      (normalizedStudent.includes('x=') && normalizedStudent.includes('y='))) {
+  if (
+    questionText.toLowerCase().includes('solve for x and y') ||
+    (normalizedStudent.includes('x=') && normalizedStudent.includes('y='))
+  ) {
     console.log('🔍 Checking as system of equations');
     return validateSystemSolution(studentAnswer, correctAnswer);
   }
@@ -111,17 +134,17 @@ export const validateAnswer = async (studentAnswer, correctAnswer, questionText 
  */
 const isMathExpression = (str) => {
   if (!str || typeof str !== 'string') return false;
-  
+
   // Check for mathematical operators, functions, or patterns
   const mathPatterns = [
-    /[+\-*/^()]/,  // Basic operators and parentheses
-    /\b(sin|cos|tan|log|ln|sqrt|exp|abs)\b/i,  // Math functions
-    /\d+\.\d+/,  // Decimal numbers
-    /[a-z]\s*[=]/i,  // Variable assignments like x=
-    /\b(pi|e|infinity)\b/i  // Math constants
+    /[+\-*/^()]/, // Basic operators and parentheses
+    /\b(sin|cos|tan|log|ln|sqrt|exp|abs)\b/i, // Math functions
+    /\d+\.\d+/, // Decimal numbers
+    /[a-z]\s*[=]/i, // Variable assignments like x=
+    /\b(pi|e|infinity)\b/i, // Math constants
   ];
-  
-  return mathPatterns.some(pattern => pattern.test(str));
+
+  return mathPatterns.some((pattern) => pattern.test(str));
 };
 
 /**
@@ -130,8 +153,14 @@ const isMathExpression = (str) => {
 const frontendValidateNumericalAnswer = (studentAnswer, correctAnswer) => {
   try {
     // Validate that both inputs are proper expressions first
-    if (!isValidExpression(studentAnswer) || !isValidExpression(correctAnswer)) {
-      console.log('Invalid expression in numerical validation:', { studentAnswer, correctAnswer });
+    if (
+      !isValidExpression(studentAnswer) ||
+      !isValidExpression(correctAnswer)
+    ) {
+      console.log('Invalid expression in numerical validation:', {
+        studentAnswer,
+        correctAnswer,
+      });
       return false;
     }
 
@@ -142,7 +171,7 @@ const frontendValidateNumericalAnswer = (studentAnswer, correctAnswer) => {
     // Try exact string match first (normalized)
     const normalizedStudent = studentAnswer.replace(/\s+/g, '');
     const normalizedCorrect = correctAnswer.replace(/\s+/g, '');
-    
+
     if (normalizedStudent === normalizedCorrect) {
       return true;
     }
@@ -171,9 +200,14 @@ const validateSystemSolution = (studentAnswer, correctAnswer) => {
     const correctValues = extractSolutionValues(correctAnswer);
 
     if (studentValues && correctValues) {
-      const match = Math.abs(studentValues.x - correctValues.x) < 0.0001 && 
-                   Math.abs(studentValues.y - correctValues.y) < 0.0001;
-      console.log('System solution comparison:', { studentValues, correctValues, match });
+      const match =
+        Math.abs(studentValues.x - correctValues.x) < 0.0001 &&
+        Math.abs(studentValues.y - correctValues.y) < 0.0001;
+      console.log('System solution comparison:', {
+        studentValues,
+        correctValues,
+        match,
+      });
       return match;
     }
   } catch (error) {
@@ -187,7 +221,7 @@ const validateSystemSolution = (studentAnswer, correctAnswer) => {
  */
 const extractSolutionValues = (answer) => {
   const cleaned = answer.toLowerCase().replace(/\s+/g, '');
-  
+
   // Pattern 1: "x=7,y=3" or "x=7;y=3"
   let match = cleaned.match(/x=([+-]?\d*\.?\d+)[,;]?.*?y=([+-]?\d*\.?\d+)/);
   if (match) {
@@ -224,19 +258,22 @@ const validateMultipleSolutions = (studentAnswer, correctAnswer) => {
     const studentNumbers = extractNumbers(studentAnswer);
     const correctNumbers = extractNumbers(correctAnswer);
 
-    if (studentNumbers.length === correctNumbers.length && studentNumbers.length > 0) {
+    if (
+      studentNumbers.length === correctNumbers.length &&
+      studentNumbers.length > 0
+    ) {
       // Sort both arrays and compare
       const sortedStudent = studentNumbers.sort((a, b) => a - b);
       const sortedCorrect = correctNumbers.sort((a, b) => a - b);
-      
-      const match = sortedStudent.every((num, index) => 
-        Math.abs(num - sortedCorrect[index]) < 0.0001
+
+      const match = sortedStudent.every(
+        (num, index) => Math.abs(num - sortedCorrect[index]) < 0.0001,
       );
 
-      console.log('Multiple solutions comparison:', { 
-        sortedStudent, 
-        sortedCorrect, 
-        match 
+      console.log('Multiple solutions comparison:', {
+        sortedStudent,
+        sortedCorrect,
+        match,
       });
       return match;
     }
@@ -251,7 +288,7 @@ const validateMultipleSolutions = (studentAnswer, correctAnswer) => {
  */
 const extractNumbers = (answer) => {
   const numbers = answer.match(/-?\d*\.?\d+/g) || [];
-  return numbers.map(n => parseFloat(n));
+  return numbers.map((n) => parseFloat(n));
 };
 
 /**
@@ -262,7 +299,7 @@ const validateNumericalAnswer = (studentAnswer, correctAnswer) => {
     // Try exact string match first (normalized)
     const normalizedStudent = studentAnswer.replace(/\s+/g, '');
     const normalizedCorrect = correctAnswer.replace(/\s+/g, '');
-    
+
     if (normalizedStudent === normalizedCorrect) {
       return true;
     }
@@ -290,7 +327,7 @@ const validateFactorization = (studentAnswer, correctAnswer) => {
     // Remove all spaces and compare
     const normalizedStudent = studentAnswer.replace(/\s+/g, '');
     const normalizedCorrect = correctAnswer.replace(/\s+/g, '');
-    
+
     if (normalizedStudent.toLowerCase() === normalizedCorrect.toLowerCase()) {
       return true;
     }
@@ -302,14 +339,15 @@ const validateFactorization = (studentAnswer, correctAnswer) => {
     if (studentFactors.length > 1 && correctFactors.length > 1) {
       const sortedStudent = studentFactors.sort();
       const sortedCorrect = correctFactors.sort();
-      
-      const match = sortedStudent.length === sortedCorrect.length &&
-                   sortedStudent.every((factor, index) => factor === sortedCorrect[index]);
-      
-      console.log('Factorization comparison:', { 
-        sortedStudent, 
-        sortedCorrect, 
-        match 
+
+      const match =
+        sortedStudent.length === sortedCorrect.length &&
+        sortedStudent.every((factor, index) => factor === sortedCorrect[index]);
+
+      console.log('Factorization comparison:', {
+        sortedStudent,
+        sortedCorrect,
+        match,
       });
       return match;
     }
@@ -326,11 +364,11 @@ const extractFactors = (expression) => {
   const factors = [];
   const factorRegex = /\([^)]+\)/g;
   const matches = expression.match(factorRegex);
-  
+
   if (matches) {
-    factors.push(...matches.map(f => f.toLowerCase()));
+    factors.push(...matches.map((f) => f.toLowerCase()));
   }
-  
+
   return factors;
 };
 
@@ -338,7 +376,11 @@ const extractFactors = (expression) => {
  * Quick validation for real-time feedback (synchronous)
  * Uses frontend validation only for immediate response
  */
-export const quickValidate = (studentAnswer, correctAnswer, questionText = '') => {
+export const quickValidate = (
+  studentAnswer,
+  correctAnswer,
+  questionText = '',
+) => {
   if (!studentAnswer || !correctAnswer) return false;
 
   // Don't validate incomplete expressions
@@ -349,12 +391,12 @@ export const quickValidate = (studentAnswer, correctAnswer, questionText = '') =
     // Check if both expressions are valid first
     const studentValid = isValidExpression(studentAnswer);
     const correctValid = isValidExpression(correctAnswer);
-    
-    console.log('🔍 quickValidate expression validity:', { 
-      student: studentAnswer, 
-      studentValid, 
-      correct: correctAnswer, 
-      correctValid 
+
+    console.log('🔍 quickValidate expression validity:', {
+      student: studentAnswer,
+      studentValid,
+      correct: correctAnswer,
+      correctValid,
     });
 
     // If student answer is invalid, reject immediately
@@ -365,7 +407,10 @@ export const quickValidate = (studentAnswer, correctAnswer, questionText = '') =
 
     // Only proceed if both are valid expressions
     if (studentValid && correctValid) {
-      const frontendResult = frontendQuickValidate(studentAnswer, correctAnswer);
+      const frontendResult = frontendQuickValidate(
+        studentAnswer,
+        correctAnswer,
+      );
       if (frontendResult) return true;
     }
 
@@ -398,8 +443,10 @@ export const quickValidate = (studentAnswer, correctAnswer, questionText = '') =
     }
 
     // Check for systems of equations (contains x= and y=)
-    if (questionText.toLowerCase().includes('solve for x and y') || 
-        (normalizedStudent.includes('x=') && normalizedStudent.includes('y='))) {
+    if (
+      questionText.toLowerCase().includes('solve for x and y') ||
+      (normalizedStudent.includes('x=') && normalizedStudent.includes('y='))
+    ) {
       return validateSystemSolution(studentAnswer, correctAnswer);
     }
 
@@ -419,22 +466,44 @@ export const quickValidate = (studentAnswer, correctAnswer, questionText = '') =
  * Enhanced validation function with both frontend and backend validation
  * Use this for comprehensive validation that includes backend fallback
  */
-export const validateAnswerEnhanced = async (studentAnswer, correctAnswer, questionText = '', questionType = '') => {
-  return await validateAnswer(studentAnswer, correctAnswer, questionText, questionType);
+export const validateAnswerEnhanced = async (
+  studentAnswer,
+  correctAnswer,
+  questionText = '',
+  questionType = '',
+) => {
+  return await validateAnswer(
+    studentAnswer,
+    correctAnswer,
+    questionText,
+    questionType,
+  );
 };
 
 /**
  * Synchronous validation using only frontend math validator
  * Use this for real-time validation without backend dependency
  */
-export const validateAnswerSync = (studentAnswer, correctAnswer, questionText = '', questionType = '') => {
+export const validateAnswerSync = (
+  studentAnswer,
+  correctAnswer,
+  questionText = '',
+  questionType = '',
+) => {
   if (!studentAnswer || !correctAnswer) return false;
 
   try {
     // Use frontend math validation for Math Input types - but only if both are valid
-    if (questionType === 'Math Input' || isMathExpression(studentAnswer) || isMathExpression(correctAnswer)) {
+    if (
+      questionType === 'Math Input' ||
+      isMathExpression(studentAnswer) ||
+      isMathExpression(correctAnswer)
+    ) {
       // Only validate if both expressions are actually valid
-      if (isValidExpression(studentAnswer) && isValidExpression(correctAnswer)) {
+      if (
+        isValidExpression(studentAnswer) &&
+        isValidExpression(correctAnswer)
+      ) {
         return validateMathAnswer(studentAnswer, correctAnswer);
       }
       return false; // Invalid expressions should not be considered correct
@@ -459,7 +528,7 @@ export const isValidExpression = (expression) => {
     }
 
     const cleaned = expression.trim();
-    
+
     // First check if it's a valid math expression using the frontend validator
     if (!isValidMathExpression(cleaned)) {
       return false;

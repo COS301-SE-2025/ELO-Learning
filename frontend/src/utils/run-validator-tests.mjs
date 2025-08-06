@@ -27,13 +27,14 @@ const mockFrontendValidator = {
       return false;
     }
   },
-  quickValidateMath: (student, correct) => mockFrontendValidator.validateMathAnswer(student, correct),
+  quickValidateMath: (student, correct) =>
+    mockFrontendValidator.validateMathAnswer(student, correct),
   isValidMathExpression: (expr) => {
     if (!expr) return false;
     // Basic validation - check for valid characters and balanced parentheses
     const validChars = /^[a-zA-Z0-9+\-*/^().,\s=]+$/;
     if (!validChars.test(expr)) return false;
-    
+
     let openParens = 0;
     for (const char of expr) {
       if (char === '(') openParens++;
@@ -41,13 +42,15 @@ const mockFrontendValidator = {
       if (openParens < 0) return false;
     }
     return openParens === 0;
-  }
+  },
 };
 
 // Mock API functions
 const mockAPI = {
-  validateMathExpression: async (expr) => mockFrontendValidator.isValidMathExpression(expr),
-  quickValidateMath: async (student, correct) => mockFrontendValidator.validateMathAnswer(student, correct)
+  validateMathExpression: async (expr) =>
+    mockFrontendValidator.isValidMathExpression(expr),
+  quickValidateMath: async (student, correct) =>
+    mockFrontendValidator.validateMathAnswer(student, correct),
 };
 
 // Create a simple test runner
@@ -55,27 +58,52 @@ async function runValidatorTestsNode() {
   console.log('🧪 Testing Combined Answer Validator (Node.js)\n');
 
   const testCases = [
-    { student: '2+2', correct: '4', expected: true, description: 'Simple addition' },
-    { student: '4', correct: '2+2', expected: true, description: 'Equivalent expressions' },
-    { student: 'x=3,y=4', correct: 'x=3,y=4', expected: true, description: 'System solution exact match' },
-    { student: '2,3', correct: '2,3', expected: true, description: 'Multiple solutions' },
+    {
+      student: '2+2',
+      correct: '4',
+      expected: true,
+      description: 'Simple addition',
+    },
+    {
+      student: '4',
+      correct: '2+2',
+      expected: true,
+      description: 'Equivalent expressions',
+    },
+    {
+      student: 'x=3,y=4',
+      correct: 'x=3,y=4',
+      expected: true,
+      description: 'System solution exact match',
+    },
+    {
+      student: '2,3',
+      correct: '2,3',
+      expected: true,
+      description: 'Multiple solutions',
+    },
   ];
 
   for (const test of testCases) {
     console.log(`Testing: ${test.description}`);
     console.log(`Student: "${test.student}", Correct: "${test.correct}"`);
-    
+
     try {
       // Test basic validation
-      const result = mockFrontendValidator.validateMathAnswer(test.student, test.correct);
-      console.log(`Result: ${result} ${result === test.expected ? '✅' : '❌'}`);
+      const result = mockFrontendValidator.validateMathAnswer(
+        test.student,
+        test.correct,
+      );
+      console.log(
+        `Result: ${result} ${result === test.expected ? '✅' : '❌'}`,
+      );
     } catch (error) {
       console.error(`❌ Error testing "${test.description}":`, error);
     }
-    
+
     console.log('---');
   }
-  
+
   // Test expression validation
   console.log('\n🔍 Testing Expression Validation:');
   const expressions = [
@@ -84,10 +112,12 @@ async function runValidatorTestsNode() {
     { expr: '2+', expected: false },
     { expr: '(2+3', expected: false },
   ];
-  
+
   for (const test of expressions) {
     const result = mockFrontendValidator.isValidMathExpression(test.expr);
-    console.log(`"${test.expr}": ${result} ${result === test.expected ? '✅' : '❌'}`);
+    console.log(
+      `"${test.expr}": ${result} ${result === test.expected ? '✅' : '❌'}`,
+    );
   }
 }
 

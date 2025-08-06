@@ -14,7 +14,7 @@ export default async function PracticeTopic({ params }) {
 
   const level = session.user.currentLevel || 1;
   const apiResponse = await fetchQuestionsByLevelAndTopic(level, topic);
-  
+
   // Debug: Log what we're getting from the API
   console.log('API Response:', apiResponse);
   console.log('Type of response:', typeof apiResponse);
@@ -39,7 +39,9 @@ export default async function PracticeTopic({ params }) {
     return (
       <div className="min-h-screen flex items-center justify-center p-8">
         <div className="text-center">
-          <h2 className="text-2xl font-bold mb-4 text-yellow-600">No Questions Available</h2>
+          <h2 className="text-2xl font-bold mb-4 text-yellow-600">
+            No Questions Available
+          </h2>
           <p className="text-gray-600 mb-4">
             No questions found for this topic at level {level}.
           </p>

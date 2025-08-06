@@ -9,19 +9,19 @@ const validateAnswerByType = (questionType, studentAnswer, correctAnswer) => {
   switch (questionType) {
     case 'Multiple Choice':
       return studentAnswer === correctAnswer;
-    
+
     case 'Math Input':
       return backendMathValidator.validateAnswer(studentAnswer, correctAnswer);
-    
+
     case 'Open Response':
       return validateOpenResponse(studentAnswer, correctAnswer);
-    
+
     case 'Expression Builder':
       return validateExpressionBuilder(studentAnswer, correctAnswer);
-    
+
     case 'Fill-in-the-Blank':
       return validateFillInBlank(studentAnswer, correctAnswer);
-    
+
     default:
       return studentAnswer === correctAnswer;
   }
@@ -32,7 +32,7 @@ const validateOpenResponse = (studentAnswer, correctAnswer) => {
   if (!studentAnswer || studentAnswer.trim().length < 10) {
     return false;
   }
-  
+
   try {
     // For now, just check if it's a reasonable length response
     // You can enhance this later with keyword matching
@@ -45,10 +45,16 @@ const validateOpenResponse = (studentAnswer, correctAnswer) => {
 
 const validateExpressionBuilder = (studentAnswer, correctAnswer) => {
   try {
-    const studentExpression = typeof studentAnswer === 'string' ? studentAnswer : studentAnswer.join('');
+    const studentExpression =
+      typeof studentAnswer === 'string'
+        ? studentAnswer
+        : studentAnswer.join('');
     const correctExpression = correctAnswer;
-    
-    return backendMathValidator.validateAnswer(studentExpression, correctExpression);
+
+    return backendMathValidator.validateAnswer(
+      studentExpression,
+      correctExpression,
+    );
   } catch (error) {
     console.error('Error validating expression builder:', error);
     return false;
@@ -57,20 +63,26 @@ const validateExpressionBuilder = (studentAnswer, correctAnswer) => {
 
 const validateFillInBlank = (studentAnswer, correctAnswer) => {
   try {
-    const studentAnswers = typeof studentAnswer === 'object' ? studentAnswer : JSON.parse(studentAnswer);
-    const correctAnswers = typeof correctAnswer === 'object' ? correctAnswer : JSON.parse(correctAnswer);
-    
+    const studentAnswers =
+      typeof studentAnswer === 'object'
+        ? studentAnswer
+        : JSON.parse(studentAnswer);
+    const correctAnswers =
+      typeof correctAnswer === 'object'
+        ? correctAnswer
+        : JSON.parse(correctAnswer);
+
     for (let blankId in correctAnswers) {
       const studentBlank = studentAnswers[blankId]?.trim().toLowerCase();
       const correctBlank = correctAnswers[blankId].trim().toLowerCase();
-      
-      const possibleAnswers = correctBlank.split('|').map(ans => ans.trim());
-      
+
+      const possibleAnswers = correctBlank.split('|').map((ans) => ans.trim());
+
       if (!possibleAnswers.includes(studentBlank)) {
         return false;
       }
     }
-    
+
     return true;
   } catch (error) {
     console.error('Error validating fill in blank:', error);
@@ -86,7 +98,8 @@ router.get('/questions/type/:type', async (req, res) => {
   try {
     let query = supabase
       .from('Questions')
-      .select(`
+      .select(
+        `
         Q_id,
         topic,
         difficulty,
@@ -97,43 +110,46 @@ router.get('/questions/type/:type', async (req, res) => {
         topic_id,
         elo_rating,
         imageUrl
-      `)
+      `,
+      )
       .eq('type', type)
       .limit(parseInt(limit));
 
     const { data: questions, error: qError } = await query;
 
     if (qError) {
-      return res.status(500).json({ 
-        error: 'Failed to fetch questions', 
-        details: qError.message 
+      return res.status(500).json({
+        error: 'Failed to fetch questions',
+        details: qError.message,
       });
     }
 
     if (!questions || questions.length === 0) {
-      return res.status(404).json({ 
-        error: `No questions found for type: ${type}` 
+      return res.status(404).json({
+        error: `No questions found for type: ${type}`,
       });
     }
 
     // Fetch answers for each question
-    const questionIds = questions.map(q => q.Q_id);
+    const questionIds = questions.map((q) => q.Q_id);
     const { data: answers, error: aError } = await supabase
       .from('Answers')
       .select('*')
       .in('question_id', questionIds);
 
     if (aError) {
-      return res.status(500).json({ 
-        error: 'Failed to fetch answers', 
-        details: aError.message 
+      return res.status(500).json({
+        error: 'Failed to fetch answers',
+        details: aError.message,
       });
     }
 
     // Map answers to questions and add placeholder metadata for frontend compatibility
-    questions.forEach(question => {
-      question.answers = answers.filter(answer => answer.question_id === question.Q_id);
-      
+    questions.forEach((question) => {
+      question.answers = answers.filter(
+        (answer) => answer.question_id === question.Q_id,
+      );
+
       // Add placeholder fields for frontend compatibility (all null for now)
       question.inputLabels = null;
       question.expressionTiles = null;
@@ -141,13 +157,12 @@ router.get('/questions/type/:type', async (req, res) => {
       question.showMathHelper = false;
     });
 
-    res.status(200).json({ 
-      success: true, 
+    res.status(200).json({
+      success: true,
       data: questions,
       type: type,
-      count: questions.length
+      count: questions.length,
     });
-
   } catch (err) {
     console.error('Unexpected error:', err);
     res.status(500).json({ error: 'Unexpected server error' });
@@ -161,7 +176,8 @@ router.get('/questions/mixed', async (req, res) => {
   try {
     const { data: questions, error: qError } = await supabase
       .from('Questions')
-      .select(`
+      .select(
+        `
         Q_id,
         topic,
         difficulty,
@@ -172,13 +188,14 @@ router.get('/questions/mixed', async (req, res) => {
         topic_id,
         elo_rating,
         imageUrl
-      `)
+      `,
+      )
       .eq('level', level);
 
     if (qError) {
-      return res.status(500).json({ 
-        error: 'Failed to fetch questions', 
-        details: qError.message 
+      return res.status(500).json({
+        error: 'Failed to fetch questions',
+        details: qError.message,
       });
     }
 
@@ -187,23 +204,25 @@ router.get('/questions/mixed', async (req, res) => {
     const selected = shuffled.slice(0, parseInt(count));
 
     // Fetch answers
-    const questionIds = selected.map(q => q.Q_id);
+    const questionIds = selected.map((q) => q.Q_id);
     const { data: answers, error: aError } = await supabase
       .from('Answers')
       .select('*')
       .in('question_id', questionIds);
 
     if (aError) {
-      return res.status(500).json({ 
-        error: 'Failed to fetch answers', 
-        details: aError.message 
+      return res.status(500).json({
+        error: 'Failed to fetch answers',
+        details: aError.message,
       });
     }
 
     // Map answers to questions and add placeholder metadata
-    selected.forEach(question => {
-      question.answers = answers.filter(answer => answer.question_id === question.Q_id);
-      
+    selected.forEach((question) => {
+      question.answers = answers.filter(
+        (answer) => answer.question_id === question.Q_id,
+      );
+
       // Add placeholder fields for frontend compatibility
       question.inputLabels = null;
       question.expressionTiles = null;
@@ -211,13 +230,12 @@ router.get('/questions/mixed', async (req, res) => {
       question.showMathHelper = false;
     });
 
-    res.status(200).json({ 
-      success: true, 
+    res.status(200).json({
+      success: true,
       data: selected,
       level: level,
-      count: selected.length
+      count: selected.length,
     });
-
   } catch (err) {
     console.error('Unexpected error:', err);
     res.status(500).json({ error: 'Unexpected server error' });
@@ -241,29 +259,34 @@ router.post('/question/:id/submit', async (req, res) => {
       return res.status(404).json({ error: 'Question not found' });
     }
 
-  const { data: correctAnswerData, error: answerError } = await supabase
-    .from('Answers')
-    .select('*')  // Select all fields
-    .eq('question_id', id)
-    .eq('isCorrect', true)
-    .single();
+    const { data: correctAnswerData, error: answerError } = await supabase
+      .from('Answers')
+      .select('*') // Select all fields
+      .eq('question_id', id)
+      .eq('isCorrect', true)
+      .single();
 
-  // Add debugging
-  console.log('Answer query result:', { correctAnswerData, answerError });
+    // Add debugging
+    console.log('Answer query result:', { correctAnswerData, answerError });
 
-  if (answerError || !correctAnswerData) {
-    console.log('Answer error details:', answerError);
-    return res.status(404).json({ 
-      error: 'Correct answer not found',
-      debug: { answerError, question_id: id }
-    });
-  }
+    if (answerError || !correctAnswerData) {
+      console.log('Answer error details:', answerError);
+      return res.status(404).json({
+        error: 'Correct answer not found',
+        debug: { answerError, question_id: id },
+      });
+    }
 
-    const correctAnswer = correctAnswerData.answer_text || correctAnswerData.answerText;
+    const correctAnswer =
+      correctAnswerData.answer_text || correctAnswerData.answerText;
     const actualQuestionType = questionType || questionData.type;
 
     // Validate answer based on question type
-    const isCorrect = validateAnswerByType(actualQuestionType, studentAnswer, correctAnswer);
+    const isCorrect = validateAnswerByType(
+      actualQuestionType,
+      studentAnswer,
+      correctAnswer,
+    );
 
     // Award XP if correct and userId provided
     let updatedUser = null;
@@ -306,20 +329,22 @@ router.post('/question/:id/submit', async (req, res) => {
       data: {
         isCorrect,
         studentAnswer,
-        correctAnswer: actualQuestionType === 'Open Response' ? 'See rubric for details' : correctAnswer,
+        correctAnswer:
+          actualQuestionType === 'Open Response'
+            ? 'See rubric for details'
+            : correctAnswer,
         message: feedbackMessage,
         xpAwarded,
         updatedUser,
-        questionType: actualQuestionType
-      }
+        questionType: actualQuestionType,
+      },
     });
-
   } catch (error) {
     console.error('Error submitting answer:', error);
-    res.status(500).json({ 
-      success: false, 
+    res.status(500).json({
+      success: false,
       error: 'Failed to submit answer',
-      details: error.message
+      details: error.message,
     });
   }
 });
@@ -329,22 +354,26 @@ const getFeedbackMessage = (questionType, isCorrect) => {
   const correctMessages = {
     'Multiple Choice': 'Correct! Well done!',
     'Math Input': 'Correct! Your mathematical expression is right!',
-    'Open Response': 'Great response! Your explanation demonstrates good understanding.',
+    'Open Response':
+      'Great response! Your explanation demonstrates good understanding.',
     'Expression Builder': 'Perfect! Your expression is correctly constructed!',
-    'Fill-in-the-Blank': 'Correct! All blanks filled properly!'
+    'Fill-in-the-Blank': 'Correct! All blanks filled properly!',
   };
 
   const incorrectMessages = {
     'Multiple Choice': 'Incorrect. Try again!',
     'Math Input': 'Not quite right. Check your mathematical expression.',
-    'Open Response': 'Your response needs more detail or accuracy. Try explaining step by step.',
-    'Expression Builder': 'Your expression isn\'t quite right. Try rearranging the tiles.',
-    'Fill-in-the-Blank': 'Some blanks are incorrect. Double-check your answers.'
+    'Open Response':
+      'Your response needs more detail or accuracy. Try explaining step by step.',
+    'Expression Builder':
+      "Your expression isn't quite right. Try rearranging the tiles.",
+    'Fill-in-the-Blank':
+      'Some blanks are incorrect. Double-check your answers.',
   };
 
-  return isCorrect ? 
-    (correctMessages[questionType] || 'Correct!') : 
-    (incorrectMessages[questionType] || 'Incorrect. Try again!');
+  return isCorrect
+    ? correctMessages[questionType] || 'Correct!'
+    : incorrectMessages[questionType] || 'Incorrect. Try again!';
 };
 
 // Keep all your existing routes exactly as they are

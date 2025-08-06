@@ -7,7 +7,10 @@ export default function OpenResponseTemplate({ setAnswer, answer }) {
   const [wordCount, setWordCount] = useState(0);
 
   useEffect(() => {
-    const words = inputValue.trim().split(/\s+/).filter(word => word.length > 0);
+    const words = inputValue
+      .trim()
+      .split(/\s+/)
+      .filter((word) => word.length > 0);
     setWordCount(words.length);
   }, [inputValue]);
 
@@ -20,9 +23,10 @@ export default function OpenResponseTemplate({ setAnswer, answer }) {
   return (
     <div className="space-y-4">
       <div className="text-sm text-gray-600 mb-2">
-        Write your explanation or step-by-step solution below. Be detailed and show your work.
+        Write your explanation or step-by-step solution below. Be detailed and
+        show your work.
       </div>
-      
+
       <textarea
         value={inputValue}
         onChange={handleInputChange}
@@ -30,15 +34,17 @@ export default function OpenResponseTemplate({ setAnswer, answer }) {
         className="w-full h-48 p-4 border-2 border-gray-300 rounded-lg resize-none focus:border-[#7D32CE] focus:outline-none text-black"
         maxLength={2000}
       />
-      
+
       <div className="flex justify-between text-sm text-gray-500">
         <span>Words: {wordCount}</span>
         <span>{inputValue.length}/2000 characters</span>
       </div>
-      
+
       {inputValue.length >= 10 && (
         <div className="text-green-600 text-sm flex items-center gap-2">
-          <span className="w-4 h-4 bg-green-500 rounded-full flex items-center justify-center text-white text-xs">✓</span>
+          <span className="w-4 h-4 bg-green-500 rounded-full flex items-center justify-center text-white text-xs">
+            ✓
+          </span>
           Ready to submit
         </div>
       )}

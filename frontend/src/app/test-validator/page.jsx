@@ -26,9 +26,14 @@ export default function TestValidatorPage() {
     ];
 
     let output = '🧪 Testing Problematic Cases:\n\n';
-    
-    cases.forEach(test => {
-      const result = validateAnswerSync(test.student, test.correct, '', 'Math Input');
+
+    cases.forEach((test) => {
+      const result = validateAnswerSync(
+        test.student,
+        test.correct,
+        '',
+        'Math Input',
+      );
       const isValid = isValidExpression(test.student);
       const status = result === test.expected ? '✅' : '❌';
       output += `${status} "${test.student}" vs "${test.correct}"\n`;
@@ -41,10 +46,10 @@ export default function TestValidatorPage() {
   const runTests = async () => {
     setIsRunning(true);
     setTestResults('Running tests...\n');
-    
+
     // First test problematic cases
     let output = testProblematicCases();
-    
+
     // Capture console output for full test suite
     const originalLog = console.log;
     const originalError = console.error;
@@ -74,8 +79,8 @@ export default function TestValidatorPage() {
 
   const runCustomTest = () => {
     if (!customTest.trim()) return;
-    
-    const [student, correct] = customTest.split(' vs ').map(s => s.trim());
+
+    const [student, correct] = customTest.split(' vs ').map((s) => s.trim());
     if (!student || !correct) {
       setTestResults('Format: "student answer vs correct answer"');
       return;
@@ -84,7 +89,7 @@ export default function TestValidatorPage() {
     const result = validateAnswerSync(student, correct, '', 'Math Input');
     const isStudentValid = isValidExpression(student);
     const isCorrectValid = isValidExpression(correct);
-    
+
     setTestResults(`Custom Test Result:
 Student: "${student}" (Valid: ${isStudentValid})
 Correct: "${correct}" (Valid: ${isCorrectValid})
@@ -100,7 +105,7 @@ Result: ${result}
   return (
     <div className="p-8 max-w-4xl mx-auto">
       <h1 className="text-3xl font-bold mb-6">Validator Test Results</h1>
-      
+
       <div className="mb-4 space-x-2">
         <button
           onClick={runTests}

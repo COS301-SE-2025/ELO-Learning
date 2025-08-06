@@ -20,18 +20,20 @@ export default function Page() {
   useEffect(() => {
     // Only run on client side
     if (typeof window !== 'undefined') {
-      const tempQuestions = JSON.parse(localStorage.getItem('questionsObj') || '[]');
-      
+      const tempQuestions = JSON.parse(
+        localStorage.getItem('questionsObj') || '[]',
+      );
+
       console.log('Loaded questions from localStorage:', tempQuestions);
-      
+
       if (tempQuestions.length === 0) {
         // No questions found, redirect to dashboard
         redirect('/dashboard');
         return;
       }
-      
+
       setQuestions(tempQuestions);
-      
+
       // Set initial question data - no re-validation needed!
       if (tempQuestions[0]) {
         setCurrQuestion(tempQuestions[0]);
@@ -39,7 +41,7 @@ export default function Page() {
         setAnswer(tempQuestions[0].answer);
         setIsCorrect(tempQuestions[0].isCorrect);
       }
-      
+
       setIsLoading(false);
     }
   }, []);
@@ -63,12 +65,12 @@ export default function Page() {
       setCorrectAnswer(currentQ.actualAnswer);
       setAnswer(currentQ.answer);
       setIsCorrect(currentQ.isCorrect);
-      
+
       console.log('📄 Displaying question:', {
         index,
         studentAnswer: currentQ.answer,
         correctAnswer: currentQ.actualAnswer?.answer_text,
-        isCorrect: currentQ.isCorrect
+        isCorrect: currentQ.isCorrect,
       });
     }
   }, [index, questions]);

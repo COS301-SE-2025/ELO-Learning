@@ -29,13 +29,16 @@ export default function UniversalQuestionWrapper({ questions }) {
 
   // 🔍 Debug logging
   console.log('UniversalQuestionWrapper - currQuestion:', currQuestion);
-  console.log('UniversalQuestionWrapper - currQuestion.type:', currQuestion?.type);
+  console.log(
+    'UniversalQuestionWrapper - currQuestion.type:',
+    currQuestion?.type,
+  );
 
   // Universal answer state - can handle any answer type
   const [answer, setAnswer] = useState(null);
   const [isAnswerCorrect, setIsAnswerCorrect] = useState(false);
   const [isValidExpression, setIsValidExpression] = useState(true);
-  
+
   // Feedback state
   const [showFeedback, setShowFeedback] = useState(false);
   const [feedbackMessage, setFeedbackMessage] = useState('');
@@ -97,8 +100,10 @@ export default function UniversalQuestionWrapper({ questions }) {
         isValid = answer && answer.length > 0; // Has at least some tiles
         break;
       case 'Fill-in-the-Blank':
-        isValid = answer && Object.keys(answer).length > 0 && 
-                 Object.values(answer).every(val => val && val.trim());
+        isValid =
+          answer &&
+          Object.keys(answer).length > 0 &&
+          Object.values(answer).every((val) => val && val.trim());
         break;
       default:
         isValid = answer !== null;
@@ -116,7 +121,7 @@ export default function UniversalQuestionWrapper({ questions }) {
         currQuestion.Q_id,
         answer,
         'current-user-id',
-        currQuestion.type
+        currQuestion.type,
       );
 
       if (result.success) {
@@ -184,13 +189,13 @@ export default function UniversalQuestionWrapper({ questions }) {
       answers: currAnswers,
       setAnswer,
       setIsAnswerCorrect,
-      answer
+      answer,
     };
 
     switch (currQuestion.type) {
       case 'Multiple Choice':
         return <MultipleChoiceTemplate {...commonProps} />;
-      
+
       case 'Math Input':
         return (
           <MathInputTemplate
@@ -201,20 +206,22 @@ export default function UniversalQuestionWrapper({ questions }) {
             studentAnswer={answer || ''}
           />
         );
-      
+
       case 'Open Response':
         return <OpenResponseTemplate {...commonProps} />;
-      
+
       case 'Expression Builder':
         return <ExpressionBuilderTemplate {...commonProps} />;
-      
+
       case 'Fill-in-the-Blank':
         return <FillInBlankTemplate {...commonProps} />;
-      
+
       default:
         return (
           <div className="text-center p-8">
-            <p className="text-red-600">Unsupported question type: {currQuestion.type}</p>
+            <p className="text-red-600">
+              Unsupported question type: {currQuestion.type}
+            </p>
           </div>
         );
     }
@@ -252,16 +259,14 @@ export default function UniversalQuestionWrapper({ questions }) {
               Question {currentStep} of {totalSteps}
             </span>
           </div>
-          
+
           <h2 className="text-2xl font-bold text-center leading-relaxed">
             {currQuestion?.questionText || 'Loading question...'}
           </h2>
         </div>
 
         {/* Question Type Component */}
-        <div className="px-4">
-          {renderQuestionComponent()}
-        </div>
+        <div className="px-4">{renderQuestionComponent()}</div>
 
         {/* Feedback Section */}
         {showFeedback && (

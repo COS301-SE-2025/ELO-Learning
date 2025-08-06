@@ -35,7 +35,7 @@ export default function Page() {
     //   setIsLoading(false);
     // }
     signIn('credentials', {
-      callbackUrl: 'http://localhost:8080/dashboard',
+      callbackUrl: `${process.env.NEXT_PUBLIC_FRONTEND_URL || 'http://localhost:8080'}/dashboard`,
       email,
       password,
       redirect: false,
@@ -133,7 +133,9 @@ export default function Page() {
         <div
           className="google-button flex items-center justify-around gap-10 m-2"
           onClick={() =>
-            signIn('google', { callbackUrl: 'http://localhost:8080/dashboard' })
+            signIn('google', {
+              callbackUrl: `${process.env.NEXT_PUBLIC_FRONTEND_URL || 'http://localhost:8080'}/dashboard`,
+            })
           }
         >
           {/* <FaGoogle size={24} /> */}

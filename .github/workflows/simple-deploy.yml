@@ -1,0 +1,87 @@
+name: Deploy to Afrihost cPanel
+
+on:
+  push:
+    branches: [main, production]
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+
+      - name: Install and build frontend
+        run: |
+          cd frontend
+          npm install
+          npm run build
+        env:
+          NEXT_PUBLIC_API_URL: https://elo-learning.co.za
+          NEXT_PUBLIC_FRONTEND_URL: https://elo-learning.co.za
+          NEXT_PUBLIC_SOCKET_URL: https://elo-learning.co.za
+
+      - name: Deploy to cPanel via SSH
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.AFRIHOST_HOST }}
+          username: ${{ secrets.AFRIHOST_USERNAME }}
+          key: ${{ secrets.AFRIHOST_SSH_KEY }}
+          port: ${{ secrets.AFRIHOST_PORT || 22 }}
+          script: |
+            # Navigate to the repository directory (typically in user home)
+            cd ~/repositories/elo-learning || cd ~/git/elo-learning || cd ~/elo-learning
+
+            # Pull latest changes
+            git pull origin main
+
+            # Install backend dependencies
+            cd backend
+            npm install --omit=dev
+
+            # Create production environment file
+            cat > .env << EOF
+            NODE_ENV=production
+            PORT=3000
+            SUPABASE_URL=${{ secrets.SUPABASE_URL }}
+            SUPABASE_KEY=${{ secrets.SUPABASE_KEY }}
+            JWT_SECRET=${{ secrets.JWT_SECRET }}
+            EOF
+
+            # Go back to repo root and handle frontend
+            cd ..
+
+            # Copy built frontend to public_html if needed
+            # (Adjust paths based on your cPanel setup)
+            if [ -d ~/public_html ]; then
+              # Copy frontend build output to public_html
+              cp -r frontend/.next ~/public_html/ 2>/dev/null || true
+              cp -r frontend/public/* ~/public_html/ 2>/dev/null || true
+              
+              # Copy necessary frontend files
+              cp frontend/package.json ~/public_html/ 2>/dev/null || true
+              cp frontend/next.config.mjs ~/public_html/ 2>/dev/null || true
+            fi
+
+            # For Node.js apps in cPanel, you might need to:
+            # 1. Use the Node.js App interface in cPanel, or
+            # 2. Use a process manager like PM2 if available, or
+            # 3. Use cPanel's built-in Node.js management
+
+            # Check if PM2 is available and restart services
+            if command -v pm2 &> /dev/null; then
+              pm2 restart all 2>/dev/null || pm2 start ~/repositories/elo-learning/ecosystem.config.js 2>/dev/null || echo "PM2 not configured"
+            else
+              echo "PM2 not available. You may need to restart your Node.js app through cPanel interface."
+            fi
+
+            # Alternative: If using cPanel Node.js apps, restart through cPanel CLI (if available)
+            # cloudlinux-selector restart --json --interpreter nodejs --user $USER 2>/dev/null || true

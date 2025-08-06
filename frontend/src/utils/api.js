@@ -1,13 +1,13 @@
-const API_BASE_URL = 'http://localhost:3000';
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000'
 
 // Helper function to get auth headers
 const getAuthHeaders = () => {
-  const token = localStorage.getItem('token'); // or however you store your JWT token
+  const token = localStorage.getItem('token') // or however you store your JWT token
   return {
     'Content-Type': 'application/json',
     ...(token && { Authorization: `Bearer ${token}` }),
-  };
-};
+  }
+}
 
 // Get all questions (no auth required)
 export const getAllQuestions = async () => {
@@ -17,25 +17,25 @@ export const getAllQuestions = async () => {
       headers: {
         'Content-Type': 'application/json',
       },
-    });
+    })
 
-    const data = await response.json();
+    const data = await response.json()
 
     if (!response.ok) {
-      throw new Error(data.error || 'Failed to fetch questions');
+      throw new Error(data.error || 'Failed to fetch questions')
     }
 
     return {
       success: true,
       data: data.questions,
-    };
+    }
   } catch (error) {
     return {
       success: false,
       error: error.message,
-    };
+    }
   }
-};
+}
 
 export const getQuestionById = async (id) => {
   try {
@@ -44,25 +44,25 @@ export const getQuestionById = async (id) => {
       headers: {
         'Content-Type': 'application/json',
       },
-    });
+    })
 
-    const data = await response.json();
+    const data = await response.json()
 
     if (!response.ok) {
-      throw new Error(data.error || 'Failed to fetch question');
+      throw new Error(data.error || 'Failed to fetch question')
     }
 
     return {
       success: true,
       data: data.question,
-    };
+    }
   } catch (error) {
     return {
       success: false,
       error: error.message,
-    };
+    }
   }
-};
+}
 
 // Get all answers (no auth required)
 export const getAllAnswers = async (id) => {
@@ -72,25 +72,25 @@ export const getAllAnswers = async (id) => {
       headers: {
         'Content-Type': 'application/json',
       },
-    });
+    })
 
-    const data = await response.json();
+    const data = await response.json()
 
     if (!response.ok) {
-      throw new Error(data.error || 'Failed to fetch answers');
+      throw new Error(data.error || 'Failed to fetch answers')
     }
 
     return {
       success: true,
       data: data.answer,
-    };
+    }
   } catch (error) {
     return {
       success: false,
       error: error.message,
-    };
+    }
   }
-};
+}
 
 export const practiceQuestion = async () => {
   try {
@@ -99,25 +99,25 @@ export const practiceQuestion = async () => {
       headers: {
         'Content-Type': 'application/json',
       },
-    });
+    })
 
-    const data = await response.json();
+    const data = await response.json()
 
     if (!response.ok) {
-      throw new Error(data.error || 'Failed to fetch questions');
+      throw new Error(data.error || 'Failed to fetch questions')
     }
 
     return {
       success: true,
       data: data.questions,
-    };
+    }
   } catch (error) {
     return {
       success: false,
       error: error.message,
-    };
+    }
   }
-};
+}
 
 // NEW MATH VALIDATION API FUNCTIONS
 
@@ -133,25 +133,25 @@ export const validateMathAnswer = async (studentAnswer, correctAnswer) => {
         studentAnswer,
         correctAnswer,
       }),
-    });
+    })
 
-    const data = await response.json();
+    const data = await response.json()
 
     if (!response.ok) {
-      throw new Error(data.error || 'Failed to validate answer');
+      throw new Error(data.error || 'Failed to validate answer')
     }
 
     return {
       success: true,
       data,
-    };
+    }
   } catch (error) {
     return {
       success: false,
       error: error.message,
-    };
+    }
   }
-};
+}
 
 // Quick validation for real-time feedback
 export const quickValidateMath = async (studentAnswer, correctAnswer) => {
@@ -165,25 +165,25 @@ export const quickValidateMath = async (studentAnswer, correctAnswer) => {
         studentAnswer,
         correctAnswer,
       }),
-    });
+    })
 
-    const data = await response.json();
+    const data = await response.json()
 
     if (!response.ok) {
-      throw new Error(data.error || 'Failed to validate answer');
+      throw new Error(data.error || 'Failed to validate answer')
     }
 
     return {
       success: true,
       data,
-    };
+    }
   } catch (error) {
     return {
       success: false,
       error: error.message,
-    };
+    }
   }
-};
+}
 
 // Validate math expression format
 export const validateMathExpression = async (expression) => {
@@ -196,25 +196,25 @@ export const validateMathExpression = async (expression) => {
       body: JSON.stringify({
         expression,
       }),
-    });
+    })
 
-    const data = await response.json();
+    const data = await response.json()
 
     if (!response.ok) {
-      throw new Error(data.error || 'Failed to validate expression');
+      throw new Error(data.error || 'Failed to validate expression')
     }
 
     return {
       success: true,
       data,
-    };
+    }
   } catch (error) {
     return {
       success: false,
       error: error.message,
-    };
+    }
   }
-};
+}
 
 // Submit answer for a specific question (with XP awarding)
 export const submitQuestionAnswer = async (
@@ -235,41 +235,41 @@ export const submitQuestionAnswer = async (
           userId,
         }),
       },
-    );
+    )
 
-    const data = await response.json();
+    const data = await response.json()
 
     if (!response.ok) {
-      throw new Error(data.error || 'Failed to submit answer');
+      throw new Error(data.error || 'Failed to submit answer')
     }
 
     return {
       success: true,
       data,
-    };
+    }
   } catch (error) {
     return {
       success: false,
       error: error.message,
-    };
+    }
   }
-};
+}
 
 // Get questions by type
 export const getQuestionsByType = async (questionType) => {
   try {
     const response = await fetch(
       `${API_BASE_URL}/practice/type/${questionType}`,
-    );
-    const data = await response.json();
+    )
+    const data = await response.json()
 
     if (response.ok) {
-      return { success: true, data: data.questions };
+      return { success: true, data: data.questions }
     } else {
-      return { success: false, error: data.error };
+      return { success: false, error: data.error }
     }
   } catch (error) {
-    console.error('Error fetching questions by type:', error);
-    return { success: false, error: 'Network error' };
+    console.error('Error fetching questions by type:', error)
+    return { success: false, error: 'Network error' }
   }
-};
+}

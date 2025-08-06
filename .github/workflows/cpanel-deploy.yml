@@ -1,0 +1,157 @@
+name: Deploy to cPanel (Alternative)
+
+on:
+  push:
+    branches: [main, production]
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+
+      - name: Build application
+        run: |
+          # Install and build frontend
+          cd frontend
+          npm install
+          npm run build
+          cd ..
+
+          # Install backend dependencies
+          cd backend
+          npm install --omit=dev
+          cd ..
+
+        env:
+          NEXT_PUBLIC_API_URL: https://elo-learning.co.za
+          NEXT_PUBLIC_FRONTEND_URL: https://elo-learning.co.za
+          NEXT_PUBLIC_SOCKET_URL: https://elo-learning.co.za
+
+      - name: Create deployment package
+        run: |
+          # Create a deployment archive
+          mkdir -p deployment
+
+          # Copy built application
+          cp -r backend deployment/
+          cp -r frontend/.next deployment/frontend/
+          cp -r frontend/public deployment/frontend/
+          cp frontend/package.json deployment/frontend/
+          cp frontend/next.config.mjs deployment/frontend/
+
+          # Copy deployment scripts and configs
+          cp deploy-cpanel.sh deployment/
+          cp ecosystem.config.js deployment/
+
+          # Create environment template
+          cat > deployment/backend/.env.example << EOF
+          NODE_ENV=production
+          PORT=3000
+          SUPABASE_URL=\${{ secrets.SUPABASE_URL }}
+          SUPABASE_KEY=\${{ secrets.SUPABASE_KEY }}
+          JWT_SECRET=\${{ secrets.JWT_SECRET }}
+          EOF
+
+          # Create archive
+          tar -czf elo-learning-deployment.tar.gz -C deployment .
+
+      - name: Deploy via SSH
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.AFRIHOST_HOST }}
+          username: ${{ secrets.AFRIHOST_USERNAME }}
+          key: ${{ secrets.AFRIHOST_SSH_KEY }}
+          port: ${{ secrets.AFRIHOST_PORT || 22 }}
+          script: |
+            # Create backup of current deployment
+            if [ -d ~/elo-learning-app ]; then
+              mv ~/elo-learning-app ~/elo-learning-app-backup-$(date +%Y%m%d-%H%M%S)
+            fi
+
+            # Create fresh app directory
+            mkdir -p ~/elo-learning-app
+            mkdir -p ~/logs
+
+      - name: Upload deployment package
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.AFRIHOST_HOST }}
+          username: ${{ secrets.AFRIHOST_USERNAME }}
+          key: ${{ secrets.AFRIHOST_SSH_KEY }}
+          port: ${{ secrets.AFRIHOST_PORT || 22 }}
+          source: 'elo-learning-deployment.tar.gz'
+          target: '~/'
+
+      - name: Extract and configure
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.AFRIHOST_HOST }}
+          username: ${{ secrets.AFRIHOST_USERNAME }}
+          key: ${{ secrets.AFRIHOST_SSH_KEY }}
+          port: ${{ secrets.AFRIHOST_PORT || 22 }}
+          script: |
+            # Extract deployment
+            cd ~/
+            tar -xzf elo-learning-deployment.tar.gz -C elo-learning-app/
+            rm elo-learning-deployment.tar.gz
+
+            # Setup environment variables
+            cd ~/elo-learning-app/backend
+            cat > .env << EOF
+            NODE_ENV=production
+            PORT=3000
+            SUPABASE_URL=${{ secrets.SUPABASE_URL }}
+            SUPABASE_KEY=${{ secrets.SUPABASE_KEY }}
+            JWT_SECRET=${{ secrets.JWT_SECRET }}
+            EOF
+
+            # Make deployment script executable
+            chmod +x ~/elo-learning-app/deploy-cpanel.sh
+
+            # Try different restart methods
+
+            # Method 1: PM2 (if available)
+            if command -v pm2 &> /dev/null; then
+              echo "🔄 Restarting with PM2..."
+              pm2 restart all 2>/dev/null || pm2 start ~/elo-learning-app/ecosystem.config.js 2>/dev/null
+            fi
+
+            # Method 2: CloudLinux Node.js selector (if available)
+            if command -v cloudlinux-selector &> /dev/null; then
+              echo "🔄 Restarting with CloudLinux selector..."
+              cloudlinux-selector restart --json --interpreter nodejs --user $(whoami) 2>/dev/null || true
+            fi
+
+            # Method 3: Check if cPanel Node.js app exists and restart it
+            # This would require manual setup through cPanel interface
+
+            echo "✅ Deployment completed!"
+            echo "📋 Manual steps required:"
+            echo "1. Check cPanel → Node.js Apps to ensure app is running"
+            echo "2. Verify startup file points to: ~/elo-learning-app/backend/src/server.js"
+            echo "3. Check environment variables are set in cPanel interface"
+            echo "4. Test application at: https://elo-learning.co.za"
+
+      - name: Cleanup old backups
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.AFRIHOST_HOST }}
+          username: ${{ secrets.AFRIHOST_USERNAME }}
+          key: ${{ secrets.AFRIHOST_SSH_KEY }}
+          port: ${{ secrets.AFRIHOST_PORT || 22 }}
+          script: |
+            # Keep only the last 3 backups
+            cd ~/
+            ls -t elo-learning-app-backup-* 2>/dev/null | tail -n +4 | xargs rm -rf 2>/dev/null || true
+
+            echo "🧹 Cleanup completed"

@@ -1,0 +1,168 @@
+name: Deploy to Afrihost
+
+on:
+  push:
+    branches: [main, production]
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+
+      - name: Install root dependencies
+        run: npm install
+
+      - name: Install backend dependencies
+        run: npm install
+        working-directory: ./backend
+
+      - name: Install frontend dependencies
+        run: npm install
+        working-directory: ./frontend
+
+      - name: Build frontend
+        run: npm run build
+        working-directory: ./frontend
+        env:
+          NEXT_PUBLIC_API_URL: https://elo-learning.co.za
+          NEXT_PUBLIC_FRONTEND_URL: https://elo-learning.co.za
+          NEXT_PUBLIC_SOCKET_URL: https://elo-learning.co.za
+
+      - name: Create deployment package
+        run: |
+          # Create deployment directory
+          mkdir -p deploy
+
+          # Copy backend files
+          cp -r backend deploy/
+
+          # Copy frontend build output
+          cp -r frontend/.next deploy/frontend/.next
+          cp -r frontend/public deploy/frontend/public
+          cp frontend/package.json deploy/frontend/
+          cp frontend/next.config.mjs deploy/frontend/
+
+          # Copy root package.json and other necessary files
+          cp package.json deploy/
+          cp docker-compose.yml deploy/ 2>/dev/null || true
+
+          # Create production environment file for backend
+          echo "NODE_ENV=production" > deploy/backend/.env
+          echo "PORT=3000" >> deploy/backend/.env
+
+          # Create archive
+          tar -czf deployment.tar.gz -C deploy .
+
+      - name: Deploy to server
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.AFRIHOST_HOST }}
+          username: ${{ secrets.AFRIHOST_USERNAME }}
+          key: ${{ secrets.AFRIHOST_SSH_KEY }}
+          port: ${{ secrets.AFRIHOST_PORT || 22 }}
+          script: |
+            # Create application directory if it doesn't exist
+            mkdir -p /var/www/elo-learning
+
+            # Backup current deployment (optional)
+            if [ -d "/var/www/elo-learning/current" ]; then
+              mv /var/www/elo-learning/current /var/www/elo-learning/backup-$(date +%Y%m%d-%H%M%S)
+            fi
+
+            # Create new deployment directory
+            mkdir -p /var/www/elo-learning/current
+
+      - name: Upload files to server
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.AFRIHOST_HOST }}
+          username: ${{ secrets.AFRIHOST_USERNAME }}
+          key: ${{ secrets.AFRIHOST_SSH_KEY }}
+          port: ${{ secrets.AFRIHOST_PORT || 22 }}
+          source: 'deployment.tar.gz'
+          target: '/var/www/elo-learning/'
+
+      - name: Extract and setup application
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.AFRIHOST_HOST }}
+          username: ${{ secrets.AFRIHOST_USERNAME }}
+          key: ${{ secrets.AFRIHOST_SSH_KEY }}
+          port: ${{ secrets.AFRIHOST_PORT || 22 }}
+          script: |
+            cd /var/www/elo-learning
+
+            # Extract deployment
+            tar -xzf deployment.tar.gz -C current/
+            rm deployment.tar.gz
+
+            # Setup backend environment
+            cd current/backend
+            echo "SUPABASE_URL=${{ secrets.SUPABASE_URL }}" >> .env
+            echo "SUPABASE_KEY=${{ secrets.SUPABASE_KEY }}" >> .env
+            echo "JWT_SECRET=${{ secrets.JWT_SECRET }}" >> .env
+
+            # Install production dependencies
+            npm ci --only=production
+
+            # Setup frontend
+            cd ../frontend
+            npm ci --only=production
+
+            # Restart services (adjust these commands based on your server setup)
+            # Using PM2 as an example - adjust based on your process manager
+            pm2 restart elo-backend || pm2 start ../backend/src/server.js --name elo-backend
+            pm2 restart elo-frontend || pm2 start npm --name elo-frontend -- start
+
+            # Or if using systemd services:
+            # sudo systemctl restart elo-learning-backend
+            # sudo systemctl restart elo-learning-frontend
+
+            # Clean up old backups (keep only last 3)
+            ls -t /var/www/elo-learning/backup-* 2>/dev/null | tail -n +4 | xargs rm -rf
+
+      - name: Health check
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.AFRIHOST_HOST }}
+          username: ${{ secrets.AFRIHOST_USERNAME }}
+          key: ${{ secrets.AFRIHOST_SSH_KEY }}
+          port: ${{ secrets.AFRIHOST_PORT || 22 }}
+          script: |
+            # Wait a moment for services to start
+            sleep 10
+
+            # Check if backend is responding
+            if curl -f https://elo-learning.co.za/health 2>/dev/null; then
+              echo "✅ Backend health check passed"
+            else
+              echo "❌ Backend health check failed"
+              exit 1
+            fi
+
+            # Check if frontend is responding
+            if curl -f https://elo-learning.co.za 2>/dev/null; then
+              echo "✅ Frontend health check passed"
+            else
+              echo "❌ Frontend health check failed"
+              exit 1
+            fi
+
+      - name: Notify deployment status
+        if: always()
+        run: |
+          if [ "${{ job.status }}" == "success" ]; then
+            echo "🚀 Deployment to Afrihost completed successfully!"
+          else
+            echo "💥 Deployment failed. Check the logs above."
+          fi

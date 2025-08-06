@@ -7,7 +7,7 @@ import AnswerWrapper from '@/app/ui/answers/answer-wrapper';
 import QuestionTemplate from '@/app/ui/question-template';
 import QuestionFooter from '@/app/ui/questions/question-footer';
 import QuestionHeader from '@/app/ui/questions/question-header';
-import { validateAnswer } from '@/utils/answerValidator';
+import { validateAnswerEnhanced } from '@/utils/answerValidator';
 
 export default function QuestionsTracker({
   questions,
@@ -67,7 +67,7 @@ export default function QuestionsTracker({
     setQuestionStartTime(Date.now());
   }, [currQuestion]);
 
-  const setLocalStorage = () => {
+  const setLocalStorage = async () => {
     // Calculate time elapsed in seconds
     const timeElapsed = Math.round((Date.now() - questionStartTime) / 1000);
 
@@ -78,7 +78,7 @@ export default function QuestionsTracker({
     const correctAnswerText = correctAnswerObj?.answer_text || correctAnswerObj;
 
     // ✅ Re-validate with new validator before storing
-    const revalidatedResult = validateAnswer(
+    const revalidatedResult = await validateAnswerEnhanced(
       answer,
       correctAnswerText,
       currQuestion?.questionText || '',
@@ -105,8 +105,9 @@ export default function QuestionsTracker({
     localStorage.setItem('questionsObj', JSON.stringify(questionsObj));
   };
 
-  const handleLives = () => {
-    if (!isAnswerCorrect) {
+  const handleLives = (validationResult) => {
+    // Use the passed validation result instead of the old state
+    if (!validationResult) {
       setNumLives((prev) => prev - 1);
       if (numLives <= 1) {
         router.push(`/end-screen?mode=${mode}`);
@@ -120,9 +121,26 @@ export default function QuestionsTracker({
     router.push(`/end-screen?mode=${mode}`);
   };
 
-  const submitAnswer = () => {
-    setLocalStorage();
-    const gameOver = handleLives();
+  const submitAnswer = async () => {
+    // Get fresh validation result before handling lives
+    const correctAnswerObj = currAnswers.find((ans) => ans.isCorrect === true);
+    const correctAnswerText = correctAnswerObj?.answer_text || correctAnswerObj;
+    
+    const freshValidationResult = await validateAnswerEnhanced(
+      answer,
+      correctAnswerText,
+      currQuestion?.questionText || '',
+      currQuestion?.type || 'Math Input'
+    );
+
+    console.log('🔄 Fresh validation for life calculation:', {
+      studentAnswer: answer,
+      correctAnswer: correctAnswerText,
+      isCorrect: freshValidationResult
+    });
+
+    await setLocalStorage();
+    const gameOver = handleLives(freshValidationResult); // Pass fresh result
     
     if (gameOver) {
       return;

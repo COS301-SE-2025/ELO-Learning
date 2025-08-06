@@ -1,6 +1,6 @@
 'use client';
 
-import { validateAnswer, quickValidate } from '@/utils/answerValidator';
+import { validateAnswerSync } from '@/utils/answerValidator';
 import {
   getMathValidationMessage,
   isValidMathExpression,
@@ -219,7 +219,7 @@ export default function MathInputTemplate({
       setIsChecking(true);
       try {
         // Use your new answerValidator with Math Input type
-        const isCorrect = validateAnswer(inputValue, correctAnswer, '', 'Math Input');
+        const isCorrect = validateAnswerSync(inputValue, correctAnswer, '', 'Math Input');
         setIsAnswerCorrect(isCorrect);
       } catch (error) {
         console.error('Quick validation error:', error);

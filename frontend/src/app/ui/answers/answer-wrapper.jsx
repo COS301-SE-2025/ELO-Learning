@@ -1,9 +1,9 @@
 // ui/answers/answer-wrapper.jsx
+import ExpressionBuilderTemplate from '@/app/ui/answers/expression-builder';
 import MathInputTemplate from '@/app/ui/answers/input-question';
 import MultipleChoiceTemplate from '@/app/ui/answers/multiple-choice';
 import OpenResponseTemplate from '@/app/ui/answers/open-response';
-import ExpressionBuilderTemplate from '@/app/ui/answers/expression-builder';
-import { validateAnswer } from '@/utils/answerValidator';
+import { validateAnswerEnhanced } from '@/utils/answerValidator';
 
 export default function AnswerWrapper({
   question,
@@ -19,7 +19,7 @@ export default function AnswerWrapper({
   console.log('All available answers:', currAnswers);
 
   // Enhanced validation function that considers ALL correct answers
-  const handleAnswerValidation = (studentAnswer) => {
+  const handleAnswerValidation = async (studentAnswer) => {
     if (!studentAnswer || !currAnswers || currAnswers.length === 0) {
       setIsAnswerCorrect(false);
       return;
@@ -48,7 +48,7 @@ export default function AnswerWrapper({
     let matchedAnswer = null;
 
     for (const correctAnswer of correctAnswers) {
-      const individualResult = validateAnswer(
+      const individualResult = await validateAnswerEnhanced(
         studentAnswer, 
         correctAnswer, 
         question.questionText || '', 

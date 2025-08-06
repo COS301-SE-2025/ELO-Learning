@@ -1,6 +1,6 @@
 import express from 'express'
 import { supabase } from '../database/supabaseClient.js'
-import { verifyToken } from '../middleware/auth.js'
+import { verifyToken } from './middleware/auth.js'
 import { backendMathValidator } from './mathValidator.js'
 
 const router = express.Router()

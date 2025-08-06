@@ -3,7 +3,7 @@ import bcrypt from 'bcrypt'
 import express from 'express'
 import jwt from 'jsonwebtoken'
 import { supabase } from '../database/supabaseClient.js'
-import { verifyToken } from '../middleware/auth.js'
+import { verifyToken } from './middleware/auth.js'
 
 const router = express.Router()
 const TOKEN_EXPIRY = 3600 // 1 hour in seconds

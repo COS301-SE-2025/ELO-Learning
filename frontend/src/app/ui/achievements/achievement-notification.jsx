@@ -28,7 +28,7 @@ export default function AchievementNotification({
   // Get category color for the notification background
   const ACHIEVEMENT_COLORS = {
     Gameplay: '#B794F6',
-    'ELO Rating': '#63B3ED', 
+    'ELO Rating': '#63B3ED',
     Streak: '#68D391',
     Wins: '#F6AD55',
     Losses: '#F56565',
@@ -39,21 +39,26 @@ export default function AchievementNotification({
     'Problem Solving': '#A0AEC0',
   };
 
-  const categoryColor = ACHIEVEMENT_COLORS[achievement.AchievementCategories?.name] || '#63B3ED';
+  const categoryColor =
+    ACHIEVEMENT_COLORS[achievement.AchievementCategories?.name] || '#63B3ED';
 
   return (
     <div
       className={`
         fixed top-4 left-1/2 transform -translate-x-1/2 z-50
         transition-all duration-500 ease-out
-        ${isVisible ? 'translate-y-0 opacity-100 scale-100' : '-translate-y-full opacity-0 scale-95'}
+        ${
+          isVisible
+            ? 'translate-y-0 opacity-100 scale-100'
+            : '-translate-y-full opacity-0 scale-95'
+        }
       `}
     >
-      <div 
+      <div
         className="bg-gray-900 text-white rounded-xl p-6 shadow-2xl border-2 min-w-[320px] backdrop-blur-sm"
-        style={{ 
+        style={{
           borderColor: categoryColor,
-          boxShadow: `0 20px 40px rgba(0,0,0,0.4), 0 0 20px ${categoryColor}40`
+          boxShadow: `0 20px 40px rgba(0,0,0,0.4), 0 0 20px ${categoryColor}40`,
         }}
       >
         <div className="flex items-center gap-4">
@@ -70,7 +75,7 @@ export default function AchievementNotification({
 
           {/* Achievement info */}
           <div className="flex-1">
-            <div 
+            <div
               className="font-bold text-sm uppercase tracking-wider mb-1"
               style={{ color: categoryColor }}
             >
@@ -82,16 +87,16 @@ export default function AchievementNotification({
             <div className="text-gray-300 text-sm leading-relaxed">
               {achievement.description}
             </div>
-            
+
             {/* Show category if available */}
             {achievement.AchievementCategories?.name && (
               <div className="mt-2">
-                <span 
+                <span
                   className="text-xs px-2 py-1 rounded-full font-medium"
-                  style={{ 
+                  style={{
                     backgroundColor: `${categoryColor}20`,
                     color: categoryColor,
-                    border: `1px solid ${categoryColor}40`
+                    border: `1px solid ${categoryColor}40`,
                   }}
                 >
                   {achievement.AchievementCategories.name}
@@ -109,7 +114,7 @@ export default function AchievementNotification({
               backgroundColor: categoryColor,
               width: isVisible ? '100%' : '0%',
               transitionDelay: '0.3s',
-              boxShadow: `0 0 10px ${categoryColor}60`
+              boxShadow: `0 0 10px ${categoryColor}60`,
             }}
           />
         </div>
@@ -127,7 +132,7 @@ export default function AchievementNotification({
                 left: `${20 + i * 15}%`,
                 top: `${10 + (i % 2) * 20}%`,
                 animationDelay: `${i * 0.2}s`,
-                animation: isVisible ? 'twinkle 2s infinite' : 'none'
+                animation: isVisible ? 'twinkle 2s infinite' : 'none',
               }}
             />
           ))}
@@ -137,12 +142,13 @@ export default function AchievementNotification({
       {/* CSS for sparkle animation */}
       <style jsx>{`
         @keyframes twinkle {
-          0%, 100% { 
-            opacity: 0.3; 
+          0%,
+          100% {
+            opacity: 0.3;
             transform: scale(1);
           }
-          50% { 
-            opacity: 1; 
+          50% {
+            opacity: 1;
             transform: scale(1.5);
           }
         }

@@ -7,6 +7,7 @@ import { createServer } from 'http';
 import { Server } from 'socket.io';
 
 //Change this import to ES6
+import achievementRoutes from './achievementRoutes.js';
 import answerRoutes from './answerRoutes.js';
 import multiPlayerRoutes from './multiPlayerRoute.js';
 import oauthRoutes from './oauthRoutes.js';
@@ -16,8 +17,6 @@ import singlePlayerRoutes from './singlePlayerRoutes.js';
 import socketsHandlers from './sockets.js';
 import userRoutes from './userRoutes.js';
 import validateRoutes from './validateRoutes.js';
-import { single } from 'rxjs';
-import achievementRoutes from './achievementRoutes.js';
 
 // Load environment variables
 dotenv.config();
@@ -542,12 +541,19 @@ app.post('/singleplayer', async (req, res) => {
     let unlockedAchievements = [];
 
     try {
+      // Import achievement checking functions dynamically
+      const { checkQuestionAchievements, checkMatchAchievements } = await import('./achievementRoutes.js');
+      
       // Check question-based achievements only
       const questionAchievements = await checkQuestionAchievements(
         user_id,
         isCorrect,
       );
       unlockedAchievements.push(...questionAchievements);
+      
+      // 🆕 Check match-based achievements
+      const matchAchievements = await checkMatchAchievements(user_id);
+      unlockedAchievements.push(...matchAchievements);
     } catch (achievementError) {
       console.error('Error checking achievements:', achievementError);
       // Don't fail the whole request if achievements fail

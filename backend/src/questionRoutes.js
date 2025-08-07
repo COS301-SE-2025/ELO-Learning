@@ -242,7 +242,7 @@ router.get('/questions/mixed', async (req, res) => {
   }
 });
 
-// Enhanced submit route with support for all question types - UPDATED
+// Enhanced submit route with support for all question types - UPDATED WITH ACHIEVEMENTS
 router.post('/question/:id/submit', async (req, res) => {
   const { id } = req.params;
   const { studentAnswer, userId, questionType } = req.body;
@@ -316,6 +316,32 @@ router.post('/question/:id/submit', async (req, res) => {
       }
     }
 
+    // 🎯 NEW: Check for achievement unlocks (PRACTICE MODE)
+    let unlockedAchievements = [];
+
+    if (userId) {
+      try {
+        // Import achievement checking function
+        const { checkQuestionAchievements } = await import(
+          './achievementRoutes.js'
+        );
+
+        // Check question-based achievements only
+        const questionAchievements = await checkQuestionAchievements(
+          userId,
+          isCorrect,
+        );
+        unlockedAchievements.push(...questionAchievements);
+
+        console.log(
+          `🏆 Practice achievements unlocked: ${unlockedAchievements.length}`,
+        );
+      } catch (achievementError) {
+        console.error('Error checking achievements:', achievementError);
+        // Don't fail the whole request if achievements fail
+      }
+    }
+
     // Generate feedback message based on question type
     let feedbackMessage;
     if (isCorrect) {
@@ -337,6 +363,7 @@ router.post('/question/:id/submit', async (req, res) => {
         xpAwarded,
         updatedUser,
         questionType: actualQuestionType,
+        unlockedAchievements: unlockedAchievements, // 🎯 Include achievements in response
       },
     });
   } catch (error) {

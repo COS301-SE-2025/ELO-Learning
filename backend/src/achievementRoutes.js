@@ -271,16 +271,15 @@ export async function triggerAchievementProgress(
   increment = 1,
 ) {
   try {
-    // Find all achievements that match this condition type (exclude ELO for now)
-    const { data: achievements, error: achievementsError } = await supabase
+    // Find all achievements that match this condition type
+    // Only exclude ELO-specific types if they are being passed to this function
+    let query = supabase
       .from('Achievements')
       .select('id, condition_type, condition_value')
-      .eq('condition_type', conditionType)
-      .not(
-        'condition_type',
-        'in',
-        '("ELO Rating Reached","Personal Best Achieved","Comeback Completed","Consecutive Improvements")',
-      );
+      .eq('condition_type', conditionType);
+    
+    // Don't apply the exclusion filter - let each achievement type be processed
+    const { data: achievements, error: achievementsError } = await query;
 
     if (achievementsError) {
       console.error('Error fetching achievements:', achievementsError.message);
@@ -289,38 +288,83 @@ export async function triggerAchievementProgress(
 
     const unlockedAchievements = [];
 
-    // Update progress for each matching achievement
+    // Update progress for each matching achievement directly
     for (const achievement of achievements) {
       try {
-        const response = await fetch(
-          `http://localhost:3000/users/${userId}/achievements/progress`,
-          {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              Authorization: 'Bearer system-internal', // You might want to handle this differently
-            },
-            body: JSON.stringify({
-              achievement_id: achievement.id,
-              increment_by: increment,
-            }),
-          },
-        );
+        // Get current progress
+        const { data: currentProgress, error: progressError } = await supabase
+          .from('AchievementProgress')
+          .select('current_value')
+          .eq('user_id', userId)
+          .eq('achievement_id', achievement.id)
+          .single();
 
-        const result = await response.json();
+        let currentValue = 0;
+        if (!progressError && currentProgress) {
+          currentValue = currentProgress.current_value;
+        }
 
-        if (result.achievement_unlocked) {
-          // Get achievement details for notification
-          const { data: achievementDetails, error: detailsError } =
-            await supabase
-              .from('Achievements')
-              .select('*, AchievementCategories(name)')
-              .eq('id', achievement.id)
-              .single();
+        const newValue = currentValue + increment;
 
-          if (!detailsError && achievementDetails) {
-            unlockedAchievements.push(achievementDetails);
+        // Upsert the progress with explicit conflict resolution
+        const { error: upsertError } = await supabase
+          .from('AchievementProgress')
+          .upsert({
+            user_id: userId,
+            achievement_id: achievement.id,
+            current_value: newValue,
+            updated_at: new Date().toISOString(),
+          }, {
+            onConflict: 'user_id,achievement_id',
+            ignoreDuplicates: false
+          });
+
+        if (upsertError) {
+          console.error('Error updating progress:', upsertError.message);
+          continue;
+        }
+
+        console.log(`📈 Progress updated: Achievement ${achievement.id} - ${newValue}/${achievement.condition_value} for user ${userId}`);
+
+        // Check if achievement is now complete
+        if (newValue >= achievement.condition_value) {
+          // Check if user already has this achievement
+          const { data: existing, error: existingError } = await supabase
+            .from('UserAchievements')
+            .select('user_id, achievement_id')
+            .eq('user_id', userId)
+            .eq('achievement_id', achievement.id)
+            .single();
+
+          // If not already unlocked, unlock it
+          if (existingError && existingError.code === 'PGRST116') { // No rows found
+            const { error: unlockError } = await supabase
+              .from('UserAchievements')
+              .insert({
+                user_id: userId,
+                achievement_id: achievement.id,
+                unlocked_at: new Date().toISOString(),
+              });
+
+            if (!unlockError) {
+              // Get achievement details for notification
+              const { data: achievementDetails, error: detailsError } =
+                await supabase
+                  .from('Achievements')
+                  .select('*, AchievementCategories(name)')
+                  .eq('id', achievement.id)
+                  .single();
+
+              if (!detailsError && achievementDetails) {
+                unlockedAchievements.push(achievementDetails);
+                console.log(`✅ Unlocked achievement: ${achievementDetails.name} (${conditionType}: ${newValue}/${achievement.condition_value})`);
+              }
+            } else {
+              console.error(`Error unlocking achievement ${achievement.id}:`, unlockError.message);
+            }
           }
+        } else {
+          console.log(`📈 Progress updated: ${achievement.id} - ${newValue}/${achievement.condition_value}`);
         }
       } catch (error) {
         console.error(`Error updating achievement ${achievement.id}:`, error);
@@ -386,7 +430,9 @@ export async function checkEloAchievements(userId, newEloRating) {
       return [];
     }
 
-    console.log(`🎯 Checking ELO achievements for user ${userId} with rating ${newEloRating}`);
+    console.log(
+      `🎯 Checking ELO achievements for user ${userId} with rating ${newEloRating}`,
+    );
 
     // Get all ELO rating achievements
     const { data: eloAchievements, error: achievementsError } = await supabase
@@ -396,7 +442,10 @@ export async function checkEloAchievements(userId, newEloRating) {
       .order('condition_value', { ascending: true });
 
     if (achievementsError) {
-      console.error('Error fetching ELO achievements:', achievementsError.message);
+      console.error(
+        'Error fetching ELO achievements:',
+        achievementsError.message,
+      );
       return [];
     }
 
@@ -410,14 +459,17 @@ export async function checkEloAchievements(userId, newEloRating) {
       .from('UserAchievements')
       .select('achievement_id')
       .eq('user_id', userId)
-      .in('achievement_id', eloAchievements.map(a => a.id));
+      .in(
+        'achievement_id',
+        eloAchievements.map((a) => a.id),
+      );
 
     if (userError) {
       console.error('Error fetching user achievements:', userError.message);
       return [];
     }
 
-    const unlockedIds = (userAchievements || []).map(ua => ua.achievement_id);
+    const unlockedIds = (userAchievements || []).map((ua) => ua.achievement_id);
     const newlyUnlockedAchievements = [];
 
     // Check each ELO achievement
@@ -441,7 +493,10 @@ export async function checkEloAchievements(userId, newEloRating) {
 
           // Ignore duplicate errors (achievement already unlocked)
           if (unlockError && unlockError.code !== '23505') {
-            console.error(`Error unlocking achievement ${achievement.id}:`, unlockError.message);
+            console.error(
+              `Error unlocking achievement ${achievement.id}:`,
+              unlockError.message,
+            );
             continue;
           }
 
@@ -454,17 +509,23 @@ export async function checkEloAchievements(userId, newEloRating) {
 
           if (!detailsError && fullAchievement) {
             newlyUnlockedAchievements.push(fullAchievement);
-            console.log(`✅ Unlocked ELO achievement: ${achievement.name} (Rating ${achievement.condition_value})`);
+            console.log(
+              `✅ Unlocked ELO achievement: ${achievement.name} (Rating ${achievement.condition_value})`,
+            );
           }
         } catch (error) {
-          console.error(`Error processing achievement ${achievement.id}:`, error);
+          console.error(
+            `Error processing achievement ${achievement.id}:`,
+            error,
+          );
         }
       }
     }
 
-    console.log(`🏆 Unlocked ${newlyUnlockedAchievements.length} new ELO achievements`);
+    console.log(
+      `🏆 Unlocked ${newlyUnlockedAchievements.length} new ELO achievements`,
+    );
     return newlyUnlockedAchievements;
-
   } catch (error) {
     console.error('Error in checkEloAchievements:', error);
     return [];

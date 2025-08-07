@@ -4,6 +4,7 @@ import { ArrowLeft } from 'lucide-react';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
+
 import AchievementBadge from '../ui/achievements/achievement-badge';
 
 export default function AchievementsPage() {

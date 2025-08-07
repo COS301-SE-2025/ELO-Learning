@@ -1,5 +1,6 @@
 'use client';
 
+import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 
@@ -8,9 +9,11 @@ import QuestionTemplate from '@/app/ui/question-template';
 import QuestionFooter from '@/app/ui/questions/question-footer';
 import QuestionHeader from '@/app/ui/questions/question-header';
 import { validateAnswerEnhanced } from '@/utils/answerValidator';
+import { submitQuestionAnswer } from '@/utils/api';
 
 export default function QuestionsTracker({ questions, lives, mode }) {
   const router = useRouter();
+  const { data: session } = useSession();
 
   // ✅ Safe array handling
   const allQuestions = questions || [];
@@ -67,7 +70,7 @@ export default function QuestionsTracker({ questions, lives, mode }) {
     setQuestionStartTime(Date.now());
   }, [currQuestion]);
 
-  const setLocalStorage = async () => {
+  const setLocalStorage = async (validationResult = null) => {
     // Calculate time elapsed in seconds
     const timeElapsed = Math.round((Date.now() - questionStartTime) / 1000);
 
@@ -79,19 +82,22 @@ export default function QuestionsTracker({ questions, lives, mode }) {
     const correctAnswerObj = currAnswers.find((ans) => ans.isCorrect === true);
     const correctAnswerText = correctAnswerObj?.answer_text || correctAnswerObj;
 
-    // ✅ Re-validate with new validator before storing
-    const revalidatedResult = await validateAnswerEnhanced(
-      answer,
-      correctAnswerText,
-      currQuestion?.questionText || '',
-      currQuestion?.type || 'Math Input', // Use question type if available, fallback to Math Input
-    );
+    // Use provided validation result or re-validate
+    const finalValidationResult =
+      validationResult !== null
+        ? validationResult
+        : await validateAnswerEnhanced(
+            answer,
+            correctAnswerText,
+            currQuestion?.questionText || '',
+            currQuestion?.type || 'Math Input',
+          );
 
     console.log('💾 Storing question with validation:', {
       studentAnswer: answer,
       correctAnswer: correctAnswerText,
       oldIsCorrect: isAnswerCorrect,
-      newIsCorrect: revalidatedResult,
+      newIsCorrect: finalValidationResult,
       questionText: currQuestion?.questionText?.substring(0, 50) + '...',
     });
 
@@ -99,7 +105,7 @@ export default function QuestionsTracker({ questions, lives, mode }) {
       question: currQuestion,
       q_index: currentStep,
       answer: answer,
-      isCorrect: revalidatedResult, // ✅ Use fresh validation instead of isAnswerCorrect
+      isCorrect: finalValidationResult, // Use final validation result
       actualAnswer: correctAnswerObj,
       timeElapsed: timeElapsed,
     });
@@ -124,45 +130,188 @@ export default function QuestionsTracker({ questions, lives, mode }) {
   };
 
   const submitAnswer = async () => {
-    // Get fresh validation result before handling lives
-    const correctAnswerObj = currAnswers.find((ans) => ans.isCorrect === true);
-    const correctAnswerText = correctAnswerObj?.answer_text || correctAnswerObj;
+    setIsSubmitting(true);
 
-    const freshValidationResult = await validateAnswerEnhanced(
-      answer,
-      correctAnswerText,
-      currQuestion?.questionText || '',
-      currQuestion?.type || 'Math Input',
-    );
+    try {
+      // Get authenticated user ID with better debugging
+      const userString = localStorage.getItem('user');
+      console.log('🔍 Raw user string from localStorage:', userString);
+      
+      const user = JSON.parse(userString || '{}');
+      console.log('🔍 Parsed user object:', user);
+      
+      let userId = user.id;
+      console.log('🔍 Extracted userId from localStorage:', userId);
+      
+      // Fallback to NextAuth session if no localStorage user
+      if (!userId && session?.user?.id) {
+        userId = session.user.id;
+        console.log('🔍 Using userId from NextAuth session:', userId);
+      }
+      
+      if (!userId) {
+        console.error('❌ No authenticated user found');
+        console.log('🔍 Available localStorage keys:', Object.keys(localStorage));
+        console.log('🔍 User object keys:', Object.keys(user));
+        console.log('🔍 Session data:', session);
+        
+        // Try to get user from token as another fallback
+        if (typeof window !== 'undefined' && window.localStorage) {
+          const token = localStorage.getItem('token');
+          console.log('🔍 Available token:', token ? 'Found' : 'Not found');
+        }
+        
+        throw new Error('User not authenticated - Please log in to continue');
+      }
 
-    console.log('🔄 Fresh validation for life calculation:', {
-      studentAnswer: answer,
-      correctAnswer: correctAnswerText,
-      isCorrect: freshValidationResult,
-    });
+      // Call the API to submit the answer and check for achievements
+      const result = await submitQuestionAnswer(
+        currQuestion.Q_id,
+        answer,
+        userId,
+        currQuestion.type,
+      );
 
-    await setLocalStorage();
-    const gameOver = handleLives(freshValidationResult); // Pass fresh result
+      // Get fresh validation result for consistent behavior
+      const correctAnswerObj = currAnswers.find(
+        (ans) => ans.isCorrect === true,
+      );
+      const correctAnswerText =
+        correctAnswerObj?.answer_text || correctAnswerObj;
 
-    if (gameOver) {
-      return;
+      const freshValidationResult = result.success
+        ? result.data.isCorrect
+        : await validateAnswerEnhanced(
+            answer,
+            correctAnswerText,
+            currQuestion?.questionText || '',
+            currQuestion?.type || 'Math Input',
+          );
+
+      console.log('🔄 API + validation result:', {
+        studentAnswer: answer,
+        correctAnswer: correctAnswerText,
+        apiResult: result.success ? result.data.isCorrect : 'API failed',
+        localValidation: freshValidationResult,
+      });
+
+      // 🎉 Handle achievement unlocks from API response!
+      if (
+        result.success &&
+        result.data.unlockedAchievements &&
+        result.data.unlockedAchievements.length > 0
+      ) {
+        console.log(
+          '🏆 Practice achievements unlocked:',
+          result.data.unlockedAchievements,
+        );
+
+        // Enhanced notification system with retry logic
+        const showAchievementNotifications = (attempts = 0) => {
+          if (typeof window !== 'undefined' && window.showMultipleAchievements) {
+            try {
+              window.showMultipleAchievements(result.data.unlockedAchievements);
+              console.log('✅ Achievement notifications displayed successfully');
+            } catch (notificationError) {
+              console.error('❌ Error displaying achievement notifications:', notificationError);
+              
+              // Retry once after a short delay
+              if (attempts < 1) {
+                setTimeout(() => showAchievementNotifications(attempts + 1), 500);
+              }
+            }
+          } else {
+            console.error('❌ Achievement notification system not ready');
+            console.log('Available window methods:', Object.keys(window).filter(k => k.includes('Achievement')));
+            
+            // Listen for the system ready event if it hasn't fired yet
+            if (attempts === 0) {
+              window.addEventListener('achievementSystemReady', () => {
+                showAchievementNotifications(1);
+              }, { once: true });
+            }
+            
+            // Retry if system not ready and we haven't exceeded attempts
+            if (attempts < 5) { // Increased retry attempts
+              setTimeout(() => showAchievementNotifications(attempts + 1), 1000);
+            } else {
+              console.error('❌ Achievement notification system failed after 5 attempts');
+            }
+          }
+        };
+
+        // Initial attempt with 1 second delay
+        setTimeout(() => showAchievementNotifications(), 1000);
+      } else {
+        console.log('ℹ️  No achievements unlocked for this practice question');
+        if (!result.success) {
+          console.warn('⚠️  API call was not successful:', result);
+        }
+      }
+
+      await setLocalStorage(freshValidationResult);
+      const gameOver = handleLives(freshValidationResult);
+
+      if (gameOver) {
+        return;
+      }
+
+      // Increment the current step and reset states
+      setCurrentStep((prev) => prev + 1);
+      setIsDisabled(true);
+      setAnswer('');
+      setIsAnswerCorrect(false);
+
+      if (currentStep >= allQuestions.length) {
+        handleQuizComplete();
+        return;
+      }
+
+      // ✅ Safe access to next question
+      const nextQuestion = allQuestions[currentStep] || null;
+      setCurrQuestion(nextQuestion);
+      setCurrAnswers(nextQuestion?.answers || []);
+    } catch (error) {
+      console.error('Error submitting answer to API:', error);
+
+      // Fallback to local validation if API fails
+      const correctAnswerObj = currAnswers.find(
+        (ans) => ans.isCorrect === true,
+      );
+      const correctAnswerText =
+        correctAnswerObj?.answer_text || correctAnswerObj;
+
+      const freshValidationResult = await validateAnswerEnhanced(
+        answer,
+        correctAnswerText,
+        currQuestion?.questionText || '',
+        currQuestion?.type || 'Math Input',
+      );
+
+      await setLocalStorage(freshValidationResult);
+      const gameOver = handleLives(freshValidationResult);
+
+      if (gameOver) {
+        return;
+      }
+
+      // Continue with local flow
+      setCurrentStep((prev) => prev + 1);
+      setIsDisabled(true);
+      setAnswer('');
+      setIsAnswerCorrect(false);
+
+      if (currentStep >= allQuestions.length) {
+        handleQuizComplete();
+        return;
+      }
+
+      const nextQuestion = allQuestions[currentStep] || null;
+      setCurrQuestion(nextQuestion);
+      setCurrAnswers(nextQuestion?.answers || []);
+    } finally {
+      setIsSubmitting(false);
     }
-
-    // Increment the current step and reset states
-    setCurrentStep((prev) => prev + 1);
-    setIsDisabled(true);
-    setAnswer('');
-    setIsAnswerCorrect(false);
-
-    if (currentStep >= allQuestions.length) {
-      handleQuizComplete();
-      return;
-    }
-
-    // ✅ Safe access to next question
-    const nextQuestion = allQuestions[currentStep] || null;
-    setCurrQuestion(nextQuestion);
-    setCurrAnswers(nextQuestion?.answers || []);
   };
 
   return (

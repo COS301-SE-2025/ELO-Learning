@@ -2,7 +2,6 @@
 
 import MathInputTemplate from '@/app/ui/math-keyboard/math-input-template';
 import ProgressBar from '@/app/ui/progress-bar';
-import AchievementNotification from '@/app/ui/achievements/achievement-notification';
 import { submitQuestionAnswer } from '@/utils/api';
 import { Heart, X } from 'lucide-react';
 import Link from 'next/link';
@@ -48,12 +47,6 @@ export default function MathKeyboardWrapper({ questions }) {
   const [feedbackMessage, setFeedbackMessage] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // 🎉 Achievement notification state
-  const [currentAchievement, setCurrentAchievement] = useState(null);
-  const [showAchievementNotification, setShowAchievementNotification] =
-    useState(false);
-  const [achievementQueue, setAchievementQueue] = useState([]);
-
   // Debug: Log state changes
   useEffect(() => {
     console.log('Student answer changed:', studentAnswer);
@@ -98,36 +91,32 @@ export default function MathKeyboardWrapper({ questions }) {
     setIsDisabled(!studentAnswer.trim() || !isValidExpression);
   }, [studentAnswer, isValidExpression]);
 
-  // 🎉 Handle multiple achievement notifications
-  const showNextAchievement = () => {
-    if (achievementQueue.length > 0) {
-      const nextAchievement = achievementQueue[0];
-      setCurrentAchievement(nextAchievement);
-      setShowAchievementNotification(true);
-      setAchievementQueue((prev) => prev.slice(1)); // Remove shown achievement from queue
-    }
-  };
-
-  // 🎉 Handle achievement notification close
-  const handleAchievementNotificationClose = () => {
-    setShowAchievementNotification(false);
-    setCurrentAchievement(null);
-
-    // Show next achievement if any in queue
-    setTimeout(() => {
-      showNextAchievement();
-    }, 500);
-  };
-
   const submitAnswer = async () => {
     setIsSubmitting(true);
     setShowFeedback(false);
 
     try {
+      // Get authenticated user ID with session fallback
+      const user = JSON.parse(localStorage.getItem('user') || '{}');
+      let userId = user.id;
+      
+      // Fallback to NextAuth session if no localStorage user
+      if (!userId && session?.user?.id) {
+        userId = session.user.id;
+        console.log('🔍 Using userId from NextAuth session:', userId);
+      }
+      
+      if (!userId) {
+        console.error('❌ No authenticated user found');
+        setFeedbackMessage('Please log in to continue');
+        setShowFeedback(true);
+        return;
+      }
+
       const result = await submitQuestionAnswer(
         currQuestion.Q_id,
         studentAnswer,
-        'current-user-id',
+        userId,
       );
 
       if (result.success) {
@@ -144,11 +133,25 @@ export default function MathKeyboardWrapper({ questions }) {
             result.data.unlockedAchievements,
           );
 
-          // Add achievements to queue and show first one
-          setAchievementQueue(result.data.unlockedAchievements);
-          setTimeout(() => {
-            showNextAchievement();
-          }, 1000); // Wait 1 second after feedback before showing achievement
+          // Use global achievement notification system for consistency
+          if (
+            typeof window !== 'undefined' &&
+            window.showMultipleAchievements
+          ) {
+            setTimeout(() => {
+              try {
+                window.showMultipleAchievements(result.data.unlockedAchievements);
+                console.log('✅ Achievement notifications triggered successfully');
+              } catch (notificationError) {
+                console.error('❌ Error showing achievement notifications:', notificationError);
+              }
+            }, 1000); // Wait 1 second after feedback before showing achievements
+          } else {
+            console.error('❌ Achievement notification system not ready');
+            console.log('Available window functions:', Object.keys(window).filter(key => key.includes('Achievement')));
+          }
+        } else {
+          console.log('ℹ️  No achievements unlocked for this question');
         }
 
         // 🎯 Update user XP in localStorage
@@ -293,14 +296,6 @@ export default function MathKeyboardWrapper({ questions }) {
           </button>
         </div>
       </div>
-
-      {/* 🎉 Achievement Notification */}
-      <AchievementNotification
-        achievement={currentAchievement}
-        show={showAchievementNotification}
-        onClose={handleAchievementNotificationClose}
-        duration={4000}
-      />
     </div>
   );
 }

@@ -39,7 +39,29 @@ export default function TotalXP({ onLoadComplete }) {
 
       const questions = JSON.parse(localStorage.getItem('questionsObj')) || [];
       const user = session.user;
-      const user_id = user.id;
+      console.log('🔍 DEBUG: Session user object:', user);
+      
+      let user_id = user.id;
+      
+      // Fix for user_id being "current-user-id" string
+      if (user_id === "current-user-id" || typeof user_id === 'string' && isNaN(user_id)) {
+        console.log('⚠️ Invalid user_id detected:', user_id);
+        
+        // Try to get real user ID from localStorage or session
+        const storedUser = JSON.parse(localStorage.getItem('user') || '{}');
+        if (storedUser && storedUser.id && typeof storedUser.id === 'number') {
+          user_id = storedUser.id;
+          console.log('✅ Using stored user ID:', user_id);
+        } else if (user.userId && typeof user.userId === 'number') {
+          user_id = user.userId;
+          console.log('✅ Using session userId:', user_id);
+        } else {
+          console.error('❌ Could not resolve valid user ID');
+          return;
+        }
+      }
+      
+      console.log('🎯 Final user_id for submission:', user_id, typeof user_id);
 
       if (!user_id) {
         console.error('User ID not found');
@@ -60,6 +82,7 @@ export default function TotalXP({ onLoadComplete }) {
         /*
         if (q.isCorrect) {
           try {
+            console.log('📤 Submission 1 with time bonus:', { user_id, timeBonus, streak, totalXP });
             const response = await submitSinglePlayerAttempt({
               user_id,
               question_id: q.question.id || q.question.Q_id,
@@ -70,6 +93,8 @@ export default function TotalXP({ onLoadComplete }) {
             // const { xpEarned } = response;
             // q.xpEarned = xpEarned;
 
+            // const { xpEarned } = response;
+            console.log('📥 Response 1 received:', response);
             const { xpEarned, totalXP, leveledUp } = response;
             q.xpEarned = Math.round(xpEarned) || 0;
 
@@ -92,12 +117,14 @@ export default function TotalXP({ onLoadComplete }) {
     */
 
         try {
+          console.log('📤 Submission 2 without bonus:', { user_id, questions });
           const response = await submitSinglePlayerAttempt({
             user_id,
             question_id: q.question.id || q.question.Q_id,
             isCorrect: q.isCorrect,
             timeSpent: q.timeTaken || 30,
           });
+          console.log('📥 Response 2 received:', response);
           const { xpEarned, totalXP, leveledUp } = response;
           q.xpEarned = Math.round(xpEarned) || 0;
 

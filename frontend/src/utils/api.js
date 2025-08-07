@@ -6,7 +6,15 @@ function getAuthToken() {
   if (typeof window === 'undefined') {
     return null; // Return null on server side
   }
-  return localStorage.getItem('authToken') || 'placeholder-token';
+  
+  // Try to get token from localStorage (for manual login)
+  const token = localStorage.getItem('token');
+  if (token && token !== 'undefined') {
+    return token;
+  }
+  
+  // Fallback for testing
+  return 'placeholder-token';
 }
 
 // Get questions by specific type

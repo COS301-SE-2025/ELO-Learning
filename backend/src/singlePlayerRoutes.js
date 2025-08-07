@@ -1,9 +1,13 @@
 import express from 'express';
 import { supabase } from '../database/supabaseClient.js';
-import { calculateSinglePlayerXP } from './utils/xpCalculator.js';
+import {
+  checkEloAchievements,
+  checkMatchAchievements,
+  checkQuestionAchievements,
+} from './achievementRoutes.js';
 import { updateSinglePlayerElo } from './utils/eloCalculator.js';
 import { checkAndUpdateRankAndLevel } from './utils/userProgression.js';
-import { checkQuestionAchievements, checkEloAchievements } from './achievementRoutes.js';
+import { calculateSinglePlayerXP } from './utils/xpCalculator.js';
 
 const router = express.Router();
 
@@ -112,6 +116,42 @@ router.post('/singleplayer', async (req, res) => {
       },
     ]);
 
+    // 🎯 Check for achievements BEFORE updating user record
+    let unlockedAchievements = [];
+
+    try {
+      console.log(`🎯 ACHIEVEMENT DEBUG: Starting achievement check for user ${user_id}, isCorrect: ${isCorrect}`);
+
+      // Check question-based achievements (existing)
+      console.log('🔍 Calling checkQuestionAchievements...');
+      const questionAchievements = await checkQuestionAchievements(
+        user_id,
+        isCorrect,
+      );
+      console.log('✅ checkQuestionAchievements completed:', questionAchievements);
+      unlockedAchievements.push(...questionAchievements);
+
+      // 🆕 Check ELO-based achievements (NEW!)
+      console.log('🔍 Calling checkEloAchievements...');
+      const eloAchievements = await checkEloAchievements(user_id, newElo);
+      console.log('✅ checkEloAchievements completed:', eloAchievements);
+      unlockedAchievements.push(...eloAchievements);
+
+      // 🆕 Check Match-based achievements (NEW!)
+      console.log('🔍 Calling checkMatchAchievements...');
+      const matchAchievements = await checkMatchAchievements(user_id);
+      console.log('✅ checkMatchAchievements completed:', matchAchievements);
+      unlockedAchievements.push(...matchAchievements);
+
+      console.log(
+        `🏆 Total achievements unlocked: ${unlockedAchievements.length}`,
+      );
+    } catch (achievementError) {
+      console.error('❌ ACHIEVEMENT ERROR:', achievementError);
+      console.error('❌ Achievement error stack:', achievementError.stack);
+      // Don't fail the whole request if achievements fail
+    }
+
     await supabase
       .from('Users')
       .update({
@@ -121,24 +161,6 @@ router.post('/singleplayer', async (req, res) => {
         rank: newRank,
       })
       .eq('id', user_id);
-
-    // 🎯 NEW: Check for achievements
-    let unlockedAchievements = [];
-
-    try {
-      // Check question-based achievements (existing)
-      const questionAchievements = await checkQuestionAchievements(user_id, isCorrect);
-      unlockedAchievements.push(...questionAchievements);
-
-      // 🆕 Check ELO-based achievements (NEW!)
-      const eloAchievements = await checkEloAchievements(user_id, newElo);
-      unlockedAchievements.push(...eloAchievements);
-
-      console.log(`🏆 Total achievements unlocked: ${unlockedAchievements.length}`);
-    } catch (achievementError) {
-      console.error('Error checking achievements:', achievementError);
-      // Don't fail the whole request if achievements fail
-    }
 
     return res.status(200).json({
       xpEarned,

@@ -1,6 +1,6 @@
 import express from 'express';
 import { supabase } from '../database/supabaseClient.js';
-
+import { checkMatchAchievements } from './achievementRoutes.js';
 import { calculateSinglePlayerXP } from './utils/xpCalculator.js';
 import { updateSinglePlayerElo } from './utils/eloCalculator.js';
 import { checkAndUpdateRankAndLevel } from './utils/userProgression.js';
@@ -122,6 +122,28 @@ router.post('/multiplayer', async (req, res) => {
       return res.status(500).json({ error: 'Error saving attempts' });
     }
 
+    // 🎯 Check for Match achievements for both players
+    let player1Achievements = [];
+    let player2Achievements = [];
+
+    try {
+      console.log('🔍 Checking match achievements for both players...');
+      
+      // Check match achievements for player 1
+      const p1MatchAchievements = await checkMatchAchievements(player1_id);
+      player1Achievements.push(...p1MatchAchievements);
+      
+      // Check match achievements for player 2  
+      const p2MatchAchievements = await checkMatchAchievements(player2_id);
+      player2Achievements.push(...p2MatchAchievements);
+
+      console.log(`🏆 Player 1 achievements unlocked: ${player1Achievements.length}`);
+      console.log(`🏆 Player 2 achievements unlocked: ${player2Achievements.length}`);
+    } catch (achievementError) {
+      console.error('❌ Error checking match achievements:', achievementError);
+      // Don't fail the whole request if achievements fail
+    }
+
     return res.status(200).json({
       message: 'Multiplayer match processed successfully',
       players: [
@@ -131,6 +153,7 @@ router.post('/multiplayer', async (req, res) => {
           newXP: updatedXP1,
           currentLevel: newLevel1,
           leveledUp: leveledUp1,
+          unlockedAchievements: player1Achievements, // 🎯 Include achievements
         },
         {
           id: player2_id,
@@ -138,6 +161,7 @@ router.post('/multiplayer', async (req, res) => {
           newXP: updatedXP2,
           currentLevel: newLevel2,
           leveledUp: leveledUp2,
+          unlockedAchievements: player2Achievements, // 🎯 Include achievements
         },
       ],
     });

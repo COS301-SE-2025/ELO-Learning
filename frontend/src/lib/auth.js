@@ -1,4 +1,4 @@
-import { handleOAuthUser, loginUser } from '@/services/api';
+import { handleOAuthUser } from '@/services/api';
 import CredentialsProvider from 'next-auth/providers/credentials';
 import GoogleProvider from 'next-auth/providers/google';
 
@@ -52,6 +52,8 @@ export const authOptions = {
               currentLevel: data.user.currentLevel || 1,
               joinDate: data.user.joinDate,
               pfpURL: data.user.pfpURL,
+              // 🔑 IMPORTANT: Pass the JWT token to NextAuth
+              accessToken: data.token,
             };
           } else {
             console.log('❌ Login failed:', data.error || 'Unknown error');
@@ -86,6 +88,9 @@ export const authOptions = {
           user.currentLevel = response.user.currentLevel;
           user.joinDate = response.user.joinDate;
           user.pfpURL = response.user.pfpURL;
+          
+          // 🔑 IMPORTANT: Pass the JWT token for OAuth users too
+          user.accessToken = response.token;
 
           return true;
         } catch (error) {
@@ -115,6 +120,11 @@ export const authOptions = {
         token.currentLevel = user.currentLevel || 1; // Default level
         token.joinDate = user.joinDate; // Add join date
         token.pfpURL = user.pfpURL || user.image; // Use database pfpURL or OAuth image
+        
+        // 🔑 IMPORTANT: Preserve JWT access token from credentials provider
+        if (user.accessToken) {
+          token.accessToken = user.accessToken;
+        }
       }
 
       return token;

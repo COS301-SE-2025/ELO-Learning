@@ -6,17 +6,20 @@ import MathInputTemplate from '@/app/ui/math-keyboard/math-input-template';
 import ProgressBar from '@/app/ui/progress-bar';
 import { submitQuestionAnswer } from '@/utils/api';
 import { Heart, X } from 'lucide-react';
+import { useSession } from 'next-auth/react';
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { useEffect, useState } from 'react';
 
 // Import all question type components
-import MultipleChoiceTemplate from '@/app/ui/question-types/multiple-choice';
-import OpenResponseTemplate from '@/app/ui/question-types/open-response';
 import ExpressionBuilderTemplate from '@/app/ui/question-types/expression-builder';
 import FillInBlankTemplate from '@/app/ui/question-types/fill-in-blank';
+import MultipleChoiceTemplate from '@/app/ui/question-types/multiple-choice';
+import OpenResponseTemplate from '@/app/ui/question-types/open-response';
 
 export default function UniversalQuestionWrapper({ questions }) {
+  const { data: session } = useSession();
+  
   // ✅ Safe array handling
   const allQuestions = questions || [];
   const totalSteps = allQuestions.length;
@@ -117,16 +120,80 @@ export default function UniversalQuestionWrapper({ questions }) {
     setShowFeedback(false);
 
     try {
+      // Get authenticated user ID with fallback to session
+      const user = JSON.parse(localStorage.getItem('user') || '{}');
+      let userId = user.id;
+      
+      // Fallback to NextAuth session if no localStorage user
+      if (!userId && session?.user?.id) {
+        userId = session.user.id;
+        console.log('🔍 Using userId from NextAuth session:', userId);
+      }
+      
+      if (!userId) {
+        console.error('❌ No authenticated user found');
+        setFeedbackMessage('Please log in to continue');
+        setShowFeedback(true);
+        return;
+      }
+
       const result = await submitQuestionAnswer(
         currQuestion.Q_id,
         answer,
-        'current-user-id',
+        userId,
         currQuestion.type,
       );
 
       if (result.success) {
         setFeedbackMessage(result.data.message);
         setShowFeedback(true);
+
+        // 🎉 Handle achievement unlocks!
+        if (
+          result.data.unlockedAchievements &&
+          result.data.unlockedAchievements.length > 0
+        ) {
+          console.log(
+            '🏆 Achievements unlocked:',
+            result.data.unlockedAchievements,
+          );
+
+          // Enhanced achievement notification with retry logic
+          const showAchievementNotifications = (attempts = 0) => {
+            if (typeof window !== 'undefined' && window.showMultipleAchievements) {
+              try {
+                window.showMultipleAchievements(result.data.unlockedAchievements);
+                console.log('✅ Achievement notifications displayed successfully');
+              } catch (notificationError) {
+                console.error('❌ Error showing achievement notifications:', notificationError);
+                
+                // Retry once after a short delay
+                if (attempts < 1) {
+                  setTimeout(() => showAchievementNotifications(attempts + 1), 500);
+                }
+              }
+            } else {
+              console.log('❌ Achievement notification system not ready');
+              
+              // Listen for the system ready event if it hasn't fired yet
+              if (attempts === 0) {
+                window.addEventListener('achievementSystemReady', () => {
+                  showAchievementNotifications(1);
+                }, { once: true });
+              }
+              
+              // Retry if system not ready and we haven't exceeded attempts
+              if (attempts < 5) { // Increased retry attempts
+                setTimeout(() => showAchievementNotifications(attempts + 1), 1000);
+              } else {
+                console.error('❌ Achievement notification system failed after 5 attempts');
+              }
+            }
+          };
+
+          // Wait 1 second after feedback before showing achievements
+          setTimeout(() => showAchievementNotifications(), 1000);
+        }
 
         if (result.data.isCorrect && result.data.xpAwarded > 0) {
           console.log(`Awarded ${result.data.xpAwarded} XP!`);

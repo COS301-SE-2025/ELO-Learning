@@ -11,8 +11,32 @@ export default async function SinglePlayerGame() {
     redirect('/api/auth/signin');
   }
 
-  const level = session.user.currentLevel || 1; // Default to level 1 if not set
-  const questions = await fetchRandomQuestions(level);
+  const level = Math.min(session.user.currentLevel || 1, 7); // Cap at level 7 since level 8+ don't exist
+  
+  let questions;
+  try {
+    console.log('Attempting to fetch questions for level:', level);
+    questions = await fetchRandomQuestions(level);
+    
+    // Ensure we have questions
+    if (!questions || !questions.questions || questions.questions.length === 0) {
+      console.error('No questions returned from API for level:', level);
+      // Try fallback to level 1
+      console.log('Trying fallback to level 1...');
+      questions = await fetchRandomQuestions(1);
+      
+      // If still no questions, throw error
+      if (!questions || !questions.questions || questions.questions.length === 0) {
+        throw new Error('No questions available even at level 1');
+      }
+    }
+    
+    console.log('Successfully fetched questions:', questions.questions.length);
+  } catch (error) {
+    console.error('Failed to fetch questions:', error);
+    // Redirect to home or show error page
+    redirect('/?error=no-questions');
+  }
   const submitCallback = async () => {
     'use server';
     redirect('/end-screen?mode=single-player');

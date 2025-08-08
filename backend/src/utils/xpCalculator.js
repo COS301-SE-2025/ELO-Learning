@@ -61,5 +61,18 @@ export async function calculateSinglePlayerXP({
   XP = XP < 0 ? 0 : XP;
   XP = XP * scalingFactor; // Scale down XP
 
-  return Number(XP.toFixed(0)); // Round to integer
+  return Math.round(XP); // Round to integer
+}
+
+export function calculateMultiplayerXP(xpTotal, expected1, expected2, score1) {
+  const score2 = 1 - score1;
+
+  let xp1 = xpTotal * (score1 - expected1);
+  let xp2 = xpTotal * (score2 - expected2);
+
+  // Prevent negative XP
+  xp1 = Math.max(0, xp1);
+  xp2 = Math.max(0, xp2);
+
+  return [Math.round(xp1), Math.round(xp2)];
 }

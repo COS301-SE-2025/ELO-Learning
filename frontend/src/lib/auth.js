@@ -1,4 +1,4 @@
-import { handleOAuthUser, loginUser } from '@/services/api';
+import { handleOAuthUser } from '@/services/api';
 import CredentialsProvider from 'next-auth/providers/credentials';
 import GoogleProvider from 'next-auth/providers/google';
 
@@ -52,6 +52,8 @@ export const authOptions = {
               currentLevel: data.user.currentLevel || 1,
               joinDate: data.user.joinDate,
               pfpURL: data.user.pfpURL,
+              // Store the JWT token from backend
+              backendToken: data.token,
             };
           } else {
             console.log('❌ Login failed:', data.error || 'Unknown error');
@@ -115,6 +117,8 @@ export const authOptions = {
         token.currentLevel = user.currentLevel || 1; // Default level
         token.joinDate = user.joinDate; // Add join date
         token.pfpURL = user.pfpURL || user.image; // Use database pfpURL or OAuth image
+        // Store the backend JWT token for API calls
+        token.backendToken = user.backendToken;
       }
 
       return token;
@@ -134,6 +138,8 @@ export const authOptions = {
         session.user.currentLevel = token.currentLevel;
         session.user.joinDate = token.joinDate;
         session.user.pfpURL = token.pfpURL;
+        // Pass backend JWT token to session
+        session.backendToken = token.backendToken;
       }
 
       return session;
@@ -147,6 +153,20 @@ export const authOptions = {
     async signOut(message) {
       // This runs when user signs out
       console.log('User signed out:', message);
+    },
+  },
+  debug: process.env.NODE_ENV === 'development',
+  logger: {
+    error(code, metadata) {
+      console.error('NextAuth Error:', code, metadata);
+    },
+    warn(code) {
+      console.warn('NextAuth Warning:', code);
+    },
+    debug(code, metadata) {
+      if (process.env.NODE_ENV === 'development') {
+        console.log('NextAuth Debug:', code, metadata);
+      }
     },
   },
 };

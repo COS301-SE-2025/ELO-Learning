@@ -20,10 +20,11 @@ axiosInstance.interceptors.request.use(async (config) => {
   }
   
   if (isServer) {
+    // Server-side token handling
     const { cookies } = await import('next/headers');
     const awaitedCookies = await cookies();
 
-    // Try to get NextAuth session token first
+    // Priority 1: NextAuth session token (for OAuth users)
     const nextAuthToken = awaitedCookies
       .getAll()
       .find(
@@ -35,33 +36,27 @@ axiosInstance.interceptors.request.use(async (config) => {
     if (nextAuthToken) {
       config.headers.Authorization = `Bearer ${nextAuthToken.value}`;
     } else {
-      // Fallback to regular token
+      // Priority 2: Custom JWT token (for credential users)
       const tokenCookie = awaitedCookies
         .getAll()
         .filter((item) => item.name === 'token')
         .map((item) => item.value);
       if (tokenCookie.length > 0) {
-        config.headers.Authorization = `Bearer ${tokenCookie}`;
+        config.headers.Authorization = `Bearer ${tokenCookie[0]}`;
       }
     }
     return config;
   } else {
-    // Client-side: Check NextAuth session first, then fallback to cached tokens
+    // Client-side token handling
     let token = null;
 
-    // Try to get NextAuth session token from cache or localStorage
+    // Priority 1: NextAuth session from cache
     const nextAuthSession = cache.get(CACHE_KEYS.NEXTAUTH_SESSION);
     if (nextAuthSession?.accessToken) {
       token = nextAuthSession.accessToken;
     } else {
-      // Fallback to our cached tokens
-      const provider = cache.get('auth_provider') || 'credentials';
-
-      if (provider === 'google' || provider === 'oauth') {
-        token = cache.get('oauth_token') || localStorage.getItem('oauth_token');
-      } else {
-        token = cache.get(CACHE_KEYS.TOKEN) || localStorage.getItem('token');
-      }
+      // Priority 2: JWT token from localStorage
+      token = cache.get(CACHE_KEYS.TOKEN) || localStorage.getItem('token');
     }
 
     if (token) {
@@ -71,10 +66,53 @@ axiosInstance.interceptors.request.use(async (config) => {
   }
 });
 
-// Helper to attach auth token
-const authHeader = {
-  Authorization: 'Bearer testtoken123',
-};
+// Helper to get dynamic auth token
+function getDynamicAuthHeader() {
+  if (typeof window === 'undefined') {
+    // Server-side: return empty object, let interceptor handle it
+    return {};
+  }
+
+  // Client-side: try to get token from various sources
+
+  // 1. Try NextAuth session (with backend JWT token)
+  const nextAuthSession = cache.get(CACHE_KEYS.NEXTAUTH_SESSION);
+  if (nextAuthSession?.backendToken) {
+    return { Authorization: `Bearer ${nextAuthSession.backendToken}` };
+  }
+
+  // 2. Try NextAuth OAuth access token (for OAuth users)
+  if (nextAuthSession?.accessToken) {
+    return { Authorization: `Bearer ${nextAuthSession.accessToken}` };
+  }
+
+  // 3. Fallback to localStorage token (direct JWT login)
+  const token =
+    localStorage.getItem('token') ||
+    localStorage.getItem('authToken') ||
+    localStorage.getItem('jwt_token');
+  if (token) {
+    return { Authorization: `Bearer ${token}` };
+  }
+
+  // 4. Check for cookie-based authentication (manual JWT storage)
+  try {
+    const tokenCookie = document.cookie
+      .split('; ')
+      .find((row) => row.startsWith('token='));
+
+    if (tokenCookie) {
+      const token = tokenCookie.split('=')[1];
+      return { Authorization: `Bearer ${token}` };
+    }
+  } catch (error) {
+    console.error('Error parsing token cookie:', error);
+  }
+
+  // No token available - this will cause 401 for protected routes
+  console.warn('No authentication token found for API request');
+  return {};
+}
 
 // 1. GET /users
 export async function fetchAllUsers() {
@@ -94,7 +132,7 @@ export async function fetchAllUsers() {
 // 2. GET /user/:id
 export async function fetchUserById(id) {
   const res = await axiosInstance.get(`/user/${id}`, {
-    headers: authHeader,
+    headers: getDynamicAuthHeader(),
   });
   return res.data;
 }
@@ -102,7 +140,7 @@ export async function fetchUserById(id) {
 // 3. GET /users/:id/achievements
 export async function fetchUserAchievements(id) {
   const res = await axiosInstance.get(`/users/${id}/achievements`, {
-    headers: authHeader,
+    headers: getDynamicAuthHeader(),
   });
   return res.data;
 }
@@ -112,7 +150,7 @@ export async function updateUserXP(id, xp) {
   const res = await axiosInstance.post(
     `/user/${id}/xp`,
     { xp },
-    { headers: authHeader },
+    { headers: getDynamicAuthHeader() },
   );
   return res.data;
 }
@@ -134,7 +172,7 @@ export async function fetchAllQuestions() {
 // 6. GET /question/:level
 export async function fetchQuestionsByLevel(level) {
   const res = await axiosInstance.get(`/question/${level}`, {
-    headers: authHeader,
+    headers: getDynamicAuthHeader(),
   });
   return res.data;
 }
@@ -142,7 +180,7 @@ export async function fetchQuestionsByLevel(level) {
 // 7. GET /question/:id/answer
 export async function fetchQuestionAnswer(id) {
   const res = await axiosInstance.get(`/question/${id}/answer`, {
-    headers: authHeader,
+    headers: getDynamicAuthHeader(),
   });
   return res.data;
 }
@@ -164,10 +202,13 @@ export async function fetchQuestionsByLevelAndTopic(level, topic) {
 }
 
 // 10. POST /question/:id/answer
-export async function submitAnswer(id, answer) {
-  const res = await axiosInstance.post(`/question/${id}/answer`, {
-    question: [{ answer }],
-  });
+// 9. POST /answer
+export async function submitAnswer(questionId, answer) {
+  const res = await axiosInstance.post(
+    '/answer',
+    { questionId, answer },
+    { headers: getDynamicAuthHeader() },
+  );
   return res.data;
 }
 
@@ -274,7 +315,7 @@ export async function fetchRandomQuestions(level) {
 //13. POST /singleplayer
 export async function submitSinglePlayerAttempt(data) {
   const res = await axiosInstance.post('/singleplayer', data, {
-    headers: authHeader,
+    headers: getDynamicAuthHeader(),
   });
   return res.data;
 }
@@ -293,15 +334,11 @@ export async function resetPassword(token, newPassword) {
 }
 
 export async function changePassword(userId, currentPassword, newPassword) {
-  if (!userId) {
-    throw new Error('User ID is required');
-  }
-
-  const res = await axiosInstance.post('/change-password', {
-    userId,
-    currentPassword,
-    newPassword,
-  });
+  const res = await axiosInstance.post(
+    `/user/${userId}/change-password`,
+    { currentPassword, newPassword },
+    { headers: getDynamicAuthHeader() },
+  );
   return res.data;
 }
 

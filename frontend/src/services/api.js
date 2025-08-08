@@ -12,8 +12,13 @@ const axiosInstance = axios.create({
   },
 });
 
-// Add request interceptor to include auth token
+// Add request interceptor to include auth token with performance optimization
 axiosInstance.interceptors.request.use(async (config) => {
+  // Skip auth for random questions endpoint to improve performance
+  if (config.url === '/questions/random') {
+    return config;
+  }
+  
   if (isServer) {
     const { cookies } = await import('next/headers');
     const awaitedCookies = await cookies();
@@ -220,12 +225,50 @@ export async function fetchAllTopics() {
 // 12. GET /questions/random
 
 export async function fetchRandomQuestions(level) {
-  const res = await axiosInstance.get('/questions/random', {
-    params: {
-      level,
-    },
-  });
-  return res.data;
+  try {
+    console.log('fetchRandomQuestions called with level:', level);
+    console.log('BASE_URL:', BASE_URL);
+    console.log('isServer:', typeof window === 'undefined');
+    
+    const res = await axiosInstance.get('/questions/random', {
+      params: {
+        level,
+      },
+    });
+    console.log('fetchRandomQuestions success:', res.status);
+    console.log('Questions received:', res.data?.questions?.length || 0);
+    
+    return res.data;
+  } catch (error) {
+    console.error('fetchRandomQuestions error:', {
+      message: error.message,
+      status: error.response?.status,
+      statusText: error.response?.statusText,
+      data: error.response?.data,
+      level: level,
+      url: error.config?.url,
+      baseURL: error.config?.baseURL
+    });
+    
+    // If the requested level has no questions, try level 1 as fallback
+    if (error.response?.status === 404 && level !== 1) {
+      console.log('No questions found for level', level, 'trying level 1 as fallback...');
+      try {
+        const fallbackRes = await axiosInstance.get('/questions/random', {
+          params: {
+            level: 1,
+          },
+        });
+        console.log('Fallback to level 1 successful');
+        return fallbackRes.data;
+      } catch (fallbackError) {
+        console.error('Fallback to level 1 also failed:', fallbackError.message);
+        throw error; // Throw original error
+      }
+    }
+    
+    throw error;
+  }
 }
 
 //13. POST /singleplayer

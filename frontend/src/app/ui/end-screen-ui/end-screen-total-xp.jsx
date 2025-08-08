@@ -154,14 +154,64 @@ export default function TotalXP({ onLoadComplete }) {
   useEffect(() => {
     async function calculateTotalXP() {
       try {
-        // FIRST: Create a unique session identifier
-        const sessionId =
-          Date.now() + '-' + Math.random().toString(36).substr(2, 9);
-        const submissionKey = 'xp-calculation-' + sessionId;
+        // FIRST: Check if XP calculation already completed for this game session
+        let gameSessionId = localStorage.getItem('currentGameSession');
 
-        // SECOND: Check if any XP calculation is already in progress or completed
+        // Generate session ID if not exists (fallback safety measure)
+        if (!gameSessionId) {
+          gameSessionId =
+            Date.now() + '-' + Math.random().toString(36).substr(2, 9);
+          localStorage.setItem('currentGameSession', gameSessionId);
+          console.log('⚠️ Generated fallback game session ID:', gameSessionId);
+        }
+
+        const completedSessions = JSON.parse(
+          sessionStorage.getItem('completedXPCalculations') || '[]',
+        );
+
+        if (gameSessionId && completedSessions.includes(gameSessionId)) {
+          console.log(
+            '❌ XP already calculated for this game session:',
+            gameSessionId,
+          );
+          // Load previously calculated XP from localStorage if available
+          const questions =
+            JSON.parse(localStorage.getItem('questionsObj')) || [];
+          const totalXPSum = questions.reduce(
+            (acc, q) => acc + (q.xpEarned ?? 0),
+            0,
+          );
+          if (totalXPSum > 0) {
+            setTotalXP(Math.round(totalXPSum));
+            setIsLoading(false);
+            if (onLoadComplete) onLoadComplete();
+            return;
+          }
+        }
+
+        // SECOND: Create a unique calculation identifier
+        const calculationId =
+          Date.now() + '-' + Math.random().toString(36).substr(2, 9);
+
+        // THIRD: Check if any XP calculation is already in progress
         const existingSubmission = sessionStorage.getItem('submittedOnce');
         const inProgressSubmission = sessionStorage.getItem('calculatingXP');
+        const lastCalculationTime = sessionStorage.getItem(
+          'lastCalculationTime',
+        );
+
+        // Prevent rapid-fire calculations (React StrictMode protection)
+        const currentTime = Date.now();
+        if (
+          lastCalculationTime &&
+          currentTime - parseInt(lastCalculationTime) < 1000
+        ) {
+          console.log(
+            '❌ Calculation attempted too soon after previous one, aborting',
+          );
+          setIsLoading(false);
+          return;
+        }
 
         if (existingSubmission === 'true') {
           console.log('❌ XP already calculated, loading cached results...');
@@ -175,24 +225,26 @@ export default function TotalXP({ onLoadComplete }) {
           if (totalXPSum > 0) {
             setTotalXP(Math.round(totalXPSum));
             setIsLoading(false);
-            if (onLoadComplete) {
-              onLoadComplete();
-            }
+            if (onLoadComplete) onLoadComplete();
             return;
           }
         }
 
-        if (inProgressSubmission) {
-          console.log('❌ XP calculation already in progress, aborting...');
+        if (inProgressSubmission && inProgressSubmission !== calculationId) {
+          console.log(
+            '❌ XP calculation already in progress, aborting:',
+            inProgressSubmission,
+          );
           setIsLoading(false);
           return;
         }
 
-        // THIRD: Mark calculation as in progress IMMEDIATELY
-        sessionStorage.setItem('calculatingXP', sessionId);
+        // FOURTH: Mark calculation as in progress IMMEDIATELY
+        sessionStorage.setItem('calculatingXP', calculationId);
         sessionStorage.setItem('submittedOnce', 'true');
+        sessionStorage.setItem('lastCalculationTime', currentTime.toString());
 
-        console.log('✅ Starting XP calculation with session:', sessionId);
+        console.log('✅ Starting XP calculation with ID:', calculationId);
 
         let user_id = null;
 
@@ -256,10 +308,23 @@ export default function TotalXP({ onLoadComplete }) {
             continue; // skip this one
           }
 
+          // Skip if already processed (has xpEarned)
+          if (q.xpEarned !== undefined && q.xpEarned !== null) {
+            console.log(
+              `⚠️ Skipping already processed question ${
+                q.question.id || q.question.Q_id
+              }: ${q.xpEarned} XP`,
+            );
+            continue;
+          }
+
+          const questionId = q.question.id || q.question.Q_id;
+          console.log(`🔄 Submitting question: ${questionId}`);
+
           try {
             const response = await submitSinglePlayerAttempt({
               user_id,
-              question_id: q.question.id || q.question.Q_id,
+              question_id: questionId,
               isCorrect: q.isCorrect,
               timeSpent: q.timeTaken || 30,
             });
@@ -271,15 +336,11 @@ export default function TotalXP({ onLoadComplete }) {
             q.leveledUp = leveledUp;
 
             console.log(
-              `✅ Submitted question ${
-                q.question.id || q.question.Q_id
-              }: earned ${q.xpEarned} XP (Total: ${totalXP})`,
+              `✅ Submitted question ${questionId}: earned ${q.xpEarned} XP (Total: ${totalXP})`,
             );
           } catch (err) {
             console.error(
-              `❌ Failed to submit question ${
-                q.question.id || q.question.Q_id
-              }:`,
+              `❌ Failed to submit question ${questionId}:`,
               err.response?.data || err.message,
             );
           }
@@ -297,6 +358,25 @@ export default function TotalXP({ onLoadComplete }) {
           '✅ XP calculation completed! Total XP earned:',
           totalXPSum,
         );
+
+        // Mark this game session as completed to prevent future duplicate calculations
+        const currentGameSession = localStorage.getItem('currentGameSession');
+        if (currentGameSession) {
+          const completedSessions = JSON.parse(
+            sessionStorage.getItem('completedXPCalculations') || '[]',
+          );
+          if (!completedSessions.includes(currentGameSession)) {
+            completedSessions.push(currentGameSession);
+            sessionStorage.setItem(
+              'completedXPCalculations',
+              JSON.stringify(completedSessions),
+            );
+            console.log(
+              '✅ Marked game session as completed:',
+              currentGameSession,
+            );
+          }
+        }
 
         // Update user session/cookie data with new values
         await updateUserDataAfterXP(user_id, totalXPSum, questions);
@@ -316,7 +396,7 @@ export default function TotalXP({ onLoadComplete }) {
       }
     }
     calculateTotalXP();
-  }, [session]);
+  }, [session?.user?.id]); // Only depend on user ID, not entire session object
 
   // Cleanup effect to prevent memory leaks and stuck states
   useEffect(() => {

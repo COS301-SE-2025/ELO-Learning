@@ -529,8 +529,30 @@ export const isValidExpression = (expression) => {
 
     const cleaned = expression.trim();
 
+    // Reject single characters that are clearly incomplete or invalid
+    if (cleaned.length === 1) {
+      // Only allow single digits or complete variable assignments
+      if (!/^[a-zA-Z0-9]$/.test(cleaned)) {
+        console.debug('Rejecting invalid single character:', cleaned);
+        return false;
+      }
+    }
+
+    // Reject expressions that are just operators or punctuation
+    if (/^[+\-*/^()=,\s\[\]{}]+$/.test(cleaned)) {
+      console.debug('Rejecting expression with only operators/punctuation:', cleaned);
+      return false;
+    }
+
+    // Reject incomplete parentheses expressions
+    if (cleaned === '(' || cleaned === ')' || cleaned === '()') {
+      console.debug('Rejecting incomplete parentheses:', cleaned);
+      return false;
+    }
+
     // First check if it's a valid math expression using the frontend validator
     if (!isValidMathExpression(cleaned)) {
+      console.debug('Failed math expression validation:', cleaned);
       return false;
     }
 
@@ -572,3 +594,5 @@ export const isValidExpression = (expression) => {
     return false;
   }
 };
+  
+// Fast validation for single-player mode (prioritizes frontend validation) 

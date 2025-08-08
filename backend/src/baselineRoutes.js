@@ -8,29 +8,51 @@ const router = express.Router();
 const baselineSessions = new Map(); // key: userId, value: BaselineEngine
 
 // Start baseline test
-router.post('/start', async (req, res) => {
+router.post('/baseline/start', async (req, res) => {
   const { userId } = req.body;
 
-  if (!userId) return res.status(400).json({ error: 'Missing userId' });
-
-  const { data: user, error } = await supabase
-    .from('Users')
-    .select('elo_rating')
-    .eq('id', userId)
-    .single();
-
-  if (error || !user) return res.status(404).json({ error: 'User not found' });
-
-  if (user.elo_rating > 0) {
-    return res.status(403).json({ error: 'User has already taken the baseline test' });
+  if (!userId) {
+    return res.status(400).json({ error: 'Missing userId' });
   }
 
-  const engine = new BaselineEngine(userId);
-  baselineSessions.set(userId, engine);
+  try {
+    const { data: user, error: userError } = await supabase
+      .from('Users')
+      .select('id, baseLineTest')
+      .eq('id', userId)
+      .single();
 
-  const result = await engine.nextQuestion();
-  return res.status(200).json(result);
+    if (userError || !user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    // Check if baseline test already taken
+    if (user.baseLineTest === true) {
+      return res.status(403).json({ error: 'Baseline test already taken.' });
+    }
+
+    // Mark baseline test as started (immediately)
+    const { error: updateError } = await supabase
+      .from('Users')
+      .update({ baseLineTest: true })
+      .eq('id', userId);
+
+    if (updateError) {
+      console.error('Error updating baseline flag:', updateError);
+      return res.status(500).json({ error: 'Failed to update test status' });
+    }
+
+    // Create test session and send first question
+    const testSession = getOrCreateTestSession(userId);
+    const result = await testSession.getNextQuestion();
+
+    return res.json(result);
+  } catch (err) {
+    console.error('Error in /baseline/start:', err);
+    return res.status(500).json({ error: 'Server error' });
+  }
 });
+
 
 // Submit answer and get next question or result
 router.post('/answer', async (req, res) => {
@@ -61,6 +83,7 @@ router.post('/answer', async (req, res) => {
 
   if (next.done) {
     // Finalised ELO -  this is the difficulty level for now, will change when elo_rating values change
+    //adjust the elo_rating of the user and the boolean value to true.
     const finalElo = next.rating;
     await supabase.from('Users').update({ elo_rating: finalElo }).eq('id', userId);
 
@@ -82,5 +105,28 @@ router.post('/answer', async (req, res) => {
     progress: next.progress,
   });
 });
+
+// Confirm baseline test: update baseLineTest = true
+router.post('/confirm', async (req, res) => {
+  const { userId } = req.body;
+
+  if (!userId) {
+    return res.status(400).json({ error: 'Missing userId' });
+  }
+
+  const { error } = await supabase
+    .from('Users')
+    .update({ baseLineTest: true })
+    .eq('id', userId);
+
+  if (error) {
+    console.error('Error updating baseline test flag:', error.message);
+    return res.status(500).json({ error: 'Could not update baselineTest flag' });
+  }
+
+  res.status(200).json({ success: true });
+});
+
+
 
 export default router;

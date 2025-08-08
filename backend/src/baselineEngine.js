@@ -18,7 +18,7 @@ class BaselineEngine {
       this.correctCount++;
       this.currentLevel = Math.min(this.currentLevel + 1, 10);
     } else {
-      this.currentLevel = Math.max(this.currentLevel - 1, 1);
+      this.currentLevel = Math.max(this.currentLevel - 1, 1); //min is now 1
     }
   }
 
@@ -59,6 +59,8 @@ class BaselineEngine {
     this.askedQuestionIds.add(selected.Q_id);
 
     return selected;
+    //frontend needs the answer so the a question needs 
+    //find optimised way to find the questions per level so it doesnt take long - DEMO 4
   }
 
   async nextQuestion(lastAnswerCorrect = null) {
@@ -84,3 +86,5 @@ class BaselineEngine {
 }
 
 export default BaselineEngine;
+
+//random num generator for the array with questions to ask.

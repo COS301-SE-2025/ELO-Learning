@@ -8,8 +8,14 @@ import QuestionTemplate from '@/app/ui/question-template';
 import QuestionFooter from '@/app/ui/questions/question-footer';
 import QuestionHeader from '@/app/ui/questions/question-header';
 import { validateAnswerEnhanced } from '@/utils/answerValidator';
+import { resetXPCalculationState } from '@/utils/gameSession';
 
-export default function QuestionsTracker({ questions, lives, mode }) {
+export default function QuestionsTracker({
+  questions,
+  lives,
+  mode,
+  resetXPState,
+}) {
   const router = useRouter();
 
   // ✅ Safe array handling
@@ -66,6 +72,16 @@ export default function QuestionsTracker({ questions, lives, mode }) {
   useEffect(() => {
     setQuestionStartTime(Date.now());
   }, [currQuestion]);
+
+  // Reset XP calculation state for new game session
+  useEffect(() => {
+    if (resetXPState) {
+      const success = resetXPCalculationState();
+      if (success) {
+        console.log('🎮 New game session started - XP calculation state reset');
+      }
+    }
+  }, [resetXPState]);
 
   const setLocalStorage = async () => {
     // Calculate time elapsed in seconds

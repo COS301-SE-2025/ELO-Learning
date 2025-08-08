@@ -56,6 +56,8 @@ router.post('/singleplayer', async (req, res) => {
     if (qError || !questionData)
       return res.status(404).json({ error: 'Question not found' });
 
+    console.log('Submitting question:', question_id);
+
     const questionElo = questionData.elo_rating ?? 5.0;
 
     const xpEarned = await calculateSinglePlayerXP({

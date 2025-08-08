@@ -107,26 +107,31 @@ router.post('/answer', async (req, res) => {
 });
 
 // Confirm baseline test: update baseLineTest = true
-router.post('/confirm', async (req, res) => {
+// POST /baseline/confirm
+app.post('/baseline/confirm', async (req, res) => {
   const { userId } = req.body;
 
   if (!userId) {
     return res.status(400).json({ error: 'Missing userId' });
   }
 
-  const { error } = await supabase
-    .from('Users')
-    .update({ baseLineTest: true })
-    .eq('id', userId);
+  try {
+    // Update the baseLineTest flag to true
+    const { data, error } = await supabase
+      .from('Users')
+      .update({ baseLineTest: true })
+      .eq('id', userId);
 
-  if (error) {
-    console.error('Error updating baseline test flag:', error.message);
-    return res.status(500).json({ error: 'Could not update baselineTest flag' });
+    if (error) {
+      console.error('Error updating baseLineTest:', error);
+      return res.status(500).json({ error: 'Database update failed' });
+    }
+
+    return res.status(200).json({ success: true, updatedUser: data });
+  } catch (err) {
+    console.error('Server error:', err);
+    return res.status(500).json({ error: 'Internal server error' });
   }
-
-  res.status(200).json({ success: true });
 });
-
-
 
 export default router;

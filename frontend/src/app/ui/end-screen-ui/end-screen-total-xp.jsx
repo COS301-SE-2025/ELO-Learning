@@ -7,7 +7,8 @@ import { useEffect, useState } from 'react';
 export default function TotalXP({ onLoadComplete }) {
   const [totalXP, setTotalXP] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
-  const { data: session } = useSession();
+  const [error, setError] = useState(null);
+  const { data: session, status } = useSession();
 
   /*   useEffect(() => {
     const questions = JSON.parse(localStorage.getItem('questionsObj'));
@@ -24,25 +25,90 @@ export default function TotalXP({ onLoadComplete }) {
   */
 
   useEffect(() => {
+    console.log('TotalXP useEffect triggered');
+    console.log('Session status:', status);
+    console.log('Session data:', session);
+    
     async function calculateTotalXP() {
-      if (!session?.user) {
-        console.error('User not authenticated');
+      // Wait for session to load
+      if (status === 'loading') {
         return;
+      }
+      
+      let userFromStorage = null;
+      
+      // Try to get user data from NextAuth session first
+      if (status === 'authenticated' && session?.user) {
+        // Use NextAuth session data
+        console.log('Using NextAuth session data');
+      } else {
+        // Try to get user data from localStorage or cookie as fallback
+        console.log('NextAuth session not available, trying fallback methods');
+        try {
+          const userCookie = document.cookie
+            .split('; ')
+            .find(row => row.startsWith('user='));
+          
+          if (userCookie) {
+            const encodedUserData = userCookie.split('=')[1];
+            const decodedUserData = decodeURIComponent(encodedUserData);
+            userFromStorage = JSON.parse(decodedUserData);
+            console.log('Using user data from cookie:', userFromStorage);
+          } else {
+            // Fallback to localStorage
+            const userData = localStorage.getItem('user');
+            if (userData) {
+              userFromStorage = JSON.parse(userData);
+              console.log('Using user data from localStorage:', userFromStorage);
+            }
+          }
+        } catch (error) {
+          console.error('Error getting user from storage:', error);
+          setError('Unable to retrieve user data');
+        }
       }
 
       //Prevent duplicate submissions
       if (sessionStorage.getItem('submittedOnce') === 'true') {
-        //console.log('Already submitted, skipping...');
+        console.log('Already submitted, loading cached results...');
+        const questions = JSON.parse(localStorage.getItem('questionsObj')) || [];
+        // Calculate XP from stored results if already submitted
+        const totalXPSum = questions.reduce(
+          (acc, q) => acc + (q.xpEarned ?? 0),
+          0,
+        );
+        setTotalXP(Math.round(totalXPSum));
+        setIsLoading(false);
+        if (onLoadComplete) {
+          onLoadComplete();
+        }
         return;
       }
       sessionStorage.setItem('submittedOnce', 'true');
 
       const questions = JSON.parse(localStorage.getItem('questionsObj')) || [];
-      const user = session.user;
-      const user_id = user.id;
+      const user = session?.user || userFromStorage;
+      const user_id = user?.id;
 
       if (!user_id) {
         console.error('User ID not found');
+        console.log('Available user data:', user);
+        setError('User authentication required');
+        // Calculate XP without submitting to backend
+        const totalXPSum = questions.reduce(
+          (acc, q) => {
+            if (q.isCorrect && q.question?.xpGain) {
+              return acc + q.question.xpGain;
+            }
+            return acc;
+          },
+          0,
+        );
+        setTotalXP(Math.round(totalXPSum));
+        setIsLoading(false);
+        if (onLoadComplete) {
+          onLoadComplete();
+        }
         return;
       }
 
@@ -51,9 +117,7 @@ export default function TotalXP({ onLoadComplete }) {
         // Sanity checks
         if (!q.question || (!q.question.id && !q.question.Q_id)) {
           console.log(
-            `Submitted question ${q.question.id || q.question.Q_id}: earned ${
-              q.xpEarned
-            }`,
+            `Skipping question ${q.question?.id || q.question?.Q_id}: missing ID`,
           );
           continue; // skip this one
         }
@@ -114,6 +178,8 @@ export default function TotalXP({ onLoadComplete }) {
             `Failed to submit question ${q.question.id || q.question.Q_id}:`,
             err.response?.data || err.message,
           );
+          // Set XP to 0 for failed submissions
+          q.xpEarned = 0;
         }
       }
       const totalXPSum = questions.reduce(
@@ -130,9 +196,9 @@ export default function TotalXP({ onLoadComplete }) {
       }
     }
     calculateTotalXP();
-  }, [session]);
+  }, [session, status]);
 
-  if (isLoading) {
+  if (isLoading || status === 'loading') {
     return (
       <div className="flex flex-col items-center justify-center">
         <div className="flex flex-row items-center justify-center gap-5">
@@ -148,6 +214,20 @@ export default function TotalXP({ onLoadComplete }) {
             className="animate-bounce rounded-full h-5 w-5 bg-[#FF6E99] mb-4"
             style={{ animationDelay: '300ms' }}
           ></div>
+        </div>
+      </div>
+    );
+  }
+  
+  // Show error state if authentication failed but still show calculated XP
+  if (error) {
+    return (
+      <div className="border-1 border-[#FF6E99] rounded-[10px] w-[90px]">
+        <div className="uppercase bg-[#FF6E99] p-2 rounded-t-[9px] text-[14px] font-bold text-center tracking-wide">
+          XP
+        </div>
+        <div className="text-center text-[18px] font-bold py-3 px-5">
+          {totalXP.toFixed(0)}xp
         </div>
       </div>
     );

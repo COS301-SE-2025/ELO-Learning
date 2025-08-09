@@ -6,7 +6,7 @@ import { useSession } from 'next-auth/react';
 import { useEffect, useState } from 'react';
 
 export default function TotalXP({ onLoadComplete }) {
-  const [totalXP, setTotalXP] = useState(0);
+  const [totalXP, setTotalXP] = useState(null); // Start with null instead of 0
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
   const { data: session, status, update: updateSession } = useSession();
@@ -212,9 +212,9 @@ export default function TotalXP({ onLoadComplete }) {
           currentTime - parseInt(lastCalculationTime) < 1000
         ) {
           console.log(
-            '❌ Calculation attempted too soon after previous one, aborting',
+            '❌ Calculation attempted too soon after previous one, waiting...',
           );
-          setIsLoading(false);
+          // Don't set loading to false, keep showing loading animation
           return;
         }
 
@@ -237,10 +237,10 @@ export default function TotalXP({ onLoadComplete }) {
 
         if (inProgressSubmission && inProgressSubmission !== calculationId) {
           console.log(
-            '❌ XP calculation already in progress, aborting:',
+            '❌ XP calculation already in progress, waiting for completion:',
             inProgressSubmission,
           );
-          setIsLoading(false);
+          // Don't set loading to false, keep showing loading animation
           return;
         }
 
@@ -267,7 +267,7 @@ export default function TotalXP({ onLoadComplete }) {
             console.error(
               'User not authenticated - no session or user cookie found',
             );
-            setIsLoading(false);
+            // Keep loading animation, don't show 0xp for auth errors
             return;
           }
 
@@ -279,7 +279,7 @@ export default function TotalXP({ onLoadComplete }) {
 
             if (!userData || !userData.id) {
               console.error('Invalid user data in cookie');
-              setIsLoading(false);
+              // Keep loading animation, don't show 0xp for auth errors
               return;
             }
 
@@ -290,7 +290,7 @@ export default function TotalXP({ onLoadComplete }) {
             );
           } catch (cookieError) {
             console.error('Error parsing user cookie:', cookieError);
-            setIsLoading(false);
+            // Keep loading animation, don't show 0xp for parsing errors
             return;
           }
         }
@@ -298,7 +298,7 @@ export default function TotalXP({ onLoadComplete }) {
         const questions =
           JSON.parse(localStorage.getItem('questionsObj')) || [];
         console.log(
-          `📊 Processing ${questions.length} questions for XP calculation`,
+          `Processing ${questions.length} questions for XP calculation`,
         );
 
         // Process each question
@@ -306,7 +306,7 @@ export default function TotalXP({ onLoadComplete }) {
           // Sanity checks
           if (!q.question || (!q.question.id && !q.question.Q_id)) {
             console.log(
-              `⚠️ Skipping question with missing ID: ${
+              `Skipping question with missing ID: ${
                 q.question?.id || q.question?.Q_id
               }`,
             );
@@ -316,7 +316,7 @@ export default function TotalXP({ onLoadComplete }) {
           // Skip if already processed (has xpEarned)
           if (q.xpEarned !== undefined && q.xpEarned !== null) {
             console.log(
-              `⚠️ Skipping already processed question ${
+              `Skipping already processed question ${
                 q.question.id || q.question.Q_id
               }: ${q.xpEarned} XP`,
             );
@@ -341,11 +341,11 @@ export default function TotalXP({ onLoadComplete }) {
             q.leveledUp = leveledUp;
 
             console.log(
-              `✅ Submitted question ${questionId}: earned ${q.xpEarned} XP (Total: ${totalXP})`,
+              `Submitted question ${questionId}: earned ${q.xpEarned} XP (Total: ${totalXP})`,
             );
           } catch (err) {
             console.error(
-              `❌ Failed to submit question ${questionId}:`,
+              `Failed to submit question ${questionId}:`,
               err.response?.data || err.message,
             );
           }
@@ -359,10 +359,7 @@ export default function TotalXP({ onLoadComplete }) {
           0,
         );
 
-        console.log(
-          '✅ XP calculation completed! Total XP earned:',
-          totalXPSum,
-        );
+        console.log('XP calculation completed! Total XP earned:', totalXPSum);
 
         // Mark this game session as completed to prevent future duplicate calculations
         const currentGameSession = localStorage.getItem('currentGameSession');
@@ -392,13 +389,12 @@ export default function TotalXP({ onLoadComplete }) {
           onLoadComplete();
         }
       } catch (error) {
-        console.error('❌ Error in calculateTotalXP:', error);
-        setError(error.message || 'Failed to calculate XP');
+        console.error('Error in calculateTotalXP:', error);
         setIsLoading(false);
       } finally {
         // Clean up the in-progress flag but keep the completed flag
         sessionStorage.removeItem('calculatingXP');
-        console.log('🧹 Cleaned up calculation session');
+        console.log('🔄 Cleaned up calculation session');
       }
     }
     calculateTotalXP();
@@ -413,7 +409,8 @@ export default function TotalXP({ onLoadComplete }) {
     };
   }, []);
 
-  if (isLoading || status === 'loading') {
+  // Show loading animation if still loading OR if totalXP is null
+  if (isLoading || totalXP === null) {
     return (
       <div className="flex flex-col items-center justify-center">
         <div className="flex flex-row items-center justify-center gap-5">
@@ -433,20 +430,6 @@ export default function TotalXP({ onLoadComplete }) {
       </div>
     );
   }
-  
-  // Show error state if authentication failed but still show calculated XP
-  if (error) {
-    return (
-      <div className="border-1 border-[#FF6E99] rounded-[10px] w-[90px]">
-        <div className="uppercase bg-[#FF6E99] p-2 rounded-t-[9px] text-[14px] font-bold text-center tracking-wide">
-          XP
-        </div>
-        <div className="text-center text-[18px] font-bold py-3 px-5">
-          {totalXP.toFixed(0)}xp
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className="border-1 border-[#FF6E99] rounded-[10px] w-[90px]">
@@ -454,7 +437,7 @@ export default function TotalXP({ onLoadComplete }) {
         XP
       </div>
       <div className="text-center text-[18px] font-bold py-3 px-5">
-        {totalXP.toFixed(0)}xp
+        {(totalXP || 0).toFixed(0)}xp
       </div>
     </div>
   );

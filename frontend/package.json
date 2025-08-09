@@ -8,10 +8,10 @@
     "build": "next build",
     "start": "next start -p 8080",
     "lint": "next lint",
-    "test:unit": "cypress run --spec 'cypress/unit/**/*.test.cy.js'",
-    "test:integration": "cypress run --spec 'cypress/integration/**/*.cy.js'",
-    "test:e2e": "cypress run --spec 'cypress/e2e/**/*.cy.jsx'",
-    "test:all": "cypress run"
+    "test:unit": "NODE_ENV=test cypress run --spec 'cypress/unit/**/*.test.cy.js'",
+    "test:integration": "NODE_ENV=test cypress run --spec 'cypress/integration/**/*.cy.js'",
+    "test:e2e": "NODE_ENV=test cypress run --spec 'cypress/e2e/**/*.cy.jsx'",
+    "test:all": "NODE_ENV=test cypress run"
   },
   "dependencies": {
     "@vercel/analytics": "^1.5.0",

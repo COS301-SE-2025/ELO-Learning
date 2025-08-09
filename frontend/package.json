@@ -14,6 +14,7 @@
     "test:all": "cypress run"
   },
   "dependencies": {
+    "@vercel/analytics": "^1.5.0",
     "axios": "1.11.0",
     "clsx": "^2.1.1",
     "katex": "^0.16.22",

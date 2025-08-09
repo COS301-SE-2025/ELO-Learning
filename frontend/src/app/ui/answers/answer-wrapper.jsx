@@ -151,6 +151,10 @@ export default function AnswerWrapper({
         'Open Response',
         'Expression Builder',
         'Fill-in-the-Blank',
+        'Match Question',
+        'Matching',
+        'True/False',
+        'True-False',
       ].includes(question.type) && (
         <div className="text-center py-8 bg-yellow-50 rounded-lg border border-yellow-200">
           <div className="text-4xl mb-4">❓</div>

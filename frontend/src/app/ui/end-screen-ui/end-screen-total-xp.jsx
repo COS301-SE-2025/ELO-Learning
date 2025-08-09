@@ -1,14 +1,15 @@
 'use client';
 
-import { submitSinglePlayerAttempt, fetchUserById } from '@/services/api';
+import { fetchUserById, submitSinglePlayerAttempt } from '@/services/api';
+import { cache, CACHE_KEYS } from '@/utils/cache';
 import { useSession } from 'next-auth/react';
 import { useEffect, useState } from 'react';
-import { cache, CACHE_KEYS } from '@/utils/cache';
 
 export default function TotalXP({ onLoadComplete }) {
   const [totalXP, setTotalXP] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
-  const { data: session, update: updateSession } = useSession();
+  const [error, setError] = useState(null);
+  const { data: session, status, update: updateSession } = useSession();
 
   // Function to update user data in session/cookies after XP calculation
   async function updateUserDataAfterXP(user_id, xpEarned, questions) {
@@ -392,6 +393,7 @@ export default function TotalXP({ onLoadComplete }) {
         }
       } catch (error) {
         console.error('❌ Error in calculateTotalXP:', error);
+        setError(error.message || 'Failed to calculate XP');
         setIsLoading(false);
       } finally {
         // Clean up the in-progress flag but keep the completed flag

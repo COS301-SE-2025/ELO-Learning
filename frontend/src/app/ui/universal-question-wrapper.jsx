@@ -11,10 +11,12 @@ import { redirect } from 'next/navigation';
 import { useEffect, useState } from 'react';
 
 // Import all question type components
-import MultipleChoiceTemplate from '@/app/ui/question-types/multiple-choice';
-import OpenResponseTemplate from '@/app/ui/question-types/open-response';
 import ExpressionBuilderTemplate from '@/app/ui/question-types/expression-builder';
 import FillInBlankTemplate from '@/app/ui/question-types/fill-in-blank';
+import MatchQuestionTemplate from '@/app/ui/question-types/match-question';
+import MultipleChoiceTemplate from '@/app/ui/question-types/multiple-choice';
+import OpenResponseTemplate from '@/app/ui/question-types/open-response';
+import TrueFalseTemplate from '@/app/ui/question-types/true-false';
 
 export default function UniversalQuestionWrapper({ questions }) {
   // ✅ Safe array handling
@@ -100,10 +102,19 @@ export default function UniversalQuestionWrapper({ questions }) {
         isValid = answer && answer.length > 0; // Has at least some tiles
         break;
       case 'Fill-in-the-Blank':
+      case 'Fill-in-the-Blanks':
         isValid =
           answer &&
           Object.keys(answer).length > 0 &&
           Object.values(answer).every((val) => val && val.trim());
+        break;
+      case 'Match Question':
+      case 'Matching':
+        isValid = answer && Object.keys(answer).length > 0;
+        break;
+      case 'True/False':
+      case 'True-False':
+        isValid = answer !== null && (answer === 'True' || answer === 'False');
         break;
       default:
         isValid = answer !== null;
@@ -214,7 +225,16 @@ export default function UniversalQuestionWrapper({ questions }) {
         return <ExpressionBuilderTemplate {...commonProps} />;
 
       case 'Fill-in-the-Blank':
+      case 'Fill-in-the-Blanks':
         return <FillInBlankTemplate {...commonProps} />;
+
+      case 'Match Question':
+      case 'Matching':
+        return <MatchQuestionTemplate {...commonProps} />;
+
+      case 'True/False':
+      case 'True-False':
+        return <TrueFalseTemplate {...commonProps} />;
 
       default:
         return (

@@ -1,8 +1,8 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useEffect, useState } from 'react';
 
-export default function FillInBlankTemplate({ question, setAnswer }) {
+export default function FillInBlankTemplate({ question, setAnswer, setIsAnswerCorrect }) {
   // Parse question text to find blanks marked with underscores or special syntax
   const [questionParts, setQuestionParts] = useState([]);
   const [blankAnswers, setBlankAnswers] = useState({});
@@ -29,6 +29,14 @@ export default function FillInBlankTemplate({ question, setAnswer }) {
     const newAnswers = { ...blankAnswers, [blankId]: value };
     setBlankAnswers(newAnswers);
     setAnswer(newAnswers);
+    
+    // Check if all blanks are filled for validation
+    const allBlanksFilled = Object.keys(newAnswers).length === getBlankCount() &&
+      Object.values(newAnswers).every((val) => val && val.trim());
+    
+    if (setIsAnswerCorrect) {
+      setIsAnswerCorrect(allBlanksFilled);
+    }
   };
 
   const getBlankCount = () => {

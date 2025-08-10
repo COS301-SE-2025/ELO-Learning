@@ -1,8 +1,8 @@
 'use client';
 
-import { useEffect, useState } from 'react';
 import UniversalQuestionWrapper from '@/app/ui/universal-question-wrapper';
 import { getQuestionsByType } from '@/utils/api';
+import { useEffect, useState } from 'react';
 
 export default function OpenResponsePage() {
   const [questions, setQuestions] = useState([]);

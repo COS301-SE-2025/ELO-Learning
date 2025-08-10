@@ -1,9 +1,9 @@
 // utils/answerValidator.js
 import { quickValidateMath } from '@/utils/api';
 import {
-    quickValidateMath as frontendQuickValidate,
-    isValidMathExpression,
-    validateMathAnswer,
+  quickValidateMath as frontendQuickValidate,
+  isValidMathExpression,
+  validateMathAnswer,
 } from '@/utils/frontendMathValidator';
 
 /**
@@ -24,6 +24,50 @@ export const validateAnswer = async (
     questionText: questionText.substring(0, 50) + '...',
     type: questionType,
   });
+
+  // Special handling for Open Response questions
+  if (questionType === 'Open Response') {
+    console.log('🔍 Processing Open Response question');
+    
+    // For Open Response, we need stricter validation logic
+    // Try exact match first (case insensitive)
+    if (studentAnswer.trim().toLowerCase() === correctAnswer.trim().toLowerCase()) {
+      console.log('✅ Open Response: Exact match found');
+      return true;
+    }
+
+    // Try numerical match for financial questions with strict comparison
+    const studentNum = parseFloat(studentAnswer.replace(/[^\d.-]/g, ''));
+    const correctNum = parseFloat(correctAnswer.replace(/[^\d.-]/g, ''));
+    
+    if (!isNaN(studentNum) && !isNaN(correctNum)) {
+      const isCorrect = Math.abs(studentNum - correctNum) < 0.001;
+      console.log('Open Response numerical comparison:', {
+        studentNum,
+        correctNum,
+        isCorrect,
+        difference: Math.abs(studentNum - correctNum)
+      });
+      return isCorrect;
+    }
+
+    // For non-numerical Open Response, try partial matching
+    if (isNaN(parseFloat(studentAnswer)) && isNaN(parseFloat(correctAnswer))) {
+      const isCorrect = (
+        studentAnswer.toLowerCase().includes(correctAnswer.toLowerCase()) ||
+        correctAnswer.toLowerCase().includes(studentAnswer.toLowerCase())
+      );
+      console.log('Open Response partial match:', {
+        student: studentAnswer,
+        correct: correctAnswer,
+        isCorrect
+      });
+      return isCorrect;
+    }
+
+    console.log('❌ Open Response: No match found');
+    return false;
+  }
 
   // First, try frontend math validation for Math Input types
   if (
@@ -499,6 +543,49 @@ export const validateAnswerSync = (
   if (!studentAnswer || !correctAnswer) return false;
 
   try {
+    // Special handling for Open Response questions
+    if (questionType === 'Open Response') {
+      console.log('🔍 Sync validation for Open Response question');
+      
+      // Try exact match first (case insensitive)
+      if (studentAnswer.trim().toLowerCase() === correctAnswer.trim().toLowerCase()) {
+        console.log('✅ Open Response sync: Exact match found');
+        return true;
+      }
+
+      // Try numerical match for financial questions with strict comparison
+      const studentNum = parseFloat(studentAnswer.replace(/[^\d.-]/g, ''));
+      const correctNum = parseFloat(correctAnswer.replace(/[^\d.-]/g, ''));
+      
+      if (!isNaN(studentNum) && !isNaN(correctNum)) {
+        const isCorrect = Math.abs(studentNum - correctNum) < 0.001;
+        console.log('Open Response sync numerical comparison:', {
+          studentNum,
+          correctNum,
+          isCorrect,
+          difference: Math.abs(studentNum - correctNum)
+        });
+        return isCorrect;
+      }
+
+      // For non-numerical Open Response, try partial matching
+      if (isNaN(parseFloat(studentAnswer)) && isNaN(parseFloat(correctAnswer))) {
+        const isCorrect = (
+          studentAnswer.toLowerCase().includes(correctAnswer.toLowerCase()) ||
+          correctAnswer.toLowerCase().includes(studentAnswer.toLowerCase())
+        );
+        console.log('Open Response sync partial match:', {
+          student: studentAnswer,
+          correct: correctAnswer,
+          isCorrect
+        });
+        return isCorrect;
+      }
+
+      console.log('❌ Open Response sync: No match found');
+      return false;
+    }
+
     // Use frontend math validation for Math Input types - but only if both are valid
     if (
       questionType === 'Math Input' ||

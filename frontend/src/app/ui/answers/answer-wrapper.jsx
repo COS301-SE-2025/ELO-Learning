@@ -28,6 +28,63 @@ export default function AnswerWrapper({
       return;
     }
 
+    // Special handling for Open Response questions
+    if (question.type === 'Open Response') {
+      // For Open Response, we'll do a more flexible comparison
+      const correctAnswers = currAnswers
+        .filter((answer) => answer.isCorrect)
+        .map((answer) => answer.answer_text || answer.answerText)
+        .filter(Boolean);
+
+      if (correctAnswers.length === 0) {
+        // If no correct answers defined, accept any non-empty response
+        setIsAnswerCorrect(studentAnswer.trim().length > 0);
+        return;
+      }
+
+      // For financial math and similar questions, try to match the numerical value
+      let isCorrect = false;
+      for (const correctAnswer of correctAnswers) {
+        // Try exact match first (case insensitive)
+        if (studentAnswer.trim().toLowerCase() === correctAnswer.trim().toLowerCase()) {
+          isCorrect = true;
+          break;
+        }
+
+        // Try numerical match for financial questions with stricter comparison
+        const studentNum = parseFloat(studentAnswer.replace(/[^\d.-]/g, ''));
+        const correctNum = parseFloat(correctAnswer.replace(/[^\d.-]/g, ''));
+        
+        if (!isNaN(studentNum) && !isNaN(correctNum)) {
+          // Use much stricter tolerance for exact numerical matches
+          if (Math.abs(studentNum - correctNum) < 0.001) {
+            isCorrect = true;
+            break;
+          }
+        }
+
+        // For descriptive answers (non-numerical), try partial matching
+        if (isNaN(parseFloat(studentAnswer)) && isNaN(parseFloat(correctAnswer))) {
+          if (studentAnswer.toLowerCase().includes(correctAnswer.toLowerCase()) ||
+              correctAnswer.toLowerCase().includes(studentAnswer.toLowerCase())) {
+            isCorrect = true;
+            break;
+          }
+        }
+      }
+
+      console.log('Open Response validation:', {
+        student: studentAnswer,
+        correctAnswers,
+        isCorrect,
+        questionText: question.questionText
+      });
+
+      setIsAnswerCorrect(isCorrect);
+      return;
+    }
+
+    // Original validation logic for other question types
     // Get ALL correct answers, not just the first one
     const correctAnswers = currAnswers
       .filter((answer) => answer.isCorrect)

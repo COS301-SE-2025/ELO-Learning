@@ -30,7 +30,7 @@ export default function AnswerWrapper({
 
     // Special handling for Open Response questions
     if (question.type === 'Open Response') {
-      // For Open Response, we'll do a more flexible comparison
+      // For Open Response, we'll check against ALL correct answers like multiple choice
       const correctAnswers = currAnswers
         .filter((answer) => answer.isCorrect)
         .map((answer) => answer.answer_text || answer.answerText)
@@ -42,41 +42,37 @@ export default function AnswerWrapper({
         return;
       }
 
-      // For financial math and similar questions, try to match the numerical value
-      let isCorrect = false;
-      for (const correctAnswer of correctAnswers) {
-        // Try exact match first (case insensitive)
-        if (studentAnswer.trim().toLowerCase() === correctAnswer.trim().toLowerCase()) {
-          isCorrect = true;
-          break;
-        }
-
-        // Try numerical match for financial questions with stricter comparison
-        const studentNum = parseFloat(studentAnswer.replace(/[^\d.-]/g, ''));
-        const correctNum = parseFloat(correctAnswer.replace(/[^\d.-]/g, ''));
-        
-        if (!isNaN(studentNum) && !isNaN(correctNum)) {
-          // Use much stricter tolerance for exact numerical matches
-          if (Math.abs(studentNum - correctNum) < 0.001) {
-            isCorrect = true;
-            break;
-          }
-        }
-
-        // For descriptive answers (non-numerical), try partial matching
-        if (isNaN(parseFloat(studentAnswer)) && isNaN(parseFloat(correctAnswer))) {
-          if (studentAnswer.toLowerCase().includes(correctAnswer.toLowerCase()) ||
-              correctAnswer.toLowerCase().includes(studentAnswer.toLowerCase())) {
-            isCorrect = true;
-            break;
-          }
-        }
-      }
-
       console.log('Open Response validation:', {
         student: studentAnswer,
         correctAnswers,
-        isCorrect,
+        isCorrect: false,
+        questionText: question.questionText
+      });
+
+      // Check if student answer matches ANY of the correct answers (like multiple choice)
+      let isCorrect = false;
+      let matchedAnswer = null;
+
+      for (const correctAnswer of correctAnswers) {
+        const individualResult = await validateAnswerEnhanced(
+          studentAnswer,
+          correctAnswer,
+          question.questionText || '',
+          question.type || '',
+        );
+
+        if (individualResult) {
+          isCorrect = true;
+          matchedAnswer = correctAnswer;
+          break; // Found a match, no need to check further
+        }
+      }
+
+      console.log('Open Response validation result:', {
+        student: studentAnswer,
+        correctAnswers: correctAnswers,
+        isCorrect: isCorrect,
+        matchedAnswer: matchedAnswer,
         questionText: question.questionText
       });
 

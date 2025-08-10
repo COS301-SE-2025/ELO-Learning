@@ -107,6 +107,13 @@ export default function QuestionsTracker({
     }
   }, [resetXPState]);
 
+  // Handle navigation when lives reach 0
+  useEffect(() => {
+    if (numLives <= 0) {
+      router.push(`/end-screen?mode=${mode}`);
+    }
+  }, [numLives, mode, router]);
+
   const setLocalStorage = async () => {
     // Only proceed if we're in the browser
     if (typeof window === 'undefined') return;
@@ -118,23 +125,47 @@ export default function QuestionsTracker({
       localStorage.getItem('questionsObj') || '[]',
     );
 
-    // Find the correct answer
-    const correctAnswerObj = currAnswers.find((ans) => ans.isCorrect === true);
-    const correctAnswerText = correctAnswerObj?.answer_text || correctAnswerObj;
+    // Get ALL correct answers, not just the first one
+    const correctAnswers = currAnswers
+      .filter((answer) => answer.isCorrect)
+      .map((answer) => answer.answer_text || answer.answerText)
+      .filter(Boolean);
 
-    // ✅ Re-validate with new validator before storing
-    const revalidatedResult = await validateAnswerEnhanced(
-      answer,
-      correctAnswerText,
-      currQuestion?.questionText || '',
-      currQuestion?.type || 'Math Input', // Use question type if available, fallback to Math Input
-    );
+    // Check if student answer matches ANY of the correct answers
+    let revalidatedResult = false;
+    let matchedAnswer = null;
+    let correctAnswerObj = null;
+
+    for (const correctAnswer of correctAnswers) {
+      const individualResult = await validateAnswerEnhanced(
+        answer,
+        correctAnswer,
+        currQuestion?.questionText || '',
+        currQuestion?.type || 'Math Input',
+      );
+
+      if (individualResult) {
+        revalidatedResult = true;
+        matchedAnswer = correctAnswer;
+        // Find the original answer object for this matched answer
+        correctAnswerObj = currAnswers.find(ans => 
+          (ans.answer_text || ans.answerText) === correctAnswer
+        );
+        break; // Found a match, no need to check further
+      }
+    }
+
+    // If no match found, use the first correct answer as fallback for storage
+    if (!correctAnswerObj) {
+      correctAnswerObj = currAnswers.find((ans) => ans.isCorrect === true);
+    }
 
     console.log('💾 Storing question with validation:', {
       studentAnswer: answer,
-      correctAnswer: correctAnswerText,
+      correctAnswers: correctAnswers,
       oldIsCorrect: isAnswerCorrect,
       newIsCorrect: revalidatedResult,
+      matchedAnswer: matchedAnswer,
       questionText: currQuestion?.questionText?.substring(0, 50) + '...',
     });
 
@@ -158,11 +189,6 @@ export default function QuestionsTracker({
         if (typeof window !== 'undefined') {
           localStorage.setItem('lives', newLives.toString());
         }
-        
-        if (newLives <= 0) {
-          router.push(`/end-screen?mode=${mode}`);
-          return newLives;
-        }
         return newLives;
       });
       
@@ -174,25 +200,43 @@ export default function QuestionsTracker({
   };
 
   const handleQuizComplete = () => {
-    router.push(`/end-screen?mode=${mode}`);
+    // Use setTimeout to ensure navigation happens after current render cycle
+    setTimeout(() => {
+      router.push(`/end-screen?mode=${mode}`);
+    }, 0);
   };
 
   const submitAnswer = async () => {
-    // Get fresh validation result before handling lives
-    const correctAnswerObj = currAnswers.find((ans) => ans.isCorrect === true);
-    const correctAnswerText = correctAnswerObj?.answer_text || correctAnswerObj;
+    // Get ALL correct answers, not just the first one
+    const correctAnswers = currAnswers
+      .filter((answer) => answer.isCorrect)
+      .map((answer) => answer.answer_text || answer.answerText)
+      .filter(Boolean);
 
-    const freshValidationResult = await validateAnswerEnhanced(
-      answer,
-      correctAnswerText,
-      currQuestion?.questionText || '',
-      currQuestion?.type || 'Math Input',
-    );
+    // Check if student answer matches ANY of the correct answers
+    let freshValidationResult = false;
+    let matchedAnswer = null;
+
+    for (const correctAnswer of correctAnswers) {
+      const individualResult = await validateAnswerEnhanced(
+        answer,
+        correctAnswer,
+        currQuestion?.questionText || '',
+        currQuestion?.type || 'Math Input',
+      );
+
+      if (individualResult) {
+        freshValidationResult = true;
+        matchedAnswer = correctAnswer;
+        break; // Found a match, no need to check further
+      }
+    }
 
     console.log('🔄 Fresh validation for life calculation:', {
       studentAnswer: answer,
-      correctAnswer: correctAnswerText,
+      correctAnswers: correctAnswers,
       isCorrect: freshValidationResult,
+      matchedAnswer: matchedAnswer,
     });
 
     await setLocalStorage();

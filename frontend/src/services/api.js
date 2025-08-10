@@ -172,6 +172,13 @@ export async function submitSinglePlayerAttempt(data) {
   return res.data;
 }
 
+// // 14. GET /user/current
+// export async function fetchCurrentUser() {
+//   const res = await axiosInstance.get('/user/current');
+//   return res.data;
+// }
+
+
 export async function sendPasswordResetEmail(email) {
   const res = await axiosInstance.post('/forgot-password', { email });
   return res.data;
@@ -210,6 +217,32 @@ export async function handleOAuthUser(email, name, image, provider) {
     name,
     image,
     provider,
+  });
+  return res.data;
+}
+
+//current user's details
+export async function fetchCurrentUser() {
+  const token = localStorage.getItem('token');
+  if (!token) throw new Error('No auth token');
+  const res = await axiosInstance.get('/user/current', {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  return res.data;
+}
+
+// Skip baseline test
+export async function skipBaselineTest(userId) {
+  const res = await axiosInstance.post(`/baseline/skip`, { userId }, {
+    headers: authHeader,
+  });
+  return res.data;
+}
+
+// Start baseline test
+export async function startBaselineTest(userId) {
+  const res = await axiosInstance.post(`/baseline/start`, { userId }, {
+    headers: authHeader,
   });
   return res.data;
 }

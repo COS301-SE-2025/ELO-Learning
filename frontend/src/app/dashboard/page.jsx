@@ -1,12 +1,18 @@
 'use client';
-import { fetchAllUsers } from '@/services/api';
+import { fetchAllUsers, fetchCurrentUser} from '@/services/api';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import LeaderboardTable from '../ui/leaderboard-table';
+import BaselineTestPopup from '../ui/pop-up/baseline-test'; 
+
 
 export default function Page() {
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+
+  const [currentUser, setCurrentUser] = useState(null);
+  const [showBaselinePopup, setShowBaselinePopup] = useState(false);
+
 
   // Memoize the sorting function to avoid recreating it on every render
   const sortUsers = useCallback((userData) => {
@@ -27,10 +33,33 @@ export default function Page() {
 
         const data = await fetchAllUsers();
 
-        // Use setTimeout to defer sorting and avoid blocking the UI
+        // Check if token exists before fetching current user
+        const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
+
+        if (token) {
+          const user = await fetchCurrentUser();
+
+          if (mounted) {
+            setCurrentUser(user);
+            if (user.baseLineTest === false) {
+              setShowBaselinePopup(true);
+            }
+          }
+        } else {
+          // No token: handle accordingly, e.g. set error or just skip current user fetch
+          if (mounted) {
+            setError('User not logged in.');
+            setLoading(false);
+            return; // Stop here because no token
+          }
+        }
+
+        if (!mounted) return;
+
+        // Defer sorting and setting users to avoid blocking UI
         timeoutId = setTimeout(() => {
           if (mounted) {
-            const sortedData = sortUsers([...data]); // Clone array before sorting
+            const sortedData = sortUsers([...data]); // clone array before sorting
             setUsers(sortedData);
             setLoading(false);
           }

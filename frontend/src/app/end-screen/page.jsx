@@ -133,6 +133,13 @@ function EndScreen() {
               <Time />
             </div>
           )}
+          {/* Blocks with information */}
+          {mode === 'baseline' && (
+            <div className="flex flex-row items-center justify-center gap-8 my-7">
+              <TotalXP onLoadComplete={() => setXpReady(true)} />
+              
+            </div>
+          )}
         </div>
 
         <div className="flex flex-col gap-4 mb-5">
@@ -152,6 +159,20 @@ function EndScreen() {
             </div>
           )}
           {mode === 'single-player' && (
+            <button
+              className="secondary-button w-full uppercase"
+              onClick={calculateXP}
+              disabled={isLoading || !xpReady}
+            >
+              {isLoading
+                ? 'Claiming XP...'
+                : !xpReady
+                  ? 'Calculating...'
+                  : 'Claim XP'}
+            </button>
+          )}
+          {/* this is where i will change the baseline end screen button */}
+          {mode === 'baseline' && (
             <button
               className="secondary-button w-full uppercase"
               onClick={calculateXP}

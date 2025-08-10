@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const BASE_URL = 'http://localhost:3000'; // Change this when deploying
+const BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000'; // Change this when deploying
 
 const isServer = typeof window === 'undefined';
 

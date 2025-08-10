@@ -3,37 +3,72 @@
 import { Check, X } from 'lucide-react';
 import { useState } from 'react';
 
-export default function TrueFalseTemplate({ question, setAnswer, setIsAnswerCorrect }) {
+export default function TrueFalseTemplate({ question, answers, setAnswer, setIsAnswerCorrect }) {
   const [selectedAnswer, setSelectedAnswer] = useState(null);
 
   const handleAnswerSelect = (answer) => {
     setSelectedAnswer(answer);
     setAnswer(answer);
     
-    // For true/false questions, we need to check against the correct answer
-    const correctAnswer = question.answers?.find(ans => ans.isCorrect)?.answer_text?.toLowerCase();
-    const isCorrect = answer.toLowerCase() === correctAnswer;
+    // For true/false questions stored in the database, check against the answer data
+    // First try to find the correct answer from the answers array
+    let isCorrect = false;
+    if (answers && answers.length > 0) {
+      const correctAnswerObj = answers.find(ans => ans.isCorrect);
+      if (correctAnswerObj) {
+        isCorrect = answer.toLowerCase() === correctAnswerObj.answer_text?.toLowerCase();
+      }
+    } else {
+      // Fallback: check against question.correctAnswer if available
+      const correctAnswer = question.correctAnswer || question.answers?.find(ans => ans.isCorrect)?.answer_text;
+      if (correctAnswer) {
+        isCorrect = answer.toLowerCase() === correctAnswer.toLowerCase();
+      }
+    }
     
     if (setIsAnswerCorrect) {
       setIsAnswerCorrect(isCorrect);
     }
   };
 
-  const getButtonStyle = (answer) => {
-    const baseStyle = "flex-1 flex items-center justify-center gap-3 p-6 rounded-xl border-2 transition-all duration-200 font-semibold text-lg";
+  // Create the two answer options for True/False
+  const trueOption = { id: 'true', answer_text: 'True', isCorrect: false }; // isCorrect will be determined by the backend data
+  const falseOption = { id: 'false', answer_text: 'False', isCorrect: false };
+  
+  // Try to determine which option is correct based on the provided answers
+  if (answers && answers.length > 0) {
+    const correctAnswerObj = answers.find(ans => ans.isCorrect);
+    if (correctAnswerObj) {
+      const correctText = correctAnswerObj.answer_text?.toLowerCase();
+      if (correctText === 'true') {
+        trueOption.isCorrect = true;
+      } else if (correctText === 'false') {
+        falseOption.isCorrect = true;
+      }
+    }
+  }
+
+  const handleAnswerSelectWithOption = (option) => {
+    setSelectedAnswer(option.answer_text);
+    setAnswer(option.answer_text);
     
-    if (selectedAnswer === answer) {
-      if (answer.toLowerCase() === 'true') {
-        return `${baseStyle} bg-green-100 border-green-400 text-green-800 shadow-lg transform scale-[1.02]`;
-      } else {
-        return `${baseStyle} bg-red-100 border-red-400 text-red-800 shadow-lg transform scale-[1.02]`;
+    // For true/false questions stored in the database, check against the answer data
+    let isCorrect = false;
+    if (answers && answers.length > 0) {
+      const correctAnswerObj = answers.find(ans => ans.isCorrect);
+      if (correctAnswerObj) {
+        isCorrect = option.answer_text.toLowerCase() === correctAnswerObj.answer_text?.toLowerCase();
+      }
+    } else {
+      // Fallback: check against question.correctAnswer if available
+      const correctAnswer = question.correctAnswer || question.answers?.find(ans => ans.isCorrect)?.answer_text;
+      if (correctAnswer) {
+        isCorrect = option.answer_text.toLowerCase() === correctAnswer.toLowerCase();
       }
     }
     
-    if (answer.toLowerCase() === 'true') {
-      return `${baseStyle} bg-white border-green-300 text-green-700 hover:bg-green-50 hover:border-green-400 hover:shadow-md`;
-    } else {
-      return `${baseStyle} bg-white border-red-300 text-red-700 hover:bg-red-50 hover:border-red-400 hover:shadow-md`;
+    if (setIsAnswerCorrect) {
+      setIsAnswerCorrect(isCorrect);
     }
   };
 
@@ -43,37 +78,47 @@ export default function TrueFalseTemplate({ question, setAnswer, setIsAnswerCorr
         Select True or False for the statement above.
       </div>
 
-      {/* True/False Buttons */}
-      <div className="flex gap-4">
-        <button
-          onClick={() => handleAnswerSelect('True')}
-          className={getButtonStyle('True')}
-        >
-          <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
-            selectedAnswer === 'True' ? 'bg-green-600' : 'bg-green-200'
-          }`}>
-            <Check 
-              size={20} 
-              className={selectedAnswer === 'True' ? 'text-white' : 'text-green-600'} 
-            />
-          </div>
-          <span>True</span>
-        </button>
-
-        <button
-          onClick={() => handleAnswerSelect('False')}
-          className={getButtonStyle('False')}
-        >
-          <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
-            selectedAnswer === 'False' ? 'bg-red-600' : 'bg-red-200'
-          }`}>
-            <X 
-              size={20} 
-              className={selectedAnswer === 'False' ? 'text-white' : 'text-red-600'} 
-            />
-          </div>
-          <span>False</span>
-        </button>
+      {/* True/False Options - styled like multiple choice */}
+      <div className="space-y-4">
+        {[trueOption, falseOption].map((option) => (
+          <button
+            key={option.id}
+            onClick={() => handleAnswerSelectWithOption(option)}
+            className={`w-full p-4 text-left rounded-lg border-2 transition-all duration-200 ${
+              selectedAnswer === option.answer_text
+                ? 'bg-[#7D32CE] text-white border-[#7D32CE] shadow-lg transform scale-[1.02]'
+                : 'bg-white text-black border-gray-300 hover:border-[#7D32CE] hover:shadow-md'
+            }`}
+          >
+            <div className="flex items-center gap-3">
+              <div
+                className={`w-6 h-6 rounded-full border-2 flex items-center justify-center ${
+                  selectedAnswer === option.answer_text
+                    ? 'border-white bg-white'
+                    : 'border-gray-400'
+                }`}
+              >
+                {selectedAnswer === option.answer_text && (
+                  <div className="w-3 h-3 rounded-full bg-[#7D32CE]"></div>
+                )}
+              </div>
+              <div className="flex items-center gap-2">
+                {option.answer_text === 'True' ? (
+                  <Check 
+                    size={20} 
+                    className={selectedAnswer === option.answer_text ? 'text-white' : 'text-green-600'} 
+                  />
+                ) : (
+                  <X 
+                    size={20} 
+                    className={selectedAnswer === option.answer_text ? 'text-white' : 'text-red-600'} 
+                  />
+                )}
+                <span className="text-lg font-semibold">{option.answer_text}</span>
+              </div>
+            </div>
+          </button>
+        ))}
       </div>
 
       {/* Selected Answer Indicator */}

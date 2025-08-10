@@ -418,6 +418,24 @@ const validateFillInBlank = (studentAnswer, correctAnswer) => {
   }
 }
 
+const validateTrueFalse = (studentAnswer, correctAnswer) => {
+  try {
+    if (!studentAnswer || !correctAnswer) {
+      return false;
+    }
+
+    // Normalize both answers to lowercase for comparison
+    const normalizedStudent = studentAnswer.toString().toLowerCase().trim();
+    const normalizedCorrect = correctAnswer.toString().toLowerCase().trim();
+
+    // Direct comparison
+    return normalizedStudent === normalizedCorrect;
+  } catch (error) {
+    console.error('Error validating true/false:', error);
+    return false;
+  }
+}
+
 // Helper function to detect if a string looks like a math expression
 const isMathExpression = (str) => {
   if (!str || typeof str !== 'string') return false

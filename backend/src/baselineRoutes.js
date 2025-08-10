@@ -16,22 +16,7 @@ router.post('/baseline/start', async (req, res) => {
   }
 
   try {
-    const { data: user, error: userError } = await supabase
-      .from('Users')
-      .select('id, baseLineTest')
-      .eq('id', userId)
-      .single();
-
-    if (userError || !user) {
-      return res.status(404).json({ error: 'User not found' });
-    }
-
-    // Check if baseline test already taken
-    if (user.baseLineTest === true) {
-      return res.status(403).json({ error: 'Baseline test already taken.' });
-    }
-
-    // Mark baseline test as started (immediately)
+    // Immediately set baseline test flag to true (so they can’t restart)
     const { error: updateError } = await supabase
       .from('Users')
       .update({ baseLineTest: true })
@@ -42,16 +27,17 @@ router.post('/baseline/start', async (req, res) => {
       return res.status(500).json({ error: 'Failed to update test status' });
     }
 
-    // Create test session and send first question
+    // Create a test session for this user
     const testSession = getOrCreateTestSession(userId);
     const result = await testSession.getNextQuestion();
 
-    return res.json(result);
+    return res.status(200).json(result);
   } catch (err) {
     console.error('Error in /baseline/start:', err);
     return res.status(500).json({ error: 'Server error' });
   }
 });
+
 
 
 // Submit answer and get next question or result
@@ -106,9 +92,35 @@ router.post('/answer', async (req, res) => {
   });
 });
 
+// POST /baseline/skip
+router.post('/skip', async (req, res) => {
+  const { userId } = req.body;
+
+  if (!userId) {
+    return res.status(400).json({ error: 'Missing userId' });
+  }
+
+  try {
+    const { error } = await supabase
+      .from('Users')
+      .update({ baseLineTest: true })
+      .eq('id', userId);
+
+    if (error) {
+      console.error(error);
+      return res.status(500).json({ error: 'Failed to update baseLineTest' });
+    }
+
+    return res.status(200).json({ success: true });
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({ error: 'Server error' });
+  }
+});
+
+
 // Confirm baseline test: update baseLineTest = true
-// POST /baseline/confirm
-app.post('/baseline/confirm', async (req, res) => {
+router.post('/baseline/confirm', async (req, res) => {
   const { userId } = req.body;
 
   if (!userId) {

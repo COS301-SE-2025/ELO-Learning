@@ -7,6 +7,21 @@ import { supabase } from '../database/supabaseClient.js';
 const router = express.Router();
 const TOKEN_EXPIRY = 3600; // 1 hour in seconds
 
+function authenticateToken(req, res, next) {
+  const authHeader = req.headers['authorization'];
+  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    return res.status(401).json({ error: 'Authorization token missing or invalid' });
+  }
+
+  const token = authHeader.split(' ')[1];
+  jwt.verify(token, process.env.JWT_SECRET, (err, user) => {
+    if (err) return res.status(403).json({ error: 'Invalid or expired token' });
+    req.user = user; // Attach decoded token payload to req.user
+    next();
+  });
+}
+
+
 // GET /users Endpoint: works.
 router.get('/users', async (req, res) => {
   const { data, error } = await supabase
@@ -156,6 +171,7 @@ router.post('/register', async (req, res) => {
         currentLevel: safeCurrentLevel,
         joinDate: safeJoinDate,
         xp: safeXP,
+        baseLineTest: false,  // add this line here
       },
     ])
     .select()
@@ -236,6 +252,7 @@ router.post('/login', async (req, res) => {
       joinDate: user.joinDate || new Date().toISOString(), // Default to current date if not set
       xp: user.xp || 0, // Default to 0 XP if not set
       pfpURL: user.pfpURL,
+      baseLineTest: user.baseLineTest ?? false,
     },
   });
 });
@@ -437,5 +454,38 @@ router.get('/verify-reset-token/:token', async (req, res) => {
     res.status(500).json({ error: 'Internal server error' });
   }
 });
+
+// GET /user/current - get logged in user's info
+// GET /user/current
+router.get('/user/current', async (req, res) => {
+  const authHeader = req.headers.authorization;
+  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    return res.status(401).json({ error: 'Unauthorized' });
+  }
+  const token = authHeader.split(' ')[1];
+
+  try {
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const userId = decoded.id;
+
+    const { data, error } = await supabase
+      .from('Users')
+      .select('id,name,surname,username,email,currentLevel,joinDate,xp,pfpURL,baseLineTest')
+      .eq('id', userId)
+      .single();
+
+    if (error) {
+      console.error('Error fetching current user:', error.message);
+      return res.status(500).json({ error: 'Failed to fetch user' });
+    }
+
+    res.status(200).json(data);
+  } catch (err) {
+    console.error('Invalid token:', err);
+    return res.status(401).json({ error: 'Invalid token' });
+  }
+});
+
+
 
 export default router;

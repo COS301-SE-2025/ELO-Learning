@@ -1,8 +1,9 @@
 'use client';
-import Picture from '@/app/ui/profile/picture-block';
+import ClickableAvatar from '@/app/ui/profile/clickable-avatar';
 import { Cog } from 'lucide-react';
 import { useSession } from 'next-auth/react';
 import Link from 'next/link';
+import { useAvatar } from '../context/avatar-context';
 import Achievements from '../ui/profile/achievements';
 import MatchStats from '../ui/profile/match-stats';
 import UserInfo from '../ui/profile/user-info';
@@ -10,6 +11,7 @@ import UsernameBlock from '../ui/profile/username-block';
 
 export default function Page() {
   const { data: session, status } = useSession();
+  const { avatar } = useAvatar();
 
   if (status === 'loading') return <div>Loading...</div>;
   if (status === 'unauthenticated')
@@ -23,7 +25,7 @@ export default function Page() {
       <div className="bg-[#FF6E99] flex items-center justify-between px-4">
         <div className="flex-1"></div>
         <div className="flex-2 flex justify-center">
-          <Picture src={user.pfpURL || '/user.svg'} />
+          <ClickableAvatar avatar={avatar} />
         </div>
         <div className="flex-1 flex justify-center">
           <Link href="settings">

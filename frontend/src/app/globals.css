@@ -534,3 +534,8 @@ textarea:focus-visible {
   border-right: var(--form-outline) 1px solid !important;
   border-radius: 0px !important;
 }
+
+/* Avatar triangle shape */
+.clip-triangle {
+  clip-path: polygon(50% 0%, 0% 100%, 100% 100%);
+}

@@ -1,48 +1,53 @@
 'use client';
-// import { Shuffle } from 'lucide-react'; // Temporarily commented out
 import { useEffect, useState } from 'react';
 
 export default function MatchQuestionTemplate({ question, answers, setAnswer, setIsAnswerCorrect }) {
-  console.log('🔥 MatchQuestionTemplate - COMPONENT CALLED!', { question, answers, setAnswer, setIsAnswerCorrect });
-  
-  // Quick test to see if component renders at all
-  console.log('🔥 MatchQuestionTemplate - Component is mounting!');
-  
-  // Force render test - this should ALWAYS show something
-  if (true) {
-    return (
-      <div className="space-y-6">
-        <div className="bg-blue-100 border border-blue-300 p-4 rounded-lg">
-          <h3 className="text-lg font-bold text-blue-800">🔥 Match Question Component Test</h3>
-          <p className="text-blue-700">This component is working! Data received:</p>
-          <div className="mt-2 text-sm">
-            <p>• Question: {question?.questionText || 'No question text'}</p>
-            <p>• Answers: {answers?.length || 0} answers</p>
-            <p>• Question Type: {question?.type || 'No type'}</p>
-          </div>
-          {answers && answers.length > 0 && (
-            <div className="mt-2">
-              <p className="font-medium">Sample answer:</p>
-              <p className="text-xs bg-white p-2 rounded">{JSON.stringify(answers[0], null, 2)}</p>
-            </div>
-          )}
-        </div>
-      </div>
-    );
-  }
-  
   const [selectedLeft, setSelectedLeft] = useState(null);
   const [selectedRight, setSelectedRight] = useState(null);
   const [matches, setMatches] = useState({});
   const [leftItems, setLeftItems] = useState([]);
   const [rightItems, setRightItems] = useState([]);
+  const [hasLostLife, setHasLostLife] = useState(false); // Track if life was already lost for this question
+  const [lifeLossMessage, setLifeLossMessage] = useState(''); // Store the reason for life loss
+  const [showLifeLossAlert, setShowLifeLossAlert] = useState(false); // Control alert visibility
+
+  // Function to handle life loss
+  const loseLife = (reason) => {
+    if (hasLostLife) return; // Prevent multiple life losses for the same question
+    
+    setHasLostLife(true);
+    setLifeLossMessage(reason);
+    setShowLifeLossAlert(true);
+    console.log(`💔 Life lost: ${reason}`);
+    
+    // Get current lives from localStorage (only in browser)
+    if (typeof window !== 'undefined') {
+      const currentLives = parseInt(localStorage.getItem('lives') || '5');
+      const newLives = Math.max(0, currentLives - 1);
+      localStorage.setItem('lives', newLives.toString());
+      
+      // Dispatch a custom event to notify other components about life loss
+      window.dispatchEvent(new CustomEvent('lifeLost', { 
+        detail: { 
+          reason, 
+          newLives,
+          questionType: 'matching'
+        } 
+      }));
+    }
+
+    // Auto-hide the alert after 3 seconds
+    setTimeout(() => {
+      setShowLifeLossAlert(false);
+    }, 3000);
+  };
 
   // Enhanced parsing function for match pairs
   const parsePairs = () => {
-    console.log('Parsing pairs from answers:', answers);
+    console.log('🔍 MATCH PARSING - Input data:', { answers, question: question?.questionText });
     
     if (!answers || answers.length === 0) {
-      console.warn('No answers provided for match question');
+      console.log('🔍 MATCH PARSING - No answers provided, using fallback');
       return { left: [], right: [] };
     }
 
@@ -51,7 +56,7 @@ export default function MatchQuestionTemplate({ question, answers, setAnswer, se
     
     // Handle different data formats
     answers.forEach((answer, index) => {
-      console.log(`Processing answer ${index}:`, answer);
+      console.log(`🔍 MATCH PARSING - Processing answer ${index}:`, answer);
       
       let left, right;
       const answerText = typeof answer === 'string' ? answer : (answer.answer_text || answer.answerText || answer);
@@ -60,6 +65,7 @@ export default function MatchQuestionTemplate({ question, answers, setAnswer, se
       if (answer.match_left && answer.match_right) {
         left = answer.match_left;
         right = answer.match_right;
+        console.log(`🔍 MATCH PARSING - Found explicit fields: ${left} → ${right}`);
       }
       // Method 2: Parse from answer_text with various separators
       else if (answerText) {
@@ -80,6 +86,10 @@ export default function MatchQuestionTemplate({ question, answers, setAnswer, se
         } else if (answerText.includes(' = ')) {
           [left, right] = answerText.split(' = ').map(item => item.trim());
         }
+        
+        if (left && right) {
+          console.log(`🔍 MATCH PARSING - Parsed from text: ${left} → ${right}`);
+        }
       }
       
       if (left && right) {
@@ -95,17 +105,17 @@ export default function MatchQuestionTemplate({ question, answers, setAnswer, se
           originalIndex: index,
           pairId: `pair-${index}` 
         });
-        console.log(`✅ Added pair: "${left}" → "${right}"`);
+        console.log(`🔍 MATCH PARSING - Added pair: ${left} ↔ ${right} (pair-${index})`);
       } else {
-        console.warn(`❌ Failed to extract left/right from:`, answer);
+        console.log(`🔍 MATCH PARSING - Could not parse answer ${index}:`, answerText);
       }
     });
     
-    console.log('Parsed items:', { leftItems, rightItems });
+    console.log(`🔍 MATCH PARSING - Final results: ${leftItems.length} left items, ${rightItems.length} right items`);
     
     // Fallback: Create sample pairs if parsing failed
     if (leftItems.length === 0 && rightItems.length === 0) {
-      console.warn('No pairs could be parsed. Creating fallback pairs...');
+      console.log('🔍 MATCH PARSING - Using fallback data based on question content');
       
       // Try to create pairs based on the question content
       let samplePairs = [];
@@ -123,6 +133,22 @@ export default function MatchQuestionTemplate({ question, answers, setAnswer, se
           { left: 'Python', right: 'Data Science' },
           { left: 'Java', right: 'Enterprise Applications' },
           { left: 'C++', right: 'System Programming' }
+        ];
+      } else if (question?.questionText?.toLowerCase().includes('transformation')) {
+        samplePairs = [
+          { left: 'y = f(x) + 3', right: 'Shift up 3 units' },
+          { left: 'y = f(x - 2)', right: 'Shift right 2 units' },
+          { left: 'y = f(x + 1)', right: 'Shift left 1 unit' },
+          { left: 'y = f(x) - 4', right: 'Shift down 4 units' }
+        ];
+      } else if (question?.questionText?.toLowerCase().includes('function') || 
+                 question?.questionText?.toLowerCase().includes('equation') ||
+                 question?.questionText?.includes('y =')) {
+        samplePairs = [
+          { left: 'y = x²', right: 'Parabola' },
+          { left: 'y = √x', right: 'Square root curve' },
+          { left: 'y = 1/x', right: 'Hyperbola' },
+          { left: 'y = |x|', right: 'Absolute value' }
         ];
       } else if (question?.questionText?.toLowerCase().includes('math')) {
         samplePairs = [
@@ -154,8 +180,6 @@ export default function MatchQuestionTemplate({ question, answers, setAnswer, se
           pairId: `pair-${index}` 
         });
       });
-      
-      console.log('✅ Created fallback pairs:', { leftItems, rightItems });
     }
     
     return { left: leftItems, right: rightItems };
@@ -163,11 +187,10 @@ export default function MatchQuestionTemplate({ question, answers, setAnswer, se
 
   // Initialize the match pairs
   useEffect(() => {
-    console.log('Initializing match pairs...');
     const pairs = parsePairs();
     setLeftItems(pairs.left);
     
-    // Shuffle right items to make it challenging
+    // Shuffle right items to make it challenging, but preserve the pairId for validation
     const shuffledRight = [...pairs.right].sort(() => Math.random() - 0.5);
     setRightItems(shuffledRight);
     
@@ -175,11 +198,11 @@ export default function MatchQuestionTemplate({ question, answers, setAnswer, se
     setMatches({});
     setSelectedLeft(null);
     setSelectedRight(null);
+    setHasLostLife(false); // Reset life loss status for new question
   }, [answers, question]);
 
   // Handle selecting items for matching
   const handleLeftSelect = (item) => {
-    console.log('Selected left item:', item);
     setSelectedLeft(item);
     if (selectedRight) {
       makeMatch(item, selectedRight);
@@ -187,7 +210,6 @@ export default function MatchQuestionTemplate({ question, answers, setAnswer, se
   };
 
   const handleRightSelect = (item) => {
-    console.log('Selected right item:', item);
     setSelectedRight(item);
     if (selectedLeft) {
       makeMatch(selectedLeft, item);
@@ -196,8 +218,6 @@ export default function MatchQuestionTemplate({ question, answers, setAnswer, se
 
   // Create a match between selected items
   const makeMatch = (leftItem, rightItem) => {
-    console.log('Making match:', leftItem, '→', rightItem);
-    
     const newMatches = {
       ...matches,
       [leftItem.id]: rightItem.id
@@ -206,25 +226,36 @@ export default function MatchQuestionTemplate({ question, answers, setAnswer, se
     setSelectedLeft(null);
     setSelectedRight(null);
     
-    // Update parent components with match data
-    setAnswer(newMatches);
+    // Check if this specific match is incorrect and lose life immediately
+    const isThisMatchCorrect = leftItem.pairId === rightItem.pairId;
+    if (!isThisMatchCorrect) {
+      loseLife(`Incorrect match: "${leftItem.text}" → "${rightItem.text}"`);
+    }
+    
+    // Convert matches object to string format for validation
+    const matchStrings = Object.keys(newMatches).map(leftId => {
+      const rightId = newMatches[leftId];
+      const leftItem = leftItems.find(item => item.id === leftId);
+      const rightItem = rightItems.find(item => item.id === rightId);
+      return `${leftItem?.text} → ${rightItem?.text}`;
+    });
+    
+    // Update parent components with string format
+    setAnswer(matchStrings.join('; '));
     
     // Check if all items are matched
     const allMatched = leftItems.length > 0 && Object.keys(newMatches).length === leftItems.length;
     
-    // For match questions, we need to validate if the matches are correct
-    if (allMatched) {
-      const isCorrect = validateMatches(newMatches);
-      console.log('All matched, validation result:', isCorrect);
-      setIsAnswerCorrect(isCorrect);
-    } else {
-      setIsAnswerCorrect(false);
-    }
+    // Always validate current matches, regardless of completion
+    const isCorrect = validateMatches(newMatches);
+    setIsAnswerCorrect(isCorrect && allMatched);
   };
 
-  // Validate if the matches are correct
+  // Validate if the matches are correct - FIXED VERSION
   const validateMatches = (currentMatches) => {
-    console.log('Validating matches:', currentMatches);
+    console.log('🔍 VALIDATING MATCHES:', currentMatches);
+    console.log('🔍 LEFT ITEMS:', leftItems);
+    console.log('🔍 RIGHT ITEMS:', rightItems);
     
     let correctCount = 0;
     const totalPairs = leftItems.length;
@@ -236,8 +267,11 @@ export default function MatchQuestionTemplate({ question, answers, setAnswer, se
       const leftItem = leftItems.find(item => item.id === leftId);
       const rightItem = rightItems.find(item => item.id === rightId);
       
+      console.log(`🔍 Checking match: ${leftItem?.text} → ${rightItem?.text}`);
+      console.log(`🔍 Left pairId: ${leftItem?.pairId}, Right pairId: ${rightItem?.pairId}`);
+      
       if (leftItem && rightItem) {
-        // Check if they have the same pairId (meaning they're a correct match)
+        // FIXED: Use pairId to determine correct matches (works even with shuffled items)
         if (leftItem.pairId === rightItem.pairId) {
           correctCount++;
           console.log(`✅ Correct match: ${leftItem.text} → ${rightItem.text}`);
@@ -247,43 +281,83 @@ export default function MatchQuestionTemplate({ question, answers, setAnswer, se
       }
     }
     
+    console.log(`🔍 Validation result: ${correctCount}/${totalPairs} correct matches`);
     const isAllCorrect = correctCount === totalPairs;
-    console.log(`Validation: ${correctCount}/${totalPairs} correct matches. All correct: ${isAllCorrect}`);
-    
     return isAllCorrect;
   };
 
-  // Remove a match
+  // Helper function to check if a specific match is correct
+  const isMatchCorrect = (leftItem, rightItem) => {
+    if (!leftItem || !rightItem) return false;
+    return leftItem.pairId === rightItem.pairId;
+  };
+
+  // Helper function to get match status for UI
+  const getMatchStatus = (item, isLeft = true) => {
+    if (isLeft) {
+      const rightId = matches[item.id];
+      if (!rightId) return { isMatched: false, isCorrect: false };
+      const rightItem = rightItems.find(r => r.id === rightId);
+      return { 
+        isMatched: true, 
+        isCorrect: isMatchCorrect(item, rightItem) 
+      };
+    } else {
+      const isMatched = Object.values(matches).includes(item.id);
+      if (!isMatched) return { isMatched: false, isCorrect: false };
+      const leftId = Object.keys(matches).find(k => matches[k] === item.id);
+      const leftItem = leftItems.find(l => l.id === leftId);
+      return { 
+        isMatched: true, 
+        isCorrect: isMatchCorrect(leftItem, item) 
+      };
+    }
+  };
+
+  // Function to check for incomplete matches when leaving the question
+  const checkForIncompleteMatches = () => {
+    // Only check if user has actually interacted with the question
+    // (has made at least one match or lost a life from incorrect matching)
+    if (hasLostLife || Object.keys(matches).length === 0) {
+      return; // Don't penalize further if already lost life, or if no interaction yet
+    }
+    
+    const totalPairs = leftItems.length;
+    const matchedPairs = Object.keys(matches).length;
+    
+    if (totalPairs > 0 && matchedPairs < totalPairs && matchedPairs > 0) {
+      // User has made some matches but not completed all
+      loseLife(`Incomplete answer: ${matchedPairs}/${totalPairs} pairs matched`);
+    }
+    // Note: Removed the "No attempt" case since that should only be checked on explicit submission
+  };
+
+  // Only expose a global function that parent components can call manually when needed
+  useEffect(() => {
+    // Expose function globally for parent components to call before navigation if needed
+    window.checkMatchQuestionCompletion = checkForIncompleteMatches;
+    
+    return () => {
+      // Clean up global function
+      delete window.checkMatchQuestionCompletion;
+    };
+  }, [matches, leftItems, hasLostLife]);
+
   const removeMatch = (leftId) => {
-    console.log('Removing match for:', leftId);
     const newMatches = { ...matches };
     delete newMatches[leftId];
     setMatches(newMatches);
-    setAnswer(newMatches);
+    
+    // Convert remaining matches to string format
+    const matchStrings = Object.keys(newMatches).map(leftId => {
+      const rightId = newMatches[leftId];
+      const leftItem = leftItems.find(item => item.id === leftId);
+      const rightItem = rightItems.find(item => item.id === rightId);
+      return `${leftItem?.text} → ${rightItem?.text}`;
+    });
+    
+    setAnswer(matchStrings.length > 0 ? matchStrings.join('; ') : '');
     setIsAnswerCorrect(false);
-  };
-
-  // Show feedback for current matches
-  const getMatchFeedback = () => {
-    if (Object.keys(matches).length === 0) return null;
-    
-    const totalMatches = Object.keys(matches).length;
-    const totalPairs = leftItems.length;
-    
-    if (totalMatches === totalPairs) {
-      const correctMatches = validateMatches(matches);
-      return {
-        type: correctMatches ? 'success' : 'error',
-        message: correctMatches 
-          ? '🎉 Perfect! All pairs matched correctly!' 
-          : '❌ Some pairs are incorrect. Try again!'
-      };
-    }
-    
-    return {
-      type: 'info',
-      message: `Progress: ${totalMatches}/${totalPairs} pairs matched`
-    };
   };
 
   // Handle case where no questions are available
@@ -324,37 +398,30 @@ export default function MatchQuestionTemplate({ question, answers, setAnswer, se
           <p className="text-red-700 mb-4">
             The question data could not be parsed into matching pairs.
           </p>
-          <div className="text-sm text-red-600 bg-red-100 p-3 rounded">
-            <p className="font-medium mb-2">Debug Information:</p>
-            <p>Total answers: {answers?.length || 0}</p>
-            <p>Sample answer: {JSON.stringify(answers?.[0], null, 2)}</p>
-          </div>
+
         </div>
       </div>
     );
   }
 
-  const feedback = getMatchFeedback();
-
   return (
     <div className="space-y-6">
-      {/* Instructions */}
-      <div className="text-sm text-gray-600 bg-blue-50 p-4 rounded-lg border border-blue-200">
-        <div className="flex items-center gap-2 mb-2">
-          <span className="text-blue-600">🔀</span>
-          <span className="font-medium text-blue-800">Matching Instructions</span>
-        </div>
-        <p>Match each item on the left with the correct item on the right. Click one item from each side to create a match.</p>
-      </div>
-
-      {/* Feedback */}
-      {feedback && (
-        <div className={`p-4 rounded-lg border ${
-          feedback.type === 'success' ? 'bg-green-50 border-green-200 text-green-800' :
-          feedback.type === 'error' ? 'bg-red-50 border-red-200 text-red-800' :
-          'bg-blue-50 border-blue-200 text-blue-800'
-        }`}>
-          <p className="font-medium">{feedback.message}</p>
+      {/* Life Loss Alert */}
+      {showLifeLossAlert && (
+        <div className="fixed top-4 right-4 z-50 bg-red-500 text-white px-6 py-4 rounded-lg shadow-lg border-2 border-red-600 animate-pulse">
+          <div className="flex items-center space-x-2">
+            <span className="text-xl">💔</span>
+            <div>
+              <div className="font-bold">Life Lost!</div>
+              <div className="text-sm">{lifeLossMessage}</div>
+            </div>
+            <button 
+              onClick={() => setShowLifeLossAlert(false)}
+              className="ml-4 text-white hover:text-red-200"
+            >
+              ✕
+            </button>
+          </div>
         </div>
       )}
 
@@ -366,26 +433,30 @@ export default function MatchQuestionTemplate({ question, answers, setAnswer, se
             Match These
           </h3>
           {leftItems.map((item) => {
-            const isMatched = matches[item.id];
+            const matchStatus = getMatchStatus(item, true);
             const isSelected = selectedLeft?.id === item.id;
             
             return (
               <div key={item.id} className="relative">
                 <button
-                  onClick={() => isMatched ? removeMatch(item.id) : handleLeftSelect(item)}
+                  onClick={() => matchStatus.isMatched ? removeMatch(item.id) : handleLeftSelect(item)}
                   className={`w-full p-4 text-left rounded-lg border-2 transition-all duration-200 ${
-                    isMatched
-                      ? 'bg-green-100 border-green-400 text-green-800 cursor-pointer'
+                    matchStatus.isMatched
+                      ? matchStatus.isCorrect
+                        ? 'bg-green-100 border-green-400 text-green-800 cursor-pointer'
+                        : 'bg-red-100 border-red-400 text-red-800 cursor-pointer'
                       : isSelected
                         ? 'bg-[#7D32CE] text-white border-[#7D32CE] shadow-lg'
-                        : 'bg-white text-black border-gray-300 hover:border-[#7D32CE] hover:shadow-md'
+                        : 'bg-[#7D32CE] text-white border-[#7D32CE] hover:bg-[#6B2BB0] hover:shadow-md'
                   }`}
-                  title={isMatched ? 'Click to unmap' : 'Click to select'}
+                  title={matchStatus.isMatched ? 'Click to unmap' : 'Click to select'}
                 >
                   <div className="flex items-center justify-between">
                     <span className="text-lg">{item.text}</span>
-                    {isMatched && (
-                      <span className="text-green-600 text-sm">✓ Matched</span>
+                    {matchStatus.isMatched && (
+                      <span className={`text-sm ${matchStatus.isCorrect ? 'text-green-600' : 'text-red-600'}`}>
+                        {matchStatus.isCorrect ? '✓ Matched' : '✗ Wrong'}
+                      </span>
                     )}
                   </div>
                 </button>
@@ -400,26 +471,30 @@ export default function MatchQuestionTemplate({ question, answers, setAnswer, se
             With These
           </h3>
           {rightItems.map((item) => {
-            const isMatched = Object.values(matches).includes(item.id);
+            const matchStatus = getMatchStatus(item, false);
             const isSelected = selectedRight?.id === item.id;
             
             return (
               <div key={item.id} className="relative">
                 <button
-                  onClick={() => isMatched ? null : handleRightSelect(item)}
-                  disabled={isMatched}
+                  onClick={() => matchStatus.isMatched ? null : handleRightSelect(item)}
+                  disabled={matchStatus.isMatched}
                   className={`w-full p-4 text-left rounded-lg border-2 transition-all duration-200 ${
-                    isMatched
-                      ? 'bg-green-100 border-green-400 text-green-800 cursor-default'
+                    matchStatus.isMatched
+                      ? matchStatus.isCorrect
+                        ? 'bg-green-100 border-green-400 text-green-800 cursor-default'
+                        : 'bg-red-100 border-red-400 text-red-800 cursor-default'
                       : isSelected
                         ? 'bg-[#7D32CE] text-white border-[#7D32CE] shadow-lg'
-                        : 'bg-white text-black border-gray-300 hover:border-[#7D32CE] hover:shadow-md'
+                        : 'bg-[#7D32CE] text-white border-[#7D32CE] hover:bg-[#6B2BB0] hover:shadow-md'
                   }`}
                 >
                   <div className="flex items-center justify-between">
                     <span className="text-lg">{item.text}</span>
-                    {isMatched && (
-                      <span className="text-green-600 text-sm">✓ Matched</span>
+                    {matchStatus.isMatched && (
+                      <span className={`text-sm ${matchStatus.isCorrect ? 'text-green-600' : 'text-red-600'}`}>
+                        {matchStatus.isCorrect ? '✓ Matched' : '✗ Wrong'}
+                      </span>
                     )}
                   </div>
                 </button>
@@ -433,17 +508,6 @@ export default function MatchQuestionTemplate({ question, answers, setAnswer, se
       {Object.keys(matches).length === 0 && (
         <div className="text-center text-gray-500 text-sm bg-gray-50 p-3 rounded-lg">
           💡 Tip: Click one item from the left, then click its matching item on the right to create a pair.
-        </div>
-      )}
-
-      {/* Debug Info (development only) */}
-      {process.env.NODE_ENV === 'development' && (
-        <div className="mt-6 p-4 bg-gray-100 rounded-lg text-xs">
-          <p className="font-bold mb-2">Debug Info:</p>
-          <p>Left items: {leftItems.length}</p>
-          <p>Right items: {rightItems.length}</p>
-          <p>Current matches: {JSON.stringify(matches, null, 2)}</p>
-          <p>Validation result: {Object.keys(matches).length === leftItems.length ? validateMatches(matches).toString() : 'incomplete'}</p>
         </div>
       )}
     </div>

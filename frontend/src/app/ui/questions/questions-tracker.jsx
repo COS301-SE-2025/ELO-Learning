@@ -10,8 +10,14 @@ import QuestionFooter from '@/app/ui/questions/question-footer';
 import QuestionHeader from '@/app/ui/questions/question-header';
 import { validateAnswerEnhanced } from '@/utils/answerValidator';
 import { submitQuestionAnswer } from '@/utils/api';
+import { resetXPCalculationState } from '@/utils/gameSession';
 
-export default function QuestionsTracker({ questions, lives, mode }) {
+export default function QuestionsTracker({
+  questions,
+  lives,
+  mode,
+  resetXPState,
+}) {
   const router = useRouter();
   const { data: session } = useSession();
 
@@ -26,7 +32,31 @@ export default function QuestionsTracker({ questions, lives, mode }) {
   const [isDisabled, setIsDisabled] = useState(true);
   const [answer, setAnswer] = useState('');
   const [isAnswerCorrect, setIsAnswerCorrect] = useState(false);
-  const [numLives, setNumLives] = useState(lives || 5);
+  const [numLives, setNumLives] = useState(() => {
+    // Reset lives to 5 and clear localStorage (only in browser)
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('lives', '5');
+    }
+    return 5;
+  });
+
+  // Listen for life loss events from match questions
+  useEffect(() => {
+    const handleMatchLifeLost = (event) => {
+      console.log('🎮 Match question life lost:', event.detail);
+      const newLives = Math.max(0, event.detail.newLives); // Ensure lives don't go below 0
+      setNumLives(newLives);
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('lives', newLives.toString());
+      }
+    };
+
+    window.addEventListener('lifeLost', handleMatchLifeLost);
+    
+    return () => {
+      window.removeEventListener('lifeLost', handleMatchLifeLost);
+    };
+  }, []);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [questionStartTime, setQuestionStartTime] = useState(Date.now());
 
@@ -70,7 +100,27 @@ export default function QuestionsTracker({ questions, lives, mode }) {
     setQuestionStartTime(Date.now());
   }, [currQuestion]);
 
-  const setLocalStorage = async (validationResult = null) => {
+  // Reset XP calculation state for new game session
+  useEffect(() => {
+    if (resetXPState) {
+      const success = resetXPCalculationState();
+      if (success) {
+        console.log('🎮 New game session started - XP calculation state reset');
+      }
+    }
+  }, [resetXPState]);
+
+  // Handle navigation when lives reach 0
+  useEffect(() => {
+    if (numLives <= 0) {
+      router.push(`/end-screen?mode=${mode}`);
+    }
+  }, [numLives, mode, router]);
+
+  const setLocalStorage = async () => {
+    // Only proceed if we're in the browser
+    if (typeof window === 'undefined') return;
+    
     // Calculate time elapsed in seconds
     const timeElapsed = Math.round((Date.now() - questionStartTime) / 1000);
 
@@ -78,26 +128,47 @@ export default function QuestionsTracker({ questions, lives, mode }) {
       localStorage.getItem('questionsObj') || '[]',
     );
 
-    // Find the correct answer
-    const correctAnswerObj = currAnswers.find((ans) => ans.isCorrect === true);
-    const correctAnswerText = correctAnswerObj?.answer_text || correctAnswerObj;
+    // Get ALL correct answers, not just the first one
+    const correctAnswers = currAnswers
+      .filter((answer) => answer.isCorrect)
+      .map((answer) => answer.answer_text || answer.answerText)
+      .filter(Boolean);
 
-    // Use provided validation result or re-validate
-    const finalValidationResult =
-      validationResult !== null
-        ? validationResult
-        : await validateAnswerEnhanced(
-            answer,
-            correctAnswerText,
-            currQuestion?.questionText || '',
-            currQuestion?.type || 'Math Input',
-          );
+    // Check if student answer matches ANY of the correct answers
+    let revalidatedResult = false;
+    let matchedAnswer = null;
+    let correctAnswerObj = null;
+
+    for (const correctAnswer of correctAnswers) {
+      const individualResult = await validateAnswerEnhanced(
+        answer,
+        correctAnswer,
+        currQuestion?.questionText || '',
+        currQuestion?.type || 'Math Input',
+      );
+
+      if (individualResult) {
+        revalidatedResult = true;
+        matchedAnswer = correctAnswer;
+        // Find the original answer object for this matched answer
+        correctAnswerObj = currAnswers.find(ans => 
+          (ans.answer_text || ans.answerText) === correctAnswer
+        );
+        break; // Found a match, no need to check further
+      }
+    }
+
+    // If no match found, use the first correct answer as fallback for storage
+    if (!correctAnswerObj) {
+      correctAnswerObj = currAnswers.find((ans) => ans.isCorrect === true);
+    }
 
     console.log('💾 Storing question with validation:', {
       studentAnswer: answer,
-      correctAnswer: correctAnswerText,
+      correctAnswers: correctAnswers,
       oldIsCorrect: isAnswerCorrect,
       newIsCorrect: finalValidationResult,
+      matchedAnswer: matchedAnswer,
       questionText: currQuestion?.questionText?.substring(0, 50) + '...',
     });
 
@@ -116,83 +187,60 @@ export default function QuestionsTracker({ questions, lives, mode }) {
   const handleLives = (validationResult) => {
     // Use the passed validation result instead of the old state
     if (!validationResult) {
-      setNumLives((prev) => prev - 1);
+      setNumLives((prev) => {
+        const newLives = Math.max(0, prev - 1);
+        if (typeof window !== 'undefined') {
+          localStorage.setItem('lives', newLives.toString());
+        }
+        return newLives;
+      });
+      
       if (numLives <= 1) {
-        router.push(`/end-screen?mode=${mode}`);
-        return true;
+        return true; // Game over
       }
     }
     return false;
   };
 
   const handleQuizComplete = () => {
-    router.push(`/end-screen?mode=${mode}`);
+    // Use setTimeout to ensure navigation happens after current render cycle
+    setTimeout(() => {
+      router.push(`/end-screen?mode=${mode}`);
+    }, 0);
   };
 
   const submitAnswer = async () => {
-    setIsSubmitting(true);
+    // Get ALL correct answers, not just the first one
+    const correctAnswers = currAnswers
+      .filter((answer) => answer.isCorrect)
+      .map((answer) => answer.answer_text || answer.answerText)
+      .filter(Boolean);
 
-    try {
-      // Get authenticated user ID with better debugging
-      const userString = localStorage.getItem('user');
-      console.log('🔍 Raw user string from localStorage:', userString);
-      
-      const user = JSON.parse(userString || '{}');
-      console.log('🔍 Parsed user object:', user);
-      
-      let userId = user.id;
-      console.log('🔍 Extracted userId from localStorage:', userId);
-      
-      // Fallback to NextAuth session if no localStorage user
-      if (!userId && session?.user?.id) {
-        userId = session.user.id;
-        console.log('🔍 Using userId from NextAuth session:', userId);
-      }
-      
-      if (!userId) {
-        console.error('❌ No authenticated user found');
-        console.log('🔍 Available localStorage keys:', Object.keys(localStorage));
-        console.log('🔍 User object keys:', Object.keys(user));
-        console.log('🔍 Session data:', session);
-        
-        // Try to get user from token as another fallback
-        if (typeof window !== 'undefined' && window.localStorage) {
-          const token = localStorage.getItem('token');
-          console.log('🔍 Available token:', token ? 'Found' : 'Not found');
-        }
-        
-        throw new Error('User not authenticated - Please log in to continue');
-      }
+    // Check if student answer matches ANY of the correct answers
+    let freshValidationResult = false;
+    let matchedAnswer = null;
 
-      // Call the API to submit the answer and check for achievements
-      const result = await submitQuestionAnswer(
-        currQuestion.Q_id,
+    for (const correctAnswer of correctAnswers) {
+      const individualResult = await validateAnswerEnhanced(
         answer,
-        userId,
-        currQuestion.type,
+        correctAnswer,
+        currQuestion?.questionText || '',
+        currQuestion?.type || 'Math Input',
       );
 
-      // Get fresh validation result for consistent behavior
-      const correctAnswerObj = currAnswers.find(
-        (ans) => ans.isCorrect === true,
-      );
-      const correctAnswerText =
-        correctAnswerObj?.answer_text || correctAnswerObj;
-
-      const freshValidationResult = result.success
-        ? result.data.isCorrect
-        : await validateAnswerEnhanced(
-            answer,
-            correctAnswerText,
-            currQuestion?.questionText || '',
-            currQuestion?.type || 'Math Input',
-          );
+      if (individualResult) {
+        freshValidationResult = true;
+        matchedAnswer = correctAnswer;
+        break; // Found a match, no need to check further
+      }
+    }
 
       console.log('🔄 API + validation result:', {
         studentAnswer: answer,
-        correctAnswer: correctAnswerText,
+        correctAnswers: correctAnswers,
         apiResult: result.success ? result.data.isCorrect : 'API failed',
         localValidation: freshValidationResult,
+      matchedAnswer: matchedAnswer,
       });
 
       // 🎉 Handle achievement unlocks from API response!

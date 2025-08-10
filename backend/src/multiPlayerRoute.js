@@ -1,10 +1,13 @@
 import express from 'express';
 import { supabase } from '../database/supabaseClient.js';
-import { checkMatchAchievements } from './achievementRoutes.js';
-import { calculateSinglePlayerXP } from './utils/xpCalculator.js';
-import { updateSinglePlayerElo } from './utils/eloCalculator.js';
+
+import {
+  calculateExpectedRating,
+  updateEloRating,
+} from './utils/eloCalculator.js';
+import { calculateMultiplayerXP } from './utils/xpCalculator.js';
 import { checkAndUpdateRankAndLevel } from './utils/userProgression.js';
-import { calculateExpected, distributeXP } from './multiPlayer.js';
+//import { calculateExpected, distributeXP } from './multiPlayer.js';
 
 const router = express.Router();
 
@@ -26,7 +29,7 @@ router.post('/multiplayer', async (req, res) => {
     // Fetch players' current XP + level
     const { data: playersData, error: playersError } = await supabase
       .from('Users')
-      .select('id, xp, currentLevel')
+      .select('id, xp, currentLevel, elo_rating')
       .in('id', [player1_id, player2_id]);
 
     if (playersError || playersData.length !== 2) {
@@ -37,54 +40,87 @@ router.post('/multiplayer', async (req, res) => {
     const player2 = playersData.find((p) => p.id === player2_id);
 
     // Expected outcomes
-    const [expected1, expected2] = calculateExpected(player1.xp, player2.xp);
-    const [xp1_raw, xp2_raw] = distributeXP(
+    const expected1 = calculateExpectedRating(
+      player1.elo_rating,
+      player2.elo_rating,
+    );
+    const expected2 = calculateExpectedRating(
+      player2.elo_rating,
+      player1.elo_rating,
+    );
+
+    //Actual outcomes
+    const actual1 = score1;
+    const actual2 = 1 - score1;
+
+    // Update ELO ratings
+    const newElo1 = parseFloat(
+      updateEloRating({
+        rating: player1.elo_rating,
+        expected: expected1,
+        actual: actual1,
+      }).toFixed(2),
+    );
+
+    const newElo2 = parseFloat(
+      updateEloRating({
+        rating: player2.elo_rating,
+        expected: expected2,
+        actual: actual2,
+      }).toFixed(2),
+    );
+
+    const eloChange1 = newElo1 - player1.elo_rating;
+    const eloChange2 = newElo2 - player2.elo_rating;
+
+    //Distribute XP based on expected outcomes and actual scores
+    const [xp1_raw, xp2_raw] = calculateMultiplayerXP(
       xpTotal,
       expected1,
       expected2,
       score1,
     );
 
-    // Clamp XP
+    // Ensure players don't lose XP
     const updatedXP1 = Math.max(0, player1.xp + xp1_raw);
     const updatedXP2 = Math.max(0, player2.xp + xp2_raw);
 
-    // Fetch level thresholds
-    const { data: levelsData, error: levelsError } = await supabase
-      .from('Levels')
-      .select('level, minXP')
-      .order('minXP', { ascending: true });
+    const { newLevel: newLevel1, newRank: newRank1 } =
+      await checkAndUpdateRankAndLevel({
+        user_id: player1_id,
+        newXP: updatedXP1,
+        newElo: newElo1,
+        supabase,
+      });
 
-    if (levelsError || !levelsData.length) {
-      return res.status(500).json({ error: 'Levels data not found' });
-    }
+    const { newLevel: newLevel2, newRank: newRank2 } =
+      await checkAndUpdateRankAndLevel({
+        user_id: player2_id,
+        newXP: updatedXP2,
+        newElo: newElo2,
+        supabase,
+      });
 
-    // Determine new levels
-    const newLevel1 = levelsData
-      .filter((l) => updatedXP1 >= l.minXP)
-      .pop().level;
-
-    const newLevel2 = levelsData
-      .filter((l) => updatedXP2 >= l.minXP)
-      .pop().level;
-
-    const leveledUp1 = newLevel1 > player1.currentLevel;
-    const leveledUp2 = newLevel2 > player2.currentLevel;
-
-    // Update users
-    const { error: updateError1 } = await supabase
+    //update players' data in the database
+    await supabase
       .from('Users')
-      .update({ xp: updatedXP1, currentLevel: newLevel1 })
+      .update({
+        xp: updatedXP1,
+        currentLevel: newLevel1,
+        elo_rating: newElo1,
+        rank: newRank1,
+      })
       .eq('id', player1_id);
 
-    const { error: updateError2 } = await supabase
+    await supabase
       .from('Users')
-      .update({ xp: updatedXP2, currentLevel: newLevel2 })
+      .update({
+        xp: updatedXP2,
+        currentLevel: newLevel2,
+        elo_rating: newElo2,
+        rank: newRank2,
+      })
       .eq('id', player2_id);
-
-    if (updateError1 || updateError2) {
-      return res.status(500).json({ error: 'Error updating users XP/level' });
-    }
 
     // Insert attempt records
     const attemptDate = new Date().toISOString();
@@ -97,7 +133,10 @@ router.post('/multiplayer', async (req, res) => {
         timeSpent: null,
         ratingBefore: player1.xp,
         ratingAfter: updatedXP1,
-        ratingChange: xp1_raw,
+        ratingChange: parseFloat(xp1_raw.toFixed(2)),
+        eloBefore: player1.elo_rating,
+        eloAfter: newElo1,
+        eloChange: parseFloat(eloChange1.toFixed(2)),
         attemptDate,
         attemptType: 'multi',
       },
@@ -108,7 +147,10 @@ router.post('/multiplayer', async (req, res) => {
         timeSpent: null,
         ratingBefore: player2.xp,
         ratingAfter: updatedXP2,
-        ratingChange: xp2_raw,
+        ratingChange: parseFloat(xp2_raw.toFixed(2)),
+        eloBefore: player2.elo_rating,
+        eloAfter: newElo2,
+        eloChange: parseFloat(eloChange2.toFixed(2)),
         attemptDate,
         attemptType: 'multi',
       },
@@ -122,46 +164,27 @@ router.post('/multiplayer', async (req, res) => {
       return res.status(500).json({ error: 'Error saving attempts' });
     }
 
-    // 🎯 Check for Match achievements for both players
-    let player1Achievements = [];
-    let player2Achievements = [];
-
-    try {
-      console.log('🔍 Checking match achievements for both players...');
-      
-      // Check match achievements for player 1
-      const p1MatchAchievements = await checkMatchAchievements(player1_id);
-      player1Achievements.push(...p1MatchAchievements);
-      
-      // Check match achievements for player 2  
-      const p2MatchAchievements = await checkMatchAchievements(player2_id);
-      player2Achievements.push(...p2MatchAchievements);
-
-      console.log(`🏆 Player 1 achievements unlocked: ${player1Achievements.length}`);
-      console.log(`🏆 Player 2 achievements unlocked: ${player2Achievements.length}`);
-    } catch (achievementError) {
-      console.error('❌ Error checking match achievements:', achievementError);
-      // Don't fail the whole request if achievements fail
-    }
-
+    // Final JSON response
     return res.status(200).json({
       message: 'Multiplayer match processed successfully',
       players: [
         {
           id: player1_id,
           xpEarned: parseFloat(xp1_raw.toFixed(2)),
+          eloChange: parseFloat(eloChange1.toFixed(2)),
           newXP: updatedXP1,
+          newElo: newElo1,
           currentLevel: newLevel1,
-          leveledUp: leveledUp1,
-          unlockedAchievements: player1Achievements, // 🎯 Include achievements
+          currentRank: newRank1,
         },
         {
           id: player2_id,
           xpEarned: parseFloat(xp2_raw.toFixed(2)),
+          eloChange: parseFloat(eloChange2.toFixed(2)),
           newXP: updatedXP2,
+          newElo: newElo2,
           currentLevel: newLevel2,
-          leveledUp: leveledUp2,
-          unlockedAchievements: player2Achievements, // 🎯 Include achievements
+          currentRank: newRank2,
         },
       ],
     });

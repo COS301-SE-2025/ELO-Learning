@@ -1,4 +1,4 @@
-const math = require('mathjs');
+import * as math from 'mathjs';
 
 // Singleton instance to prevent multiple MathJS initializations
 let mathValidatorInstance = null;
@@ -348,6 +348,16 @@ class FrontendMathValidator {
 
       // Check for empty or whitespace-only input
       if (!normalized.trim()) return false;
+
+      // Reject single parentheses or incomplete expressions
+      if (normalized === '(' || normalized === ')' || normalized === '()') {
+        return false;
+      }
+
+      // Reject expressions that are only operators or punctuation
+      if (/^[+\-*/^()=,\s\[\]{}]+$/.test(normalized)) {
+        return false;
+      }
 
       // Check for obviously invalid patterns
       if (/[+\-*/^]{2,}/.test(normalized.replace(/\*\*/g, '^'))) {
@@ -733,24 +743,19 @@ if (!mathValidatorInstance) {
 }
 const MathValidator = mathValidatorInstance;
 
-// Export functions for compatibility
-const validateMathAnswer = (studentAnswer, correctAnswer) =>
+// ES6 Named Exports for Next.js
+export const validateMathAnswer = (studentAnswer, correctAnswer) =>
   MathValidator.validateAnswer(studentAnswer, correctAnswer);
 
-const quickValidateMath = (studentAnswer, correctAnswer) =>
+export const quickValidateMath = (studentAnswer, correctAnswer) =>
   MathValidator.quickValidate(studentAnswer, correctAnswer);
 
-const isValidMathExpression = (input) =>
+export const isValidMathExpression = (input) =>
   MathValidator.isValidMathExpression(input);
 
-const getMathValidationMessage = (input) =>
+export const getMathValidationMessage = (input) =>
   MathValidator.getValidationMessage(input);
 
-module.exports = {
-  validateMathAnswer,
-  quickValidateMath,
-  isValidMathExpression,
-  getMathValidationMessage,
-  FrontendMathValidator,
-  default: MathValidator,
-};
+export { FrontendMathValidator };
+
+export default MathValidator;

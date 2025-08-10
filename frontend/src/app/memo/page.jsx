@@ -24,8 +24,6 @@ export default function Page() {
         localStorage.getItem('questionsObj') || '[]',
       );
 
-      console.log('Loaded questions from localStorage:', tempQuestions);
-
       if (tempQuestions.length === 0) {
         // No questions found, redirect to dashboard
         redirect('/dashboard');
@@ -65,13 +63,6 @@ export default function Page() {
       setCorrectAnswer(currentQ.actualAnswer);
       setAnswer(currentQ.answer);
       setIsCorrect(currentQ.isCorrect);
-
-      console.log('📄 Displaying question:', {
-        index,
-        studentAnswer: currentQ.answer,
-        correctAnswer: currentQ.actualAnswer?.answer_text,
-        isCorrect: currentQ.isCorrect,
-      });
     }
   }, [index, questions]);
 
@@ -105,7 +96,18 @@ export default function Page() {
         </div>
         <div>
           <p className="text-xl">System answer:</p>
-          <RightAnswer answer={correctAnswer?.answer_text} />
+          <RightAnswer answer={
+            // Smart fallback for different question types and answer formats
+            (() => {
+              if (typeof correctAnswer === 'string') {
+                return correctAnswer; // Direct string answer (like "True" or "False")
+              }
+              if (correctAnswer && typeof correctAnswer === 'object') {
+                return correctAnswer.answer_text || correctAnswer.answerText || JSON.stringify(correctAnswer);
+              }
+              return 'Answer not available';
+            })()
+          } />
         </div>
       </div>
       <div className="flex flex-row items-center justify-between w-full gap-4 md:w-[50%] md:m-auto">

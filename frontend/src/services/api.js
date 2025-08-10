@@ -12,12 +12,19 @@ const axiosInstance = axios.create({
   },
 })
 
+// Add request interceptor to include auth token with performance optimization
 axiosInstance.interceptors.request.use(async (config) => {
+  // Skip auth for random questions endpoint to improve performance
+  if (config.url === '/questions/random') {
+    return config;
+  }
+  
   if (isServer) {
+    // Server-side token handling
     const { cookies } = await import('next/headers');
     const awaitedCookies = await cookies();
 
-    // Try to get NextAuth session token first
+    // Priority 1: NextAuth session token (for OAuth users)
     const nextAuthToken = awaitedCookies
       .getAll()
       .find(
@@ -29,33 +36,27 @@ axiosInstance.interceptors.request.use(async (config) => {
     if (nextAuthToken) {
       config.headers.Authorization = `Bearer ${nextAuthToken.value}`;
     } else {
-      // Fallback to regular token
+      // Priority 2: Custom JWT token (for credential users)
       const tokenCookie = awaitedCookies
         .getAll()
         .filter((item) => item.name === 'token')
         .map((item) => item.value);
       if (tokenCookie.length > 0) {
-        config.headers.Authorization = `Bearer ${tokenCookie}`;
+        config.headers.Authorization = `Bearer ${tokenCookie[0]}`;
       }
     }
     return config;
   } else {
-    // Client-side: Check NextAuth session first, then fallback to cached tokens
+    // Client-side token handling
     let token = null;
 
-    // Try to get NextAuth session token from cache or localStorage
+    // Priority 1: NextAuth session from cache
     const nextAuthSession = cache.get(CACHE_KEYS.NEXTAUTH_SESSION);
     if (nextAuthSession?.accessToken) {
       token = nextAuthSession.accessToken;
     } else {
-      // Fallback to our cached tokens
-      const provider = cache.get('auth_provider') || 'credentials';
-
-      if (provider === 'google' || provider === 'oauth') {
-        token = cache.get('oauth_token') || localStorage.getItem('oauth_token');
-      } else {
-        token = cache.get(CACHE_KEYS.TOKEN) || localStorage.getItem('token');
-      }
+      // Priority 2: JWT token from localStorage
+      token = cache.get(CACHE_KEYS.TOKEN) || localStorage.getItem('token');
     }
 
     if (token) {
@@ -65,9 +66,52 @@ axiosInstance.interceptors.request.use(async (config) => {
   }
 })
 
-// Helper to attach auth token
-const authHeader = {
-  Authorization: 'Bearer testtoken123',
+// Helper to get dynamic auth token
+function getDynamicAuthHeader() {
+  if (typeof window === 'undefined') {
+    // Server-side: return empty object, let interceptor handle it
+    return {};
+  }
+
+  // Client-side: try to get token from various sources
+
+  // 1. Try NextAuth session (with backend JWT token)
+  const nextAuthSession = cache.get(CACHE_KEYS.NEXTAUTH_SESSION);
+  if (nextAuthSession?.backendToken) {
+    return { Authorization: `Bearer ${nextAuthSession.backendToken}` };
+  }
+
+  // 2. Try NextAuth OAuth access token (for OAuth users)
+  if (nextAuthSession?.accessToken) {
+    return { Authorization: `Bearer ${nextAuthSession.accessToken}` };
+  }
+
+  // 3. Fallback to localStorage token (direct JWT login)
+  const token =
+    localStorage.getItem('token') ||
+    localStorage.getItem('authToken') ||
+    localStorage.getItem('jwt_token');
+  if (token) {
+    return { Authorization: `Bearer ${token}` };
+  }
+
+  // 4. Check for cookie-based authentication (manual JWT storage)
+  try {
+    const tokenCookie = document.cookie
+      .split('; ')
+      .find((row) => row.startsWith('token='));
+
+    if (tokenCookie) {
+      const token = tokenCookie.split('=')[1];
+      return { Authorization: `Bearer ${token}` };
+    }
+  } catch (error) {
+    console.error('Error parsing token cookie:', error);
+  }
+
+  // No token available - this will cause 401 for protected routes
+  console.warn('No authentication token found for API request');
+  return {};
 }
 
 // 1. GET /users
@@ -88,9 +132,17 @@ export async function fetchAllUsers() {
 // 2. GET /user/:id
 export async function fetchUserById(id) {
   const res = await axiosInstance.get(`/user/${id}`, {
-    headers: authHeader,
-  })
-  return res.data
+    headers: getDynamicAuthHeader(),
+  });
+  return res.data;
+}
+
+// 3. GET /users/:id/achievements
+export async function fetchUserAchievements(id) {
+  const res = await axiosInstance.get(`/users/${id}/achievements`, {
+    headers: getDynamicAuthHeader(),
+  });
+  return res.data;
 }
 
 // 4. POST /user/:id/xp
@@ -98,9 +150,9 @@ export async function updateUserXP(id, xp) {
   const res = await axiosInstance.post(
     `/user/${id}/xp`,
     { xp },
-    { headers: authHeader },
-  )
-  return res.data
+    { headers: getDynamicAuthHeader() },
+  );
+  return res.data;
 }
 
 // 5. GET /questions
@@ -120,17 +172,17 @@ export async function fetchAllQuestions() {
 // 6. GET /question/:level
 export async function fetchQuestionsByLevel(level) {
   const res = await axiosInstance.get(`/question/${level}`, {
-    headers: authHeader,
-  })
-  return res.data
+    headers: getDynamicAuthHeader(),
+  });
+  return res.data;
 }
 
 // 7. GET /question/:id/answer
 export async function fetchQuestionAnswer(id) {
   const res = await axiosInstance.get(`/question/${id}/answer`, {
-    headers: authHeader,
-  })
-  return res.data
+    headers: getDynamicAuthHeader(),
+  });
+  return res.data;
 }
 
 // 8. GET /questions/topic?topic=Algebra
@@ -150,64 +202,14 @@ export async function fetchQuestionsByLevelAndTopic(level, topic) {
 }
 
 // 10. POST /question/:id/answer
-export async function submitAnswer(id, answer) {
-  const res = await axiosInstance.post(`/question/${id}/answer`, {
-    question: [{ answer }],
-  })
-  return res.data
-}
-
-// Submit answer for a specific question (uses the fixed /submit-answer endpoint)
-export async function submitQuestionAnswer(questionId, studentAnswer, userId) {
-  try {
-    // Get user from localStorage if userId is not provided or is placeholder
-    let actualUserId = userId
-    if (!userId || userId === 'current-user-id') {
-      const user = JSON.parse(localStorage.getItem('user'))
-      if (!user || !user.id) {
-        throw new Error('User not authenticated')
-      }
-      actualUserId = user.id
-    }
-
-    // For math input questions, we need to find the correct answer ID
-    // This is a limitation - we need to get the answers first
-    const answersResponse = await axiosInstance.get(`/answers/${questionId}`)
-    const answers = answersResponse.data.answer
-
-    // Find the correct answer (for now, we'll submit the first correct one)
-    // In a real scenario, you'd need to validate the studentAnswer against all possible correct answers
-    const correctAnswer = answers.find((answer) => answer.isCorrect)
-    if (!correctAnswer) {
-      throw new Error('No correct answer found for this question')
-    }
-
-    const response = await axiosInstance.post('/submit-answer', {
-      userId: actualUserId,
-      questionId: questionId,
-      selectedAnswerId: correctAnswer.answer_id, // Use the correct column name
-    })
-
-    return {
-      success: true,
-      data: {
-        isCorrect: response.data.correct,
-        message: response.data.message,
-        xpAwarded: response.data.newXP ? 10 : 0, // Calculate XP gained
-        newXP: response.data.newXP,
-        unlockedAchievements: response.data.unlockedAchievements || [],
-      },
-    }
-  } catch (error) {
-    console.error('Error submitting question answer:', error)
-    return {
-      success: false,
-      error:
-        error.response?.data?.error ||
-        error.message ||
-        'Failed to submit answer',
-    }
-  }
+// 9. POST /answer
+export async function submitAnswer(questionId, answer) {
+  const res = await axiosInstance.post(
+    '/answer',
+    { questionId, answer },
+    { headers: getDynamicAuthHeader() },
+  );
+  return res.data;
 }
 
 export async function loginUser(email, password) {
@@ -264,20 +266,58 @@ export async function fetchAllTopics() {
 // 12. GET /questions/random
 
 export async function fetchRandomQuestions(level) {
-  const res = await axiosInstance.get('/questions/random', {
-    params: {
-      level,
-    },
-  })
-  return res.data
+  try {
+    console.log('fetchRandomQuestions called with level:', level);
+    console.log('BASE_URL:', BASE_URL);
+    console.log('isServer:', typeof window === 'undefined');
+    
+    const res = await axiosInstance.get('/questions/random', {
+      params: {
+        level,
+      },
+    });
+    console.log('fetchRandomQuestions success:', res.status);
+    console.log('Questions received:', res.data?.questions?.length || 0);
+    
+    return res.data;
+  } catch (error) {
+    console.error('fetchRandomQuestions error:', {
+      message: error.message,
+      status: error.response?.status,
+      statusText: error.response?.statusText,
+      data: error.response?.data,
+      level: level,
+      url: error.config?.url,
+      baseURL: error.config?.baseURL
+    });
+    
+    // If the requested level has no questions, try level 1 as fallback
+    if (error.response?.status === 404 && level !== 1) {
+      console.log('No questions found for level', level, 'trying level 1 as fallback...');
+      try {
+        const fallbackRes = await axiosInstance.get('/questions/random', {
+          params: {
+            level: 1,
+          },
+        });
+        console.log('Fallback to level 1 successful');
+        return fallbackRes.data;
+      } catch (fallbackError) {
+        console.error('Fallback to level 1 also failed:', fallbackError.message);
+        throw error; // Throw original error
+      }
+    }
+    
+    throw error;
+  }
 }
 
 //13. POST /singleplayer
 export async function submitSinglePlayerAttempt(data) {
   const res = await axiosInstance.post('/singleplayer', data, {
-    headers: authHeader,
-  })
-  return res.data
+    headers: getDynamicAuthHeader(),
+  });
+  return res.data;
 }
 
 export async function sendPasswordResetEmail(email) {
@@ -294,16 +334,12 @@ export async function resetPassword(token, newPassword) {
 }
 
 export async function changePassword(userId, currentPassword, newPassword) {
-  if (!userId) {
-    throw new Error('User ID is required')
-  }
-
-  const res = await axiosInstance.post('/change-password', {
-    userId,
-    currentPassword,
-    newPassword,
-  })
-  return res.data
+  const res = await axiosInstance.post(
+    `/user/${userId}/change-password`,
+    { currentPassword, newPassword },
+    { headers: getDynamicAuthHeader() },
+  );
+  return res.data;
 }
 
 export async function verifyResetToken(token) {

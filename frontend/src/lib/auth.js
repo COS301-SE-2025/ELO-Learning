@@ -52,8 +52,8 @@ export const authOptions = {
               currentLevel: data.user.currentLevel || 1,
               joinDate: data.user.joinDate,
               pfpURL: data.user.pfpURL,
-              // 🔑 IMPORTANT: Pass the JWT token to NextAuth
-              accessToken: data.token,
+              // Store the JWT token from backend
+              backendToken: data.token,
             };
           } else {
             console.log('❌ Login failed:', data.error || 'Unknown error');
@@ -120,11 +120,8 @@ export const authOptions = {
         token.currentLevel = user.currentLevel || 1; // Default level
         token.joinDate = user.joinDate; // Add join date
         token.pfpURL = user.pfpURL || user.image; // Use database pfpURL or OAuth image
-        
-        // 🔑 IMPORTANT: Preserve JWT access token from credentials provider
-        if (user.accessToken) {
-          token.accessToken = user.accessToken;
-        }
+        // Store the backend JWT token for API calls
+        token.backendToken = user.backendToken;
       }
 
       return token;
@@ -144,6 +141,8 @@ export const authOptions = {
         session.user.currentLevel = token.currentLevel;
         session.user.joinDate = token.joinDate;
         session.user.pfpURL = token.pfpURL;
+        // Pass backend JWT token to session
+        session.backendToken = token.backendToken;
       }
 
       return session;
@@ -157,6 +156,20 @@ export const authOptions = {
     async signOut(message) {
       // This runs when user signs out
       console.log('User signed out:', message);
+    },
+  },
+  debug: process.env.NODE_ENV === 'development',
+  logger: {
+    error(code, metadata) {
+      console.error('NextAuth Error:', code, metadata);
+    },
+    warn(code) {
+      console.warn('NextAuth Warning:', code);
+    },
+    debug(code, metadata) {
+      if (process.env.NODE_ENV === 'development') {
+        console.log('NextAuth Debug:', code, metadata);
+      }
     },
   },
 };

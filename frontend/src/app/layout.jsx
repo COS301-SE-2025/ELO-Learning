@@ -63,6 +63,16 @@ export default function RootLayout({ children }) {
           <PWALifecycle />
 
           {children}
+          {process.env.NODE_ENV === 'development' && (
+            <script
+              dangerouslySetInnerHTML={{
+                __html: `
+                  // Load debug utilities in development
+                  import('/src/utils/debug.js').catch(console.error);
+                `,
+              }}
+            />
+          )}
 
           {/* Achievement notifications - appears above all content */}
           <AchievementNotificationManager />

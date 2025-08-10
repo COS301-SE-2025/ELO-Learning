@@ -1,4 +1,5 @@
 'use client';
+
 import { useEffect, useState } from 'react';
 
 export default function MatchQuestionTemplate({ question, answers, setAnswer, setIsAnswerCorrect }) {
@@ -7,18 +8,18 @@ export default function MatchQuestionTemplate({ question, answers, setAnswer, se
   const [matches, setMatches] = useState({});
   const [leftItems, setLeftItems] = useState([]);
   const [rightItems, setRightItems] = useState([]);
-  const [hasLostLife, setHasLostLife] = useState(false); // Track if life was already lost for this question
+  const [incorrectMatches, setIncorrectMatches] = useState(new Set()); // Track incorrect matches to prevent duplicate life loss
   const [lifeLossMessage, setLifeLossMessage] = useState(''); // Store the reason for life loss
   const [showLifeLossAlert, setShowLifeLossAlert] = useState(false); // Control alert visibility
+  const [correctPairs, setCorrectPairs] = useState([]); // Store the correct pairs for validation
 
-  // Function to handle life loss
-  const loseLife = (reason) => {
-    if (hasLostLife) return; // Prevent multiple life losses for the same question
+  // Enhanced function to handle life loss with better tracking
+  const loseLife = (reason, matchDetails = null) => {
+    console.log(`💔 Attempting to lose life: ${reason}`, { matchDetails });
     
-    setHasLostLife(true);
+    // Allow multiple life losses for different incorrect matches, but track them
     setLifeLossMessage(reason);
     setShowLifeLossAlert(true);
-    console.log(`💔 Life lost: ${reason}`);
     
     // Get current lives from localStorage (only in browser)
     if (typeof window !== 'undefined') {
@@ -26,35 +27,39 @@ export default function MatchQuestionTemplate({ question, answers, setAnswer, se
       const newLives = Math.max(0, currentLives - 1);
       localStorage.setItem('lives', newLives.toString());
       
+      console.log(`💔 Life lost! Lives: ${currentLives} → ${newLives}. Reason: ${reason}`);
+      
       // Dispatch a custom event to notify other components about life loss
       window.dispatchEvent(new CustomEvent('lifeLost', { 
         detail: { 
           reason, 
           newLives,
-          questionType: 'matching'
+          questionType: 'matching',
+          matchDetails
         } 
       }));
     }
 
-    // Auto-hide the alert after 3 seconds
+    // Auto-hide the alert after 4 seconds (increased for better visibility)
     setTimeout(() => {
       setShowLifeLossAlert(false);
-    }, 3000);
+    }, 4000);
   };
 
-  // Enhanced parsing function for match pairs
+  // Enhanced parsing function for match pairs - handles multiple formats
   const parsePairs = () => {
     console.log('🔍 MATCH PARSING - Input data:', { answers, question: question?.questionText });
     
     if (!answers || answers.length === 0) {
       console.log('🔍 MATCH PARSING - No answers provided, using fallback');
-      return { left: [], right: [] };
+      return { left: [], right: [], correctPairs: [] };
     }
 
     const leftItems = [];
     const rightItems = [];
+    const correctPairs = [];
     
-    // Handle different data formats
+    // Handle different data formats with improved parsing
     answers.forEach((answer, index) => {
       console.log(`🔍 MATCH PARSING - Processing answer ${index}:`, answer);
       
@@ -67,60 +72,93 @@ export default function MatchQuestionTemplate({ question, answers, setAnswer, se
         right = answer.match_right;
         console.log(`🔍 MATCH PARSING - Found explicit fields: ${left} → ${right}`);
       }
-      // Method 2: Parse from answer_text with various separators
+      // Method 2: Parse from answer_text with various separators (enhanced list)
       else if (answerText) {
-        if (answerText.includes(' → ')) {
-          [left, right] = answerText.split(' → ').map(item => item.trim());
-        } else if (answerText.includes('→')) {
-          [left, right] = answerText.split('→').map(item => item.trim());
-        } else if (answerText.includes(' | ')) {
-          [left, right] = answerText.split(' | ').map(item => item.trim());
-        } else if (answerText.includes('|')) {
-          [left, right] = answerText.split('|').map(item => item.trim());
-        } else if (answerText.includes(': ')) {
-          [left, right] = answerText.split(': ').map(item => item.trim());
-        } else if (answerText.includes(':')) {
-          [left, right] = answerText.split(':').map(item => item.trim());
-        } else if (answerText.includes(' - ')) {
-          [left, right] = answerText.split(' - ').map(item => item.trim());
-        } else if (answerText.includes(' = ')) {
-          [left, right] = answerText.split(' = ').map(item => item.trim());
+        // Try multiple separators in order of preference
+        const separators = [
+          ' → ', '→',           // Arrow separators
+          ' | ', '|',           // Pipe separators  
+          ': ', ':',            // Colon separators
+          ' - ', '-',           // Dash separators
+          ' = ', '=',           // Equals separators
+          ' ~ ', '~',           // Tilde separators
+          ' <-> ', '<->',       // Bidirectional arrows
+          ' ↔ ', '↔',          // Unicode bidirectional
+          ' matches ', ' match ' // Text-based separators
+        ];
+        
+        for (const separator of separators) {
+          if (answerText.includes(separator)) {
+            const parts = answerText.split(separator).map(item => item.trim());
+            if (parts.length >= 2 && parts[0] && parts[1]) {
+              left = parts[0];
+              right = parts[1];
+              console.log(`🔍 MATCH PARSING - Parsed with "${separator}": ${left} → ${right}`);
+              break;
+            }
+          }
         }
         
-        if (left && right) {
-          console.log(`🔍 MATCH PARSING - Parsed from text: ${left} → ${right}`);
+        // Fallback: Try comma separation for simple lists
+        if (!left && !right && answerText.includes(',')) {
+          const parts = answerText.split(',').map(item => item.trim());
+          if (parts.length >= 2) {
+            left = parts[0];
+            right = parts[1];
+            console.log(`🔍 MATCH PARSING - Parsed with comma: ${left} → ${right}`);
+          }
         }
       }
       
       if (left && right) {
+        // Store correct pair mapping (left text → right text)
+        correctPairs.push({ 
+          leftText: left.trim(), 
+          rightText: right.trim(),
+          originalIndex: index 
+        });
+        
         leftItems.push({ 
           id: `left-${index}`, 
-          text: left, 
-          originalIndex: index,
-          pairId: `pair-${index}` 
+          text: left.trim(), 
+          originalIndex: index
         });
-        rightItems.push({ 
-          id: `right-${index}`, 
-          text: right, 
-          originalIndex: index,
-          pairId: `pair-${index}` 
-        });
-        console.log(`🔍 MATCH PARSING - Added pair: ${left} ↔ ${right} (pair-${index})`);
+        
+        // Check if this right text already exists to avoid duplicates
+        let existingRightItem = rightItems.find(item => item.text.trim() === right.trim());
+        if (!existingRightItem) {
+          rightItems.push({ 
+            id: `right-${rightItems.length}`, 
+            text: right.trim(), 
+            originalIndex: index
+          });
+        }
+        
+        console.log(`🔍 MATCH PARSING - Added pair: ${left.trim()} ↔ ${right.trim()}`);
       } else {
         console.log(`🔍 MATCH PARSING - Could not parse answer ${index}:`, answerText);
       }
     });
     
     console.log(`🔍 MATCH PARSING - Final results: ${leftItems.length} left items, ${rightItems.length} right items`);
+    console.log('🔍 CORRECT PAIRS:', correctPairs);
     
     // Fallback: Create sample pairs if parsing failed
     if (leftItems.length === 0 && rightItems.length === 0) {
       console.log('🔍 MATCH PARSING - Using fallback data based on question content');
       
-      // Try to create pairs based on the question content
+      // Try to create pairs based on the question content including trig functions
       let samplePairs = [];
       
-      if (question?.questionText?.toLowerCase().includes('capital')) {
+      if (question?.questionText?.toLowerCase().includes('trigonometric') || 
+          question?.questionText?.toLowerCase().includes('trig') ||
+          question?.questionText?.toLowerCase().includes('period')) {
+        samplePairs = [
+          { left: 'sin(x)', right: '360°' },
+          { left: 'cos(x)', right: '360°' },
+          { left: 'tan(x)', right: '180°' }
+        ];
+      } else if (question?.questionText?.toLowerCase().includes('capital')) {
         samplePairs = [
           { left: 'France', right: 'Paris' },
           { left: 'Italy', right: 'Rome' },
@@ -166,31 +204,38 @@ export default function MatchQuestionTemplate({ question, answers, setAnswer, se
         ];
       }
       
+      // Build items and correct pairs from sample data
       samplePairs.forEach((pair, index) => {
+        correctPairs.push({ leftText: pair.left, rightText: pair.right });
+        
         leftItems.push({ 
           id: `left-${index}`, 
           text: pair.left, 
-          originalIndex: index,
-          pairId: `pair-${index}` 
+          originalIndex: index
         });
-        rightItems.push({ 
-          id: `right-${index}`, 
-          text: pair.right, 
-          originalIndex: index,
-          pairId: `pair-${index}` 
-        });
+        
+        // Check if this right text already exists
+        let existingRightItem = rightItems.find(item => item.text === pair.right);
+        if (!existingRightItem) {
+          rightItems.push({ 
+            id: `right-${rightItems.length}`, 
+            text: pair.right, 
+            originalIndex: index
+          });
+        }
       });
     }
     
-    return { left: leftItems, right: rightItems };
+    return { left: leftItems, right: rightItems, correctPairs };
   };
 
   // Initialize the match pairs
   useEffect(() => {
     const pairs = parsePairs();
     setLeftItems(pairs.left);
+    setCorrectPairs(pairs.correctPairs);
     
-    // Shuffle right items to make it challenging, but preserve the pairId for validation
+    // Shuffle right items to make it challenging
     const shuffledRight = [...pairs.right].sort(() => Math.random() - 0.5);
     setRightItems(shuffledRight);
     
@@ -198,7 +243,7 @@ export default function MatchQuestionTemplate({ question, answers, setAnswer, se
     setMatches({});
     setSelectedLeft(null);
     setSelectedRight(null);
-    setHasLostLife(false); // Reset life loss status for new question
+    setIncorrectMatches(new Set()); // Reset incorrect matches tracking for new question
   }, [answers, question]);
 
   // Handle selecting items for matching
@@ -216,8 +261,10 @@ export default function MatchQuestionTemplate({ question, answers, setAnswer, se
     }
   };
 
-  // Create a match between selected items
+  // Create a match between selected items with enhanced validation
   const makeMatch = (leftItem, rightItem) => {
+    console.log(`🔗 Making match: ${leftItem.text} → ${rightItem.text}`);
+    
     const newMatches = {
       ...matches,
       [leftItem.id]: rightItem.id
@@ -227,9 +274,25 @@ export default function MatchQuestionTemplate({ question, answers, setAnswer, se
     setSelectedRight(null);
     
     // Check if this specific match is incorrect and lose life immediately
-    const isThisMatchCorrect = leftItem.pairId === rightItem.pairId;
+    const isThisMatchCorrect = isMatchCorrect(leftItem, rightItem);
+    const matchKey = `${leftItem.text}→${rightItem.text}`;
+    
+    console.log(`🔍 Match validation: ${leftItem.text} → ${rightItem.text} = ${isThisMatchCorrect ? 'CORRECT' : 'INCORRECT'}`);
+    
     if (!isThisMatchCorrect) {
-      loseLife(`Incorrect match: "${leftItem.text}" → "${rightItem.text}"`);
+      // Only lose life if this specific incorrect match hasn't been made before
+      if (!incorrectMatches.has(matchKey)) {
+        setIncorrectMatches(prev => new Set([...prev, matchKey]));
+        loseLife(`Incorrect match: "${leftItem.text}" → "${rightItem.text}"`, {
+          leftText: leftItem.text,
+          rightText: rightItem.text,
+          expectedMatches: correctPairs.filter(pair => pair.leftText === leftItem.text)
+        });
+      } else {
+        console.log(`⚠️ Duplicate incorrect match detected, no additional life loss: ${matchKey}`);
+      }
+    } else {
+      console.log(`✅ Correct match made: ${leftItem.text} → ${rightItem.text}`);
     }
     
     // Convert matches object to string format for validation
@@ -249,13 +312,16 @@ export default function MatchQuestionTemplate({ question, answers, setAnswer, se
     // Always validate current matches, regardless of completion
     const isCorrect = validateMatches(newMatches);
     setIsAnswerCorrect(isCorrect && allMatched);
+    
+    console.log(`🔍 Overall validation: ${isCorrect ? 'VALID' : 'INVALID'}, All matched: ${allMatched}`);
   };
 
-  // Validate if the matches are correct - FIXED VERSION
+  // ENHANCED VALIDATION: Check against correct pairs with better matching logic
   const validateMatches = (currentMatches) => {
     console.log('🔍 VALIDATING MATCHES:', currentMatches);
     console.log('🔍 LEFT ITEMS:', leftItems);
     console.log('🔍 RIGHT ITEMS:', rightItems);
+    console.log('🔍 CORRECT PAIRS:', correctPairs);
     
     let correctCount = 0;
     const totalPairs = leftItems.length;
@@ -268,15 +334,25 @@ export default function MatchQuestionTemplate({ question, answers, setAnswer, se
       const rightItem = rightItems.find(item => item.id === rightId);
       
       console.log(`🔍 Checking match: ${leftItem?.text} → ${rightItem?.text}`);
-      console.log(`🔍 Left pairId: ${leftItem?.pairId}, Right pairId: ${rightItem?.pairId}`);
       
       if (leftItem && rightItem) {
-        // FIXED: Use pairId to determine correct matches (works even with shuffled items)
-        if (leftItem.pairId === rightItem.pairId) {
+        // ENHANCED LOGIC: Check if this left→right mapping exists in correctPairs
+        // Use case-insensitive and trimmed comparison for better matching
+        const isCorrect = correctPairs.some(pair => 
+          pair.leftText.toLowerCase().trim() === leftItem.text.toLowerCase().trim() && 
+          pair.rightText.toLowerCase().trim() === rightItem.text.toLowerCase().trim()
+        );
+        
+        if (isCorrect) {
           correctCount++;
           console.log(`✅ Correct match: ${leftItem.text} → ${rightItem.text}`);
         } else {
           console.log(`❌ Incorrect match: ${leftItem.text} → ${rightItem.text}`);
+          // Log what the correct matches should be for this left item
+          const expectedMatches = correctPairs.filter(pair => 
+            pair.leftText.toLowerCase().trim() === leftItem.text.toLowerCase().trim()
+          );
+          console.log(`Expected matches for "${leftItem.text}":`, expectedMatches);
         }
       }
     }
@@ -286,10 +362,30 @@ export default function MatchQuestionTemplate({ question, answers, setAnswer, se
     return isAllCorrect;
   };
 
-  // Helper function to check if a specific match is correct
+  // Helper function to check if a specific match is correct with enhanced comparison
   const isMatchCorrect = (leftItem, rightItem) => {
-    if (!leftItem || !rightItem) return false;
-    return leftItem.pairId === rightItem.pairId;
+    if (!leftItem || !rightItem || !correctPairs.length) {
+      console.log('🔍 isMatchCorrect: Missing data', { leftItem: !!leftItem, rightItem: !!rightItem, correctPairsCount: correctPairs.length });
+      return false;
+    }
+    
+    // ENHANCED LOGIC: Case-insensitive and trimmed comparison
+    const isCorrect = correctPairs.some(pair => {
+      const leftMatch = pair.leftText.toLowerCase().trim() === leftItem.text.toLowerCase().trim();
+      const rightMatch = pair.rightText.toLowerCase().trim() === rightItem.text.toLowerCase().trim();
+      return leftMatch && rightMatch;
+    });
+    
+    console.log(`🔍 isMatchCorrect: "${leftItem.text}" → "${rightItem.text}" = ${isCorrect}`);
+    if (!isCorrect) {
+      // Log what correct matches exist for this left item
+      const possibleMatches = correctPairs.filter(pair => 
+        pair.leftText.toLowerCase().trim() === leftItem.text.toLowerCase().trim()
+      );
+      console.log(`🔍 Possible correct matches for "${leftItem.text}":`, possibleMatches);
+    }
+    
+    return isCorrect;
   };
 
   // Helper function to get match status for UI
@@ -317,9 +413,9 @@ export default function MatchQuestionTemplate({ question, answers, setAnswer, se
   // Function to check for incomplete matches when leaving the question
   const checkForIncompleteMatches = () => {
     // Only check if user has actually interacted with the question
-    // (has made at least one match or lost a life from incorrect matching)
-    if (hasLostLife || Object.keys(matches).length === 0) {
-      return; // Don't penalize further if already lost life, or if no interaction yet
+    // (has made at least one match)
+    if (Object.keys(matches).length === 0) {
+      return; // Don't penalize if no interaction yet
     }
     
     const totalPairs = leftItems.length;
@@ -327,7 +423,11 @@ export default function MatchQuestionTemplate({ question, answers, setAnswer, se
     
     if (totalPairs > 0 && matchedPairs < totalPairs && matchedPairs > 0) {
       // User has made some matches but not completed all
-      loseLife(`Incomplete answer: ${matchedPairs}/${totalPairs} pairs matched`);
+      loseLife(`Incomplete answer: ${matchedPairs}/${totalPairs} pairs matched`, {
+        totalPairs,
+        matchedPairs,
+        missingPairs: totalPairs - matchedPairs
+      });
     }
     // Note: Removed the "No attempt" case since that should only be checked on explicit submission
   };
@@ -341,7 +441,7 @@ export default function MatchQuestionTemplate({ question, answers, setAnswer, se
       // Clean up global function
       delete window.checkMatchQuestionCompletion;
     };
-  }, [matches, leftItems, hasLostLife]);
+  }, [matches, leftItems, incorrectMatches]);
 
   const removeMatch = (leftId) => {
     const newMatches = { ...matches };
@@ -398,7 +498,6 @@ export default function MatchQuestionTemplate({ question, answers, setAnswer, se
           <p className="text-red-700 mb-4">
             The question data could not be parsed into matching pairs.
           </p>
-
         </div>
       </div>
     );
@@ -406,18 +505,19 @@ export default function MatchQuestionTemplate({ question, answers, setAnswer, se
 
   return (
     <div className="space-y-6">
-      {/* Life Loss Alert */}
+      {/* Life Loss Alert - Enhanced with better styling */}
       {showLifeLossAlert && (
-        <div className="fixed top-4 right-4 z-50 bg-red-500 text-white px-6 py-4 rounded-lg shadow-lg border-2 border-red-600 animate-pulse">
+        <div className="fixed top-4 right-4 z-50 bg-red-500 text-white px-6 py-4 rounded-lg shadow-lg border-2 border-red-600 animate-bounce max-w-sm">
           <div className="flex items-center space-x-2">
             <span className="text-xl">💔</span>
-            <div>
-              <div className="font-bold">Life Lost!</div>
-              <div className="text-sm">{lifeLossMessage}</div>
+            <div className="flex-1">
+              <div className="font-bold text-sm">Life Lost!</div>
+              <div className="text-xs leading-tight">{lifeLossMessage}</div>
             </div>
             <button 
               onClick={() => setShowLifeLossAlert(false)}
-              className="ml-4 text-white hover:text-red-200"
+              className="ml-2 text-white hover:text-red-200 text-lg leading-none"
+              title="Close"
             >
               ✕
             </button>
@@ -443,19 +543,19 @@ export default function MatchQuestionTemplate({ question, answers, setAnswer, se
                   className={`w-full p-4 text-left rounded-lg border-2 transition-all duration-200 ${
                     matchStatus.isMatched
                       ? matchStatus.isCorrect
-                        ? 'bg-green-100 border-green-400 text-green-800 cursor-pointer'
-                        : 'bg-red-100 border-red-400 text-red-800 cursor-pointer'
+                        ? 'bg-green-100 border-green-500 text-green-800 cursor-pointer shadow-md'
+                        : 'bg-red-100 border-red-500 text-red-800 cursor-pointer shadow-md animate-pulse'
                       : isSelected
-                        ? 'bg-[#7D32CE] text-white border-[#7D32CE] shadow-lg'
-                        : 'bg-[#7D32CE] text-white border-[#7D32CE] hover:bg-[#6B2BB0] hover:shadow-md'
+                        ? 'bg-[#7D32CE] text-white border-[#7D32CE] shadow-lg transform scale-105'
+                        : 'bg-[#7D32CE] text-white border-[#7D32CE] hover:bg-[#6B2BB0] hover:shadow-md hover:transform hover:scale-102'
                   }`}
                   title={matchStatus.isMatched ? 'Click to unmap' : 'Click to select'}
                 >
                   <div className="flex items-center justify-between">
-                    <span className="text-lg">{item.text}</span>
+                    <span className="text-lg font-medium">{item.text}</span>
                     {matchStatus.isMatched && (
-                      <span className={`text-sm ${matchStatus.isCorrect ? 'text-green-600' : 'text-red-600'}`}>
-                        {matchStatus.isCorrect ? '✓ Matched' : '✗ Wrong'}
+                      <span className={`text-sm font-semibold ${matchStatus.isCorrect ? 'text-green-700' : 'text-red-700'}`}>
+                        {matchStatus.isCorrect ? '✓ Correct' : '✗ Incorrect'}
                       </span>
                     )}
                   </div>
@@ -482,18 +582,18 @@ export default function MatchQuestionTemplate({ question, answers, setAnswer, se
                   className={`w-full p-4 text-left rounded-lg border-2 transition-all duration-200 ${
                     matchStatus.isMatched
                       ? matchStatus.isCorrect
-                        ? 'bg-green-100 border-green-400 text-green-800 cursor-default'
-                        : 'bg-red-100 border-red-400 text-red-800 cursor-default'
+                        ? 'bg-green-100 border-green-500 text-green-800 cursor-default shadow-md'
+                        : 'bg-red-100 border-red-500 text-red-800 cursor-default shadow-md animate-pulse'
                       : isSelected
-                        ? 'bg-[#7D32CE] text-white border-[#7D32CE] shadow-lg'
-                        : 'bg-[#7D32CE] text-white border-[#7D32CE] hover:bg-[#6B2BB0] hover:shadow-md'
+                        ? 'bg-[#7D32CE] text-white border-[#7D32CE] shadow-lg transform scale-105'
+                        : 'bg-[#7D32CE] text-white border-[#7D32CE] hover:bg-[#6B2BB0] hover:shadow-md hover:transform hover:scale-102'
                   }`}
                 >
                   <div className="flex items-center justify-between">
-                    <span className="text-lg">{item.text}</span>
+                    <span className="text-lg font-medium">{item.text}</span>
                     {matchStatus.isMatched && (
-                      <span className={`text-sm ${matchStatus.isCorrect ? 'text-green-600' : 'text-red-600'}`}>
-                        {matchStatus.isCorrect ? '✓ Matched' : '✗ Wrong'}
+                      <span className={`text-sm font-semibold ${matchStatus.isCorrect ? 'text-green-700' : 'text-red-700'}`}>
+                        {matchStatus.isCorrect ? '✓ Correct' : '✗ Incorrect'}
                       </span>
                     )}
                   </div>

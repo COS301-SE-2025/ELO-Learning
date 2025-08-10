@@ -1,9 +1,9 @@
 // utils/answerValidator.js
 import { quickValidateMath } from '@/utils/api';
 import {
-  quickValidateMath as frontendQuickValidate,
-  isValidMathExpression,
-  validateMathAnswer,
+    quickValidateMath as frontendQuickValidate,
+    isValidMathExpression,
+    validateMathAnswer,
 } from '@/utils/frontendMathValidator';
 
 /**
@@ -84,6 +84,12 @@ export const validateAnswer = async (
   if (normalizedStudent === normalizedCorrect) {
     console.log('✅ Direct match found');
     return true;
+  }
+
+  // For True/False questions, direct comparison should be final
+  if (questionType === 'True/False' || questionType === 'True-False') {
+    console.log('❌ True/False question - no match found');
+    return false;
   }
 
   // Check for systems of equations (contains x= and y=)

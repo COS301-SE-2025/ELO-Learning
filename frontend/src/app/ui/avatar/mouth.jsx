@@ -1,40 +1,74 @@
 'use client';
 
+import Image from 'next/image';
+
 export const MouthTypes = {
-  SMILE: 'smile',
-  NEUTRAL: 'neutral',
-  FROWN: 'frown',
-  SURPRISED: 'surprised',
-  TONGUE: 'tongue',
-  LAUGH: 'laugh',
+  MOUTH_1: 'Mouth 1',
+  MOUTH_2: 'Mouth 2',
+  MOUTH_3: 'Mouth 3',
+  MOUTH_4: 'Mouth 4',
+  MOUTH_5: 'Mouth 5',
+  MOUTH_6: 'Mouth 6',
+  MOUTH_7: 'Mouth 7',
+  MOUTH_8: 'Mouth 8',
+  MOUTH_9: 'Mouth 9',
+  MOUTH_10: 'Mouth 10',
+  MOUTH_11: 'Mouth 11',
+  MOUTH_12: 'Mouth 12',
+  MOUTH_13: 'Mouth 13',
+  MOUTH_14: 'Mouth 14',
+  MOUTH_15: 'Mouth 15',
+  MOUTH_16: 'Mouth 16',
+  MOUTH_17: 'Mouth 17',
+  MOUTH_18: 'Mouth 18',
+  MOUTH_19: 'Mouth 19',
+  MOUTH_20: 'Mouth 20',
+  MOUTH_21: 'Mouth 21',
+  MOUTH_22: 'Mouth 22',
+  MOUTH_23: 'Mouth 23',
+  MOUTH_24: 'Mouth 24',
+  MOUTH_25: 'Mouth 25',
+  MOUTH_26: 'Mouth 26',
+  MOUTH_27: 'Mouth 27',
+  MOUTH_28: 'Mouth 28',
+  MOUTH_29: 'Mouth 29',
+  MOUTH_30: 'Mouth 30',
+  MOUTH_31: 'Mouth 31',
+  MOUTH_32: 'Mouth 32',
 };
 
 export function MouthSelector({ selectedMouth, onMouthChange }) {
-  const mouths = [
-    { id: MouthTypes.SMILE, name: 'Smile', emoji: '😊' },
-    { id: MouthTypes.NEUTRAL, name: 'Neutral', emoji: '😐' },
-    { id: MouthTypes.FROWN, name: 'Frown', emoji: '☹️' },
-    { id: MouthTypes.SURPRISED, name: 'Surprised', emoji: '😮' },
-    { id: MouthTypes.TONGUE, name: 'Tongue', emoji: '😛' },
-    { id: MouthTypes.LAUGH, name: 'Laugh', emoji: '😄' },
-  ];
+  const mouths = Object.values(MouthTypes).map((mouthType) => ({
+    id: mouthType,
+    name: mouthType,
+    src: `/mouths/${mouthType}.svg`,
+  }));
 
   return (
     <div className="space-y-4">
       <h3 className="text-lg font-semibold text-white">Mouth</h3>
-      <div className="grid grid-cols-3 gap-3">
+      <div className="grid grid-cols-4 gap-3 max-h-96 overflow-y-auto">
         {mouths.map((mouth) => (
           <button
             key={mouth.id}
             onClick={() => onMouthChange(mouth.id)}
-            className={`p-3 rounded-lg border-2 transition-all ${
+            className={`p-3 rounded-lg border-2 transition-all aspect-square ${
               selectedMouth === mouth.id
                 ? 'border-blue-500 bg-blue-500 bg-opacity-20'
                 : 'border-gray-600 bg-gray-700 hover:border-blue-400'
             }`}
           >
-            <div className="text-xl mb-1">{mouth.emoji}</div>
-            <div className="text-xs font-medium text-white">{mouth.name}</div>
+            <div className="w-full h-12 relative mb-2">
+              <Image
+                src={mouth.src}
+                alt={mouth.name}
+                fill
+                className="object-contain"
+              />
+            </div>
+            <div className="text-xs font-medium text-white text-center">
+              {mouth.name}
+            </div>
           </button>
         ))}
       </div>
@@ -43,39 +77,27 @@ export function MouthSelector({ selectedMouth, onMouthChange }) {
 }
 
 export function AvatarMouth({ mouthType, className = '' }) {
-  const mouthComponents = {
-    [MouthTypes.SMILE]: (
-      <div className="w-6 h-3 border-b-2 border-black rounded-b-full"></div>
-    ),
-    [MouthTypes.NEUTRAL]: (
-      <div className="w-4 h-0.5 bg-black rounded-full"></div>
-    ),
-    [MouthTypes.FROWN]: (
-      <div className="w-6 h-3 border-t-2 border-black rounded-t-full"></div>
-    ),
-    [MouthTypes.SURPRISED]: (
-      <div className="w-3 h-4 bg-black rounded-full"></div>
-    ),
-    [MouthTypes.TONGUE]: (
-      <div className="flex flex-col items-center">
-        <div className="w-6 h-3 border-b-2 border-black rounded-b-full"></div>
-        <div className="w-2 h-2 bg-red-400 rounded-b-full -mt-1"></div>
-      </div>
-    ),
-    [MouthTypes.LAUGH]: (
-      <div className="w-8 h-4 border-b-2 border-black rounded-b-full">
-        <div className="flex justify-center mt-1 space-x-0.5">
-          <div className="w-1 h-1 bg-white rounded-full"></div>
-          <div className="w-1 h-1 bg-white rounded-full"></div>
-          <div className="w-1 h-1 bg-white rounded-full"></div>
-        </div>
-      </div>
-    ),
-  };
+  // Fallback for old mouth types or invalid types
+  const validMouthType = Object.values(MouthTypes).includes(mouthType)
+    ? mouthType
+    : MouthTypes.MOUTH_1;
+  const mouthSrc = `/mouths/${validMouthType}.svg`;
 
   return (
     <div className={`flex justify-center items-center ${className}`}>
-      {mouthComponents[mouthType] || mouthComponents[MouthTypes.SMILE]}
+      <div className="w-full h-full relative">
+        <Image
+          src={mouthSrc}
+          alt={`${validMouthType} mouth`}
+          fill
+          className="object-contain"
+          onError={(e) => {
+            console.error('Failed to load mouth image:', mouthSrc);
+            // Fallback to Mouth 1 if image fails to load
+            e.target.src = '/mouths/Mouth 1.svg';
+          }}
+        />
+      </div>
     </div>
   );
 }

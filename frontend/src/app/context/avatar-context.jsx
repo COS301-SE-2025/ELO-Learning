@@ -10,10 +10,10 @@ import { MouthTypes } from '../ui/avatar/mouth';
 const AvatarContext = createContext();
 
 const DEFAULT_AVATAR = {
-  bodyShape: BodyShapes.ROUND,
+  bodyShape: BodyShapes.CIRCLE,
   color: AvatarColors.BRIGHT_RED,
   eyes: EyeTypes.EYE_1,
-  mouth: MouthTypes.SMILE,
+  mouth: MouthTypes.MOUTH_1,
   background: BackgroundTypes.SOLID_PINK,
 };
 
@@ -35,6 +35,25 @@ export function AvatarProvider({ children }) {
     ];
     if (oldEyeTypes.includes(savedAvatar.eyes)) {
       migratedAvatar.eyes = EyeTypes.EYE_1; // Default to Eye 1 for old eye types
+    }
+
+    // Migrate old mouth types to new format
+    const oldMouthTypes = [
+      'smile',
+      'neutral',
+      'frown',
+      'surprised',
+      'tongue',
+      'laugh',
+    ];
+    if (oldMouthTypes.includes(savedAvatar.mouth)) {
+      migratedAvatar.mouth = MouthTypes.MOUTH_1; // Default to Mouth 1 for old mouth types
+    }
+
+    // Migrate old shape types to new format
+    const oldShapeTypes = ['round', 'square', 'oval', 'triangle'];
+    if (oldShapeTypes.includes(savedAvatar.bodyShape)) {
+      migratedAvatar.bodyShape = BodyShapes.CIRCLE; // Default to Circle for old shape types
     }
 
     return migratedAvatar;

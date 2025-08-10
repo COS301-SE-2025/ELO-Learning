@@ -1,36 +1,49 @@
 'use client';
 
+import Image from 'next/image';
+
 export const BodyShapes = {
-  ROUND: 'round',
-  SQUARE: 'square',
-  OVAL: 'oval',
-  TRIANGLE: 'triangle',
+  CIRCLE: 'Circle',
+  SQUARE: 'Square',
+  TRIANGLE: 'Triangle',
+  HEART: 'Heart',
+  PENTAGON: 'Pentagon',
+  POLYGON: 'Polygon',
+  TACO: 'Taco',
 };
 
 export function BodyShapeSelector({ selectedShape, onShapeChange }) {
-  const shapes = [
-    { id: BodyShapes.ROUND, name: 'Round', icon: '●' },
-    { id: BodyShapes.SQUARE, name: 'Square', icon: '■' },
-    { id: BodyShapes.OVAL, name: 'Oval', icon: '◯' },
-    { id: BodyShapes.TRIANGLE, name: 'Triangle', icon: '▲' },
-  ];
+  const shapes = Object.values(BodyShapes).map((shapeType) => ({
+    id: shapeType,
+    name: shapeType,
+    src: `/shapes/${shapeType}.svg`,
+  }));
 
   return (
     <div className="space-y-4">
       <h3 className="text-lg font-semibold text-white">Body Shape</h3>
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid grid-cols-3 gap-3">
         {shapes.map((shape) => (
           <button
             key={shape.id}
             onClick={() => onShapeChange(shape.id)}
-            className={`p-4 rounded-lg border-2 transition-all ${
+            className={`p-4 rounded-lg border-2 transition-all aspect-square ${
               selectedShape === shape.id
                 ? 'border-blue-500 bg-blue-500 bg-opacity-20'
                 : 'border-gray-600 bg-gray-700 hover:border-blue-400'
             }`}
           >
-            <div className="text-2xl mb-2">{shape.icon}</div>
-            <div className="text-sm font-medium text-white">{shape.name}</div>
+            <div className="w-full h-12 relative mb-2">
+              <Image
+                src={shape.src}
+                alt={shape.name}
+                fill
+                className="object-contain"
+              />
+            </div>
+            <div className="text-sm font-medium text-white text-center">
+              {shape.name}
+            </div>
           </button>
         ))}
       </div>
@@ -39,19 +52,22 @@ export function BodyShapeSelector({ selectedShape, onShapeChange }) {
 }
 
 export function AvatarBodyShape({ shape, color, className = '' }) {
-  const baseClasses = 'transition-all duration-200';
-
-  const shapeStyles = {
-    [BodyShapes.ROUND]: 'rounded-full',
-    [BodyShapes.SQUARE]: 'rounded-lg',
-    [BodyShapes.OVAL]: 'rounded-full aspect-[3/4]',
-    [BodyShapes.TRIANGLE]: 'clip-triangle',
-  };
+  // Fallback for old shape types or invalid types
+  const validShapeType = Object.values(BodyShapes).includes(shape)
+    ? shape
+    : BodyShapes.CIRCLE;
+  const shapeSrc = `/shapes/${validShapeType}.svg`;
 
   return (
-    <div
-      className={`${baseClasses} ${shapeStyles[shape]} ${className}`}
-      style={{ backgroundColor: color }}
-    />
+    <div className={`relative ${className}`}>
+      <div
+        className="absolute inset-0 w-full h-full"
+        style={{
+          backgroundColor: color,
+          WebkitMask: `url(${shapeSrc}) no-repeat center / contain`,
+          mask: `url(${shapeSrc}) no-repeat center / contain`,
+        }}
+      />
+    </div>
   );
 }

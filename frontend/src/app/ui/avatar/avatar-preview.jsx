@@ -16,22 +16,26 @@ export function AvatarPreview({ avatar, className = '' }) {
 
       {/* Avatar Container */}
       <div className="relative flex items-center justify-center h-full p-8">
-        <div className="relative">
-          {/* Body Shape */}
-          <AvatarBodyShape
-            shape={avatar.bodyShape}
-            color={avatar.color}
-            className="w-32 h-32 relative"
-          />
+        <div className="relative w-64 h-64">
+          {/* All elements are exactly the same size and perfectly layered */}
 
-          {/* Eyes */}
-          <div className="absolute top-4 left-1/2 transform -translate-x-1/2">
-            <AvatarEyes eyeType={avatar.eyes} className="w-24 h-12" />
+          {/* Body Shape - Bottom layer */}
+          <div className="absolute inset-0">
+            <AvatarBodyShape
+              shape={avatar.bodyShape}
+              color={avatar.color}
+              className="w-full h-full"
+            />
           </div>
 
-          {/* Mouth */}
-          <div className="absolute bottom-6 left-1/2 transform -translate-x-1/2">
-            <AvatarMouth mouthType={avatar.mouth} className="w-12 h-6" />
+          {/* Eyes - Middle layer */}
+          <div className="absolute inset-0">
+            <AvatarEyes eyeType={avatar.eyes} className="w-full h-full" />
+          </div>
+
+          {/* Mouth - Top layer */}
+          <div className="absolute inset-0">
+            <AvatarMouth mouthType={avatar.mouth} className="w-full h-full" />
           </div>
         </div>
       </div>

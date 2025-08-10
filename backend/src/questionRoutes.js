@@ -294,7 +294,7 @@ router.post('/question/:id/submit', async (req, res) => {
   }
 });
 
-export { validateMatchQuestion, validateMatchQuestionLegacy };
+export { validateMatchQuestion, validateMatchQuestionLegacy }
 
 // Enhanced answer validation for different question types
 const validateAnswerByType = (questionType, studentAnswer, correctAnswer) => {
@@ -374,12 +374,39 @@ const validateFillInBlank = (studentAnswer, correctAnswer) => {
         : JSON.parse(correctAnswer)
 
     for (let blankId in correctAnswers) {
-      const studentBlank = studentAnswers[blankId]?.trim().toLowerCase()
-      const correctBlank = correctAnswers[blankId].trim().toLowerCase()
+      const studentBlank = studentAnswers[blankId]?.trim()
+      const correctBlank = correctAnswers[blankId].trim()
+
+      if (!studentBlank) {
+        return false // Empty answer
+      }
 
       const possibleAnswers = correctBlank.split('|').map((ans) => ans.trim())
 
-      if (!possibleAnswers.includes(studentBlank)) {
+      // Check each possible answer
+      let isCorrect = false
+      for (const possibleAnswer of possibleAnswers) {
+        // First try exact match (case-insensitive)
+        if (studentBlank.toLowerCase() === possibleAnswer.toLowerCase()) {
+          isCorrect = true
+          break
+        }
+
+        // If it looks like a math expression, use the math validator
+        if (isMathExpression(studentBlank) || isMathExpression(possibleAnswer)) {
+          try {
+            if (backendMathValidator.validateAnswer(studentBlank, possibleAnswer)) {
+              isCorrect = true
+              break
+            }
+          } catch (mathError) {
+            console.debug('Math validation failed for blank:', blankId, mathError)
+            // Continue to next possible answer
+          }
+        }
+      }
+
+      if (!isCorrect) {
         return false
       }
     }
@@ -389,6 +416,24 @@ const validateFillInBlank = (studentAnswer, correctAnswer) => {
     console.error('Error validating fill in blank:', error)
     return false
   }
+}
+
+// Helper function to detect if a string looks like a math expression
+const isMathExpression = (str) => {
+  if (!str || typeof str !== 'string') return false
+
+  // Check for mathematical operators, functions, or patterns
+  const mathPatterns = [
+    /[+\-*/^()=]/, // Basic operators and parentheses
+    /\b(sin|cos|tan|log|ln|sqrt|exp|abs)\b/i, // Math functions
+    /\d+\.\d+/, // Decimal numbers
+    /[a-z]\s*[=]/i, // Variable assignments like x=
+    /\b(pi|e|infinity)\b/i, // Math constants
+    /\d+[a-z]/i, // Number with variable like 2x
+    /[a-z]\d+/i, // Variable with number like x2
+  ]
+
+  return mathPatterns.some((pattern) => pattern.test(str))
 }
 
 // Get questions by type - UPDATED to use only existing columns
@@ -437,6 +482,7 @@ router.get('/questions/type/:type', async (req, res) => {
       .from('Answers')
       .select('*')
       .in('question_id', questionIds)
+      .not('answer_text', 'is', null)
 
     if (aError) {
       return res.status(500).json({
@@ -458,11 +504,14 @@ router.get('/questions/type/:type', async (req, res) => {
       question.showMathHelper = false
     })
 
+    // Filter out questions with no answers (for match questions this means incomplete data)
+    const questionsWithAnswers = questions.filter(q => q.answers && q.answers.length > 0)
+
     res.status(200).json({
       success: true,
-      data: questions,
+      data: questionsWithAnswers,
       type: type,
-      count: questions.length,
+      count: questionsWithAnswers.length,
     })
   } catch (err) {
     console.error('Unexpected error:', err)

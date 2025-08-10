@@ -23,6 +23,9 @@ export default function UniversalQuestionWrapper({ questions }) {
   const allQuestions = questions || [];
   const totalSteps = allQuestions.length;
 
+  console.log('🔥 UniversalQuestionWrapper - Received questions:', allQuestions);
+  console.log('🔥 UniversalQuestionWrapper - Total questions:', totalSteps);
+
   // ✅ Safe initialization
   const [currQuestion, setCurrQuestion] = useState(allQuestions[0] || null);
   const [currAnswers, setCurrAnswers] = useState(currQuestion?.answers || []);
@@ -35,6 +38,7 @@ export default function UniversalQuestionWrapper({ questions }) {
     'UniversalQuestionWrapper - currQuestion.type:',
     currQuestion?.type,
   );
+  console.log('UniversalQuestionWrapper - currAnswers:', currAnswers);
 
   // Universal answer state - can handle any answer type
   const [answer, setAnswer] = useState(null);
@@ -230,6 +234,7 @@ export default function UniversalQuestionWrapper({ questions }) {
 
       case 'Match Question':
       case 'Matching':
+        console.log('🔥 UniversalQuestionWrapper - Rendering MatchQuestionTemplate!', currQuestion);
         return <MatchQuestionTemplate {...commonProps} />;
 
       case 'True/False':

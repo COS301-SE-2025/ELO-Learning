@@ -1,9 +1,9 @@
 // ui/answers/expression-builder.jsx
 'use client';
 
-import { useState, useEffect } from 'react';
-import { ChevronDown, ChevronUp } from 'lucide-react';
 import 'katex/dist/katex.min.css';
+import { ChevronDown, ChevronUp } from 'lucide-react';
+import { useEffect, useState } from 'react';
 import { InlineMath } from 'react-katex';
 
 export default function ExpressionBuilderTemplate({
@@ -16,20 +16,67 @@ export default function ExpressionBuilderTemplate({
   const [availableTiles, setAvailableTiles] = useState([]);
   const [showHelper, setShowHelper] = useState(false);
 
-  // Available tiles for expression building
+  // Available tiles for expression building - COMPREHENSIVE VERSION FOR ALL QUESTION TYPES
   const mathTiles = [
+    // Variables (including Greek letters for advanced math)
     { id: 'x', label: 'x', type: 'variable' },
+    { id: 'y', label: 'y', type: 'variable' },
+    { id: 'z', label: 'z', type: 'variable' },
+    { id: 'a', label: 'a', type: 'variable' },
+    { id: 'b', label: 'b', type: 'variable' },
+    { id: 'c', label: 'c', type: 'variable' },
+    { id: 'd', label: 'd', type: 'variable' },
+    { id: 'n', label: 'n', type: 'variable' },
+    { id: 'r', label: 'r', type: 'variable' },
+    { id: 'i', label: 'i', type: 'variable' },
+    { id: 'theta', label: 'θ', type: 'variable' },
+    { id: 'h', label: 'h', type: 'variable' },
+    { id: 'k', label: 'k', type: 'variable' },
+    { id: 'A', label: 'A', type: 'variable' },
+    { id: 'B', label: 'B', type: 'variable' },
+    { id: 'C', label: 'C', type: 'variable' },
+    { id: 'P', label: 'P', type: 'variable' },
+
+    // Basic Operators
     { id: 'equals', label: '=', type: 'operator' },
-    { id: 'minus', label: '-', type: 'operator' },
     { id: 'plus', label: '+', type: 'operator' },
+    { id: 'minus', label: '-', type: 'operator' },
     { id: 'multiply', label: '×', type: 'operator' },
     { id: 'divide', label: '÷', type: 'operator' },
     { id: 'power', label: '^', type: 'operator' },
-    { id: 'sqrt', label: '√', type: 'function' },
+    { id: 'dot', label: '.', type: 'operator' },
+    { id: 'pm', label: '±', type: 'operator' },
+
+    // Brackets and Grouping
     { id: 'lparen', label: '(', type: 'bracket' },
     { id: 'rparen', label: ')', type: 'bracket' },
-    { id: 'y', label: 'y', type: 'variable' },
-    { id: 'fraction', label: '1/2', type: 'function' },
+    { id: 'lbracket', label: '[', type: 'bracket' },
+    { id: 'rbracket', label: ']', type: 'bracket' },
+    { id: 'lbrace', label: '{', type: 'bracket' },
+    { id: 'rbrace', label: '}', type: 'bracket' },
+
+    // Mathematical Functions
+    { id: 'sqrt', label: '√', type: 'function' },
+    { id: 'sin', label: 'sin', type: 'function' },
+    { id: 'cos', label: 'cos', type: 'function' },
+    { id: 'tan', label: 'tan', type: 'function' },
+    { id: 'sec', label: 'sec', type: 'function' },
+    { id: 'csc', label: 'csc', type: 'function' },
+    { id: 'cot', label: 'cot', type: 'function' },
+    { id: 'log', label: 'log', type: 'function' },
+    { id: 'ln', label: 'ln', type: 'function' },
+    { id: 'abs', label: '|x|', type: 'function' },
+
+    // Constants
+    { id: 'pi', label: 'π', type: 'constant' },
+    { id: 'e', label: 'e', type: 'constant' },
+    { id: 'infinity', label: '∞', type: 'constant' },
+
+    // Fractions and Advanced
+    { id: 'fraction', label: 'a/b', type: 'function' },
+    { id: 'subscript', label: 'a₁', type: 'function' },
+    { id: 'deg', label: '°', type: 'symbol' },
+
     // Numbers
     { id: '0', label: '0', type: 'number' },
     { id: '1', label: '1', type: 'number' },
@@ -86,14 +133,26 @@ export default function ExpressionBuilderTemplate({
   // Convert expression to LaTeX format for proper rendering
   const convertToLatex = (expression) => {
     return expression
-      .replace(/\*/g, ' \\times ')
-      .replace(/\//g, ' \\div ')
+      .replace(/×/g, ' \\times ')
+      .replace(/÷/g, ' \\div ')
       .replace(/\^/g, '^')
-      .replace(/sqrt\(/g, '\\sqrt{')
-      .replace(/\)/g, '}')
-      .replace(/pi/g, '\\pi')
-      .replace(/infinity/g, '\\infty')
-      .replace(/±/g, '\\pm');
+      .replace(/sqrt/g, '\\sqrt')
+      .replace(/π/g, '\\pi')
+      .replace(/θ/g, '\\theta')
+      .replace(/∞/g, '\\infty')
+      .replace(/±/g, '\\pm')
+      .replace(/°/g, '^\\circ')
+      .replace(/sin/g, '\\sin')
+      .replace(/cos/g, '\\cos')
+      .replace(/tan/g, '\\tan')
+      .replace(/sec/g, '\\sec')
+      .replace(/csc/g, '\\csc')
+      .replace(/cot/g, '\\cot')
+      .replace(/log/g, '\\log')
+      .replace(/ln/g, '\\ln')
+      .replace(/\|x\|/g, '|x|')
+      .replace(/a\/b/g, '\\frac{a}{b}')
+      .replace(/a₁/g, 'a_1');
   };
 
   return (
@@ -154,170 +213,90 @@ export default function ExpressionBuilderTemplate({
         </button>
       </div>
 
-      {/* Available Tiles Grid - Clean Layout */}
-      <div className="space-y-4">
-        {/* Variables and Common Operators */}
-        <div className="grid grid-cols-6 gap-3">
-          {mathTiles
-            .filter((tile) =>
-              ['x', 'equals', 'minus', 'plus', 'multiply', 'divide'].includes(
-                tile.id,
-              ),
-            )
-            .map((tile) => (
-              <button
-                key={tile.id}
-                onClick={() => addTile(tile)}
-                className={`
-                ${getTileColor()} h-12 rounded-md font-bold text-lg
-                hover:scale-105 transition-all duration-200 active:scale-95
-                shadow-md hover:shadow-lg
-              `}
-              >
+      {/* Available Tiles Grid - Organized by Categories */}
+      <div className="space-y-6">
+        {/* Numbers Grid - Traditional Calculator Layout */}
+        <div>
+          <div className="text-sm font-medium text-gray-600 mb-2">Numbers</div>
+          <div className="grid grid-cols-4 gap-2">
+            {/* Row 1: 7, 8, 9, ÷ */}
+            <button onClick={() => addTile(mathTiles.find((t) => t.id === '7'))} className={`${getTileColor()} h-12 rounded-md font-bold text-lg hover:scale-105 transition-all duration-200 active:scale-95 shadow-md hover:shadow-lg`}>7</button>
+            <button onClick={() => addTile(mathTiles.find((t) => t.id === '8'))} className={`${getTileColor()} h-12 rounded-md font-bold text-lg hover:scale-105 transition-all duration-200 active:scale-95 shadow-md hover:shadow-lg`}>8</button>
+            <button onClick={() => addTile(mathTiles.find((t) => t.id === '9'))} className={`${getTileColor()} h-12 rounded-md font-bold text-lg hover:scale-105 transition-all duration-200 active:scale-95 shadow-md hover:shadow-lg`}>9</button>
+            <button onClick={() => addTile(mathTiles.find((t) => t.id === 'divide'))} className={`${getTileColor()} h-12 rounded-md font-bold text-lg hover:scale-105 transition-all duration-200 active:scale-95 shadow-md hover:shadow-lg`}>÷</button>
+            
+            {/* Row 2: 4, 5, 6, × */}
+            <button onClick={() => addTile(mathTiles.find((t) => t.id === '4'))} className={`${getTileColor()} h-12 rounded-md font-bold text-lg hover:scale-105 transition-all duration-200 active:scale-95 shadow-md hover:shadow-lg`}>4</button>
+            <button onClick={() => addTile(mathTiles.find((t) => t.id === '5'))} className={`${getTileColor()} h-12 rounded-md font-bold text-lg hover:scale-105 transition-all duration-200 active:scale-95 shadow-md hover:shadow-lg`}>5</button>
+            <button onClick={() => addTile(mathTiles.find((t) => t.id === '6'))} className={`${getTileColor()} h-12 rounded-md font-bold text-lg hover:scale-105 transition-all duration-200 active:scale-95 shadow-md hover:shadow-lg`}>6</button>
+            <button onClick={() => addTile(mathTiles.find((t) => t.id === 'multiply'))} className={`${getTileColor()} h-12 rounded-md font-bold text-lg hover:scale-105 transition-all duration-200 active:scale-95 shadow-md hover:shadow-lg`}>×</button>
+            
+            {/* Row 3: 1, 2, 3, - */}
+            <button onClick={() => addTile(mathTiles.find((t) => t.id === '1'))} className={`${getTileColor()} h-12 rounded-md font-bold text-lg hover:scale-105 transition-all duration-200 active:scale-95 shadow-md hover:shadow-lg`}>1</button>
+            <button onClick={() => addTile(mathTiles.find((t) => t.id === '2'))} className={`${getTileColor()} h-12 rounded-md font-bold text-lg hover:scale-105 transition-all duration-200 active:scale-95 shadow-md hover:shadow-lg`}>2</button>
+            <button onClick={() => addTile(mathTiles.find((t) => t.id === '3'))} className={`${getTileColor()} h-12 rounded-md font-bold text-lg hover:scale-105 transition-all duration-200 active:scale-95 shadow-md hover:shadow-lg`}>3</button>
+            <button onClick={() => addTile(mathTiles.find((t) => t.id === 'minus'))} className={`${getTileColor()} h-12 rounded-md font-bold text-lg hover:scale-105 transition-all duration-200 active:scale-95 shadow-md hover:shadow-lg`}>-</button>
+            
+            {/* Row 4: 0, ., +, = */}
+            <button onClick={() => addTile(mathTiles.find((t) => t.id === '0'))} className={`${getTileColor()} h-12 rounded-md font-bold text-lg hover:scale-105 transition-all duration-200 active:scale-95 shadow-md hover:shadow-lg`}>0</button>
+            <button onClick={() => addTile(mathTiles.find((t) => t.id === 'dot'))} className={`${getTileColor()} h-12 rounded-md font-bold text-lg hover:scale-105 transition-all duration-200 active:scale-95 shadow-md hover:shadow-lg`}>.</button>
+            <button onClick={() => addTile(mathTiles.find((t) => t.id === 'plus'))} className={`${getTileColor()} h-12 rounded-md font-bold text-lg hover:scale-105 transition-all duration-200 active:scale-95 shadow-md hover:shadow-lg`}>+</button>
+            <button onClick={() => addTile(mathTiles.find((t) => t.id === 'equals'))} className={`${getTileColor()} h-12 rounded-md font-bold text-lg hover:scale-105 transition-all duration-200 active:scale-95 shadow-md hover:shadow-lg`}>=</button>
+          </div>
+        </div>
+
+        {/* Common Variables */}
+        <div>
+          <div className="text-sm font-medium text-gray-600 mb-2">Variables</div>
+          <div className="grid grid-cols-6 gap-2">
+            {mathTiles.filter(tile => tile.type === 'variable').slice(0, 12).map((tile) => (
+              <button key={tile.id} onClick={() => addTile(tile)} className={`${getTileColor()} h-12 rounded-md font-bold text-lg hover:scale-105 transition-all duration-200 active:scale-95 shadow-md hover:shadow-lg`}>
                 {tile.label}
               </button>
             ))}
+          </div>
         </div>
 
-        {/* Numbers Grid - Clean 4x3 layout */}
-        <div className="grid grid-cols-4 gap-3">
-          {/* Row 1: 1, 2, 3, + */}
-          <button
-            onClick={() => addTile(mathTiles.find((t) => t.id === '1'))}
-            className={`${getTileColor()} h-12 rounded-md font-bold text-lg hover:scale-105 transition-all duration-200 active:scale-95 shadow-md hover:shadow-lg`}
-          >
-            1
-          </button>
-          <button
-            onClick={() => addTile(mathTiles.find((t) => t.id === '2'))}
-            className={`${getTileColor()} h-12 rounded-md font-bold text-lg hover:scale-105 transition-all duration-200 active:scale-95 shadow-md hover:shadow-lg`}
-          >
-            2
-          </button>
-          <button
-            onClick={() => addTile(mathTiles.find((t) => t.id === '3'))}
-            className={`${getTileColor()} h-12 rounded-md font-bold text-lg hover:scale-105 transition-all duration-200 active:scale-95 shadow-md hover:shadow-lg`}
-          >
-            3
-          </button>
-          <button
-            onClick={() => addTile(mathTiles.find((t) => t.id === 'plus'))}
-            className={`${getTileColor()} h-12 rounded-md font-bold text-lg hover:scale-105 transition-all duration-200 active:scale-95 shadow-md hover:shadow-lg`}
-          >
-            +
-          </button>
-
-          {/* Row 2: 4, 5, 6, - */}
-          <button
-            onClick={() => addTile(mathTiles.find((t) => t.id === '4'))}
-            className={`${getTileColor()} h-12 rounded-md font-bold text-lg hover:scale-105 transition-all duration-200 active:scale-95 shadow-md hover:shadow-lg`}
-          >
-            4
-          </button>
-          <button
-            onClick={() => addTile(mathTiles.find((t) => t.id === '5'))}
-            className={`${getTileColor()} h-12 rounded-md font-bold text-lg hover:scale-105 transition-all duration-200 active:scale-95 shadow-md hover:shadow-lg`}
-          >
-            5
-          </button>
-          <button
-            onClick={() => addTile(mathTiles.find((t) => t.id === '6'))}
-            className={`${getTileColor()} h-12 rounded-md font-bold text-lg hover:scale-105 transition-all duration-200 active:scale-95 shadow-md hover:shadow-lg`}
-          >
-            6
-          </button>
-          <button
-            onClick={() => addTile(mathTiles.find((t) => t.id === 'minus'))}
-            className={`${getTileColor()} h-12 rounded-md font-bold text-lg hover:scale-105 transition-all duration-200 active:scale-95 shadow-md hover:shadow-lg`}
-          >
-            -
-          </button>
-
-          {/* Row 3: 7, 8, 9, × */}
-          <button
-            onClick={() => addTile(mathTiles.find((t) => t.id === '7'))}
-            className={`${getTileColor()} h-12 rounded-md font-bold text-lg hover:scale-105 transition-all duration-200 active:scale-95 shadow-md hover:shadow-lg`}
-          >
-            7
-          </button>
-          <button
-            onClick={() => addTile(mathTiles.find((t) => t.id === '8'))}
-            className={`${getTileColor()} h-12 rounded-md font-bold text-lg hover:scale-105 transition-all duration-200 active:scale-95 shadow-md hover:shadow-lg`}
-          >
-            8
-          </button>
-          <button
-            onClick={() => addTile(mathTiles.find((t) => t.id === '9'))}
-            className={`${getTileColor()} h-12 rounded-md font-bold text-lg hover:scale-105 transition-all duration-200 active:scale-95 shadow-md hover:shadow-lg`}
-          >
-            9
-          </button>
-          <button
-            onClick={() => addTile(mathTiles.find((t) => t.id === 'multiply'))}
-            className={`${getTileColor()} h-12 rounded-md font-bold text-lg hover:scale-105 transition-all duration-200 active:scale-95 shadow-md hover:shadow-lg`}
-          >
-            ×
-          </button>
-
-          {/* Row 4: 0, y, ÷, = */}
-          <button
-            onClick={() => addTile(mathTiles.find((t) => t.id === '0'))}
-            className={`${getTileColor()} h-12 rounded-md font-bold text-lg hover:scale-105 transition-all duration-200 active:scale-95 shadow-md hover:shadow-lg`}
-          >
-            0
-          </button>
-          <button
-            onClick={() => addTile(mathTiles.find((t) => t.id === 'y'))}
-            className={`${getTileColor()} h-12 rounded-md font-bold text-lg hover:scale-105 transition-all duration-200 active:scale-95 shadow-md hover:shadow-lg`}
-          >
-            y
-          </button>
-          <button
-            onClick={() => addTile(mathTiles.find((t) => t.id === 'divide'))}
-            className={`${getTileColor()} h-12 rounded-md font-bold text-lg hover:scale-105 transition-all duration-200 active:scale-95 shadow-md hover:shadow-lg`}
-          >
-            ÷
-          </button>
-          <button
-            onClick={() => addTile(mathTiles.find((t) => t.id === 'equals'))}
-            className={`${getTileColor()} h-12 rounded-md font-bold text-lg hover:scale-105 transition-all duration-200 active:scale-95 shadow-md hover:shadow-lg`}
-          >
-            =
-          </button>
+        {/* Trigonometric Functions */}
+        <div>
+          <div className="text-sm font-medium text-gray-600 mb-2">Trigonometric Functions</div>
+          <div className="grid grid-cols-6 gap-2">
+            {mathTiles.filter(tile => ['sin', 'cos', 'tan', 'sec', 'csc', 'cot'].includes(tile.id)).map((tile) => (
+              <button key={tile.id} onClick={() => addTile(tile)} className={`${getTileColor()} h-10 rounded-md font-bold text-sm hover:scale-105 transition-all duration-200 active:scale-95 shadow-md hover:shadow-lg`}>
+                {tile.label}
+              </button>
+            ))}
+          </div>
         </div>
 
-        {/* Functions - Clean row */}
-        <div className="grid grid-cols-5 gap-3">
-          <button
-            onClick={() => addTile(mathTiles.find((t) => t.id === 'power'))}
-            className={`${getTileColor()} h-12 rounded-md font-bold text-lg hover:scale-105 transition-all duration-200 active:scale-95 shadow-md hover:shadow-lg`}
-          >
-            ^
-          </button>
-          <button
-            onClick={() => addTile(mathTiles.find((t) => t.id === 'sqrt'))}
-            className={`${getTileColor()} h-12 rounded-md font-bold text-lg hover:scale-105 transition-all duration-200 active:scale-95 shadow-md hover:shadow-lg`}
-          >
-            √
-          </button>
-          <button
-            onClick={() => addTile(mathTiles.find((t) => t.id === 'lparen'))}
-            className={`${getTileColor()} h-12 rounded-md font-bold text-lg hover:scale-105 transition-all duration-200 active:scale-95 shadow-md hover:shadow-lg`}
-          >
-            (
-          </button>
-          <button
-            onClick={() => addTile(mathTiles.find((t) => t.id === 'rparen'))}
-            className={`${getTileColor()} h-12 rounded-md font-bold text-lg hover:scale-105 transition-all duration-200 active:scale-95 shadow-md hover:shadow-lg`}
-          >
-            )
-          </button>
-          <button
-            onClick={() => addTile(mathTiles.find((t) => t.id === 'fraction'))}
-            className={`${getTileColor()} h-12 rounded-md font-bold text-lg hover:scale-105 transition-all duration-200 active:scale-95 shadow-md hover:shadow-lg`}
-          >
-            1/2
-          </button>
+        {/* Advanced Functions & Operations */}
+        <div>
+          <div className="text-sm font-medium text-gray-600 mb-2">Functions & Operations</div>
+          <div className="grid grid-cols-5 gap-2">
+            <button onClick={() => addTile(mathTiles.find((t) => t.id === 'power'))} className={`${getTileColor()} h-12 rounded-md font-bold text-lg hover:scale-105 transition-all duration-200 active:scale-95 shadow-md hover:shadow-lg`}>^</button>
+            <button onClick={() => addTile(mathTiles.find((t) => t.id === 'sqrt'))} className={`${getTileColor()} h-12 rounded-md font-bold text-lg hover:scale-105 transition-all duration-200 active:scale-95 shadow-md hover:shadow-lg`}>√</button>
+            <button onClick={() => addTile(mathTiles.find((t) => t.id === 'fraction'))} className={`${getTileColor()} h-12 rounded-md font-bold text-sm hover:scale-105 transition-all duration-200 active:scale-95 shadow-md hover:shadow-lg`}>a/b</button>
+            <button onClick={() => addTile(mathTiles.find((t) => t.id === 'subscript'))} className={`${getTileColor()} h-12 rounded-md font-bold text-sm hover:scale-105 transition-all duration-200 active:scale-95 shadow-md hover:shadow-lg`}>a₁</button>
+            <button onClick={() => addTile(mathTiles.find((t) => t.id === 'abs'))} className={`${getTileColor()} h-12 rounded-md font-bold text-sm hover:scale-105 transition-all duration-200 active:scale-95 shadow-md hover:shadow-lg`}>|x|</button>
+            
+            <button onClick={() => addTile(mathTiles.find((t) => t.id === 'log'))} className={`${getTileColor()} h-12 rounded-md font-bold text-sm hover:scale-105 transition-all duration-200 active:scale-95 shadow-md hover:shadow-lg`}>log</button>
+            <button onClick={() => addTile(mathTiles.find((t) => t.id === 'ln'))} className={`${getTileColor()} h-12 rounded-md font-bold text-sm hover:scale-105 transition-all duration-200 active:scale-95 shadow-md hover:shadow-lg`}>ln</button>
+            <button onClick={() => addTile(mathTiles.find((t) => t.id === 'pi'))} className={`${getTileColor()} h-12 rounded-md font-bold text-lg hover:scale-105 transition-all duration-200 active:scale-95 shadow-md hover:shadow-lg`}>π</button>
+            <button onClick={() => addTile(mathTiles.find((t) => t.id === 'e'))} className={`${getTileColor()} h-12 rounded-md font-bold text-lg hover:scale-105 transition-all duration-200 active:scale-95 shadow-md hover:shadow-lg`}>e</button>
+            <button onClick={() => addTile(mathTiles.find((t) => t.id === 'deg'))} className={`${getTileColor()} h-12 rounded-md font-bold text-lg hover:scale-105 transition-all duration-200 active:scale-95 shadow-md hover:shadow-lg`}>°</button>
+          </div>
+        </div>
+
+        {/* Brackets & Symbols */}
+        <div>
+          <div className="text-sm font-medium text-gray-600 mb-2">Brackets & Symbols</div>
+          <div className="grid grid-cols-6 gap-2">
+            {mathTiles.filter(tile => tile.type === 'bracket' || ['pm', 'infinity'].includes(tile.id)).map((tile) => (
+              <button key={tile.id} onClick={() => addTile(tile)} className={`${getTileColor()} h-12 rounded-md font-bold text-lg hover:scale-105 transition-all duration-200 active:scale-95 shadow-md hover:shadow-lg`}>
+                {tile.label}
+              </button>
+            ))}
+          </div>
         </div>
       </div>
 
@@ -336,9 +315,12 @@ export default function ExpressionBuilderTemplate({
           <div className="space-y-1 mt-2 text-gray-300">
             <p>• Tap tiles to add them to your expression</p>
             <p>• Click on tiles in your expression to remove them</p>
-            <p>• Build expressions like: x + 2 × 3 = 11</p>
-            <p>• Use parentheses for grouping: (x + 2) × 3</p>
-            <p>• For factorization: (x + 2)(x + 3)</p>
+            <p>• Build expressions like: x² + 5x + 6</p>
+            <p>• Use parentheses for grouping: (x + 2)(x + 3)</p>
+            <p>• For identities: sin²θ + cos²θ = 1</p>
+            <p>• For sequences: aₙ = a₁ + (n-1)d</p>
+            <p>• For functions: f(x) = 2x + 5</p>
+            <p>• For geometry: A = πr²</p>
           </div>
         )}
       </div>

@@ -15,7 +15,9 @@ export default function MatchQuestionPage() {
         setLoading(true);
         
         // First try to fetch from backend
-        const result = await getQuestionsByType('Match Question', 10);
+        console.log('🔥 MATCH QUESTION: Starting fetch...');
+        const result = await getQuestionsByType('Matching', 10);
+        console.log('🔥 MATCH QUESTION: API result:', result);
 
         if (result.success && result.data && result.data.length > 0) {
           console.log('Match Question questions fetched from backend:', result.data.length);

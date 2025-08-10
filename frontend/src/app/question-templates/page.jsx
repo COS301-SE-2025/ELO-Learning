@@ -1,6 +1,6 @@
 'use client';
 
-import { BookOpen, Brain, Check, CheckSquare, Layers, Shuffle, Target, X } from 'lucide-react';
+import { BookOpen, Brain, Check, CheckSquare, Layers, Target, X } from 'lucide-react';
 import Link from 'next/link';
 
 export default function QuestionTemplatesPage() {
@@ -54,7 +54,7 @@ export default function QuestionTemplatesPage() {
       id: 'match-question',
       title: 'Match Question',
       description: 'Connect related items by matching pairs',
-      icon: <Shuffle size={32} />,
+      icon: <span style={{fontSize: '32px'}}>🔗</span>,
       color: 'bg-pink-100 border-pink-300 text-pink-800',
       hoverColor: 'hover:bg-pink-200',
       path: '/question-templates/match-question',

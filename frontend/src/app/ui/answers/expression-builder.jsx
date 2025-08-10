@@ -1,9 +1,9 @@
 // ui/answers/expression-builder.jsx
 'use client';
 
-import { useState, useEffect } from 'react';
-import { ChevronDown, ChevronUp } from 'lucide-react';
 import 'katex/dist/katex.min.css';
+import { ChevronDown, ChevronUp } from 'lucide-react';
+import { useEffect, useState } from 'react';
 import { InlineMath } from 'react-katex';
 
 export default function ExpressionBuilderTemplate({
@@ -94,14 +94,27 @@ export default function ExpressionBuilderTemplate({
 
   // Convert expression to LaTeX format for proper rendering
   const convertToLatex = (expression) => {
-    // Simple approach - just replace basic operators, keep parentheses as-is
     return expression
       .replace(/×/g, ' \\times ')
       .replace(/÷/g, ' \\div ')
-      .replace(/√/g, '\\sqrt')
+      .replace(/\^/g, '^')
+      .replace(/sqrt/g, '\\sqrt')
       .replace(/π/g, '\\pi')
+      .replace(/θ/g, '\\theta')
       .replace(/∞/g, '\\infty')
-      .replace(/±/g, '\\pm');
+      .replace(/±/g, '\\pm')
+      .replace(/°/g, '^\\circ')
+      .replace(/sin/g, '\\sin')
+      .replace(/cos/g, '\\cos')
+      .replace(/tan/g, '\\tan')
+      .replace(/sec/g, '\\sec')
+      .replace(/csc/g, '\\csc')
+      .replace(/cot/g, '\\cot')
+      .replace(/log/g, '\\log')
+      .replace(/ln/g, '\\ln')
+      .replace(/\|x\|/g, '|x|')
+      .replace(/a\/b/g, '\\frac{a}{b}')
+      .replace(/a₁/g, 'a_1');
   };
 
   return (
@@ -331,9 +344,12 @@ export default function ExpressionBuilderTemplate({
           <div className="space-y-1 mt-2 text-gray-300">
             <p>• Tap tiles to add them to your expression</p>
             <p>• Click on tiles in your expression to remove them</p>
-            <p>• Build expressions like: x + 2 × 3 = 11</p>
-            <p>• Use parentheses for grouping: (x + 2) × 3</p>
-            <p>• For factorization: (x + 2)(x + 3)</p>
+            <p>• Build expressions like: x² + 5x + 6</p>
+            <p>• Use parentheses for grouping: (x + 2)(x + 3)</p>
+            <p>• For identities: sin²θ + cos²θ = 1</p>
+            <p>• For sequences: aₙ = a₁ + (n-1)d</p>
+            <p>• For functions: f(x) = 2x + 5</p>
+            <p>• For geometry: A = πr²</p>
           </div>
         )}
       </div>

@@ -25,13 +25,13 @@ export function AvatarPreview({ avatar, className = '' }) {
           />
 
           {/* Eyes */}
-          <div className="absolute top-6 left-1/2 transform -translate-x-1/2">
-            <AvatarEyes eyeType={avatar.eyes} className="w-16 h-8" />
+          <div className="absolute top-4 left-1/2 transform -translate-x-1/2">
+            <AvatarEyes eyeType={avatar.eyes} className="w-24 h-12" />
           </div>
 
           {/* Mouth */}
-          <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2">
-            <AvatarMouth mouthType={avatar.mouth} className="w-8 h-4" />
+          <div className="absolute bottom-6 left-1/2 transform -translate-x-1/2">
+            <AvatarMouth mouthType={avatar.mouth} className="w-12 h-6" />
           </div>
         </div>
       </div>

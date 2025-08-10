@@ -29,7 +29,31 @@ export default function QuestionsTracker({
   const [isDisabled, setIsDisabled] = useState(true);
   const [answer, setAnswer] = useState('');
   const [isAnswerCorrect, setIsAnswerCorrect] = useState(false);
-  const [numLives, setNumLives] = useState(lives || 5);
+  const [numLives, setNumLives] = useState(() => {
+    // Reset lives to 5 and clear localStorage (only in browser)
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('lives', '5');
+    }
+    return 5;
+  });
+
+  // Listen for life loss events from match questions
+  useEffect(() => {
+    const handleMatchLifeLost = (event) => {
+      console.log('🎮 Match question life lost:', event.detail);
+      const newLives = Math.max(0, event.detail.newLives); // Ensure lives don't go below 0
+      setNumLives(newLives);
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('lives', newLives.toString());
+      }
+    };
+
+    window.addEventListener('lifeLost', handleMatchLifeLost);
+    
+    return () => {
+      window.removeEventListener('lifeLost', handleMatchLifeLost);
+    };
+  }, []);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [questionStartTime, setQuestionStartTime] = useState(Date.now());
 
@@ -84,6 +108,9 @@ export default function QuestionsTracker({
   }, [resetXPState]);
 
   const setLocalStorage = async () => {
+    // Only proceed if we're in the browser
+    if (typeof window === 'undefined') return;
+    
     // Calculate time elapsed in seconds
     const timeElapsed = Math.round((Date.now() - questionStartTime) / 1000);
 
@@ -126,10 +153,21 @@ export default function QuestionsTracker({
   const handleLives = (validationResult) => {
     // Use the passed validation result instead of the old state
     if (!validationResult) {
-      setNumLives((prev) => prev - 1);
+      setNumLives((prev) => {
+        const newLives = Math.max(0, prev - 1);
+        if (typeof window !== 'undefined') {
+          localStorage.setItem('lives', newLives.toString());
+        }
+        
+        if (newLives <= 0) {
+          router.push(`/end-screen?mode=${mode}`);
+          return newLives;
+        }
+        return newLives;
+      });
+      
       if (numLives <= 1) {
-        router.push(`/end-screen?mode=${mode}`);
-        return true;
+        return true; // Game over
       }
     }
     return false;

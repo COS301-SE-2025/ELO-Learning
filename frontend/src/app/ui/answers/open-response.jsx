@@ -1,102 +1,67 @@
-// ui/answers/open-response.jsx
+// ui/answers/open-response.jsx - Themed version
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useEffect, useState } from 'react';
 
 export default function OpenResponseTemplate({
   setAnswer,
   answer = '',
   setIsAnswerCorrect,
 }) {
-  const [inputValue, setInputValue] = useState(answer);
-  const [characterCount, setCharacterCount] = useState(0);
-  const [isValidLength, setIsValidLength] = useState(false);
+  const [inputValue, setInputValue] = useState('');
 
-  const MIN_LENGTH = 20;
-  const MAX_LENGTH = 2000;
+  // Reset input when answer prop changes (new question) or when it's empty
+  useEffect(() => {
+    setInputValue(answer || '');
+  }, [answer]);
 
   useEffect(() => {
-    const trimmedLength = inputValue.trim().length;
-    setCharacterCount(trimmedLength);
-    setIsValidLength(
-      trimmedLength >= MIN_LENGTH && trimmedLength <= MAX_LENGTH,
-    );
-
     // Update parent components
     setAnswer(inputValue);
-    setIsAnswerCorrect(trimmedLength >= MIN_LENGTH);
-  }, [inputValue, setAnswer, setIsAnswerCorrect]);
+    // For open response, don't auto-validate here - let the parent handle it
+    // We'll just indicate if there's content for basic UI feedback
+    // The actual validation happens in the answer-wrapper
+  }, [inputValue]); // Remove setAnswer and setIsAnswerCorrect from dependencies
 
   const handleInputChange = (e) => {
     const value = e.target.value;
-    if (value.length <= MAX_LENGTH) {
-      setInputValue(value);
-    }
-  };
-
-  const getCharacterCountColor = () => {
-    if (characterCount < MIN_LENGTH) return 'text-red-500';
-    if (characterCount > MAX_LENGTH * 0.9) return 'text-yellow-500';
-    return 'text-green-500';
+    setInputValue(value);
+    // Immediately call setAnswer to trigger validation in the parent
+    setAnswer(value);
   };
 
   return (
     <div className="w-full space-y-4">
       <div className="space-y-2">
-        <label className="block text-sm font-medium text-gray-700">
-          Write your detailed explanation or step-by-step solution:
-        </label>
-
-        {/* Text Area */}
+        {/* Text Area with enhanced styling */}
         <textarea
           value={inputValue}
           onChange={handleInputChange}
-          placeholder="Explain your reasoning step by step..."
-          className={`w-full p-4 border rounded-lg resize-none font-mono text-sm min-h-[200px] ${
-            !isValidLength && characterCount > 0
-              ? 'border-red-500 focus:border-red-600'
-              : isValidLength
-                ? 'border-green-500 focus:border-green-600'
-                : 'border-gray-300 focus:border-purple-500'
-          } focus:outline-none focus:ring-2 focus:ring-purple-500/20`}
+          placeholder="Write your answer"
+          className="w-full p-4 resize-none text-sm min-h-[200px] 
+                     focus:outline-none
+                     bg-white text-gray-900 placeholder-gray-500
+                     transition-all duration-200"
+          style={{
+            border: '3px solid #ffffff',
+            borderRadius: '8px',
+            boxShadow: '0 0 0 1px rgba(255, 255, 255, 0.8)',
+          }}
+          onFocus={(e) => {
+            e.target.style.border = '3px solid #7D32CE';
+            e.target.style.boxShadow = '0 0 0 3px rgba(125, 50, 206, 0.2)';
+          }}
+          onBlur={(e) => {
+            e.target.style.border = '3px solid #ffffff';
+            e.target.style.boxShadow = '0 0 0 1px rgba(255, 255, 255, 0.8)';
+          }}
           rows={8}
         />
-
-        {/* Character Counter and Validation */}
-        <div className="flex justify-between items-center text-sm">
-          <div className={getCharacterCountColor()}>
-            {characterCount < MIN_LENGTH ? (
-              <span>
-                {MIN_LENGTH - characterCount} more characters needed (minimum{' '}
-                {MIN_LENGTH})
-              </span>
-            ) : (
-              <span className="flex items-center gap-2">
-                <span className="w-4 h-4 bg-green-500 rounded-full flex items-center justify-center">
-                  <span className="text-white text-xs">✓</span>
-                </span>
-                Great! Keep writing to strengthen your answer.
-              </span>
-            )}
-          </div>
-
-          <div className={`${getCharacterCountColor()} font-mono`}>
-            {characterCount}/{MAX_LENGTH}
-          </div>
+        
+        {/* Character count or word count (optional) */}
+        <div className="text-xs text-gray-500 text-right">
+          {inputValue.length} characters
         </div>
-      </div>
-
-      {/* Writing Tips */}
-      <div className="bg-purple-50 border border-purple-200 rounded-lg p-4">
-        <h4 className="text-sm font-medium text-purple-800 mb-2">
-          💡 Writing Tips:
-        </h4>
-        <ul className="text-xs text-purple-700 space-y-1">
-          <li>• Show your work step by step</li>
-          <li>• Explain your reasoning clearly</li>
-          <li>• Use proper mathematical notation</li>
-          <li>• Check your answer makes sense</li>
-        </ul>
       </div>
     </div>
   );

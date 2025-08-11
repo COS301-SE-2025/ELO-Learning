@@ -11,7 +11,7 @@ export function AvatarPreview({ avatar, className = '' }) {
       {/* Background */}
       <AvatarBackground
         backgroundType={avatar.background}
-        className="absolute"
+        className="absolute inset-0 w-full h-full"
       />
 
       {/* Avatar Container */}

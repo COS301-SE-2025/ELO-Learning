@@ -1,8 +1,10 @@
 'use client';
 
+import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { useAvatar } from '../../context/avatar-context';
+import Back from '../back';
 import { AvatarPreview } from './avatar-preview';
 import { BackgroundSelector } from './background';
 import { BodyShapeSelector } from './body-shape';
@@ -11,11 +13,15 @@ import { EyeSelector } from './eyes';
 import { MouthSelector } from './mouth';
 
 const TABS = [
-  { id: 'body', name: 'Body', icon: '👤' },
-  { id: 'color', name: 'Color', icon: '🎨' },
-  { id: 'eyes', name: 'Eyes', icon: '👀' },
-  { id: 'mouth', name: 'Mouth', icon: '😊' },
-  { id: 'background', name: 'Background', icon: '🖼️' },
+  { id: 'body', name: 'Body', icon: '/avatar-icons/Body.svg' },
+  { id: 'color', name: 'Color', icon: '/avatar-icons/Colour.svg' },
+  { id: 'eyes', name: 'Eyes', icon: '/avatar-icons/Eyes.svg' },
+  { id: 'mouth', name: 'Mouth', icon: '/avatar-icons/Mouth.svg' },
+  {
+    id: 'background',
+    name: 'Background',
+    icon: '/avatar-icons/Background.svg',
+  },
 ];
 
 export function AvatarCreator() {
@@ -85,59 +91,59 @@ export function AvatarCreator() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-900 text-white">
+    <div className="">
       {/* Header */}
-      <div className="border-b border-gray-700 p-4 flex items-center justify-between">
-        <button
-          onClick={() => router.back()}
-          className="text-gray-400 hover:text-white transition-colors"
-        >
-          ← Back
-        </button>
-        <h1 className="text-2xl font-bold">Edit Avatar</h1>
-        <div className="w-16"></div> {/* Spacer for centering */}
+      <div>
+        <Back pagename="Create Avatar" />
       </div>
 
-      <div className="flex flex-col lg:flex-row">
+      <div className="h-[90vh] flex flex-col lg:flex-row">
         {/* Avatar Preview - Left side on desktop, top on mobile */}
-        <div className="lg:w-1/2 p-6">
-          <div className="aspect-square max-w-md mx-auto bg-gray-800 rounded-2xl overflow-hidden">
+        <div className="lg:w-1/2 p-6 flex">
+          <div className="w-full mx-auto rounded-2xl overflow-hidden flex items-center justify-center">
             <AvatarPreview avatar={currentAvatar} />
           </div>
         </div>
 
-        {/* Customization Panel - Right side on desktop, bottom on mobile */}
-        <div className="lg:w-1/2 p-6">
-          {/* Tab Navigation */}
-          <div className="flex justify-center mb-6 bg-gray-800 rounded-xl p-2">
-            {TABS.map((tab) => (
-              <button
-                key={tab.id}
-                onClick={() => setActiveTab(tab.id)}
-                className={`flex-1 flex flex-col items-center p-3 rounded-lg transition-all ${
-                  activeTab === tab.id
-                    ? 'bg-blue-500 text-white'
-                    : 'text-gray-400 hover:text-white hover:bg-gray-700'
-                }`}
-              >
-                <span className="text-xl mb-1">{tab.icon}</span>
-                <span className="text-xs font-medium">{tab.name}</span>
-              </button>
-            ))}
-          </div>
+        {/* Customization Panel + Save Button in one bordered container */}
+        <div className="lg:w-1/2 m-6 border rounded-lg border-[#696969] flex flex-col justify-between">
+          <div>
+            {/* Tab Navigation */}
+            <div className="flex justify-center p-6 border-b border-[#696969]">
+              {TABS.map((tab) => (
+                <button
+                  key={tab.id}
+                  onClick={() => setActiveTab(tab.id)}
+                  className={`flex-1 flex flex-col items-center p-3 rounded-lg transition-all ${
+                    activeTab === tab.id
+                      ? 'bg-blue-500 text-white'
+                      : 'text-gray-400 hover:text-white hover:bg-gray-700'
+                  }`}
+                >
+                  <div className="w-10 h-10 mb-1">
+                    <Image
+                      src={tab.icon}
+                      alt={tab.name}
+                      width={45}
+                      height={45}
+                      className="w-full h-full object-contain filter brightness-0 invert opacity-50"
+                    />
+                  </div>
+                </button>
+              ))}
+            </div>
 
-          {/* Tab Content */}
-          <div className="bg-gray-800 rounded-xl p-6 min-h-[400px]">
-            {renderTabContent()}
+            {/* Tab Content */}
+            <div className="p-6 min-h-[420px] max-h-[420px] overflow-y-auto">
+              {renderTabContent()}
+            </div>
           </div>
-
-          {/* Save Button */}
-          <button
-            onClick={handleSave}
-            className="w-full mt-6 bg-green-500 hover:bg-green-600 text-white font-bold py-4 rounded-xl transition-colors"
-          >
-            Save Avatar
-          </button>
+          {/* Save Button at the bottom of the builder section */}
+          <div className="w-full flex justify-center p-6">
+            <button onClick={handleSave} className="main-button">
+              Save Avatar
+            </button>
+          </div>
         </div>
       </div>
     </div>

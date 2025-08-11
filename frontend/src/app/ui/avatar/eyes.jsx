@@ -54,11 +54,11 @@ export function EyeSelector({ selectedEyes, onEyesChange }) {
             onClick={() => onEyesChange(eye.id)}
             className={`p-3 rounded-lg border-2 transition-all aspect-square ${
               selectedEyes === eye.id
-                ? 'border-blue-500 bg-blue-500 bg-opacity-20'
-                : 'border-gray-600 bg-gray-700 hover:border-blue-400'
+                ? 'border-[#4d5ded] bg-[#201F1F] bg-opacity-20'
+                : 'border-gray-600 bg-gray-700 hover:border-[#4d5ded]'
             }`}
           >
-            <div className="w-full h-12 relative mb-2">
+            <div className="w-30 h-30 relative mb-2 flex items-center justify-center">
               <Image
                 src={eye.src}
                 alt={eye.name}
@@ -66,9 +66,9 @@ export function EyeSelector({ selectedEyes, onEyesChange }) {
                 className="object-contain"
               />
             </div>
-            <div className="text-xs font-medium text-white text-center">
+            {/* <div className="text-xs font-medium text-white text-center">
               {eye.name}
-            </div>
+            </div> */}
           </button>
         ))}
       </div>

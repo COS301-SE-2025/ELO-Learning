@@ -28,7 +28,11 @@ const PORT = process.env.PORT || 3000;
 const server = createServer(app);
 
 // Middleware
-app.use(cors());
+//app.use(cors());
+app.use(cors({
+  origin: 'http://localhost:8080',
+  credentials: true
+}));
 app.use(express.json());
 
 // Routes
@@ -55,11 +59,19 @@ if (process.env.NODE_ENV !== 'test') {
 }
 
 //Socket IO setup
+// const io = new Server(server, {
+//   cors: {
+//     origin: '*',
+//     methods: ['GET', 'POST'],
+//   },
+// });
+// Socket.IO CORS config
 const io = new Server(server, {
   cors: {
-    origin: '*',
+    origin: 'http://localhost:8080', // must match frontend URL
     methods: ['GET', 'POST'],
-  },
+    credentials: true
+  }
 });
 
 io.on('connection', (socket) => {

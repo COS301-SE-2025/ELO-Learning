@@ -7,26 +7,11 @@ import { supabase } from '../database/supabaseClient.js';
 const router = express.Router();
 const TOKEN_EXPIRY = 3600; // 1 hour in seconds
 
-function authenticateToken(req, res, next) {
-  const authHeader = req.headers['authorization'];
-  if (!authHeader || !authHeader.startsWith('Bearer ')) {
-    return res.status(401).json({ error: 'Authorization token missing or invalid' });
-  }
-
-  const token = authHeader.split(' ')[1];
-  jwt.verify(token, process.env.JWT_SECRET, (err, user) => {
-    if (err) return res.status(403).json({ error: 'Invalid or expired token' });
-    req.user = user; // Attach decoded token payload to req.user
-    next();
-  });
-}
-
-
 // GET /users Endpoint: works.
 router.get('/users', async (req, res) => {
   const { data, error } = await supabase
     .from('Users')
-    .select('id,name,surname,username,email,currentLevel,joinDate,xp,pfpURL');
+    .select('id,name,surname,username,email,currentLevel,joinDate,xp,pfpURL,baseLineTest');
   if (error) {
     console.error('Error fetching users:', error.message);
     return res.status(500).json({ error: 'Failed to fetch users' });
@@ -49,7 +34,7 @@ router.get('/user/:id', async (req, res) => {
   // Fetch user from Supabase
   const { data, error } = await supabase
     .from('Users')
-    .select('id,name,surname,username,email,currentLevel,joinDate,xp,pfpURL')
+    .select('id,name,surname,username,email,currentLevel,joinDate,xp,pfpURL,baseLineTest')
     .eq('id', id)
     .single();
 
@@ -63,6 +48,101 @@ router.get('/user/:id', async (req, res) => {
 
   res.status(200).json(data);
 });
+
+router.get('/user/me', async (req, res) => {
+  try {
+    // Try to get token from Authorization header or cookie
+    let token = null;
+    const authHeader = req.headers.authorization;
+    if (authHeader && authHeader.startsWith('Bearer ')) {
+      token = authHeader.split(' ')[1];
+    } else if (req.cookies && req.cookies.token) {
+      token = req.cookies.token;
+    }
+
+    if (!token) {
+      return res.status(401).json({ error: 'Unauthorized: No token provided' });
+    }
+
+    // Verify JWT token
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const userId = decoded.id || decoded.userId; // depends on your JWT payload
+
+    if (!userId) {
+      return res.status(401).json({ error: 'Unauthorized: Invalid token payload' });
+    }
+
+    // Fetch user from Supabase by id
+    const { data: user, error } = await supabase
+      .from('Users')
+      .select('id, name, surname, username, email, baseLineTest, currentLevel, xp')
+      .eq('id', userId)
+      .single();
+
+    if (error || !user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    // Return user info
+    return res.status(200).json({ user });
+  } catch (error) {
+    console.error('Error fetching current user:', error);
+    return res.status(401).json({ error: 'Unauthorized: Invalid or expired token' });
+  }
+});
+
+
+//get user's baseline
+router.get('/user/:id/baseline', async (req, res) => {
+  const { id } = req.params;
+  const { data, error } = await supabase
+    .from('Users')
+    .select('baseLineTest')
+    .eq('id', id)
+    .single();
+
+  if (error) {
+    return res.status(500).json({ error: 'Failed to fetch baseline test value' });
+  }
+  res.status(200).json({ baseLineTest: data.baseLineTest });
+});
+
+// Update user's baseLineTest value
+router.put('/user/:id/baseline', async (req, res) => {
+  const { id } = req.params;
+  const { baseLineTest } = req.body;
+
+  // Validate input
+  if (typeof baseLineTest !== 'boolean') {
+    return res.status(400).json({ error: 'baseLineTest must be a boolean' });
+  }
+
+  const authHeader = req.headers.authorization;
+  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    return res.status(401).json({ error: 'Unauthorized: No token provided' });
+  }
+
+  try {
+    // Optional: Verify token here if needed (like in /user/me)
+    // Update the value
+    const { data, error } = await supabase
+      .from('Users')
+      .update({ baseLineTest })
+      .eq('id', id)
+      .select()
+      .single();
+
+    if (error) {
+      return res.status(500).json({ error: 'Failed to update baseLineTest' });
+    }
+
+    res.status(200).json({ message: 'baseLineTest updated', baseLineTest: data.baseLineTest });
+  } catch (err) {
+    console.error('Error updating baseLineTest:', err);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
 
 // Return user's achievements: (works)
 router.get('/users/:id/achievements', async (req, res) => {
@@ -130,7 +210,7 @@ router.post('/user/:id/xp', async (req, res) => {
 
 // Register new user
 router.post('/register', async (req, res) => {
-  const { name, surname, username, email, password, joinDate } = req.body;
+  const { name, surname, username, email, password, joinDate, currentLevel, baseLineTest } = req.body;
 
   if (!name || !surname || !username || !email || !password) {
     return res.status(400).json({ error: 'All fields are required' });
@@ -158,6 +238,7 @@ router.post('/register', async (req, res) => {
   const safeCurrentLevel = 5;
   const safeJoinDate = joinDate || new Date().toISOString();
   const safeXP = 1000;
+  const startBase = false;
 
   const { data, error } = await supabase
     .from('Users')
@@ -171,7 +252,7 @@ router.post('/register', async (req, res) => {
         currentLevel: safeCurrentLevel,
         joinDate: safeJoinDate,
         xp: safeXP,
-        baseLineTest: false,  // add this line here
+        baseLineTest: startBase,
       },
     ])
     .select()
@@ -200,6 +281,7 @@ router.post('/register', async (req, res) => {
       currentLevel: data.currentLevel,
       joinDate: data.joinDate,
       xp: data.xp,
+      baseLineTest: data.baseLineTest,
     },
   });
 });
@@ -216,7 +298,7 @@ router.post('/login', async (req, res) => {
   const { data: user, error: fetchError } = await supabase
     .from('Users')
     .select(
-      'id,name,surname,username,email,password,currentLevel,joinDate,xp,pfpURL',
+      'id,name,surname,username,email,password,currentLevel,joinDate,xp,pfpURL,baseLineTest',
     )
     .eq('email', email)
     .single();
@@ -252,7 +334,7 @@ router.post('/login', async (req, res) => {
       joinDate: user.joinDate || new Date().toISOString(), // Default to current date if not set
       xp: user.xp || 0, // Default to 0 XP if not set
       pfpURL: user.pfpURL,
-      baseLineTest: user.baseLineTest ?? false,
+      baseLineTest: user.baseLineTest,
     },
   });
 });
@@ -454,38 +536,5 @@ router.get('/verify-reset-token/:token', async (req, res) => {
     res.status(500).json({ error: 'Internal server error' });
   }
 });
-
-// GET /user/current - get logged in user's info
-// GET /user/current
-router.get('/user/current', async (req, res) => {
-  const authHeader = req.headers.authorization;
-  if (!authHeader || !authHeader.startsWith('Bearer ')) {
-    return res.status(401).json({ error: 'Unauthorized' });
-  }
-  const token = authHeader.split(' ')[1];
-
-  try {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    const userId = decoded.id;
-
-    const { data, error } = await supabase
-      .from('Users')
-      .select('id,name,surname,username,email,currentLevel,joinDate,xp,pfpURL,baseLineTest')
-      .eq('id', userId)
-      .single();
-
-    if (error) {
-      console.error('Error fetching current user:', error.message);
-      return res.status(500).json({ error: 'Failed to fetch user' });
-    }
-
-    res.status(200).json(data);
-  } catch (err) {
-    console.error('Invalid token:', err);
-    return res.status(401).json({ error: 'Invalid token' });
-  }
-});
-
-
 
 export default router;

@@ -11,13 +11,13 @@ export default function ClickableAvatar({ avatar, className = '' }) {
   };
 
   return (
-    <div className="flex flex-col items-center justify-center pt-10">
+    <div className="flex flex-col items-center justify-center">
       <div
         onClick={handleAvatarClick}
         className={`cursor-pointer transition-transform hover:scale-105 active:scale-95 ${className}`}
         title="Click to edit avatar"
       >
-        <div className="w-48 h-48 rounded-2xl overflow-hidden shadow-lg border-4 border-white bg-white">
+        <div className="w-70 h-70">
           <AvatarPreview avatar={avatar} />
         </div>
       </div>

@@ -4,6 +4,7 @@ import { Cog } from 'lucide-react';
 import { useSession } from 'next-auth/react';
 import Link from 'next/link';
 import { useAvatar } from '../context/avatar-context';
+import { BackgroundTypes } from '../ui/avatar/background';
 import Achievements from '../ui/profile/achievements';
 import MatchStats from '../ui/profile/match-stats';
 import UserInfo from '../ui/profile/user-info';
@@ -20,15 +21,46 @@ export default function Page() {
 
   const user = session.user;
 
+  // Convert background type to actual style
+  const getBackgroundStyle = (backgroundType) => {
+    const backgroundStyles = {
+      [BackgroundTypes.SOLID_PINK]: { backgroundColor: '#FFB6C1' },
+      [BackgroundTypes.SOLID_BLUE]: { backgroundColor: '#87CEEB' },
+      [BackgroundTypes.SOLID_GREEN]: { backgroundColor: '#98FB98' },
+      [BackgroundTypes.SOLID_PURPLE]: { backgroundColor: '#DDA0DD' },
+      [BackgroundTypes.GRADIENT_SUNSET]: {
+        background:
+          'linear-gradient(135deg, #ff9a9e 0%, #fecfef 50%, #fecfef 100%)',
+      },
+      [BackgroundTypes.GRADIENT_OCEAN]: {
+        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+      },
+      [BackgroundTypes.GRADIENT_FOREST]: {
+        background: 'linear-gradient(135deg, #c3ec52 0%, #0ba360 100%)',
+      },
+      [BackgroundTypes.GRADIENT_PURPLE]: {
+        background: 'linear-gradient(135deg, #a8edea 0%, #fed6e3 100%)',
+      },
+    };
+
+    return backgroundStyles[backgroundType] || { backgroundColor: '#FF6E99' };
+  };
+
   return (
     <div className="h-full">
-      <div className="bg-[#FF6E99] flex items-center justify-between px-4">
+      <div
+        className="flex items-center justify-between px-4"
+        style={getBackgroundStyle(avatar?.background)}
+      >
         <div className="flex-1"></div>
         <div className="flex-2 flex justify-center">
           <ClickableAvatar avatar={avatar} />
         </div>
         <div className="flex-1 flex justify-center">
-          <Link href="settings">
+          <Link
+            href="settings"
+            className="transition-transform hover:scale-105 active:scale-95"
+          >
             <Cog stroke="black" size={40} />
           </Link>
         </div>

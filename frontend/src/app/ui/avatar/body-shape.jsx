@@ -57,13 +57,14 @@ export function AvatarBodyShape({ shape, color, className = '' }) {
     ? shape
     : BodyShapes.CIRCLE;
   const shapeSrc = `/shapes/${validShapeType}.svg`;
+  const previewColor = color || '#FF6E99';
 
   return (
     <div className={`relative ${className}`}>
       <div
         className="absolute inset-0 w-full h-full"
         style={{
-          backgroundColor: color,
+          backgroundColor: previewColor,
           WebkitMask: `url(${shapeSrc}) no-repeat center / contain`,
           mask: `url(${shapeSrc}) no-repeat center / contain`,
         }}

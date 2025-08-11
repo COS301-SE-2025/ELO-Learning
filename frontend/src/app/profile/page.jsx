@@ -4,7 +4,7 @@ import { Cog } from 'lucide-react';
 import { useSession } from 'next-auth/react';
 import Link from 'next/link';
 import { useAvatar } from '../context/avatar-context';
-import { BackgroundTypes } from '../ui/avatar/background';
+import { gradients, solidColors } from '../ui/avatar/avatar-colors';
 import Achievements from '../ui/profile/achievements';
 import MatchStats from '../ui/profile/match-stats';
 import UserInfo from '../ui/profile/user-info';
@@ -21,29 +21,21 @@ export default function Page() {
 
   const user = session.user;
 
-  // Convert background type to actual style
   const getBackgroundStyle = (backgroundType) => {
-    const backgroundStyles = {
-      [BackgroundTypes.SOLID_PINK]: { backgroundColor: '#FFB6C1' },
-      [BackgroundTypes.SOLID_BLUE]: { backgroundColor: '#87CEEB' },
-      [BackgroundTypes.SOLID_GREEN]: { backgroundColor: '#98FB98' },
-      [BackgroundTypes.SOLID_PURPLE]: { backgroundColor: '#DDA0DD' },
-      [BackgroundTypes.GRADIENT_SUNSET]: {
-        background:
-          'linear-gradient(135deg, #ff9a9e 0%, #fecfef 50%, #fecfef 100%)',
-      },
-      [BackgroundTypes.GRADIENT_OCEAN]: {
-        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-      },
-      [BackgroundTypes.GRADIENT_FOREST]: {
-        background: 'linear-gradient(135deg, #c3ec52 0%, #0ba360 100%)',
-      },
-      [BackgroundTypes.GRADIENT_PURPLE]: {
-        background: 'linear-gradient(135deg, #a8edea 0%, #fed6e3 100%)',
-      },
-    };
-
-    return backgroundStyles[backgroundType] || { backgroundColor: '#FF6E99' };
+    let style = { backgroundColor: '#421e68' };
+    if (backgroundType && backgroundType.startsWith('solid-')) {
+      const idx = parseInt(backgroundType.split('-')[1], 10);
+      style = { backgroundColor: solidColors[idx] || '#421e68' };
+    } else if (backgroundType && backgroundType.startsWith('gradient-')) {
+      const idx = parseInt(backgroundType.split('-')[1], 10);
+      const g = gradients[idx];
+      if (g) {
+        style = {
+          background: `linear-gradient(135deg, ${g.colors.join(', ')})`,
+        };
+      }
+    }
+    return style;
   };
 
   return (

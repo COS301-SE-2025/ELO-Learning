@@ -116,7 +116,7 @@ export function AvatarCreator() {
                   onClick={() => setActiveTab(tab.id)}
                   className={`flex-1 flex flex-col items-center p-3 rounded-lg transition-all ${
                     activeTab === tab.id
-                      ? 'bg-blue-500 text-white'
+                      ? 'bg-[#4d5ded] text-white'
                       : 'text-gray-400 hover:text-white hover:bg-gray-700'
                   }`}
                 >

@@ -42,8 +42,8 @@ export function BackgroundSelector({ selectedBackground, onBackgroundChange }) {
               onClick={() => onBackgroundChange(bg.id)}
               className={`w-12 h-12 rounded-lg border-2 transition-all ${
                 selectedBackground === bg.id
-                  ? 'border-blue-500 border-4 scale-110'
-                  : 'border-gray-600 hover:border-blue-400 hover:scale-105'
+                  ? 'border-[#4d5ded] border-4 scale-110'
+                  : 'border-gray-600 hover:border-[#4d5ded] hover:scale-105'
               }`}
               style={bg.style}
             />

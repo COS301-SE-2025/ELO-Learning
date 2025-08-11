@@ -46,7 +46,7 @@ export default function Page() {
       >
         <div className="flex-1"></div>
         <div className="flex-2 flex justify-center">
-          <ClickableAvatar avatar={avatar} />
+          <ClickableAvatar avatar={{ ...avatar, background: 'transparent' }} />
         </div>
         <div className="flex-1 flex justify-center">
           <Link

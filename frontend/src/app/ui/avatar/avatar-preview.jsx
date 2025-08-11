@@ -6,13 +6,16 @@ import { AvatarEyes } from './eyes';
 import { AvatarMouth } from './mouth';
 
 export function AvatarPreview({ avatar, className = '' }) {
+  const showBackground = avatar.background !== 'transparent';
   return (
     <div className={`relative w-full h-full ${className}`}>
       {/* Background */}
-      <AvatarBackground
-        backgroundType={avatar.background}
-        className="absolute inset-0 w-full h-full"
-      />
+      {showBackground && (
+        <AvatarBackground
+          backgroundType={avatar.background}
+          className="absolute inset-0 w-full h-full"
+        />
+      )}
 
       {/* Avatar Container */}
       <div className="relative flex items-center justify-center h-full p-8">

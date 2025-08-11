@@ -38,6 +38,7 @@ export const authOptions = {
               currentLevel: response.user.currentLevel,
               joinDate: response.user.joinDate,
               pfpURL: response.user.pfpURL,
+              baseLineTest: response.user.baseLineTest,
               // Add any other fields your backend returns
             };
           } else {
@@ -73,6 +74,7 @@ export const authOptions = {
           user.currentLevel = response.user.currentLevel;
           user.joinDate = response.user.joinDate;
           user.pfpURL = response.user.pfpURL;
+          user.baseLineTest = response.user.baseLineTest;
 
           return true;
         } catch (error) {
@@ -102,6 +104,7 @@ export const authOptions = {
         token.currentLevel = user.currentLevel || 1; // Default level
         token.joinDate = user.joinDate; // Add join date
         token.pfpURL = user.pfpURL || user.image; // Use database pfpURL or OAuth image
+        token.baseLineTest = user.baseLineTest;
       }
 
       return token;
@@ -121,6 +124,7 @@ export const authOptions = {
         session.user.currentLevel = token.currentLevel;
         session.user.joinDate = token.joinDate;
         session.user.pfpURL = token.pfpURL;
+        session.user.baseLineTest = token.baseLineTest;
       }
 
       return session;

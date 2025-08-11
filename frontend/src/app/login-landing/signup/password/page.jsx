@@ -2,6 +2,7 @@
 import { setCookie } from '@/app/lib/authCookie';
 import ProgressBar from '@/app/ui/progress-bar';
 import { registerUser } from '@/services/api';
+import { signIn } from 'next-auth/react';
 import { Eye, EyeOff, X } from 'lucide-react';
 import Link from 'next/link';
 import { useState } from 'react';
@@ -63,11 +64,26 @@ export default function Page() {
         password,
         reg.currentLevel,
         reg.joinDate,
+        reg.baseLineTest,
       );
       // Save token and user to localStorage
       if (response.token && response.user) {
         await setCookie(response);
       }
+
+              // Automatically sign in the new user using NextAuth signIn
+        const signInResult = await signIn('credentials', {
+          redirect: false,
+          email: reg.email,
+          password: password,
+        });
+
+        if (signInResult?.error) {
+          setError('Registration succeeded but automatic login failed.');
+          setLoading(false);
+          return;
+        }
+
       clearRegistration();
       window.location.href = '/dashboard';
     } catch (err) {

@@ -24,6 +24,7 @@ export default function Page() {
       surname,
       currentLevel: 5,
       joinDate: new Date().toISOString(),
+      baseLineTest: false,
     });
     window.location.href = '/login-landing/signup/username';
   };

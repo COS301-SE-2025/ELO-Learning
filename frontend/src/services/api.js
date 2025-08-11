@@ -6,6 +6,7 @@ const isServer = typeof window === 'undefined';
 
 const axiosInstance = axios.create({
   baseURL: BASE_URL,
+  withCredentials: true,
   headers: {
     'Content-Type': 'application/json',
   },
@@ -127,6 +128,7 @@ export async function registerUser(
   password,
   currentLevel,
   joinDate,
+  baseLineTest,
 ) {
   const res = await axiosInstance.post('/register', {
     name,
@@ -136,7 +138,9 @@ export async function registerUser(
     password,
     currentLevel,
     joinDate,
+    baseLineTest,
   });
+
   return res.data;
 }
 
@@ -171,13 +175,6 @@ export async function submitSinglePlayerAttempt(data) {
   });
   return res.data;
 }
-
-// // 14. GET /user/current
-// export async function fetchCurrentUser() {
-//   const res = await axiosInstance.get('/user/current');
-//   return res.data;
-// }
-
 
 export async function sendPasswordResetEmail(email) {
   const res = await axiosInstance.post('/forgot-password', { email });
@@ -221,13 +218,34 @@ export async function handleOAuthUser(email, name, image, provider) {
   return res.data;
 }
 
-//current user's details
-export async function fetchCurrentUser() {
-  const token = localStorage.getItem('token');
-  if (!token) throw new Error('No auth token');
-  const res = await axiosInstance.get('/user/current', {
-    headers: { Authorization: `Bearer ${token}` },
+//get baseline test value:
+export async function fetchBaselineTestValue(userId) {
+  if (!userId) throw new Error('User ID is required');
+
+  const response = await fetch(`${BASE_URL}/user/${userId}/baseline`, {
+    method: 'GET',
+    headers: {
+      'Content-Type': 'application/json',
+      // Include authorization header if your backend requires JWT token
+      // 'Authorization': `Bearer ${yourTokenHere}`, 
+    },
   });
+
+  if (!response.ok) {
+    throw new Error('Failed to fetch baseline test value');
+  }
+
+  const data = await response.json();
+  return data; // { baseLineTest: boolean }
+}
+
+// Update baseline test value for a user by ID (new)
+export async function updateBaselineTestValue(id, baseLineTest) {
+  const res = await axiosInstance.put(
+    `/user/${id}/baseline`,
+    { baseLineTest },
+    { headers: authHeader }
+  );
   return res.data;
 }
 

@@ -8,6 +8,28 @@ export default (io, socket) => {
   const queueForGame = async (userData) => {
     console.log('Queueing for game:', socket.id, 'User:', userData?.username);
 
+    // 🎯 NEW: Track queue join for achievements
+    if (userData?.id) {
+      try {
+        console.log(`🎯 QUEUE ACHIEVEMENT: Checking queue achievements for user ${userData.id}`);
+        const { checkQueueAchievements } = await import('./achievementRoutes.js');
+        const queueAchievements = await checkQueueAchievements(userData.id);
+        
+        if (queueAchievements.length > 0) {
+          console.log(`🏆 Queue achievements unlocked:`, queueAchievements.map(a => a.name));
+          
+          // Emit queue achievements to the user
+          socket.emit('achievementsUnlocked', {
+            achievements: queueAchievements,
+            source: 'queue_join'
+          });
+        }
+      } catch (error) {
+        console.error('❌ Error checking queue achievements:', error);
+        // Don't fail the queue process if achievements fail
+      }
+    }
+
     // Store user data with the socket
     socket.userData = userData;
 

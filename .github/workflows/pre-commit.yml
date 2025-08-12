@@ -2,11 +2,16 @@ name: Pre-commit Checks
 
 on:
   push:
+    branches:
+      - '**'
   pull_request:
+    branches:
+      - '**'
 
 jobs:
   pre-commit:
     runs-on: ubuntu-latest
+
     steps:
       - uses: actions/checkout@v4
 
@@ -20,7 +25,6 @@ jobs:
         with:
           node-version: 18
 
-      # Only include these installs if your hooks require them
       - name: Install frontend dependencies
         working-directory: frontend
         run: yarn install --frozen-lockfile

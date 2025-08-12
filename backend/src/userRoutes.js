@@ -42,29 +42,6 @@ router.get('/user/:id', verifyToken, async (req, res) => {
   res.status(200).json(data)
 })
 
-// Return user's achievements: (works)
-router.get('/users/:id/achievements', verifyToken, async (req, res) => {
-  const { id } = req.params
-
-  const { data, error } = await supabase
-    .from('Achievements')
-    .select('*')
-    .eq('user_id', id)
-
-  if (error) {
-    console.error('Error fetching achievements:', error.message)
-    return res.status(500).json({ error: 'Failed to fetch achievements' })
-  }
-
-  if (data.length === 0) {
-    return res
-      .status(404)
-      .json({ error: "User doesn't exist or has no achievements" })
-  }
-
-  res.status(200).json({ achievements: data })
-})
-
 // Update a user's XP: (works)
 router.post('/user/:id/xp', verifyToken, async (req, res) => {
   const { id } = req.params

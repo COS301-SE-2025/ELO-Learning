@@ -1,50 +1,50 @@
 // auth.js - Authentication middleware
-import jwt from 'jsonwebtoken'
+import jwt from 'jsonwebtoken';
 
 /**
  * Middleware to verify JWT tokens
  * @param {Object} req - Express request object
- * @param {Object} res - Express response object  
+ * @param {Object} res - Express response object
  * @param {Function} next - Express next function
  */
 export function verifyToken(req, res, next) {
-    const authHeader = req.headers.authorization
+  const authHeader = req.headers.authorization;
 
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-        return res.status(401).json({
-            error: 'Access denied. No valid token provided.'
-        })
+  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    return res.status(401).json({
+      error: 'Access denied. No valid token provided.',
+    });
+  }
+
+  const token = authHeader.substring(7); // Remove 'Bearer ' prefix
+
+  try {
+    // Verify the JWT token
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+
+    // Add user info to request object for use in route handlers
+    req.user = {
+      id: decoded.id,
+      email: decoded.email,
+    };
+
+    next();
+  } catch (error) {
+    if (error.name === 'TokenExpiredError') {
+      return res.status(401).json({
+        error: 'Token has expired. Please log in again.',
+      });
+    } else if (error.name === 'JsonWebTokenError') {
+      return res.status(401).json({
+        error: 'Invalid token.',
+      });
+    } else {
+      console.error('Token verification error:', error);
+      return res.status(500).json({
+        error: 'Internal server error during authentication.',
+      });
     }
-
-    const token = authHeader.substring(7) // Remove 'Bearer ' prefix
-
-    try {
-        // Verify the JWT token
-        const decoded = jwt.verify(token, process.env.JWT_SECRET)
-
-        // Add user info to request object for use in route handlers
-        req.user = {
-            id: decoded.id,
-            email: decoded.email
-        }
-
-        next()
-    } catch (error) {
-        if (error.name === 'TokenExpiredError') {
-            return res.status(401).json({
-                error: 'Token has expired. Please log in again.'
-            })
-        } else if (error.name === 'JsonWebTokenError') {
-            return res.status(401).json({
-                error: 'Invalid token.'
-            })
-        } else {
-            console.error('Token verification error:', error)
-            return res.status(500).json({
-                error: 'Internal server error during authentication.'
-            })
-        }
-    }
+  }
 }
 
 /**
@@ -52,26 +52,26 @@ export function verifyToken(req, res, next) {
  * Useful for routes that work for both authenticated and unauthenticated users
  */
 export function optionalAuth(req, res, next) {
-    const authHeader = req.headers.authorization
+  const authHeader = req.headers.authorization;
 
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-        // No token provided, continue without user info
-        req.user = null
-        return next()
-    }
+  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    // No token provided, continue without user info
+    req.user = null;
+    return next();
+  }
 
-    const token = authHeader.substring(7)
+  const token = authHeader.substring(7);
 
-    try {
-        const decoded = jwt.verify(token, process.env.JWT_SECRET)
-        req.user = {
-            id: decoded.id,
-            email: decoded.email
-        }
-    } catch (error) {
-        // Invalid token, but don't fail the request
-        req.user = null
-    }
+  try {
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    req.user = {
+      id: decoded.id,
+      email: decoded.email,
+    };
+  } catch (error) {
+    // Invalid token, but don't fail the request
+    req.user = null;
+  }
 
-    next()
+  next();
 }

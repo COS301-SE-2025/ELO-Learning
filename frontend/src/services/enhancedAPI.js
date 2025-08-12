@@ -1,5 +1,5 @@
-import { cache, CACHE_KEYS } from '../utils/cache'
-import { updateUserXP as apiUpdateUserXP } from './api'
+import { cache, CACHE_KEYS } from '../utils/cache';
+import { updateUserXP as apiUpdateUserXP } from './api';
 
 // Enhanced API functions that work with NextAuth and caching
 export const enhancedAPI = {
@@ -7,24 +7,24 @@ export const enhancedAPI = {
   async updateUserXP(userId, newXP) {
     try {
       // Call the original API
-      const result = await apiUpdateUserXP(userId, newXP)
+      const result = await apiUpdateUserXP(userId, newXP);
 
       if (result) {
         // Update NextAuth session cache
-        const { sessionManager } = await import('../hooks/useSessionWithCache')
-        sessionManager.updateCachedUserData({ xp: newXP })
+        const { sessionManager } = await import('../hooks/useSessionWithCache');
+        sessionManager.updateCachedUserData({ xp: newXP });
 
         // Also update standalone user cache
-        const cachedUser = cache.get(CACHE_KEYS.USER)
+        const cachedUser = cache.get(CACHE_KEYS.USER);
         if (cachedUser) {
-          cache.set(CACHE_KEYS.USER, { ...cachedUser, xp: newXP })
+          cache.set(CACHE_KEYS.USER, { ...cachedUser, xp: newXP });
         }
       }
 
-      return result
+      return result;
     } catch (error) {
-      console.error('Failed to update user XP:', error)
-      throw error
+      console.error('Failed to update user XP:', error);
+      throw error;
     }
   },
 
@@ -43,81 +43,81 @@ export const enhancedAPI = {
           answer,
           userId,
         }),
-      })
+      });
 
-      const result = await response.json()
+      const result = await response.json();
 
       // If XP was awarded, update the cached user data
       if (result.xpAwarded && result.updatedUser) {
-        const { sessionManager } = await import('../hooks/useSessionWithCache')
+        const { sessionManager } = await import('../hooks/useSessionWithCache');
         sessionManager.updateCachedUserData({
           xp: result.updatedUser.xp,
           // Add any other updated fields
-        })
+        });
       }
 
-      return result
+      return result;
     } catch (error) {
-      console.error('Failed to submit answer:', error)
-      throw error
+      console.error('Failed to submit answer:', error);
+      throw error;
     }
   },
 
   // Get auth token (works with NextAuth and JWT)
   getAuthToken() {
     // Priority 1: NextAuth session token
-    const nextAuthSession = cache.get(CACHE_KEYS.NEXTAUTH_SESSION)
+    const nextAuthSession = cache.get(CACHE_KEYS.NEXTAUTH_SESSION);
     if (nextAuthSession?.accessToken) {
-      return nextAuthSession.accessToken
+      return nextAuthSession.accessToken;
     }
 
     // Priority 2: JWT token from cache or localStorage
-    const jwtToken = cache.get(CACHE_KEYS.TOKEN)
+    const jwtToken = cache.get(CACHE_KEYS.TOKEN);
     if (jwtToken) {
-      return jwtToken
+      return jwtToken;
     }
 
     // Priority 3: JWT token from localStorage
     if (typeof window !== 'undefined') {
-      return localStorage.getItem('token')
+      return localStorage.getItem('token');
     }
 
-    return null
+    return null;
   },
 
   // Cached fetch functions
   async fetchUserDataWithCache(userId) {
-    const cacheKey = `user_${userId}`
-    const cachedData = cache.get(cacheKey)
+    const cacheKey = `user_${userId}`;
+    const cachedData = cache.get(cacheKey);
 
     if (cachedData) {
-      return cachedData
+      return cachedData;
     }
 
     try {
-      const { fetchUserById } = await import('./api')
-      const userData = await fetchUserById(userId)
+      const { fetchUserById } = await import('./api');
+      const userData = await fetchUserById(userId);
 
       // Cache for 5 minutes
-      cache.set(cacheKey, userData, 5 * 60 * 1000)
+      cache.set(cacheKey, userData, 5 * 60 * 1000);
 
-      return userData
+      return userData;
     } catch (error) {
-      console.error('Failed to fetch user data:', error)
-      throw error
+      console.error('Failed to fetch user data:', error);
+      throw error;
     }
   },
 
   // Clear all user-related cache when logging out
   clearUserCache() {
-    cache.clear()
+    cache.clear();
     // Also clear any user-specific cache keys
     Object.keys(localStorage).forEach((key) => {
       if (key.startsWith('user_') || key.startsWith('cache_')) {
-        localStorage.removeItem(key)
+        localStorage.removeItem(key);
       }
-    })
+    });
   },
-}
+};
 
-export default enhancedAPI
+export default enhancedAPI;

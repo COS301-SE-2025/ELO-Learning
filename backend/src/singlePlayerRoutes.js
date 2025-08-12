@@ -2,13 +2,14 @@ import express from 'express';
 import { supabase } from '../database/supabaseClient.js';
 import {
   checkEloAchievements,
-  checkMatchAchievements,
+  checkFastSolveAchievements,
+  checkLeaderboardAchievements,
   checkQuestionAchievements,
 } from './achievementRoutes.js';
 import {
-  updateSinglePlayerElo,
   calculateExpectedRating,
   updateEloRating,
+  updateSinglePlayerElo,
 } from './utils/eloCalculator.js';
 import { checkAndUpdateRankAndLevel } from './utils/userProgression.js';
 import { calculateSinglePlayerXP } from './utils/xpCalculator.js';
@@ -164,11 +165,20 @@ router.post('/singleplayer', async (req, res) => {
       console.log('✅ checkEloAchievements completed:', eloAchievements);
       unlockedAchievements.push(...eloAchievements);
 
-      // 🆕 Check Match-based achievements (NEW!)
-      console.log('🔍 Calling checkMatchAchievements...');
-      const matchAchievements = await checkMatchAchievements(user_id);
-      console.log('✅ checkMatchAchievements completed:', matchAchievements);
-      unlockedAchievements.push(...matchAchievements);
+      // 🆕 Check fast solve achievements (NEW!)
+      console.log('🔍 Calling checkFastSolveAchievements...');
+      const fastSolveAchievements = await checkFastSolveAchievements(user_id, timeSpent, isCorrect);
+      console.log('✅ checkFastSolveAchievements completed:', fastSolveAchievements);
+      unlockedAchievements.push(...fastSolveAchievements);
+
+      // 🆕 Check leaderboard position achievements (NEW!)
+      console.log('🔍 Calling checkLeaderboardAchievements...');
+      const leaderboardAchievements = await checkLeaderboardAchievements(user_id);
+      console.log('✅ checkLeaderboardAchievements completed:', leaderboardAchievements);
+      unlockedAchievements.push(...leaderboardAchievements);
+
+      // NOTE: Single player mode should NOT trigger match achievements
+      // Match achievements are only for multiplayer games
 
       console.log(
         `🏆 Total achievements unlocked: ${unlockedAchievements.length}`,

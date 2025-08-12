@@ -39,6 +39,9 @@ export default function QuestionsTracker({
     }
     return 5;
   });
+  
+  // Track question attempts for "Never Give Up" achievement
+  const [questionAttempts, setQuestionAttempts] = useState({});
 
   // Listen for life loss events from match questions
   useEffect(() => {
@@ -106,6 +109,9 @@ export default function QuestionsTracker({
       const success = resetXPCalculationState();
       if (success) {
         console.log('🎮 New game session started - XP calculation state reset');
+        // Also reset question attempts for new session
+        setQuestionAttempts({});
+        console.log('💪 Question attempts reset for new session');
       }
     }
   }, [resetXPState]);
@@ -117,7 +123,7 @@ export default function QuestionsTracker({
     }
   }, [numLives, mode, router]);
 
-  const setLocalStorage = async () => {
+  const setLocalStorage = async (finalValidationResult) => {
     // Only proceed if we're in the browser
     if (typeof window === 'undefined') return;
     
@@ -203,45 +209,254 @@ export default function QuestionsTracker({
   };
 
   const handleQuizComplete = () => {
+    // Check for Perfect Session achievement before navigating
+    checkPerfectSessionAchievement();
+    
     // Use setTimeout to ensure navigation happens after current render cycle
     setTimeout(() => {
       router.push(`/end-screen?mode=${mode}`);
     }, 0);
   };
 
-  const submitAnswer = async () => {
-    // Get ALL correct answers, not just the first one
-    const correctAnswers = currAnswers
-      .filter((answer) => answer.isCorrect)
-      .map((answer) => answer.answer_text || answer.answerText)
-      .filter(Boolean);
+  const checkPerfectSessionAchievement = async () => {
+    try {
+      // Check for Perfect Session in any mode (practice, single-player, multiplayer)
+      console.log(`🏅 Perfect Session check for mode: ${mode}`);
 
-    // Check if student answer matches ANY of the correct answers
-    let freshValidationResult = false;
-    let matchedAnswer = null;
-
-    for (const correctAnswer of correctAnswers) {
-      const individualResult = await validateAnswerEnhanced(
-        answer,
-        correctAnswer,
-        currQuestion?.questionText || '',
-        currQuestion?.type || 'Math Input',
-      );
-
-      if (individualResult) {
-        freshValidationResult = true;
-        matchedAnswer = correctAnswer;
-        break; // Found a match, no need to check further
+      // Get the completed session from localStorage
+      const questionsObj = JSON.parse(localStorage.getItem('questionsObj') || '[]');
+      
+      if (questionsObj.length < 10) {
+        console.log('🏅 Perfect Session check skipped - less than 10 questions completed');
+        return;
       }
+
+      // Check for 10 consecutive correct answers
+      let consecutiveCorrect = 0;
+      let maxConsecutive = 0;
+      
+      for (const questionObj of questionsObj) {
+        if (questionObj.isCorrect) {
+          consecutiveCorrect++;
+          maxConsecutive = Math.max(maxConsecutive, consecutiveCorrect);
+        } else {
+          consecutiveCorrect = 0;
+        }
+      }
+
+      console.log('🏅 Perfect Session analysis:', {
+        totalQuestions: questionsObj.length,
+        maxConsecutiveCorrect: maxConsecutive,
+        perfectSessionQualified: maxConsecutive >= 10
+      });
+
+      // If achieved 10 consecutive correct answers, trigger achievement
+      if (maxConsecutive >= 10) {
+        const userId = session?.user?.id;
+        if (!userId) {
+          console.log('🏅 Perfect Session achievement skipped - no user ID');
+          return;
+        }
+
+        console.log('🏆 Perfect Session achievement earned! Triggering achievement...');
+        
+        // Call achievement endpoint
+        const response = await fetch('/api/achievements/trigger', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            userId: userId,
+            achievementType: 'Perfect Session',
+            context: {
+              consecutiveCorrect: maxConsecutive,
+              totalQuestions: questionsObj.length,
+              mode: mode
+            }
+          }),
+        });
+
+        if (response.ok) {
+          const result = await response.json();
+          console.log('🏆 Perfect Session achievement result:', result);
+          
+          // Show achievement notification if unlocked
+          if (result.unlockedAchievements && result.unlockedAchievements.length > 0) {
+            console.log('🏆 Perfect Session achievement unlocked!', result.unlockedAchievements);
+            
+            // Use the existing achievement notification system
+            const showAchievementNotifications = (attempts = 0) => {
+              if (typeof window !== 'undefined' && window.showMultipleAchievements) {
+                try {
+                  window.showMultipleAchievements(result.unlockedAchievements);
+                  console.log('✅ Perfect Session achievement notification displayed');
+                } catch (notificationError) {
+                  console.error('❌ Error displaying Perfect Session achievement notification:', notificationError);
+                  
+                  if (attempts < 2) {
+                    setTimeout(() => showAchievementNotifications(attempts + 1), 500);
+                  }
+                }
+              } else {
+                console.error('❌ Achievement notification system not ready for Perfect Session');
+                
+                if (attempts < 3) {
+                  setTimeout(() => showAchievementNotifications(attempts + 1), 1000);
+                } else {
+                  console.error('❌ Perfect Session achievement notification failed after 3 attempts');
+                }
+              }
+            };
+
+            // Show achievement notification with a slight delay
+            setTimeout(() => showAchievementNotifications(), 500);
+          }
+        } else {
+          console.error('🏆 Failed to trigger Perfect Session achievement:', response.status, response.statusText);
+        }
+      }
+    } catch (error) {
+      console.error('🏆 Error checking Perfect Session achievement:', error);
     }
+  };
+
+  const checkNeverGiveUpAchievement = async (questionId, isCorrect, attemptNumber) => {
+    try {
+      const userId = session?.user?.id;
+      if (!userId) {
+        console.log('💪 Never Give Up achievement skipped - no user ID');
+        return;
+      }
+
+      console.log(`💪 Checking Never Give Up: Question ${questionId}, Attempt ${attemptNumber}, Correct: ${isCorrect}`);
+
+      const response = await fetch(`/api/achievements/users/${userId}/achievements/never-give-up`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          questionId,
+          isCorrect,
+          attemptNumber
+        }),
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        console.log('💪 Never Give Up achievement response:', data);
+        
+        // Show achievement notification if unlocked
+        if (data.unlockedAchievements && data.unlockedAchievements.length > 0) {
+          const showAchievementNotifications = (attempts = 0) => {
+            if (typeof window !== 'undefined' && window.showMultipleAchievements) {
+              try {
+                window.showMultipleAchievements(data.unlockedAchievements);
+                console.log('✅ Never Give Up achievement notification displayed');
+              } catch (notificationError) {
+                console.error('❌ Error displaying Never Give Up achievement notification:', notificationError);
+                
+                if (attempts < 2) {
+                  setTimeout(() => showAchievementNotifications(attempts + 1), 500);
+                }
+              }
+            } else {
+              console.error('❌ Achievement notification system not ready for Never Give Up');
+              
+              if (attempts < 3) {
+                setTimeout(() => showAchievementNotifications(attempts + 1), 1000);
+              } else {
+                console.error('❌ Never Give Up achievement notification failed after 3 attempts');
+              }
+            }
+          };
+
+          // Show achievement notification with a slight delay
+          setTimeout(() => showAchievementNotifications(), 500);
+        }
+      } else {
+        console.error('💪 Failed to check Never Give Up achievement:', response.status, response.statusText);
+      }
+    } catch (error) {
+      console.error('💪 Error checking Never Give Up achievement:', error);
+    }
+  };
+
+  const submitAnswer = async () => {
+    setIsSubmitting(true);
+
+    try {
+      // Get ALL correct answers, not just the first one
+      const correctAnswers = currAnswers
+        .filter((answer) => answer.isCorrect)
+        .map((answer) => answer.answer_text || answer.answerText)
+        .filter(Boolean);
+
+      // Check if student answer matches ANY of the correct answers
+      let freshValidationResult = false;
+      let matchedAnswer = null;
+
+      for (const correctAnswer of correctAnswers) {
+        const individualResult = await validateAnswerEnhanced(
+          answer,
+          correctAnswer,
+          currQuestion?.questionText || '',
+          currQuestion?.type || 'Math Input',
+        );
+
+        if (individualResult) {
+          freshValidationResult = true;
+          matchedAnswer = correctAnswer;
+          break; // Found a match, no need to check further
+        }
+      }
+
+      // Validate user session before submitting
+      if (!session?.user?.id) {
+        console.warn('⚠️ No user session found, skipping achievement checks');
+      }
+
+      // Submit to API
+      const result = await submitQuestionAnswer({
+        userId: session?.user?.id,
+        questionId: currQuestion?.id,
+        userAnswer: answer,
+        isCorrect: freshValidationResult,
+        timeSpent: Math.round((Date.now() - questionStartTime) / 1000),
+      });
 
       console.log('🔄 API + validation result:', {
         studentAnswer: answer,
         correctAnswers: correctAnswers,
         apiResult: result.success ? result.data.isCorrect : 'API failed',
         localValidation: freshValidationResult,
-      matchedAnswer: matchedAnswer,
+        matchedAnswer: matchedAnswer,
+        userId: session?.user?.id,
       });
+
+      // 💪 Track attempts for "Never Give Up" achievement
+      const questionId = currQuestion?.id;
+      if (questionId) {
+        const currentAttempts = questionAttempts[questionId] || 0;
+        const newAttemptCount = currentAttempts + 1;
+        
+        // Update attempt count
+        setQuestionAttempts(prev => ({
+          ...prev,
+          [questionId]: newAttemptCount
+        }));
+
+        // Check Never Give Up achievement if this is a correct answer after multiple attempts
+        if (freshValidationResult && newAttemptCount >= 5 && session?.user?.id) {
+          console.log(`💪 Potential Never Give Up achievement: Question ${questionId} solved on attempt ${newAttemptCount}`);
+          await checkNeverGiveUpAchievement(questionId, true, newAttemptCount);
+        } else if (!freshValidationResult) {
+          console.log(`💪 Tracking attempt ${newAttemptCount} for question ${questionId} (incorrect)`);
+        } else if (freshValidationResult && newAttemptCount >= 5 && !session?.user?.id) {
+          console.log('💪 Never Give Up achievement skipped - no user session');
+        }
+      }
 
       // 🎉 Handle achievement unlocks from API response!
       if (

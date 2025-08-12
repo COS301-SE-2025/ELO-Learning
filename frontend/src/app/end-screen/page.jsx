@@ -2,13 +2,14 @@
 import Score from '@/app/ui/end-screen-ui/end-screen-score';
 import Time from '@/app/ui/end-screen-ui/end-screen-total-time';
 import TotalXP from '@/app/ui/end-screen-ui/end-screen-total-xp';
-import { updateUserXP } from '@/services/api';
+import { useSession } from 'next-auth/react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { redirect, useRouter, useSearchParams } from 'next/navigation';
 import { Suspense, useEffect, useState } from 'react';
 
 function EndScreen() {
+  const { data: session } = useSession();
   const searchParams = useSearchParams();
   const router = useRouter();
   const mode = searchParams.get('mode');
@@ -33,21 +34,37 @@ function EndScreen() {
     try {
       setIsLoading(true);
 
-      // Get user data from cookie
-      const userCookie = document.cookie
-        .split('; ')
-        .find((row) => row.startsWith('user='));
+      // Get user data from cookie or session
+      let userData = null;
+      
+      // First try to get from NextAuth session
+      if (session?.user) {
+        userData = {
+          id: session.user.id,
+          username: session.user.name || session.user.username,
+          email: session.user.email
+        };
+      } else {
+        // Fallback to cookie method
+        const userCookie = document.cookie
+          .split('; ')
+          .find((row) => row.startsWith('user='));
 
-      if (!userCookie) {
-        console.error('User cookie not found');
-        router.push('/dashboard');
-        return;
+        if (!userCookie) {
+          console.error('User cookie not found and no session available');
+          console.log('Available cookies:', document.cookie);
+          console.log('Session data:', session);
+          
+          // Don't redirect immediately, just show error
+          setIsLoading(false);
+          return;
+        }
+
+        // Decode the URL-encoded cookie value
+        const encodedUserData = userCookie.split('=')[1];
+        const decodedUserData = decodeURIComponent(encodedUserData);
+        userData = JSON.parse(decodedUserData);
       }
-
-      // Decode the URL-encoded cookie value
-      const encodedUserData = userCookie.split('=')[1];
-      const decodedUserData = decodeURIComponent(encodedUserData);
-      const userData = JSON.parse(decodedUserData);
 
       // Calculate XP earned using the same logic as TotalXP component
       const questions = JSON.parse(

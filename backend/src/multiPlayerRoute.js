@@ -1,12 +1,13 @@
 import express from 'express';
 import { supabase } from '../database/supabaseClient.js';
 
+import { checkLeaderboardAchievements, checkMatchAchievements } from './achievementRoutes.js';
 import {
-  calculateExpectedRating,
-  updateEloRating,
+    calculateExpectedRating,
+    updateEloRating,
 } from './utils/eloCalculator.js';
-import { calculateMultiplayerXP } from './utils/xpCalculator.js';
 import { checkAndUpdateRankAndLevel } from './utils/userProgression.js';
+import { calculateMultiplayerXP } from './utils/xpCalculator.js';
 //import { calculateExpected, distributeXP } from './multiPlayer.js';
 
 const router = express.Router();
@@ -164,6 +165,31 @@ router.post('/multiplayer', async (req, res) => {
       return res.status(500).json({ error: 'Error saving attempts' });
     }
 
+    // 🎯 Check for match achievements (both players participated in a match)
+    let unlockedAchievements = [];
+    
+    try {
+      // Check match achievements for both players
+      const player1Achievements = await checkMatchAchievements(player1_id);
+      const player2Achievements = await checkMatchAchievements(player2_id);
+      
+      // 🆕 Check leaderboard position achievements after XP changes
+      const player1LeaderboardAchievements = await checkLeaderboardAchievements(player1_id);
+      const player2LeaderboardAchievements = await checkLeaderboardAchievements(player2_id);
+      
+      unlockedAchievements = [
+        ...player1Achievements.map(achievement => ({ ...achievement, playerId: player1_id })),
+        ...player2Achievements.map(achievement => ({ ...achievement, playerId: player2_id })),
+        ...player1LeaderboardAchievements.map(achievement => ({ ...achievement, playerId: player1_id })),
+        ...player2LeaderboardAchievements.map(achievement => ({ ...achievement, playerId: player2_id }))
+      ];
+      
+      console.log(`🏆 Multiplayer match achievements unlocked: ${unlockedAchievements.length}`);
+    } catch (achievementError) {
+      console.error('Error checking match achievements:', achievementError);
+      // Don't fail the whole request if achievements fail
+    }
+
     // Final JSON response
     return res.status(200).json({
       message: 'Multiplayer match processed successfully',
@@ -187,6 +213,7 @@ router.post('/multiplayer', async (req, res) => {
           currentRank: newRank2,
         },
       ],
+      unlockedAchievements: unlockedAchievements, // 🎯 Include match achievements
     });
   } catch (err) {
     console.error('Error in /multiplayer:', err);

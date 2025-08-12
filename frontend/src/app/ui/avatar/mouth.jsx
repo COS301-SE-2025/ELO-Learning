@@ -64,6 +64,7 @@ export function MouthSelector({ selectedMouth, onMouthChange }) {
                 alt={mouth.name}
                 fill
                 className="object-contain"
+                priority
               />
             </div>
             {/* <div className="text-xs font-medium text-white text-center">
@@ -91,6 +92,7 @@ export function AvatarMouth({ mouthType, className = '' }) {
           alt={`${validMouthType} mouth`}
           fill
           className="object-contain"
+          priority
           onError={(e) => {
             console.error('Failed to load mouth image:', mouthSrc);
             // Fallback to Mouth 1 if image fails to load

@@ -39,6 +39,7 @@ export function BodyShapeSelector({ selectedShape, onShapeChange }) {
                 alt={shape.name}
                 fill
                 className="object-contain"
+                priority
               />
             </div>
             {/* <div className="text-sm font-medium text-white text-center">

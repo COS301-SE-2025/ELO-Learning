@@ -1,6 +1,7 @@
 'use client';
 
-import { gradients, solidColors } from './avatar-colors';
+import { gradients } from './avatar-colors';
+import { AvatarColors } from './color';
 
 export const BackgroundTypes = {
   SOLID_PINK: 'solid-pink',
@@ -15,8 +16,8 @@ export const BackgroundTypes = {
 
 export function BackgroundSelector({ selectedBackground, onBackgroundChange }) {
   const backgrounds = [
-    // Solid color options
-    ...solidColors.map((color, i) => ({
+    // Solid color options (use AvatarColors for consistency)
+    ...AvatarColors.map((color, i) => ({
       id: `solid-${i}`,
       name: `Solid ${i + 1}`,
       style: { backgroundColor: color },
@@ -56,41 +57,13 @@ export function BackgroundSelector({ selectedBackground, onBackgroundChange }) {
 
 export function AvatarBackground({ backgroundType, className = '' }) {
   // Support new solid and gradient backgrounds
-  // If backgroundType starts with 'solid-', use solidColors
+  // If backgroundType starts with 'solid-', use AvatarColors
   // If backgroundType starts with 'gradient-', use gradients
-  const solidColors = [
-    '#421e68',
-    '#7d32ce',
-    '#c794ff',
-    '#4d5ded',
-    '#ff6e99',
-    '#6e3a99',
-    '#a16be0',
-    '#bfa0ff',
-    '#7a8aff',
-    '#ff8ab8',
-    '#d94d8f',
-    '#a8327d',
-  ];
-  const gradients = [
-    { colors: ['#421e68', '#7d32ce'] },
-    { colors: ['#7d32ce', '#c794ff'] },
-    { colors: ['#c794ff', '#4d5ded'] },
-    { colors: ['#4d5ded', '#ff6e99'] },
-    { colors: ['#ff6e99', '#421e68'] },
-    { colors: ['#421e68', '#7d32ce', '#c794ff'] },
-    { colors: ['#7d32ce', '#c794ff', '#4d5ded'] },
-    { colors: ['#c794ff', '#4d5ded', '#ff6e99'] },
-    { colors: ['#4d5ded', '#ff6e99', '#421e68'] },
-    { colors: ['#ff6e99', '#421e68', '#7d32ce'] },
-    { colors: ['#421e68', '#7d32ce', '#c794ff', '#4d5ded', '#ff6e99'] },
-    { colors: ['#ff6e99', '#4d5ded', '#c794ff', '#7d32ce', '#421e68'] },
-  ];
 
   let style = { backgroundColor: '#421e68' };
   if (backgroundType && backgroundType.startsWith('solid-')) {
     const idx = parseInt(backgroundType.split('-')[1], 10);
-    style = { backgroundColor: solidColors[idx] || '#421e68' };
+    style = { backgroundColor: AvatarColors[idx] || '#421e68' };
   } else if (backgroundType && backgroundType.startsWith('gradient-')) {
     const idx = parseInt(backgroundType.split('-')[1], 10);
     const g = gradients[idx];

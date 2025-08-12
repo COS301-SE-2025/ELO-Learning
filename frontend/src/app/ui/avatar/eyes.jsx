@@ -64,6 +64,7 @@ export function EyeSelector({ selectedEyes, onEyesChange }) {
                 alt={eye.name}
                 fill
                 className="object-contain"
+                priority
               />
             </div>
             {/* <div className="text-xs font-medium text-white text-center">
@@ -91,6 +92,7 @@ export function AvatarEyes({ eyeType, className = '' }) {
           alt={`${validEyeType} eyes`}
           fill
           className="object-contain"
+          priority
           onError={(e) => {
             console.error('Failed to load eye image:', eyeSrc);
             // Fallback to Eye 1 if image fails to load

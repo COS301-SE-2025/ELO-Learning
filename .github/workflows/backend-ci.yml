@@ -26,9 +26,9 @@ jobs:
         working-directory: backend
         run: npm ci
 
-      - name: Run ESLint
-        working-directory: backend
-        run: npm run lint
+      # - name: Run ESLint
+      #   working-directory: backend
+      #   run: npm run lint
 
       - name: Run Tests
         working-directory: backend

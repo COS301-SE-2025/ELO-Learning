@@ -37,17 +37,52 @@ export const cache = {
       const item = localStorage.getItem(key);
       if (!item) return null;
 
-      const { data, timestamp, expiryTime } = JSON.parse(item);
-      const now = Date.now();
+      // Try to parse as cache format first
+      let parsed;
+      try {
+        parsed = JSON.parse(item);
+      } catch (parseError) {
+        // If JSON parsing fails, this might be legacy data stored as plain string
+        console.warn(`Cache item "${key}" is not in expected format, treating as legacy data:`, parseError.message);
+        
+        // Special handling for JWT tokens (they start with 'eyJ')
+        if (key === CACHE_KEYS.TOKEN && item.startsWith('eyJ')) {
+          console.log('Detected legacy JWT token, migrating to proper cache format');
+          // Migrate legacy JWT token to proper cache format
+          cache.set(key, item);
+          return item;
+        }
+        
+        // For other legacy data, return the raw string but remove it to force refresh
+        localStorage.removeItem(key);
+        return item.startsWith('{') || item.startsWith('[') ? null : item;
+      }
 
-      if (now - timestamp > expiryTime) {
+      // Check if it's in the expected cache format
+      if (parsed && typeof parsed === 'object' && parsed.hasOwnProperty('data') && parsed.hasOwnProperty('timestamp')) {
+        const { data, timestamp, expiryTime } = parsed;
+        const now = Date.now();
+
+        if (now - timestamp > expiryTime) {
+          localStorage.removeItem(key);
+          return null;
+        }
+
+        return data;
+      } else {
+        // If it's not in cache format, treat as legacy data
+        console.warn(`Cache item "${key}" is not in expected cache format, removing legacy data`);
         localStorage.removeItem(key);
         return null;
       }
-
-      return data;
     } catch (error) {
       console.error('Cache get error:', error);
+      // Remove corrupted cache item
+      try {
+        localStorage.removeItem(key);
+      } catch (removeError) {
+        console.error('Failed to remove corrupted cache item:', removeError);
+      }
       return null;
     }
   },
@@ -106,3 +141,4 @@ export const cache = {
 };
 
 export { CACHE_EXPIRY, CACHE_KEYS };
+

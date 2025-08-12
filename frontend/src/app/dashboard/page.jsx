@@ -69,43 +69,6 @@ async function loadDashboard() {
       loadDashboard();
     }
 
-//added
-
-
-//     if (!mounted) return;
-
-//     const currentUser = res.data.user;
-//     setUser(currentUser);
-
-//     if (currentUser.baseLineTest === false) {
-//       setShowBaselinePopup(true);
-//     }
-
-//     console.log('Fetching /users/all...');
-//     const usersRes = await axios.get('/users/all', { withCredentials: true });
-//     console.log('/users/all response:', usersRes.data);
-
-//     if (!mounted) return;
-
-//     timeoutId = setTimeout(() => {
-//       if (mounted) {
-//         const sortedUsers = sortUsers([...usersRes.data]);
-//         setUsers(sortedUsers);
-//         setLoading(false);
-//       }
-//     }, 0);
-//   } catch (err) {
-//     console.error('Failed to load dashboard data:', err.response || err.message || err);
-//     if (mounted) {
-//       setError('Failed to load leaderboard. Please try again.');
-//       setLoading(false);
-//     }
-//   }
-// }
-
-
-    //loadDashboard();
-    //checkBaselineTest();
 
     //cleanup
     return () => {

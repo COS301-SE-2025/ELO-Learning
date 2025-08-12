@@ -690,7 +690,7 @@ router.post('/question/:id/submit', async (req, res) => {
     if (userId) {
       try {
         // Import achievement checking function
-        const { checkQuestionAchievements } = await import(
+        const { checkQuestionAchievements, checkFastSolveAchievements, checkLeaderboardAchievements, checkNeverGiveUpAchievement } = await import(
           './achievementRoutes.js'
         );
 
@@ -701,6 +701,21 @@ router.post('/question/:id/submit', async (req, res) => {
         );
         unlockedAchievements.push(...questionAchievements);
 
+        // 🆕 Check leaderboard position achievements after XP changes (practice mode)
+        if (isCorrect && updatedUser) {
+          console.log('🔍 Calling checkLeaderboardAchievements for practice mode...');
+          const leaderboardAchievements = await checkLeaderboardAchievements(userId);
+          console.log('✅ checkLeaderboardAchievements completed:', leaderboardAchievements);
+          unlockedAchievements.push(...leaderboardAchievements);
+        }
+
+        // 🆕 Check Never Give Up achievement (practice mode)
+        // Note: This would require frontend to track attempts per question
+        // For now, we'll assume this is handled via the separate endpoint
+        
+        // 🆕 Check fast solve achievements (practice mode doesn't have timeSpent, so skip for now)
+        // Note: To add fast solve to practice, you'd need to modify the frontend to track time
+        
         console.log(
           `🏆 Practice achievements unlocked: ${unlockedAchievements.length}`,
         );

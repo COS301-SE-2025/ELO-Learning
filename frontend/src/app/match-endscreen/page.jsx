@@ -39,31 +39,6 @@ function MatchEndScreenContent() {
         localStorage.getItem('questionsObj') || '[]',
       );
 
-      /*
-      const correctAnswers = questions.filter(
-        (question) => question.isCorrect == true,
-      );
-      const xpEarned = correctAnswers.reduce(
-        (accumulator, question) => accumulator + question.question.xpGain,
-        0,
-      );
-
-      if (xpEarned > 0) {
-        // Calculate new total XP
-        const newTotalXP = userData.xp + xpEarned;
-
-        // Update user XP in database
-        await updateUserXP(userData.id, newTotalXP);
-
-        // Update the cookie with new XP value
-        const updatedUserData = { ...userData, xp: newTotalXP };
-        const updatedCookie = encodeURIComponent(
-          JSON.stringify(updatedUserData),
-        );
-        document.cookie = `user=${updatedCookie}; path=/`;
-      }
-      */
-
       // Clear localStorage
       localStorage.removeItem('questionsObj');
 

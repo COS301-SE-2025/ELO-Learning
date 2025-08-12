@@ -8,7 +8,10 @@ import { useEffect, useState } from 'react';
 export default function GameClient({ game, level }) {
   const { socket, session, status } = useSocket();
   const [questions, setQuestions] = useState([]);
-  const [isWaitingForOpponent, setIsWaitingForOpponent] = useState(false);
+  const [isWaitingForOpponentStart, setIsWaitingForOpponentStart] =
+    useState(true);
+  const [isWaitingForOpponentFinish, setIsWaitingForOpponentFinish] =
+    useState(false);
   const [error, setError] = useState(null);
 
   useEffect(() => {
@@ -37,15 +40,12 @@ export default function GameClient({ game, level }) {
     function onGameReady(data) {
       console.log('Game is ready:', data);
       setQuestions(data.questions);
+      setIsWaitingForOpponentStart(false);
     }
 
     function onGameError(data) {
       console.error('Game error:', data);
       setError(data.error || 'Unknown game error');
-    }
-    function onGameReady(data) {
-      console.log('Game is ready:', data);
-      setQuestions(data.questions);
     }
 
     function onMatchEnd(data) {
@@ -68,7 +68,7 @@ export default function GameClient({ game, level }) {
 
   const submitCallback = () => {
     console.log('Submit callback triggered - Match ended');
-    setIsWaitingForOpponent(true);
+    setIsWaitingForOpponentFinish(true);
     // Emit an event to the server to handle the end of the match
     const userAnswers = localStorage.getItem('questionsObj');
     socket.emit('matchComplete', {
@@ -92,39 +92,41 @@ export default function GameClient({ game, level }) {
         </div>
       )}
 
-      {!error && !isWaitingForOpponent && (
+      {!error && questions.length > 0 && !isWaitingForOpponentFinish && (
         <div>
-          {questions.length > 0 ? (
-            <QuestionsTracker
-              questions={questions}
-              submitCallback={submitCallback}
-              lives={15}
-            />
-          ) : (
-            <div className="flex flex-col items-center justify-center min-h-screen">
-              <div className="flex flex-row items-center justify-center gap-5">
-                <div
-                  className="animate-bounce rounded-full h-5 w-5 bg-[#FF6E99] mb-4"
-                  style={{ animationDelay: '0ms' }}
-                ></div>
-                <div
-                  className="animate-bounce rounded-full h-5 w-5 bg-[#FF6E99] mb-4"
-                  style={{ animationDelay: '150ms' }}
-                ></div>
-                <div
-                  className="animate-bounce rounded-full h-5 w-5 bg-[#FF6E99] mb-4"
-                  style={{ animationDelay: '300ms' }}
-                ></div>
-              </div>
-              <div className="text-lg font-bold text-center">
-                Both players need to be ready before the game starts
-              </div>
-            </div>
-          )}
+          <QuestionsTracker
+            questions={questions}
+            submitCallback={submitCallback}
+            lives={15}
+          />
         </div>
       )}
 
-      {!error && isWaitingForOpponent && (
+      {!error && isWaitingForOpponentStart && (
+        <div>
+          <div className="flex flex-col items-center justify-center min-h-screen">
+            <div className="flex flex-row items-center justify-center gap-5">
+              <div
+                className="animate-bounce rounded-full h-5 w-5 bg-[#FF6E99] mb-4"
+                style={{ animationDelay: '0ms' }}
+              ></div>
+              <div
+                className="animate-bounce rounded-full h-5 w-5 bg-[#FF6E99] mb-4"
+                style={{ animationDelay: '150ms' }}
+              ></div>
+              <div
+                className="animate-bounce rounded-full h-5 w-5 bg-[#FF6E99] mb-4"
+                style={{ animationDelay: '300ms' }}
+              ></div>
+            </div>
+            <div className="text-lg font-bold text-center">
+              Both players need to be ready before the game starts
+            </div>
+          </div>
+        </div>
+      )}
+
+      {!error && isWaitingForOpponentFinish && (
         <div className="flex flex-col items-center justify-center min-h-screen">
           <div className="flex flex-row items-center justify-center gap-5">
             <div

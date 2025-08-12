@@ -12,6 +12,7 @@ import { resetXPCalculationState } from '@/utils/gameSession';
 
 export default function QuestionsTracker({
   questions,
+  submitCallback,
   lives,
   mode,
   resetXPState,
@@ -135,10 +136,6 @@ export default function QuestionsTracker({
     return false;
   };
 
-  const handleQuizComplete = () => {
-    router.push(`/end-screen?mode=${mode}`);
-  };
-
   const submitAnswer = async () => {
     // Get fresh validation result before handling lives
     const correctAnswerObj = currAnswers.find((ans) => ans.isCorrect === true);
@@ -171,7 +168,7 @@ export default function QuestionsTracker({
     setIsAnswerCorrect(false);
 
     if (currentStep >= allQuestions.length) {
-      handleQuizComplete();
+      submitCallback();
       return;
     }
 

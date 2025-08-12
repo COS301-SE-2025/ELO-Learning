@@ -137,13 +137,6 @@ export async function fetchUserById(id) {
   return res.data;
 }
 
-// 3. GET /users/:id/achievements
-export async function fetchUserAchievements(id) {
-  const res = await axiosInstance.get(`/users/${id}/achievements`, {
-    headers: getDynamicAuthHeader(),
-  });
-  return res.data;
-}
 
 // 4. POST /user/:id/xp
 export async function updateUserXP(id, xp) {
@@ -370,13 +363,17 @@ export async function fetchAllAchievements(categoryId = null) {
 }
 
 export async function fetchUserAchievements(userId) {
-  const res = await axiosInstance.get(`/users/${userId}/achievements`)
-  return res.data.achievements
+  const res = await axiosInstance.get(`/users/${userId}/achievements`, {
+    headers: getDynamicAuthHeader(),
+  });
+  return res.data.achievements;
 }
 
 export async function fetchUserAchievementsWithStatus(userId) {
-  const res = await axiosInstance.get(`/users/${userId}/achievements/all`)
-  return res.data.achievements
+  const res = await axiosInstance.get(`/users/${userId}/achievements/all`, {
+    headers: getDynamicAuthHeader(),
+  });
+  return res.data.achievements;
 }
 
 export async function updateAchievementProgress(
@@ -390,6 +387,9 @@ export async function updateAchievementProgress(
       achievement_id: achievementId,
       increment_by: increment,
     },
-  )
-  return res.data
+    {
+      headers: getDynamicAuthHeader(),
+    }
+  );
+  return res.data;
 }

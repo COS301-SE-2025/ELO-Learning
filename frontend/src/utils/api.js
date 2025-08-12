@@ -117,12 +117,14 @@ export async function getMixedQuestions(level = 1, count = 10) {
 }
 
 // Enhanced submit function that handles all question types
-export async function submitQuestionAnswer(
+export async function submitQuestionAnswer({
   questionId,
-  studentAnswer,
   userId,
+  userAnswer,
+  isCorrect,
+  timeSpent,
   questionType = null,
-) {
+}) {
   try {
     const headers = {
       'Content-Type': 'application/json',
@@ -141,9 +143,10 @@ export async function submitQuestionAnswer(
         method: 'POST',
         headers,
         body: JSON.stringify({
-          studentAnswer,
+          studentAnswer: userAnswer,
           userId,
           questionType,
+          timeSpent,
         }),
       },
     );
@@ -160,7 +163,7 @@ export async function submitQuestionAnswer(
 
     return {
       success: true,
-      data: data.data,
+      data: data.data || data,
     };
   } catch (error) {
     console.error('Error submitting answer:', error);

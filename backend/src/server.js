@@ -7,7 +7,7 @@ import { createServer } from 'http'
 import { Server } from 'socket.io'
 
 //Change this import to ES6
-import achievementRoutes from './achievementRoutes.js';
+import achievementRoutes from './achievementRoutes.js'
 import answerRoutes from './answerRoutes.js'
 import multiPlayerRoutes from './multiPlayerRoute.js'
 import oauthRoutes from './oauthRoutes.js'
@@ -551,7 +551,7 @@ app.post('/singleplayer', async (req, res) => {
 
     try {
       // Import achievement checking functions dynamically
-      const { checkQuestionAchievements, checkMatchAchievements } = await import('./achievementRoutes.js');
+      const { checkQuestionAchievements } = await import('./achievementRoutes.js');
       
       // Check question-based achievements only
       const questionAchievements = await checkQuestionAchievements(
@@ -560,9 +560,8 @@ app.post('/singleplayer', async (req, res) => {
       );
       unlockedAchievements.push(...questionAchievements);
       
-      // 🆕 Check match-based achievements
-      const matchAchievements = await checkMatchAchievements(user_id);
-      unlockedAchievements.push(...matchAchievements);
+      // NOTE: Single player mode should NOT trigger match achievements
+      // Match achievements are only for multiplayer games
     } catch (achievementError) {
       console.error('Error checking achievements:', achievementError);
       // Don't fail the whole request if achievements fail
@@ -695,6 +694,28 @@ app.post('/multiplayer', async (req, res) => {
       return res.status(500).json({ error: 'Error saving attempts' });
     }
 
+    // 🎯 Check for match achievements (both players participated in a match)
+    let unlockedAchievements = [];
+    
+    try {
+      // Import achievement checking functions dynamically
+      const { checkMatchAchievements } = await import('./achievementRoutes.js');
+      
+      // Check match achievements for both players
+      const player1Achievements = await checkMatchAchievements(player1_id);
+      const player2Achievements = await checkMatchAchievements(player2_id);
+      
+      unlockedAchievements = [
+        ...player1Achievements.map(achievement => ({ ...achievement, playerId: player1_id })),
+        ...player2Achievements.map(achievement => ({ ...achievement, playerId: player2_id }))
+      ];
+      
+      console.log(`🏆 Multiplayer match achievements unlocked: ${unlockedAchievements.length}`);
+    } catch (achievementError) {
+      console.error('Error checking match achievements:', achievementError);
+      // Don't fail the whole request if achievements fail
+    }
+
     return res.status(200).json({
       message: 'Multiplayer match processed successfully',
       players: [
@@ -713,6 +734,7 @@ app.post('/multiplayer', async (req, res) => {
           leveledUp: leveledUp2,
         },
       ],
+      unlockedAchievements: unlockedAchievements, // 🎯 Include match achievements
     });
   } catch (err) {
     console.error('Error in /multiplayer:', err);

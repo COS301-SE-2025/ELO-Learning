@@ -45,8 +45,10 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+
       - name: Install root dependencies
         run: npm install
+
       - name: Install frontend dependencies
         uses: actions/setup-node@v4
         with:
@@ -60,7 +62,18 @@ jobs:
         uses: cypress-io/github-action@v6
         with:
           install-command: yarn --silent
-          build: yarn build
-          start: yarn run dev
+          start: yarn dev
+          wait-on: 'http://localhost:8080'
           working-directory: ./frontend
+        env:
+          # Set test environment variables for frontend
+          # Point API calls to the frontend server since tests use mocked APIs
+          NEXT_PUBLIC_API_URL: http://localhost:8080
+          NEXT_PUBLIC_SOCKET_URL: http://localhost:8080
+          NEXT_PUBLIC_FRONTEND_URL: http://localhost:8080
+          NEXTAUTH_URL: http://localhost:8080
+          NEXTAUTH_SECRET: test-secret
+          GOOGLE_CLIENT_ID: test-client-id
+          GOOGLE_CLIENT_SECRET: test-client-secret
+          NODE_ENV: test
         timeout-minutes: 15

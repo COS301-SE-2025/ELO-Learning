@@ -5,15 +5,12 @@ on:
     branches: [development]
   pull_request:
     branches: [development]
-    paths-ignore:
-      - readme.md
 
 jobs:
   pre-commit:
     runs-on: ubuntu-latest
-
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - name: Set up Python
         uses: actions/setup-python@v4
@@ -21,11 +18,17 @@ jobs:
           python-version: '3.x'
 
       - name: Set up Node.js
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
-          node-version: '18' # or whichever version we used lpcally
+          node-version: 18
 
-      - name: Install node dependencies
+      # Only include these installs if your hooks require them
+      - name: Install frontend dependencies
+        working-directory: frontend
+        run: yarn install --frozen-lockfile
+
+      - name: Install backend dependencies
+        working-directory: backend
         run: npm ci
 
       - name: Install pre-commit

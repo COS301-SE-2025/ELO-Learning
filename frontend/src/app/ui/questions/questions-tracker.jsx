@@ -212,6 +212,9 @@ export default function QuestionsTracker({
     // Check for Perfect Session achievement before navigating
     checkPerfectSessionAchievement();
     
+    // Check for Speed Solver achievement before navigating
+    checkSpeedSolverAchievement();
+    
     // Use setTimeout to ensure navigation happens after current render cycle
     setTimeout(() => {
       router.push(`/end-screen?mode=${mode}`);
@@ -318,6 +321,115 @@ export default function QuestionsTracker({
       }
     } catch (error) {
       console.error('🏆 Error checking Perfect Session achievement:', error);
+    }
+  };
+
+  const checkSpeedSolverAchievement = async () => {
+    try {
+      const userId = session?.user?.id;
+      if (!userId) {
+        console.log('⚡ Speed Solver achievement skipped - no user ID');
+        return;
+      }
+
+      console.log('⚡ Checking Speed Solver achievements...');
+
+      // Get the completed session from localStorage
+      const questionsObj = JSON.parse(localStorage.getItem('questionsObj') || '[]');
+      
+      if (questionsObj.length < 5) {
+        console.log('⚡ Speed Solver check skipped - less than 5 questions completed');
+        return;
+      }
+
+      // Calculate speed statistics for correct answers only
+      const correctAnswers = questionsObj.filter(q => q.isCorrect === true);
+      
+      if (correctAnswers.length < 5) {
+        console.log(`⚡ Speed Solver check skipped - only ${correctAnswers.length} correct answers`);
+        return;
+      }
+
+      // Calculate average time for correct answers
+      const totalTime = correctAnswers.reduce((sum, q) => {
+        // timeElapsed is stored in seconds
+        return sum + (q.timeElapsed || 30); // default 30s if no time recorded
+      }, 0);
+
+      const averageTime = totalTime / correctAnswers.length;
+      const correctCount = correctAnswers.length;
+
+      console.log('⚡ Speed Solver analysis:', {
+        totalQuestions: questionsObj.length,
+        correctCount,
+        averageTime: averageTime.toFixed(2),
+        totalTime
+      });
+
+      // Only check if average time is reasonably fast (under 15 seconds)
+      if (averageTime <= 15) {
+        console.log(`🏃 Triggering Speed Solver check: ${correctCount} correct answers in ${averageTime.toFixed(2)}s average`);
+        
+        // Call Speed Solver achievement endpoint
+        const response = await fetch(`/api/achievements/users/${userId}/achievements/speed-solver`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            averageTime,
+            correctCount,
+            sessionData: {
+              totalQuestions: questionsObj.length,
+              mode: mode,
+              correctAnswers: correctAnswers.length
+            }
+          }),
+        });
+
+        if (response.ok) {
+          const result = await response.json();
+          console.log('⚡ Speed Solver achievement result:', result);
+          
+          // Show achievement notification if unlocked
+          if (result.unlockedAchievements && result.unlockedAchievements.length > 0) {
+            console.log('🏆 Speed Solver achievement unlocked!', result.unlockedAchievements);
+            
+            // Use the existing achievement notification system
+            const showAchievementNotifications = (attempts = 0) => {
+              if (typeof window !== 'undefined' && window.showMultipleAchievements) {
+                try {
+                  window.showMultipleAchievements(result.unlockedAchievements);
+                  console.log('✅ Speed Solver achievement notification displayed');
+                } catch (notificationError) {
+                  console.error('❌ Error displaying Speed Solver achievement notification:', notificationError);
+                  
+                  if (attempts < 2) {
+                    setTimeout(() => showAchievementNotifications(attempts + 1), 500);
+                  }
+                }
+              } else {
+                console.error('❌ Achievement notification system not ready for Speed Solver');
+                
+                if (attempts < 3) {
+                  setTimeout(() => showAchievementNotifications(attempts + 1), 1000);
+                } else {
+                  console.error('❌ Speed Solver achievement notification failed after 3 attempts');
+                }
+              }
+            };
+
+            // Show achievement notification with a slight delay
+            setTimeout(() => showAchievementNotifications(), 500);
+          }
+        } else {
+          console.error('🏆 Failed to trigger Speed Solver achievement:', response.status, response.statusText);
+        }
+      } else {
+        console.log(`⚡ Average time too slow for Speed Solver: ${averageTime.toFixed(2)}s (threshold: 15s)`);
+      }
+    } catch (error) {
+      console.error('⚡ Error checking Speed Solver achievement:', error);
     }
   };
 

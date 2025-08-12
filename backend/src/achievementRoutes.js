@@ -1043,4 +1043,153 @@ router.post('/users/:userId/achievements/never-give-up', async (req, res) => {
   }
 });
 
+// Speed Solver Achievement Endpoint
+router.post('/users/:userId/achievements/speed-solver', async (req, res) => {
+  try {
+    const { userId } = req.params;
+    const { averageTime, correctCount, sessionData } = req.body;
+
+    console.log(`⚡ Speed Solver check for user ${userId}: ${correctCount} questions, ${averageTime}s average`);
+
+    // Validate input
+    if (!averageTime || !correctCount || correctCount < 5) {
+      return res.json({
+        success: false,
+        message: 'Need at least 5 correct answers to qualify for Speed Solver',
+        unlockedAchievements: []
+      });
+    }
+
+    // Check for Speed Solver achievements
+    const unlockedAchievements = await checkSpeedSolverAchievements(userId, averageTime, correctCount);
+
+    res.json({
+      success: true,
+      message: unlockedAchievements.length > 0 ? 'Speed Solver achievement unlocked!' : 'Speed tracked',
+      unlockedAchievements,
+      context: {
+        averageTime,
+        correctCount,
+        sessionData
+      }
+    });
+
+  } catch (error) {
+    console.error('❌ Speed Solver achievement error:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Internal server error'
+    });
+  }
+});
+
+// Learn from Mistakes Achievement Endpoint
+router.post('/users/:userId/achievements/learn-from-mistakes', async (req, res) => {
+  try {
+    const { userId } = req.params;
+    const { questionId, isCorrect, previouslyIncorrect, attemptHistory } = req.body;
+
+    console.log(`📚 Learn from Mistakes check: User ${userId}, Question ${questionId}, Previously wrong: ${previouslyIncorrect}`);
+
+    // Check for Learn from Mistakes achievements
+    const unlockedAchievements = await checkLearnFromMistakesAchievements(userId, questionId, isCorrect, previouslyIncorrect);
+
+    res.json({
+      success: true,
+      message: unlockedAchievements.length > 0 ? 'Learn from Mistakes achievement unlocked!' : 'Learning progress tracked',
+      unlockedAchievements,
+      context: {
+        questionId,
+        isCorrect,
+        previouslyIncorrect,
+        attemptHistory
+      }
+    });
+
+  } catch (error) {
+    console.error('❌ Learn from Mistakes achievement error:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Internal server error'
+    });
+  }
+});
+
+// Speed Solver Achievement - Fast consecutive correct answers
+export async function checkSpeedSolverAchievements(userId, averageTime, correctCount) {
+  // Speed Solver: Answer multiple questions correctly with low average time
+  // averageTime should be in seconds, correctCount is number of consecutive correct answers
+  
+  if (!averageTime || !correctCount || correctCount < 5) {
+    return [];
+  }
+
+  // Define speed thresholds
+  const SPEED_THRESHOLDS = {
+    'Lightning Solver': { maxTime: 8, minQuestions: 5 },   // 5 questions under 8s each
+    'Speed Master': { maxTime: 10, minQuestions: 10 },     // 10 questions under 10s each
+    'Velocity Champion': { maxTime: 12, minQuestions: 20 } // 20 questions under 12s each
+  };
+
+  console.log(`⚡ Speed Solver check: ${correctCount} correct answers, ${averageTime}s average`);
+
+  const unlockedAchievements = [];
+
+  for (const [achievementName, criteria] of Object.entries(SPEED_THRESHOLDS)) {
+    if (averageTime <= criteria.maxTime && correctCount >= criteria.minQuestions) {
+      console.log(`🏃 Potential ${achievementName}: ${correctCount} questions in ${averageTime}s avg`);
+      
+      const result = await triggerAchievementProgress(userId, 'Speed Solver', 1, {
+        achievementName,
+        averageTime,
+        correctCount,
+        criteria
+      });
+      
+      unlockedAchievements.push(...result.unlockedAchievements);
+    }
+  }
+
+  return unlockedAchievements;
+}
+
+// Learn from Mistakes Achievement - Answer question correctly after getting it wrong
+export async function checkLearnFromMistakesAchievements(userId, questionId, isCorrect, previouslyIncorrect = false) {
+  // Only trigger if this is a correct answer AND the user previously got this question wrong
+  if (!isCorrect || !previouslyIncorrect) {
+    return [];
+  }
+
+  console.log(`📚 Learn from Mistakes: User ${userId} corrected Question ${questionId}`);
+
+  // Trigger the "Learn from Mistakes" achievement progress
+  const result = await triggerAchievementProgress(userId, 'Learn from Mistakes', 1, {
+    questionId,
+    correctedAnswer: true
+  });
+
+  if (result.unlockedAchievements.length > 0) {
+    console.log(`🎓 Learn from Mistakes achievement unlocked for user ${userId}!`);
+  }
+
+  return result.unlockedAchievements;
+}
+
+// Mistake Recovery Achievement - Get back on track after multiple wrong answers
+export async function checkMistakeRecoveryAchievements(userId, correctAnswersAfterMistakes, mistakeCount) {
+  // Recovery after making multiple mistakes
+  if (!correctAnswersAfterMistakes || correctAnswersAfterMistakes < 3 || mistakeCount < 3) {
+    return [];
+  }
+
+  console.log(`🔄 Mistake Recovery: ${correctAnswersAfterMistakes} correct after ${mistakeCount} mistakes`);
+
+  const result = await triggerAchievementProgress(userId, 'Mistake Recovery', 1, {
+    correctAnswersAfterMistakes,
+    mistakeCount
+  });
+
+  return result.unlockedAchievements;
+}
+
 export default router;

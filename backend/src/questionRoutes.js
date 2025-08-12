@@ -690,9 +690,14 @@ router.post('/question/:id/submit', async (req, res) => {
     if (userId) {
       try {
         // Import achievement checking function
-        const { checkQuestionAchievements, checkFastSolveAchievements, checkLeaderboardAchievements, checkNeverGiveUpAchievement } = await import(
-          './achievementRoutes.js'
-        );
+        const { 
+          checkQuestionAchievements, 
+          checkFastSolveAchievements, 
+          checkLeaderboardAchievements, 
+          checkNeverGiveUpAchievement,
+          checkSpeedSolverAchievements,
+          checkLearnFromMistakesAchievements
+        } = await import('./achievementRoutes.js');
 
         // Check question-based achievements only
         const questionAchievements = await checkQuestionAchievements(
@@ -707,6 +712,39 @@ router.post('/question/:id/submit', async (req, res) => {
           const leaderboardAchievements = await checkLeaderboardAchievements(userId);
           console.log('✅ checkLeaderboardAchievements completed:', leaderboardAchievements);
           unlockedAchievements.push(...leaderboardAchievements);
+        }
+
+        // 🆕 Check Fast Solve achievements (if timeSpent is provided)
+        if (isCorrect && timeSpent && typeof timeSpent === 'number') {
+          console.log(`⚡ Checking fast solve: ${timeSpent}s`);
+          const fastSolveAchievements = await checkFastSolveAchievements(userId, timeSpent, isCorrect);
+          unlockedAchievements.push(...fastSolveAchievements);
+        }
+
+        // 🆕 Check Learn from Mistakes achievement (if question was previously incorrect)
+        // Note: This would require frontend to track previous attempts
+        // For now, we'll check if this question exists in user's incorrect history
+        if (isCorrect && questionId) {
+          try {
+            // Check if user previously answered this question incorrectly
+            const { data: previousAttempts, error: historyError } = await supabase
+              .from('UserQuestionAnswers')
+              .select('is_correct')
+              .eq('user_id', userId)
+              .eq('question_id', questionId)
+              .eq('is_correct', false)
+              .limit(1);
+
+            const previouslyIncorrect = !historyError && previousAttempts && previousAttempts.length > 0;
+
+            if (previouslyIncorrect) {
+              console.log(`📚 User previously got question ${questionId} wrong, now correct - checking Learn from Mistakes`);
+              const learnAchievements = await checkLearnFromMistakesAchievements(userId, questionId, isCorrect, true);
+              unlockedAchievements.push(...learnAchievements);
+            }
+          } catch (mistakeError) {
+            console.error('Error checking Learn from Mistakes:', mistakeError);
+          }
         }
 
         // 🆕 Check Never Give Up achievement (practice mode)

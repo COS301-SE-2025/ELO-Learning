@@ -91,9 +91,6 @@ const validateMatchQuestion = async (studentAnswer, questionId) => {
       
       if (correctPair && correctPair.rightId === studentRightId) {
         correctMatchCount++;
-        console.log(`✅ Correct match: ${leftId} → ${studentRightId}`);
-      } else {
-        console.log(`❌ Incorrect match: ${leftId} → ${studentRightId} (should be ${correctPair?.rightId})`);
       }
     }
 
@@ -181,118 +178,6 @@ const validateMatchQuestionLegacy = (studentAnswer, correctAnswer) => {
   }
 };
 
-// Enhanced submission route with proper match question handling
-router.post('/question/:id/submit', async (req, res) => {
-  const { id } = req.params;
-  const { studentAnswer, userId, questionType } = req.body;
-
-  try {
-    // Fetch question data
-    const { data: questionData, error: questionError } = await supabase
-      .from('Questions')
-      .select('type, xpGain, questionText')
-      .eq('Q_id', id)
-      .single();
-
-    if (questionError || !questionData) {
-      return res.status(404).json({ error: 'Question not found' });
-    }
-
-    const actualQuestionType = questionType || questionData.type;
-    let isCorrect = false;
-
-    // Handle match questions with enhanced validation
-    if (actualQuestionType === 'Match Question' || actualQuestionType === 'Matching') {
-      console.log('Processing match question submission');
-      
-      // Use the enhanced match validation
-      isCorrect = await validateMatchQuestion(studentAnswer, id);
-      
-      if (!isCorrect) {
-        // Fallback to legacy validation if new method fails
-        const { data: correctAnswerData, error: answerError } = await supabase
-          .from('Answers')
-          .select('answer_text')
-          .eq('question_id', id)
-          .eq('isCorrect', true);
-
-        if (!answerError && correctAnswerData) {
-          const correctAnswers = correctAnswerData.map(a => a.answer_text);
-          isCorrect = validateMatchQuestionLegacy(studentAnswer, correctAnswers);
-        }
-      }
-    } else {
-      // Handle other question types with existing validation
-      const { data: correctAnswerData, error: answerError } = await supabase
-        .from('Answers')
-        .select('*')
-        .eq('question_id', id)
-        .eq('isCorrect', true)
-        .single();
-
-      if (answerError || !correctAnswerData) {
-        return res.status(404).json({
-          error: 'Correct answer not found',
-          debug: { answerError, question_id: id }
-        });
-      }
-
-      const correctAnswer = correctAnswerData.answer_text || correctAnswerData.answerText;
-      isCorrect = validateAnswerByType(actualQuestionType, studentAnswer, correctAnswer);
-    }
-
-    // Award XP if correct
-    let updatedUser = null;
-    let xpAwarded = 0;
-
-    if (isCorrect && userId) {
-      const { data: currentUser, error: userError } = await supabase
-        .from('Users')
-        .select('xp')
-        .eq('id', userId)
-        .single();
-
-      if (!userError && currentUser) {
-        xpAwarded = questionData.xpGain || 10;
-        const newXp = (currentUser.xp || 0) + xpAwarded;
-
-        const { data: updated, error: updateError } = await supabase
-          .from('Users')
-          .update({ xp: newXp })
-          .eq('id', userId)
-          .select('id, xp')
-          .single();
-
-        if (!updateError) {
-          updatedUser = updated;
-        }
-      }
-    }
-
-    // Generate feedback message
-    const feedbackMessage = getFeedbackMessage(actualQuestionType, isCorrect);
-
-    res.status(200).json({
-      success: true,
-      data: {
-        isCorrect,
-        studentAnswer,
-        message: feedbackMessage,
-        xpAwarded,
-        updatedUser,
-        questionType: actualQuestionType,
-      },
-    });
-
-  } catch (error) {
-    console.error('Error submitting answer:', error);
-    res.status(500).json({
-      success: false,
-      error: 'Failed to submit answer',
-      details: error.message,
-    });
-  }
-});
 
 export { validateMatchQuestion, validateMatchQuestionLegacy }
 
@@ -328,20 +213,42 @@ const validateAnswerByType = (questionType, studentAnswer, correctAnswer) => {
   }
 }
 
-// Validation functions for each question type
+// Replace your validateOpenResponse function in questionRoutes.js with this:
+
 const validateOpenResponse = (studentAnswer, correctAnswer) => {
-  if (!studentAnswer || studentAnswer.trim().length < 10) {
-    return false
+  if (!studentAnswer || !correctAnswer) {
+    return false;
   }
 
-  try {
-    // For now, just check if it's a reasonable length response
-    // You can enhance this later with keyword matching
-    return studentAnswer.trim().length >= 20
-  } catch (error) {
-    console.log('Open response validation - using basic length check')
-    return studentAnswer.trim().length >= 20
+  const studentStr = studentAnswer.toString().trim();
+  const correctStr = correctAnswer.toString().trim();
+
+  // Method 1: Try exact match (case-insensitive)
+  if (studentStr.toLowerCase() === correctStr.toLowerCase()) {
+    return true;
   }
+
+  // Method 2: Try numerical comparison for math problems
+  const studentNum = parseFloat(studentStr.replace(/[^\d.-]/g, '')); // Remove non-numeric chars except decimal and minus
+  const correctNum = parseFloat(correctStr.replace(/[^\d.-]/g, ''));
+  
+  if (!isNaN(studentNum) && !isNaN(correctNum)) {
+    const isCorrect = Math.abs(studentNum - correctNum) < 0.01; // Allow small floating point differences
+    if (isCorrect) {
+      return true;
+    }
+  }
+
+  // Method 3: Check if student answer contains the correct answer
+  if (studentStr.toLowerCase().includes(correctStr.toLowerCase())) {
+    return true;
+  }
+
+  // Method 4: For text responses, require minimum length (original behavior)
+  if (studentStr.length >= 20) {
+    return true;
+  }
+  return false;
 }
 
 const validateExpressionBuilder = (studentAnswer, correctAnswer) => {
@@ -610,232 +517,8 @@ router.get('/questions/mixed', async (req, res) => {
   }
 })
 
-// Enhanced submit route with support for all question types - UPDATED WITH ACHIEVEMENTS
-router.post('/question/:id/submit', async (req, res) => {
-  const { id } = req.params
-  const { studentAnswer, userId, questionType } = req.body
 
-  try {
-    // Fetch question and correct answer
-    const { data: questionData, error: questionError } = await supabase
-      .from('Questions')
-      .select('type, xpGain')
-      .eq('Q_id', id)
-      .single()
 
-    if (questionError || !questionData) {
-      return res.status(404).json({ error: 'Question not found' })
-    }
-
-    const { data: correctAnswerData, error: answerError } = await supabase
-      .from('Answers')
-      .select('*') // Select all fields
-      .eq('question_id', id)
-      .eq('isCorrect', true)
-      .single()
-
-    // Add debugging
-    console.log('Answer query result:', { correctAnswerData, answerError })
-
-    if (answerError || !correctAnswerData) {
-      console.log('Answer error details:', answerError)
-      return res.status(404).json({
-        error: 'Correct answer not found',
-        debug: { answerError, question_id: id },
-      })
-    }
-
-    const correctAnswer =
-      correctAnswerData.answer_text || correctAnswerData.answerText
-    const actualQuestionType = questionType || questionData.type
-
-    // Validate answer based on question type
-    const isCorrect = validateAnswerByType(
-      actualQuestionType,
-      studentAnswer,
-      correctAnswer,
-    )
-
-    // Award XP if correct and userId provided
-    let updatedUser = null
-    let xpAwarded = 0
-
-    if (isCorrect && userId) {
-      const { data: currentUser, error: userError } = await supabase
-        .from('Users')
-        .select('xp')
-        .eq('id', userId)
-        .single()
-
-      if (!userError && currentUser) {
-        xpAwarded = questionData.xpGain || 10
-        const newXp = (currentUser.xp || 0) + xpAwarded
-
-        const { data: updated, error: updateError } = await supabase
-          .from('Users')
-          .update({ xp: newXp })
-          .eq('id', userId)
-          .select('id, xp')
-          .single()
-
-        if (!updateError) {
-          updatedUser = updated;
-        }
-      }
-    }
-
-    // 🎯 NEW: Check for achievement unlocks (PRACTICE MODE)
-    let unlockedAchievements = [];
-
-    if (userId) {
-      try {
-        // Import achievement checking function
-        const { 
-          checkQuestionAchievements, 
-          checkFastSolveAchievements, 
-          checkLeaderboardAchievements, 
-          checkNeverGiveUpAchievement,
-          checkSpeedSolverAchievements,
-          checkLearnFromMistakesAchievements
-        } = await import('./achievementRoutes.js');
-
-        // Check question-based achievements only
-        const questionAchievements = await checkQuestionAchievements(
-          userId,
-          isCorrect,
-        );
-        unlockedAchievements.push(...questionAchievements);
-
-        // 🆕 Check leaderboard position achievements after XP changes (practice mode)
-        if (isCorrect && updatedUser) {
-          console.log('🔍 Calling checkLeaderboardAchievements for practice mode...');
-          const leaderboardAchievements = await checkLeaderboardAchievements(userId);
-          console.log('✅ checkLeaderboardAchievements completed:', leaderboardAchievements);
-          unlockedAchievements.push(...leaderboardAchievements);
-        }
-
-        // 🆕 Check Fast Solve achievements (if timeSpent is provided)
-        if (isCorrect && timeSpent && typeof timeSpent === 'number') {
-          console.log(`⚡ Checking fast solve: ${timeSpent}s`);
-          const fastSolveAchievements = await checkFastSolveAchievements(userId, timeSpent, isCorrect);
-          unlockedAchievements.push(...fastSolveAchievements);
-        }
-
-        // 🆕 Check Learn from Mistakes achievement (if question was previously incorrect)
-        // Note: This would require frontend to track previous attempts
-        // For now, we'll check if this question exists in user's incorrect history
-        if (isCorrect && questionId) {
-          try {
-            // Check if user previously answered this question incorrectly
-            const { data: previousAttempts, error: historyError } = await supabase
-              .from('UserQuestionAnswers')
-              .select('is_correct')
-              .eq('user_id', userId)
-              .eq('question_id', questionId)
-              .eq('is_correct', false)
-              .limit(1);
-
-            const previouslyIncorrect = !historyError && previousAttempts && previousAttempts.length > 0;
-
-            if (previouslyIncorrect) {
-              console.log(`📚 User previously got question ${questionId} wrong, now correct - checking Learn from Mistakes`);
-              const learnAchievements = await checkLearnFromMistakesAchievements(userId, questionId, isCorrect, true);
-              unlockedAchievements.push(...learnAchievements);
-            }
-          } catch (mistakeError) {
-            console.error('Error checking Learn from Mistakes:', mistakeError);
-          }
-        }
-
-        // 🆕 Check Never Give Up achievement (practice mode)
-        // Note: This would require frontend to track attempts per question
-        // For now, we'll assume this is handled via the separate endpoint
-        
-        // 🆕 Check fast solve achievements (practice mode doesn't have timeSpent, so skip for now)
-        // Note: To add fast solve to practice, you'd need to modify the frontend to track time
-        
-        console.log(
-          `🏆 Practice achievements unlocked: ${unlockedAchievements.length}`,
-        );
-      } catch (achievementError) {
-        console.error('Error checking achievements:', achievementError);
-        // Don't fail the whole request if achievements fail
-      }
-    }
-
-    // Generate feedback message based on question type
-    let feedbackMessage
-    if (isCorrect) {
-      feedbackMessage = getFeedbackMessage(actualQuestionType, true)
-    } else {
-      feedbackMessage = getFeedbackMessage(actualQuestionType, false)
-    }
-
-    res.status(200).json({
-      success: true,
-      data: {
-        isCorrect,
-        studentAnswer,
-        correctAnswer:
-          actualQuestionType === 'Open Response'
-            ? 'See rubric for details'
-            : correctAnswer,
-        message: feedbackMessage,
-        xpAwarded,
-        updatedUser,
-        questionType: actualQuestionType,
-        unlockedAchievements: unlockedAchievements, // 🎯 Include achievements in response
-      },
-    })
-  } catch (error) {
-    console.error('Error submitting answer:', error)
-    res.status(500).json({
-      success: false,
-      error: 'Failed to submit answer',
-      details: error.message,
-    })
-  }
-})
-
-// Helper function for feedback messages
-const getFeedbackMessage = (questionType, isCorrect) => {
-  const correctMessages = {
-    'Multiple Choice': 'Correct! Well done!',
-    'Math Input': 'Correct! Your mathematical expression is right!',
-    'Open Response':
-      'Great response! Your explanation demonstrates good understanding.',
-    'Expression Builder': 'Perfect! Your expression is correctly constructed!',
-    'Fill-in-the-Blank': 'Correct! All blanks filled properly!',
-    'Fill-in-the-Blanks': 'Correct! All blanks filled properly!',
-    'Match Question': 'Excellent! All pairs matched correctly!',
-    'Matching': 'Excellent! All pairs matched correctly!',
-    'True/False': 'Correct! You chose the right answer!',
-    'True-False': 'Correct! You chose the right answer!',
-  }
-
-  const incorrectMessages = {
-    'Multiple Choice': 'Incorrect. Try again!',
-    'Math Input': 'Not quite right. Check your mathematical expression.',
-    'Open Response':
-      'Your response needs more detail or accuracy. Try explaining step by step.',
-    'Expression Builder':
-      "Your expression isn't quite right. Try rearranging the tiles.",
-    'Fill-in-the-Blank':
-      'Some blanks are incorrect. Double-check your answers.',
-    'Fill-in-the-Blanks':
-      'Some blanks are incorrect. Double-check your answers.',
-    'Match Question':
-      'Some pairs are not matched correctly. Review your connections.',
-    'Matching':
-      'Some pairs are not matched correctly. Review your connections.',
-    'True/False': 'Incorrect. Think about the statement more carefully.',
-    'True-False': 'Incorrect. Think about the statement more carefully.',
-  }
-
-  return isCorrect
-    ? correctMessages[questionType] || 'Correct!'
-    : incorrectMessages[questionType] || 'Incorrect. Try again!'
-}
 
 // Keep all your existing routes exactly as they are
 router.get('/questions', async (req, res) => {
@@ -1060,4 +743,256 @@ router.get('/questions/random', async (req, res) => {
   }
 })
 
-export default router
+
+
+// Make sure this helper function exists in the same file
+function getFeedbackMessage(questionType, isCorrect) {
+  const correctMessages = {
+    'Multiple Choice': 'Correct! Well done!',
+    'Math Input': 'Correct! Your mathematical expression is right!',
+    'Open Response': 'Great response! Your explanation demonstrates good understanding.',
+    'Expression Builder': 'Perfect! Your expression is correctly constructed!',
+    'Fill-in-the-Blank': 'Correct! All blanks filled properly!',
+    'Fill-in-the-Blanks': 'Correct! All blanks filled properly!',
+    'Match Question': 'Excellent! All pairs matched correctly!',
+    'Matching': 'Excellent! All pairs matched correctly!',
+    'True/False': 'Correct! You chose the right answer!',
+    'True-False': 'Correct! You chose the right answer!',
+  };
+
+  const incorrectMessages = {
+    'Multiple Choice': 'Incorrect. Try again!',
+    'Math Input': 'Not quite right. Check your mathematical expression.',
+    'Open Response': 'Your response needs more detail or accuracy. Try explaining step by step.',
+    'Expression Builder': "Your expression isn't quite right. Try rearranging the tiles.",
+    'Fill-in-the-Blank': 'Some blanks are incorrect. Double-check your answers.',
+    'Fill-in-the-Blanks': 'Some blanks are incorrect. Double-check your answers.',
+    'Match Question': 'Some pairs are not matched correctly. Review your connections.',
+    'Matching': 'Some pairs are not matched correctly. Review your connections.',
+    'True/False': 'Incorrect. Think about the statement more carefully.',
+    'True-False': 'Incorrect. Think about the statement more carefully.',
+  };
+
+  return isCorrect
+    ? correctMessages[questionType] || 'Correct!'
+    : incorrectMessages[questionType] || 'Incorrect. Try again!';
+}
+
+router.post('/question/:id/submit', async (req, res) => {
+  const { id } = req.params;
+  const { studentAnswer, userId, questionType, timeSpent, gameMode } = req.body;
+
+  try {
+    // Validate required fields
+    if (!id) {
+      return res.status(400).json({
+        success: false,
+        error: 'Question ID is required'
+      });
+    }
+
+    if (!userId) {
+      return res.status(400).json({
+        success: false,
+        error: 'User ID is required'
+      });
+    }
+
+    if (studentAnswer === undefined || studentAnswer === null) {
+      return res.status(400).json({
+        success: false,
+        error: 'Student answer is required'
+      });
+    }
+
+    const { data: questionData, error: questionError } = await supabase
+      .from('Questions')
+      .select(`
+        type, 
+        xpGain, 
+        questionText, 
+        topic, 
+        topic_id,
+        Topics!inner(name)
+      `)
+      .eq('Q_id', id)
+      .single();
+
+    if (questionError || !questionData) {
+      return res.status(404).json({ 
+        success: false,
+        error: 'Question not found' 
+      });
+    }
+
+    const actualQuestionType = questionType || questionData.type;
+    const topicName = questionData.Topics?.name || questionData.topic;
+    let isCorrect = false;
+
+    // Handle match questions with enhanced validation
+    if (actualQuestionType === 'Match Question' || actualQuestionType === 'Matching') {
+      isCorrect = await validateMatchQuestion(studentAnswer, id);
+    } else {
+      // Handle other question types with existing validation
+      const { data: correctAnswerData, error: answerError } = await supabase
+        .from('Answers')
+        .select('*')
+        .eq('question_id', id)
+        .eq('isCorrect', true)
+        .single();
+
+      if (answerError || !correctAnswerData) {
+        return res.status(404).json({
+          success: false,
+          error: 'Correct answer not found',
+          debug: { answerError, question_id: id }
+        });
+      }
+
+      const correctAnswer = correctAnswerData.answer_text || correctAnswerData.answerText;
+      isCorrect = validateAnswerByType(actualQuestionType, studentAnswer, correctAnswer);
+    }
+
+    // Award XP if correct
+    let updatedUser = null;
+    let xpAwarded = 0;
+
+    if (isCorrect && userId) {
+      const { data: currentUser, error: userError } = await supabase
+        .from('Users')
+        .select('xp')
+        .eq('id', userId)
+        .single();
+
+      if (!userError && currentUser) {
+        xpAwarded = questionData.xpGain || 10;
+        const newXp = (currentUser.xp || 0) + xpAwarded;
+
+        const { data: updated, error: updateError } = await supabase
+          .from('Users')
+          .update({ xp: newXp })
+          .eq('id', userId)
+          .select('id, xp')
+          .single();
+
+        if (!updateError) {
+          updatedUser = updated;
+        }
+      }
+    }
+
+    // Check for achievement unlocks
+    let unlockedAchievements = [];
+
+    if (userId) {
+      try {
+        // Import achievement checking functions
+        const { 
+          checkQuestionAchievements, 
+          checkFastSolveAchievements, 
+          checkLeaderboardAchievements,
+          checkBadgeCollectorAchievement,
+          checkTopicMasteryAchievements
+        } = await import('./achievementRoutes.js');
+
+        if (isCorrect) {
+          // Check Topic Mastery Achievements first
+          if (topicName) {
+            try {
+              const topicAchievements = await checkTopicMasteryAchievements(userId, topicName, isCorrect);
+              if (topicAchievements && topicAchievements.length > 0) {
+                unlockedAchievements.push(...topicAchievements);
+              }
+            } catch (topicError) {
+              console.error('Topic achievement error:', topicError.message);
+            }
+          }
+          
+          // Continue with existing question achievements  
+          const questionAchievements = await checkQuestionAchievements(
+            userId,
+            isCorrect,
+            gameMode || 'practice'
+          );
+          
+          if (questionAchievements && questionAchievements.length > 0) {
+            unlockedAchievements.push(...questionAchievements);
+          }
+        }
+
+        // Practice mode specific enhancements
+        if (gameMode === 'practice' || !gameMode) {
+          // Check Fast Solve achievements
+          if (isCorrect && timeSpent && typeof timeSpent === 'number') {
+            try {
+              const fastSolveAchievements = await checkFastSolveAchievements(userId, timeSpent, isCorrect);
+              if (fastSolveAchievements && fastSolveAchievements.length > 0) {
+                unlockedAchievements.push(...fastSolveAchievements);
+              }
+            } catch (fastSolveError) {
+              console.error('Fast solve achievement error:', fastSolveError.message);
+            }
+          }
+
+          // Check Badge Collector achievements when new achievements are unlocked
+          if (unlockedAchievements.length > 0) {
+            try {
+              const badgeCollectorAchievements = await checkBadgeCollectorAchievement(userId);
+              if (badgeCollectorAchievements && badgeCollectorAchievements.length > 0) {
+                unlockedAchievements.push(...badgeCollectorAchievements);
+              }
+            } catch (badgeError) {
+              console.error('Badge collector achievement error:', badgeError.message);
+            }
+          }
+
+          // Check leaderboard achievements if user gained XP
+          if (updatedUser && xpAwarded > 0) {
+            try {
+              const leaderboardAchievements = await checkLeaderboardAchievements(userId);
+              if (leaderboardAchievements && leaderboardAchievements.length > 0) {
+                unlockedAchievements.push(...leaderboardAchievements);
+              }
+            } catch (leaderboardError) {
+              console.error('Leaderboard achievement error:', leaderboardError.message);
+            }
+          }
+        }
+      } catch (achievementError) {
+        console.error('Error checking achievements:', achievementError);
+        // Don't fail the whole request if achievements fail
+      }
+    }
+
+    // Generate feedback message
+    const feedbackMessage = getFeedbackMessage(actualQuestionType, isCorrect);
+
+    // Use the exact response format your frontend expects
+    const responseData = {
+      success: true,
+      data: {
+        isCorrect,
+        studentAnswer,
+        message: feedbackMessage,
+        xpAwarded,
+        newXP: updatedUser?.xp,
+        updatedUser,
+        questionType: actualQuestionType,
+        unlockedAchievements: unlockedAchievements,
+      },
+    };
+
+    res.status(200).json(responseData);
+
+  } catch (error) {
+    console.error('Error submitting answer:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to submit answer',
+      details: error.message,
+    });
+  }
+});
+
+
+export default router;

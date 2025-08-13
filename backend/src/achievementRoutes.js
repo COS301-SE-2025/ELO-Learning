@@ -278,7 +278,9 @@ router.post('/users/:userId/achievements/sync', async (req, res) => {
         .json({ error: 'You are unauthorized to make this request.' });
     }
 
-    console.log(`🔄 Syncing achievements for user ${userId}...`);
+    async function syncUserAchievements(userId) {
+  try {
+    console.log(`Syncing achievements for user ${userId}...`);
 
     // Get all "Questions Answered" achievements to sync progress
     const { data: questionAchievements, error: achievementsError } = await supabase
@@ -314,15 +316,22 @@ router.post('/users/:userId/achievements/sync', async (req, res) => {
 
         if (!insertError) {
           syncedCount++;
-          console.log(`✅ Created progress record for: ${achievement.name}`);
+          console.log(`Created progress record for: ${achievement.name}`);
         }
       }
     }
 
-    res.status(200).json({ 
+    return { 
       message: `Synced ${syncedCount} achievement progress records`,
       synced_count: syncedCount 
-    });
+    };
+  } catch (err) {
+    throw err;
+  }
+}
+
+    const result = await syncUserAchievements(userId);
+    res.status(200).json(result);
   } catch (err) {
     console.error('Error syncing achievement progress:', err.message);
     res.status(500).json({ error: 'Failed to sync achievement progress' });
@@ -367,8 +376,6 @@ export async function triggerAchievementProgress(
         if (!progressError && currentProgress) {
           currentValue = currentProgress.current_value;
         } else if (progressError && progressError.code === 'PGRST116') {
-          // No progress record exists - this is common for new achievements
-          console.log(`📝 No progress record found for achievement ${achievement.id}, starting from 0`);
           currentValue = 0;
         }
 
@@ -398,8 +405,6 @@ export async function triggerAchievementProgress(
           console.error(`Error updating progress for achievement ${achievement.id}:`, upsertError.message);
           continue;
         }
-
-        console.log(`📈 Progress updated: Achievement ${achievement.id} (${achievement.condition_type}) - ${newValue}/${achievement.condition_value} for user ${userId}`);
 
         // Check if achievement is now complete
         if (newValue >= achievement.condition_value) {
@@ -432,9 +437,8 @@ export async function triggerAchievementProgress(
 
               if (!detailsError && achievementDetails) {
                 unlockedAchievements.push(achievementDetails);
-                console.log(`✅ Unlocked achievement: ${achievementDetails.name} (${conditionType}: ${newValue}/${achievement.condition_value})`);
                 
-                // 🏆 NEW: Check for Badge Collector achievement after unlocking any achievement
+                // Check for Badge Collector achievement after unlocking any achievement
                 if (conditionType !== 'Badges Collected') { // Prevent infinite loop
                   const badgeCollectorResults = await checkBadgeCollectorAchievement(userId);
                   unlockedAchievements.push(...badgeCollectorResults);
@@ -444,8 +448,6 @@ export async function triggerAchievementProgress(
               console.error(`Error unlocking achievement ${achievement.id}:`, unlockError.message);
             }
           }
-        } else {
-          console.log(`📈 Progress updated: ${achievement.id} - ${newValue}/${achievement.condition_value}`);
         }
       } catch (error) {
         console.error(`Error updating achievement ${achievement.id}:`, error);
@@ -460,23 +462,20 @@ export async function triggerAchievementProgress(
 }
 
 // Specific helper functions for different game events
-export async function checkQuestionAchievements(userId, isCorrect) {
+export async function checkQuestionAchievements(userId, isCorrect, gameMode = null) {
   const results = [];
 
   if (isCorrect) {
-    // Trigger "Questions Answered" achievements
+    // Always trigger "Questions Answered" achievements for any correct answer
     const questionResult = await triggerAchievementProgress(
       userId,
       'Questions Answered',
       1,
     );
     results.push(questionResult);
-
-    // Note: "Problems Solved" has been replaced with "Questions Answered" in the new achievement system
-    // All question-based achievements now use "Questions Answered" condition type
   }
 
-  return results.flatMap((r) => r.unlockedAchievements);
+  return results.flatMap((r) => r.unlockedAchievements || []);
 }
 
 export async function checkMatchAchievements(userId) {
@@ -500,7 +499,6 @@ export async function checkFastSolveAchievements(userId, timeSpent, isCorrect) {
   const FAST_SOLVE_THRESHOLD = 10;
   
   if (timeSpent <= FAST_SOLVE_THRESHOLD) {
-    console.log(`⚡ Fast solve detected: ${timeSpent}s (threshold: ${FAST_SOLVE_THRESHOLD}s)`);
     const result = await triggerAchievementProgress(userId, 'Fast Solves', 1);
     return result.unlockedAchievements;
   }
@@ -521,8 +519,6 @@ export async function checkNeverGiveUpAchievement(userId, questionId, isCorrect,
     return [];
   }
 
-  console.log(`💪 Never Give Up achievement triggered: User ${userId} solved question ${questionId} on attempt ${attemptNumber}`);
-  
   // Trigger the "Never Give Up" achievement (using existing "Problem Attempts" condition type)
   const result = await triggerAchievementProgress(userId, 'Problem Attempts', 5);
   return result.unlockedAchievements;
@@ -534,14 +530,12 @@ export async function checkTimeBasedAchievements(userId, sessionHour) {
   
   // Check for Early Bird (6 AM - 9 AM)
   if (sessionHour >= 6 && sessionHour <= 9) {
-    console.log(`🌅 Early Bird session detected at ${sessionHour}:00`);
     const morningResult = await triggerAchievementProgress(userId, 'Morning Sessions', 1);
     results.push(...morningResult.unlockedAchievements);
   }
   
   // Check for Night Owl (10 PM - 6 AM)
   if (sessionHour >= 22 || sessionHour <= 6) {
-    console.log(`🦉 Night Owl session detected at ${sessionHour}:00`);
     const nightResult = await triggerAchievementProgress(userId, 'Night Sessions', 1);
     results.push(...nightResult.unlockedAchievements);
   }
@@ -551,7 +545,6 @@ export async function checkTimeBasedAchievements(userId, sessionHour) {
 
 export async function checkWeekendAchievements(userId, isWeekend) {
   if (isWeekend) {
-    console.log('🎮 Weekend session detected');
     const result = await triggerAchievementProgress(userId, 'Weekend Sessions', 1);
     return result.unlockedAchievements;
   }
@@ -561,7 +554,6 @@ export async function checkWeekendAchievements(userId, isWeekend) {
 export async function checkMarathonAchievements(userId, problemsInSession) {
   // For Marathon Session: 50 problems in a single sitting
   if (problemsInSession >= 50) {
-    console.log(`🏃‍♂️ Marathon session detected: ${problemsInSession} problems`);
     const result = await triggerAchievementProgress(userId, 'Problems Per Session', problemsInSession);
     return result.unlockedAchievements;
   }
@@ -574,7 +566,6 @@ export async function checkAccuracyAchievements(userId, accuracyData) {
   const { questionsAnswered, correctAnswers, currentAccuracy } = accuracyData;
   
   if (currentAccuracy >= 0.95) { // 95%+ accuracy
-    console.log(`🎯 High accuracy detected: ${(currentAccuracy * 100).toFixed(1)}%`);
     const result = await triggerAchievementProgress(userId, 'High Accuracy Streak', questionsAnswered);
     return result.unlockedAchievements;
   }
@@ -586,11 +577,145 @@ export async function checkSubjectMasteryAchievements(userId, subject, isCorrect
   // For Subject Mastery achievements (Algebra Master, Geometry Genius)
   if (isCorrect && subject) {
     const subjectLower = subject.toLowerCase();
-    console.log(`📚 Subject mastery progress: ${subject}`);
+    // Subject mastery progress
     const result = await triggerAchievementProgress(userId, 'Subject Questions Correct', 1);
     return result.unlockedAchievements;
   }
   return [];
+}
+
+// Replace your existing checkTopicMasteryAchievements function in achievementRoutes.js with this:
+
+export async function checkTopicMasteryAchievements(userId, topicName, isCorrect) {
+  // Only process correct answers
+  if (!isCorrect || !topicName) {
+    return [];
+  }
+
+  // Enhanced topic name mapping - maps your database topics to specific achievements
+  const topicToAchievementMapping = {
+    // Direct name matches
+    'Algebra': ['Algebra Master'],
+    'Geometry': ['Geometry Genius'], 
+    'Trigonometry': ['Trigonometry Virtuoso'],
+    'Calculus': ['Calculus Conqueror'],
+    'Statistics': ['Stats Maestro'],
+    'Statistics & Probability': ['Stats Maestro'],
+    'Financial Mathematics': ['Financial Wizard'],
+    'Sequences & Series': ['Sequence Sage'],
+    'Sequences and Series': ['Sequence Sage'],
+    'Functions & Graphs': ['Graph Guru'],
+    'Functions and Graphs': ['Graph Guru'],
+    
+    // Add more variations as needed
+    'Probability': ['Stats Maestro'],
+    'Finance': ['Financial Wizard'],
+    'Functions': ['Graph Guru'],
+    'Graphs': ['Graph Guru'],
+    'Sequences': ['Sequence Sage']
+  };
+
+  // Find which achievements this topic should trigger
+  const achievementNames = topicToAchievementMapping[topicName];
+  
+  if (!achievementNames || achievementNames.length === 0) {
+    return [];
+  }
+
+  const unlockedAchievements = [];
+
+  // Process each achievement for this topic
+  for (const achievementName of achievementNames) {
+    try {
+      // Find the specific achievement by name
+      const { data: achievement, error: achievementError } = await supabase
+        .from('Achievements')
+        .select('id, name, condition_type, condition_value, description')
+        .eq('name', achievementName)
+        .eq('condition_type', 'Subject Questions Correct')
+        .single();
+
+      if (achievementError || !achievement) {
+        continue;
+      }
+
+      // Get current progress for this specific achievement
+      const { data: currentProgress, error: progressError } = await supabase
+        .from('AchievementProgress')
+        .select('current_value')
+        .eq('user_id', userId)
+        .eq('achievement_id', achievement.id)
+        .single();
+
+      let currentValue = 0;
+      if (!progressError && currentProgress) {
+        currentValue = currentProgress.current_value;
+      } else if (progressError && progressError.code === 'PGRST116') {
+        currentValue = 0;
+      }
+
+      const newValue = currentValue + 1;
+
+      // Update progress for this specific achievement
+      const { error: upsertError } = await supabase
+        .from('AchievementProgress')
+        .upsert({
+          user_id: userId,
+          achievement_id: achievement.id,
+          current_value: newValue,
+          updated_at: new Date().toISOString(),
+        }, {
+          onConflict: 'user_id,achievement_id',
+          ignoreDuplicates: false
+        });
+
+      if (upsertError) {
+        console.error(`Error updating progress for ${achievement.name}:`, upsertError.message);
+        continue;
+      }
+
+      // Check if achievement is now complete
+      if (newValue >= achievement.condition_value) {
+        // Check if user already has this achievement
+        const { data: existing, error: existingError } = await supabase
+          .from('UserAchievements')
+          .select('user_id, achievement_id')
+          .eq('user_id', userId)
+          .eq('achievement_id', achievement.id)
+          .single();
+
+        // If not already unlocked, unlock it
+        if (existingError && existingError.code === 'PGRST116') { // No rows found
+          const { error: unlockError } = await supabase
+            .from('UserAchievements')
+            .insert({
+              user_id: userId,
+              achievement_id: achievement.id,
+              unlocked_at: new Date().toISOString(),
+            });
+
+          if (!unlockError) {
+            // Get full achievement details for notification
+            const { data: achievementDetails, error: detailsError } = await supabase
+              .from('Achievements')
+              .select('*, AchievementCategories(name)')
+              .eq('id', achievement.id)
+              .single();
+
+            if (!detailsError && achievementDetails) {
+              unlockedAchievements.push(achievementDetails);
+            }
+          } else {
+            console.error(`Error unlocking ${achievement.name}:`, unlockError.message);
+          }
+        }
+      }
+    } catch (error) {
+      console.error(`Error processing achievement "${achievementName}":`, error);
+    }
+  }
+
+  return unlockedAchievements;
 }
 
 export async function checkLeaderboardAchievements(userId) {
@@ -624,7 +749,7 @@ export async function checkLeaderboardAchievements(userId) {
     const totalUsers = allUsers.length;
     const percentile = (userPosition / totalUsers) * 100;
 
-    console.log(`📊 User ${userId} leaderboard stats: Position ${userPosition}/${totalUsers} (${percentile.toFixed(1)}th percentile)`);
+    // User leaderboard stats processed
 
     // Get all leaderboard achievements to check multiple thresholds
     const { data: leaderboardAchievements, error: achievementsError } = await supabase
@@ -662,7 +787,7 @@ export async function checkLeaderboardAchievements(userId) {
       }
 
       if (percentile <= thresholdPercentile) {
-        console.log(`🎯 User qualifies for ${achievement.name} (${percentile.toFixed(1)}th percentile ≤ ${thresholdPercentile}%)`);
+        // User qualifies for this achievement
         
         // For leaderboard achievements, we need to handle them differently than regular achievements
         // Check if user already has this achievement
@@ -693,16 +818,11 @@ export async function checkLeaderboardAchievements(userId) {
 
             if (!detailsError && achievementDetails) {
               unlockedAchievements.push(achievementDetails);
-              console.log(`✅ Unlocked leaderboard achievement: ${achievementDetails.name} (Position ${userPosition}/${totalUsers} - ${percentile.toFixed(1)}th percentile)`);
             }
           } else {
             console.error(`Error unlocking leaderboard achievement ${achievement.id}:`, unlockError.message);
           }
-        } else if (!existingError) {
-          console.log(`📋 User already has leaderboard achievement: ${achievement.name}`);
         }
-      } else {
-        console.log(`📈 User doesn't qualify for ${achievement.name} yet (${percentile.toFixed(1)}th percentile > ${thresholdPercentile}%)`);
       }
     }
 
@@ -730,10 +850,8 @@ export async function checkBadgeCollectorAchievement(userId) {
     }
 
     const totalBadges = userAchievements?.length || 0;
-    console.log(`📊 User ${userId} has ${totalBadges} non-badge-collector badges`);
 
     if (totalBadges === 0) {
-      console.log('⚠️  User has no badges yet, skipping Badge Collector check');
       return [];
     }
 
@@ -751,7 +869,6 @@ export async function checkBadgeCollectorAchievement(userId) {
     // Only update if the badge count has changed
     const currentBadgeCount = currentBadgeProgress?.[0]?.current_value || 0;
     if (currentBadgeCount === totalBadges) {
-      console.log(`📊 Badge count unchanged (${totalBadges}), skipping update`);
       return [];
     }
 
@@ -761,10 +878,6 @@ export async function checkBadgeCollectorAchievement(userId) {
       'Badges Collected',
       totalBadges // Set to total count, not increment
     );
-
-    if (badgeResult.unlockedAchievements.length > 0) {
-      console.log(`🎉 Badge Collector achievements unlocked:`, badgeResult.unlockedAchievements.map(a => a.name));
-    }
 
     return badgeResult.unlockedAchievements;
   } catch (error) {
@@ -788,10 +901,6 @@ export async function checkEloAchievements(userId, newEloRating) {
     if (!newEloRating || typeof newEloRating !== 'number') {
       return [];
     }
-
-    console.log(
-      `🎯 Checking ELO achievements for user ${userId} with rating ${newEloRating}`,
-    );
 
     // Get all ELO rating achievements
     const { data: eloAchievements, error: achievementsError } = await supabase
@@ -868,9 +977,6 @@ export async function checkEloAchievements(userId, newEloRating) {
 
           if (!detailsError && fullAchievement) {
             newlyUnlockedAchievements.push(fullAchievement);
-            console.log(
-              `✅ Unlocked ELO achievement: ${achievement.name} (Rating ${achievement.condition_value})`,
-            );
           }
         } catch (error) {
           console.error(
@@ -897,13 +1003,6 @@ router.post('/users/:userId/achievements/perfect-session', async (req, res) => {
     const { userId } = req.params;
     const { consecutiveCorrect, totalQuestions, mode } = req.body;
 
-    console.log('🎯 Perfect Session achievement request:', {
-      userId,
-      consecutiveCorrect,
-      totalQuestions,
-      mode
-    });
-
     // Validate requirements - now works for all modes
     if (consecutiveCorrect < 10) {
       return res.status(400).json({
@@ -916,11 +1015,11 @@ router.post('/users/:userId/achievements/perfect-session', async (req, res) => {
     const { data: perfectSessionAchievements, error: achievementError } = await supabase
       .from('Achievements')
       .select('*')
-      .eq('achievement_name', 'Perfect Session')
+      .eq('name', 'Perfect Session')
       .eq('condition_type', 'Perfect Session Completed');
 
     if (achievementError) {
-      console.error('❌ Error fetching Perfect Session achievement:', achievementError);
+      console.error('Error fetching Perfect Session achievement:', achievementError);
       return res.status(500).json({
         success: false,
         error: 'Failed to check Perfect Session achievement'
@@ -928,7 +1027,6 @@ router.post('/users/:userId/achievements/perfect-session', async (req, res) => {
     }
 
     if (!perfectSessionAchievements || perfectSessionAchievements.length === 0) {
-      console.log('⚠️ Perfect Session achievement not found in database');
       return res.status(404).json({
         success: false,
         error: 'Perfect Session achievement not configured in database'
@@ -936,7 +1034,6 @@ router.post('/users/:userId/achievements/perfect-session', async (req, res) => {
     }
 
     const perfectSessionAchievement = perfectSessionAchievements[0];
-    console.log('🎯 Found Perfect Session achievement:', perfectSessionAchievement);
 
     // Check if user already has this achievement
     const { data: existingUnlock, error: unlockCheckError } = await supabase
@@ -946,7 +1043,7 @@ router.post('/users/:userId/achievements/perfect-session', async (req, res) => {
       .eq('achievement_id', perfectSessionAchievement.id);
 
     if (unlockCheckError) {
-      console.error('❌ Error checking existing Perfect Session unlock:', unlockCheckError);
+      console.error('Error checking existing Perfect Session unlock:', unlockCheckError);
       return res.status(500).json({
         success: false,
         error: 'Failed to check existing achievement'
@@ -954,7 +1051,6 @@ router.post('/users/:userId/achievements/perfect-session', async (req, res) => {
     }
 
     if (existingUnlock && existingUnlock.length > 0) {
-      console.log('📋 User already has Perfect Session achievement');
       return res.json({
         success: true,
         message: 'Perfect Session achievement already unlocked',
@@ -973,7 +1069,7 @@ router.post('/users/:userId/achievements/perfect-session', async (req, res) => {
       .select('*, Achievements(*, AchievementCategories(name))');
 
     if (unlockError) {
-      console.error('❌ Error unlocking Perfect Session achievement:', unlockError);
+      console.error('Error unlocking Perfect Session achievement:', unlockError);
       return res.status(500).json({
         success: false,
         error: 'Failed to unlock Perfect Session achievement'
@@ -985,7 +1081,7 @@ router.post('/users/:userId/achievements/perfect-session', async (req, res) => {
     const unlockedAchievement = newUnlock[0];
     const achievementData = {
       id: unlockedAchievement.achievement_id,
-      name: unlockedAchievement.Achievements.achievement_name,
+      name: unlockedAchievement.Achievements.name,
       description: unlockedAchievement.Achievements.description,
       badge_icon_url: unlockedAchievement.Achievements.badge_icon_url,
       category: unlockedAchievement.Achievements.AchievementCategories?.name,
@@ -1004,7 +1100,7 @@ router.post('/users/:userId/achievements/perfect-session', async (req, res) => {
     });
 
   } catch (error) {
-    console.error('❌ Perfect Session achievement error:', error);
+    console.error('Perfect Session achievement error:', error);
     res.status(500).json({
       success: false,
       error: 'Internal server error'
@@ -1017,8 +1113,6 @@ router.post('/users/:userId/achievements/never-give-up', async (req, res) => {
   try {
     const { userId } = req.params;
     const { questionId, isCorrect, attemptNumber } = req.body;
-
-    console.log(`🎯 Never Give Up check: User ${userId}, Question ${questionId}, Attempt ${attemptNumber}, Correct: ${isCorrect}`);
 
     // Check for Never Give Up achievement
     const unlockedAchievements = await checkNeverGiveUpAchievement(userId, questionId, isCorrect, attemptNumber);
@@ -1035,7 +1129,7 @@ router.post('/users/:userId/achievements/never-give-up', async (req, res) => {
     });
 
   } catch (error) {
-    console.error('❌ Never Give Up achievement error:', error);
+    console.error('Never Give Up achievement error:', error);
     res.status(500).json({
       success: false,
       error: 'Internal server error'
@@ -1075,7 +1169,7 @@ router.post('/users/:userId/achievements/speed-solver', async (req, res) => {
     });
 
   } catch (error) {
-    console.error('❌ Speed Solver achievement error:', error);
+    console.error('Speed Solver achievement error:', error);
     res.status(500).json({
       success: false,
       error: 'Internal server error'
@@ -1088,8 +1182,6 @@ router.post('/users/:userId/achievements/learn-from-mistakes', async (req, res) 
   try {
     const { userId } = req.params;
     const { questionId, isCorrect, previouslyIncorrect, attemptHistory } = req.body;
-
-    console.log(`📚 Learn from Mistakes check: User ${userId}, Question ${questionId}, Previously wrong: ${previouslyIncorrect}`);
 
     // Check for Learn from Mistakes achievements
     const unlockedAchievements = await checkLearnFromMistakesAchievements(userId, questionId, isCorrect, previouslyIncorrect);
@@ -1107,7 +1199,7 @@ router.post('/users/:userId/achievements/learn-from-mistakes', async (req, res) 
     });
 
   } catch (error) {
-    console.error('❌ Learn from Mistakes achievement error:', error);
+    console.error('Learn from Mistakes achievement error:', error);
     res.status(500).json({
       success: false,
       error: 'Internal server error'
@@ -1160,7 +1252,7 @@ export async function checkLearnFromMistakesAchievements(userId, questionId, isC
     return [];
   }
 
-  console.log(`📚 Learn from Mistakes: User ${userId} corrected Question ${questionId}`);
+  // Learn from Mistakes: User corrected question after being wrong
 
   // Trigger the "Learn from Mistakes" achievement progress
   const result = await triggerAchievementProgress(userId, 'Learn from Mistakes', 1, {
@@ -1182,7 +1274,7 @@ export async function checkMistakeRecoveryAchievements(userId, correctAnswersAft
     return [];
   }
 
-  console.log(`🔄 Mistake Recovery: ${correctAnswersAfterMistakes} correct after ${mistakeCount} mistakes`);
+  // Mistake recovery progress calculated
 
   const result = await triggerAchievementProgress(userId, 'Mistake Recovery', 1, {
     correctAnswersAfterMistakes,
@@ -1191,5 +1283,46 @@ export async function checkMistakeRecoveryAchievements(userId, correctAnswersAft
 
   return result.unlockedAchievements;
 }
+
+// Generic achievement trigger endpoint for manual use
+router.post('/achievements/trigger', async (req, res) => {
+  try {
+    const { userId, achievementType, increment = 1, gameMode } = req.body;
+
+    if (!userId || !achievementType) {
+      return res.status(400).json({
+        success: false,
+        error: 'Missing required fields: userId, achievementType'
+      });
+    }
+
+    // Trigger the achievement progress
+    const result = await triggerAchievementProgress(userId, achievementType, increment);
+    
+    // Also trigger practice-specific achievements if in practice mode
+    if (gameMode === 'practice' && achievementType === 'Questions Answered' && increment > 0) {
+      // Practice mode - triggering additional practice achievements
+      try {
+        const practiceResult = await triggerAchievementProgress(userId, 'Practice Questions', increment);
+        result.unlockedAchievements.push(...practiceResult.unlockedAchievements);
+      } catch (practiceError) {
+        console.log('Practice achievement trigger failed (non-critical):', practiceError.message);
+      }
+    }
+
+    res.json({
+      success: true,
+      message: `Achievement progress updated for ${achievementType}`,
+      unlockedAchievements: result.unlockedAchievements || []
+    });
+
+  } catch (error) {
+    console.error('Manual achievement trigger error:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Internal server error'
+    });
+  }
+});
 
 export default router;

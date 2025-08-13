@@ -4,7 +4,8 @@ import { Cog } from 'lucide-react';
 import { useSession } from 'next-auth/react';
 import Link from 'next/link';
 import { useAvatar } from '../context/avatar-context';
-import { gradients, solidColors } from '../ui/avatar/avatar-colors';
+import { gradients } from '../ui/avatar/avatar-colors';
+import { AvatarColors } from '../ui/avatar/color';
 import Achievements from '../ui/profile/achievements';
 import MatchStats from '../ui/profile/match-stats';
 import UserInfo from '../ui/profile/user-info';
@@ -25,7 +26,7 @@ export default function Page() {
     let style = { backgroundColor: '#421e68' };
     if (backgroundType && backgroundType.startsWith('solid-')) {
       const idx = parseInt(backgroundType.split('-')[1], 10);
-      style = { backgroundColor: solidColors[idx] || '#421e68' };
+      style = { backgroundColor: AvatarColors[idx] || '#421e68' };
     } else if (backgroundType && backgroundType.startsWith('gradient-')) {
       const idx = parseInt(backgroundType.split('-')[1], 10);
       const g = gradients[idx];

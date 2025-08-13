@@ -11,6 +11,7 @@ import { BodyShapeSelector } from './body-shape';
 import { ColorSelector } from './color';
 import { EyeSelector } from './eyes';
 import { MouthSelector } from './mouth';
+import { useSession } from 'next-auth/react';
 
 const TABS = [
   { id: 'body', name: 'Body', icon: '/avatar-icons/Body.svg' },
@@ -29,6 +30,7 @@ export function AvatarCreator() {
   const router = useRouter();
   const [activeTab, setActiveTab] = useState('body');
   const [currentAvatar, setCurrentAvatar] = useState(savedAvatar);
+  const { data: session, status, update } = useSession();
 
   // Update local state when saved avatar changes
   useEffect(() => {
@@ -41,7 +43,8 @@ export function AvatarCreator() {
   };
 
   const handleSave = () => {
-    updateAvatar(currentAvatar);
+    updateAvatar(session.user.id, currentAvatar);
+
     // Navigate back to profile
     router.push('/profile');
   };

@@ -1,28 +1,28 @@
 // oauthRoutes.js
-import express from 'express';
-import { supabase } from '../database/supabaseClient.js';
+import express from 'express'
+import { supabase } from '../database/supabaseClient.js'
 
-const router = express.Router();
+const router = express.Router()
 
 // Handle OAuth user creation/retrieval
 router.post('/oauth/user', async (req, res) => {
-  const { email, name, image, provider } = req.body;
+  const { email, name, image, provider } = req.body
 
   if (!email || !name) {
-    return res.status(400).json({ error: 'Email and name are required' });
+    return res.status(400).json({ error: 'Email and name are required' })
   }
 
   try {
     // Check if user already exists
     const { data: existingUser, error: fetchError } = await supabase
       .from('Users')
-      .select('id,name,surname,username,email,currentLevel,joinDate,xp,pfpURL')
+      .select('id,name,surname,username,email,currentLevel,joinDate,xp,avatar')
       .eq('email', email)
-      .maybeSingle();
+      .maybeSingle()
 
     if (fetchError) {
-      console.error('Error checking existing user:', fetchError.message);
-      return res.status(500).json({ error: 'Internal server error' });
+      console.error('Error checking existing user:', fetchError.message)
+      return res.status(500).json({ error: 'Internal server error' })
     }
 
     if (existingUser) {
@@ -38,39 +38,39 @@ router.post('/oauth/user', async (req, res) => {
           currentLevel: existingUser.currentLevel,
           joinDate: existingUser.joinDate,
           xp: existingUser.xp,
-          pfpURL: existingUser.pfpURL || image, // Use stored image or fallback to OAuth image
+          avatar: existingUser.avatar,
         },
-      });
+      })
     }
 
     // User doesn't exist, create new OAuth user
 
     // Parse name into first and last name
-    const nameParts = name.trim().split(' ');
-    const firstName = nameParts[0] || name;
-    const lastName = nameParts.length > 1 ? nameParts.slice(1).join(' ') : '';
+    const nameParts = name.trim().split(' ')
+    const firstName = nameParts[0] || name
+    const lastName = nameParts.length > 1 ? nameParts.slice(1).join(' ') : ''
 
     // Generate username from email (fallback if name parsing fails)
     const baseUsername =
-      name.replace(/\s+/g, '').toLowerCase() || email.split('@')[0];
-    let username = baseUsername;
+      name.replace(/\s+/g, '').toLowerCase() || email.split('@')[0]
+    let username = baseUsername
 
     // Check if username is already taken and make it unique if needed
-    let usernameExists = true;
-    let counter = 1;
+    let usernameExists = true
+    let counter = 1
 
     while (usernameExists) {
       const { data: usernameCheck } = await supabase
         .from('Users')
         .select('id')
         .eq('username', username)
-        .maybeSingle();
+        .maybeSingle()
 
       if (!usernameCheck) {
-        usernameExists = false;
+        usernameExists = false
       } else {
-        username = `${baseUsername}${counter}`;
-        counter++;
+        username = `${baseUsername}${counter}`
+        counter++
       }
     }
 
@@ -87,15 +87,15 @@ router.post('/oauth/user', async (req, res) => {
           currentLevel: 5, // Default starting level
           joinDate: new Date().toISOString(),
           xp: 1000, // Default starting XP
-          pfpURL: image, // Use OAuth profile image
+          avatar: { "eyes": "Eye 1", "mouth": "Mouth 1", "bodyShape": "Circle", "background": "solid-pink" }
         },
       ])
       .select()
-      .single();
+      .single()
 
     if (createError) {
-      console.error('Error creating OAuth user:', createError.message);
-      return res.status(500).json({ error: 'Failed to create user' });
+      console.error('Error creating OAuth user:', createError.message)
+      return res.status(500).json({ error: 'Failed to create user' })
     }
 
     res.status(201).json({
@@ -109,13 +109,13 @@ router.post('/oauth/user', async (req, res) => {
         currentLevel: newUser.currentLevel,
         joinDate: newUser.joinDate,
         xp: newUser.xp,
-        pfpURL: newUser.pfpURL,
+        avatar: newUser.avatar,
       },
-    });
+    })
   } catch (error) {
-    console.error('Error in OAuth user handling:', error);
-    res.status(500).json({ error: 'Internal server error' });
+    console.error('Error in OAuth user handling:', error)
+    res.status(500).json({ error: 'Internal server error' })
   }
-});
+})
 
-export default router;
+export default router

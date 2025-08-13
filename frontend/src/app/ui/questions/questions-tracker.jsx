@@ -8,6 +8,7 @@ import AnswerWrapper from '@/app/ui/answers/answer-wrapper';
 import QuestionTemplate from '@/app/ui/question-template';
 import QuestionFooter from '@/app/ui/questions/question-footer';
 import QuestionHeader from '@/app/ui/questions/question-header';
+import { showAchievementNotificationsWhenReady } from '@/utils/achievementNotifications';
 import { validateAnswerEnhanced } from '@/utils/answerValidator';
 import { submitQuestionAnswer } from '@/utils/api';
 import { resetXPCalculationState } from '@/utils/gameSession';
@@ -46,8 +47,7 @@ export default function QuestionsTracker({
   // Listen for life loss events from match questions
   useEffect(() => {
     const handleMatchLifeLost = (event) => {
-      console.log('🎮 Match question life lost:', event.detail);
-      const newLives = Math.max(0, event.detail.newLives); // Ensure lives don't go below 0
+      const newLives = Math.max(0, event.detail.newLives);
       setNumLives(newLives);
       if (typeof window !== 'undefined') {
         localStorage.setItem('lives', newLives.toString());
@@ -108,10 +108,7 @@ export default function QuestionsTracker({
     if (resetXPState) {
       const success = resetXPCalculationState();
       if (success) {
-        console.log('🎮 New game session started - XP calculation state reset');
-        // Also reset question attempts for new session
         setQuestionAttempts({});
-        console.log('💪 Question attempts reset for new session');
       }
     }
   }, [resetXPState]);
@@ -169,20 +166,11 @@ export default function QuestionsTracker({
       correctAnswerObj = currAnswers.find((ans) => ans.isCorrect === true);
     }
 
-    console.log('💾 Storing question with validation:', {
-      studentAnswer: answer,
-      correctAnswers: correctAnswers,
-      oldIsCorrect: isAnswerCorrect,
-      newIsCorrect: finalValidationResult,
-      matchedAnswer: matchedAnswer,
-      questionText: currQuestion?.questionText?.substring(0, 50) + '...',
-    });
-
     questionsObj.push({
       question: currQuestion,
       q_index: currentStep,
       answer: answer,
-      isCorrect: finalValidationResult, // Use final validation result
+      isCorrect: finalValidationResult,
       actualAnswer: correctAnswerObj,
       timeElapsed: timeElapsed,
     });
@@ -223,14 +211,9 @@ export default function QuestionsTracker({
 
   const checkPerfectSessionAchievement = async () => {
     try {
-      // Check for Perfect Session in any mode (practice, single-player, multiplayer)
-      console.log(`🏅 Perfect Session check for mode: ${mode}`);
-
-      // Get the completed session from localStorage
       const questionsObj = JSON.parse(localStorage.getItem('questionsObj') || '[]');
       
       if (questionsObj.length < 10) {
-        console.log('🏅 Perfect Session check skipped - less than 10 questions completed');
         return;
       }
 
@@ -247,21 +230,12 @@ export default function QuestionsTracker({
         }
       }
 
-      console.log('🏅 Perfect Session analysis:', {
-        totalQuestions: questionsObj.length,
-        maxConsecutiveCorrect: maxConsecutive,
-        perfectSessionQualified: maxConsecutive >= 10
-      });
-
       // If achieved 10 consecutive correct answers, trigger achievement
       if (maxConsecutive >= 10) {
         const userId = session?.user?.id;
         if (!userId) {
-          console.log('🏅 Perfect Session achievement skipped - no user ID');
           return;
         }
-
-        console.log('🏆 Perfect Session achievement earned! Triggering achievement...');
         
         // Call achievement endpoint
         const response = await fetch('/api/achievements/trigger', {
@@ -282,45 +256,16 @@ export default function QuestionsTracker({
 
         if (response.ok) {
           const result = await response.json();
-          console.log('🏆 Perfect Session achievement result:', result);
           
           // Show achievement notification if unlocked
           if (result.unlockedAchievements && result.unlockedAchievements.length > 0) {
-            console.log('🏆 Perfect Session achievement unlocked!', result.unlockedAchievements);
-            
-            // Use the existing achievement notification system
-            const showAchievementNotifications = (attempts = 0) => {
-              if (typeof window !== 'undefined' && window.showMultipleAchievements) {
-                try {
-                  window.showMultipleAchievements(result.unlockedAchievements);
-                  console.log('✅ Perfect Session achievement notification displayed');
-                } catch (notificationError) {
-                  console.error('❌ Error displaying Perfect Session achievement notification:', notificationError);
-                  
-                  if (attempts < 2) {
-                    setTimeout(() => showAchievementNotifications(attempts + 1), 500);
-                  }
-                }
-              } else {
-                console.error('❌ Achievement notification system not ready for Perfect Session');
-                
-                if (attempts < 3) {
-                  setTimeout(() => showAchievementNotifications(attempts + 1), 1000);
-                } else {
-                  console.error('❌ Perfect Session achievement notification failed after 3 attempts');
-                }
-              }
-            };
-
-            // Show achievement notification with a slight delay
-            setTimeout(() => showAchievementNotifications(), 500);
+            showAchievementNotificationsWhenReady(result.unlockedAchievements)
+              .catch(error => console.error('Failed to show Perfect Session achievement:', error));
           }
-        } else {
-          console.error('🏆 Failed to trigger Perfect Session achievement:', response.status, response.statusText);
         }
       }
     } catch (error) {
-      console.error('🏆 Error checking Perfect Session achievement:', error);
+      console.error('Error checking Perfect Session achievement:', error);
     }
   };
 
@@ -328,17 +273,12 @@ export default function QuestionsTracker({
     try {
       const userId = session?.user?.id;
       if (!userId) {
-        console.log('⚡ Speed Solver achievement skipped - no user ID');
         return;
       }
 
-      console.log('⚡ Checking Speed Solver achievements...');
-
-      // Get the completed session from localStorage
       const questionsObj = JSON.parse(localStorage.getItem('questionsObj') || '[]');
       
       if (questionsObj.length < 5) {
-        console.log('⚡ Speed Solver check skipped - less than 5 questions completed');
         return;
       }
 
@@ -346,30 +286,19 @@ export default function QuestionsTracker({
       const correctAnswers = questionsObj.filter(q => q.isCorrect === true);
       
       if (correctAnswers.length < 5) {
-        console.log(`⚡ Speed Solver check skipped - only ${correctAnswers.length} correct answers`);
         return;
       }
 
       // Calculate average time for correct answers
       const totalTime = correctAnswers.reduce((sum, q) => {
-        // timeElapsed is stored in seconds
-        return sum + (q.timeElapsed || 30); // default 30s if no time recorded
+        return sum + (q.timeElapsed || 30);
       }, 0);
 
       const averageTime = totalTime / correctAnswers.length;
       const correctCount = correctAnswers.length;
 
-      console.log('⚡ Speed Solver analysis:', {
-        totalQuestions: questionsObj.length,
-        correctCount,
-        averageTime: averageTime.toFixed(2),
-        totalTime
-      });
-
       // Only check if average time is reasonably fast (under 15 seconds)
       if (averageTime <= 15) {
-        console.log(`🏃 Triggering Speed Solver check: ${correctCount} correct answers in ${averageTime.toFixed(2)}s average`);
-        
         // Call Speed Solver achievement endpoint
         const response = await fetch(`/api/achievements/users/${userId}/achievements/speed-solver`, {
           method: 'POST',
@@ -389,47 +318,16 @@ export default function QuestionsTracker({
 
         if (response.ok) {
           const result = await response.json();
-          console.log('⚡ Speed Solver achievement result:', result);
           
           // Show achievement notification if unlocked
           if (result.unlockedAchievements && result.unlockedAchievements.length > 0) {
-            console.log('🏆 Speed Solver achievement unlocked!', result.unlockedAchievements);
-            
-            // Use the existing achievement notification system
-            const showAchievementNotifications = (attempts = 0) => {
-              if (typeof window !== 'undefined' && window.showMultipleAchievements) {
-                try {
-                  window.showMultipleAchievements(result.unlockedAchievements);
-                  console.log('✅ Speed Solver achievement notification displayed');
-                } catch (notificationError) {
-                  console.error('❌ Error displaying Speed Solver achievement notification:', notificationError);
-                  
-                  if (attempts < 2) {
-                    setTimeout(() => showAchievementNotifications(attempts + 1), 500);
-                  }
-                }
-              } else {
-                console.error('❌ Achievement notification system not ready for Speed Solver');
-                
-                if (attempts < 3) {
-                  setTimeout(() => showAchievementNotifications(attempts + 1), 1000);
-                } else {
-                  console.error('❌ Speed Solver achievement notification failed after 3 attempts');
-                }
-              }
-            };
-
-            // Show achievement notification with a slight delay
-            setTimeout(() => showAchievementNotifications(), 500);
+            showAchievementNotificationsWhenReady(result.unlockedAchievements)
+              .catch(error => console.error('Failed to show Speed Solver achievement:', error));
           }
-        } else {
-          console.error('🏆 Failed to trigger Speed Solver achievement:', response.status, response.statusText);
         }
-      } else {
-        console.log(`⚡ Average time too slow for Speed Solver: ${averageTime.toFixed(2)}s (threshold: 15s)`);
       }
     } catch (error) {
-      console.error('⚡ Error checking Speed Solver achievement:', error);
+      console.error('Error checking Speed Solver achievement:', error);
     }
   };
 
@@ -437,11 +335,8 @@ export default function QuestionsTracker({
     try {
       const userId = session?.user?.id;
       if (!userId) {
-        console.log('💪 Never Give Up achievement skipped - no user ID');
         return;
       }
-
-      console.log(`💪 Checking Never Give Up: Question ${questionId}, Attempt ${attemptNumber}, Correct: ${isCorrect}`);
 
       const response = await fetch(`/api/achievements/users/${userId}/achievements/never-give-up`, {
         method: 'POST',
@@ -457,41 +352,15 @@ export default function QuestionsTracker({
 
       if (response.ok) {
         const data = await response.json();
-        console.log('💪 Never Give Up achievement response:', data);
         
         // Show achievement notification if unlocked
         if (data.unlockedAchievements && data.unlockedAchievements.length > 0) {
-          const showAchievementNotifications = (attempts = 0) => {
-            if (typeof window !== 'undefined' && window.showMultipleAchievements) {
-              try {
-                window.showMultipleAchievements(data.unlockedAchievements);
-                console.log('✅ Never Give Up achievement notification displayed');
-              } catch (notificationError) {
-                console.error('❌ Error displaying Never Give Up achievement notification:', notificationError);
-                
-                if (attempts < 2) {
-                  setTimeout(() => showAchievementNotifications(attempts + 1), 500);
-                }
-              }
-            } else {
-              console.error('❌ Achievement notification system not ready for Never Give Up');
-              
-              if (attempts < 3) {
-                setTimeout(() => showAchievementNotifications(attempts + 1), 1000);
-              } else {
-                console.error('❌ Never Give Up achievement notification failed after 3 attempts');
-              }
-            }
-          };
-
-          // Show achievement notification with a slight delay
-          setTimeout(() => showAchievementNotifications(), 500);
+          showAchievementNotificationsWhenReady(data.unlockedAchievements)
+            .catch(error => console.error('Failed to show Never Give Up achievement:', error));
         }
-      } else {
-        console.error('💪 Failed to check Never Give Up achievement:', response.status, response.statusText);
       }
     } catch (error) {
-      console.error('💪 Error checking Never Give Up achievement:', error);
+      console.error('Error checking Never Give Up achievement:', error);
     }
   };
 
@@ -526,29 +395,22 @@ export default function QuestionsTracker({
 
       // Validate user session before submitting
       if (!session?.user?.id) {
-        console.warn('⚠️ No user session found, skipping achievement checks');
+        console.warn('No user session found, skipping achievement checks');
       }
 
       // Submit to API
       const result = await submitQuestionAnswer({
         userId: session?.user?.id,
-        questionId: currQuestion?.id,
+        questionId: currQuestion?.Q_id || currQuestion?.id,
         userAnswer: answer,
         isCorrect: freshValidationResult,
         timeSpent: Math.round((Date.now() - questionStartTime) / 1000),
+        gameMode: mode || 'practice',
+        questionType: currQuestion?.type,
       });
 
-      console.log('🔄 API + validation result:', {
-        studentAnswer: answer,
-        correctAnswers: correctAnswers,
-        apiResult: result.success ? result.data.isCorrect : 'API failed',
-        localValidation: freshValidationResult,
-        matchedAnswer: matchedAnswer,
-        userId: session?.user?.id,
-      });
-
-      // 💪 Track attempts for "Never Give Up" achievement
-      const questionId = currQuestion?.id;
+      // Track attempts for "Never Give Up" achievement
+      const questionId = currQuestion?.Q_id || currQuestion?.id;
       if (questionId) {
         const currentAttempts = questionAttempts[questionId] || 0;
         const newAttemptCount = currentAttempts + 1;
@@ -561,67 +423,18 @@ export default function QuestionsTracker({
 
         // Check Never Give Up achievement if this is a correct answer after multiple attempts
         if (freshValidationResult && newAttemptCount >= 5 && session?.user?.id) {
-          console.log(`💪 Potential Never Give Up achievement: Question ${questionId} solved on attempt ${newAttemptCount}`);
           await checkNeverGiveUpAchievement(questionId, true, newAttemptCount);
-        } else if (!freshValidationResult) {
-          console.log(`💪 Tracking attempt ${newAttemptCount} for question ${questionId} (incorrect)`);
-        } else if (freshValidationResult && newAttemptCount >= 5 && !session?.user?.id) {
-          console.log('💪 Never Give Up achievement skipped - no user session');
         }
       }
 
-      // 🎉 Handle achievement unlocks from API response!
+      // Handle achievement unlocks from API response
       if (
         result.success &&
         result.data.unlockedAchievements &&
         result.data.unlockedAchievements.length > 0
       ) {
-        console.log(
-          '🏆 Practice achievements unlocked:',
-          result.data.unlockedAchievements,
-        );
-
-        // Enhanced notification system with retry logic
-        const showAchievementNotifications = (attempts = 0) => {
-          if (typeof window !== 'undefined' && window.showMultipleAchievements) {
-            try {
-              window.showMultipleAchievements(result.data.unlockedAchievements);
-              console.log('✅ Achievement notifications displayed successfully');
-            } catch (notificationError) {
-              console.error('❌ Error displaying achievement notifications:', notificationError);
-              
-              // Retry once after a short delay
-              if (attempts < 1) {
-                setTimeout(() => showAchievementNotifications(attempts + 1), 500);
-              }
-            }
-          } else {
-            console.error('❌ Achievement notification system not ready');
-            console.log('Available window methods:', Object.keys(window).filter(k => k.includes('Achievement')));
-            
-            // Listen for the system ready event if it hasn't fired yet
-            if (attempts === 0) {
-              window.addEventListener('achievementSystemReady', () => {
-                showAchievementNotifications(1);
-              }, { once: true });
-            }
-            
-            // Retry if system not ready and we haven't exceeded attempts
-            if (attempts < 5) { // Increased retry attempts
-              setTimeout(() => showAchievementNotifications(attempts + 1), 1000);
-            } else {
-              console.error('❌ Achievement notification system failed after 5 attempts');
-            }
-          }
-        };
-
-        // Initial attempt with 1 second delay
-        setTimeout(() => showAchievementNotifications(), 1000);
-      } else {
-        console.log('ℹ️  No achievements unlocked for this practice question');
-        if (!result.success) {
-          console.warn('⚠️  API call was not successful:', result);
-        }
+        showAchievementNotificationsWhenReady(result.data.unlockedAchievements)
+          .catch(error => console.error('Failed to show achievements:', error));
       }
 
       await setLocalStorage(freshValidationResult);

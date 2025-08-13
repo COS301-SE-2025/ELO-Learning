@@ -16,7 +16,7 @@ router.post('/oauth/user', async (req, res) => {
     // Check if user already exists
     const { data: existingUser, error: fetchError } = await supabase
       .from('Users')
-      .select('id,name,surname,username,email,currentLevel,joinDate,xp,pfpURL')
+      .select('id,name,surname,username,email,currentLevel,joinDate,xp,avatar')
       .eq('email', email)
       .maybeSingle();
 
@@ -38,7 +38,7 @@ router.post('/oauth/user', async (req, res) => {
           currentLevel: existingUser.currentLevel,
           joinDate: existingUser.joinDate,
           xp: existingUser.xp,
-          pfpURL: existingUser.pfpURL || image, // Use stored image or fallback to OAuth image
+          avatar: existingUser.avatar,
         },
       });
     }
@@ -87,7 +87,12 @@ router.post('/oauth/user', async (req, res) => {
           currentLevel: 5, // Default starting level
           joinDate: new Date().toISOString(),
           xp: 1000, // Default starting XP
-          pfpURL: image, // Use OAuth profile image
+          avatar: {
+            eyes: 'Eye 1',
+            mouth: 'Mouth 1',
+            bodyShape: 'Circle',
+            background: 'solid-pink',
+          },
         },
       ])
       .select()
@@ -109,7 +114,7 @@ router.post('/oauth/user', async (req, res) => {
         currentLevel: newUser.currentLevel,
         joinDate: newUser.joinDate,
         xp: newUser.xp,
-        pfpURL: newUser.pfpURL,
+        avatar: newUser.avatar,
       },
     });
   } catch (error) {

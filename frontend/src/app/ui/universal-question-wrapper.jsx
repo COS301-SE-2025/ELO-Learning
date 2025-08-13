@@ -2,14 +2,16 @@
 
 'use client';
 
+
 import MathInputTemplate from '@/app/ui/math-keyboard/math-input-template';
 import ProgressBar from '@/app/ui/progress-bar';
+import { showAchievementNotificationsWhenReady } from '@/utils/achievementNotifications';
 import { submitQuestionAnswer } from '@/utils/api';
 import { Heart, X } from 'lucide-react';
-import { useSession } from 'next-auth/react';
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { useEffect, useState } from 'react';
+import { useSession } from 'next-auth/react'; // 🔧 ADD THIS MISSING IMPORT
 
 // Import all question type components
 import ExpressionBuilderTemplate from '@/app/ui/question-types/expression-builder';
@@ -20,7 +22,7 @@ import OpenResponseTemplate from '@/app/ui/question-types/open-response';
 import TrueFalseTemplate from '@/app/ui/question-types/true-false';
 
 export default function UniversalQuestionWrapper({ questions, numLives = 5 }) {
-  // ✅ Safe array handling
+  const { data: session } = useSession(); 
   const allQuestions = questions || [];
   const totalSteps = allQuestions.length;
 
@@ -150,12 +152,13 @@ export default function UniversalQuestionWrapper({ questions, numLives = 5 }) {
         return;
       }
 
-      const result = await submitQuestionAnswer(
-        currQuestion.Q_id,
-        answer,
-        userId,
-        currQuestion.type,
-      );
+      const result = await submitQuestionAnswer({
+        questionId: currQuestion.Q_id,
+        userId: userId,
+        userAnswer: answer,
+        questionType: currQuestion.type,
+        gameMode: 'practice',
+      });
 
       if (result.success) {
         setFeedbackMessage(result.data.message);
@@ -171,41 +174,10 @@ export default function UniversalQuestionWrapper({ questions, numLives = 5 }) {
             result.data.unlockedAchievements,
           );
 
-          // Enhanced achievement notification with retry logic
-          const showAchievementNotifications = (attempts = 0) => {
-            if (typeof window !== 'undefined' && window.showMultipleAchievements) {
-              try {
-                window.showMultipleAchievements(result.data.unlockedAchievements);
-                console.log('✅ Achievement notifications displayed successfully');
-              } catch (notificationError) {
-                console.error('❌ Error showing achievement notifications:', notificationError);
-                
-                // Retry once after a short delay
-                if (attempts < 1) {
-                  setTimeout(() => showAchievementNotifications(attempts + 1), 500);
-                }
-              }
-            } else {
-              console.log('❌ Achievement notification system not ready');
-              
-              // Listen for the system ready event if it hasn't fired yet
-              if (attempts === 0) {
-                window.addEventListener('achievementSystemReady', () => {
-                  showAchievementNotifications(1);
-                }, { once: true });
-              }
-              
-              // Retry if system not ready and we haven't exceeded attempts
-              if (attempts < 5) { // Increased retry attempts
-                setTimeout(() => showAchievementNotifications(attempts + 1), 1000);
-              } else {
-                console.error('❌ Achievement notification system failed after 5 attempts');
-              }
-            }
-          };
-
-          // Wait 1 second after feedback before showing achievements
-          setTimeout(() => showAchievementNotifications(), 1000);
+          // Use the centralized achievement notification utility
+          showAchievementNotificationsWhenReady(result.data.unlockedAchievements)
+            .then(() => console.log('✅ Achievement notifications displayed successfully'))
+            .catch(error => console.error('❌ Failed to show achievements:', error));
         }
 
         if (result.data.isCorrect && result.data.xpAwarded > 0) {

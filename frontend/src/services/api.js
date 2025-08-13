@@ -370,10 +370,31 @@ export async function fetchUserAchievements(userId) {
 }
 
 export async function fetchUserAchievementsWithStatus(userId) {
-  const res = await axiosInstance.get(`/users/${userId}/achievements/all`, {
-    headers: getDynamicAuthHeader(),
-  });
-  return res.data.achievements;
+  try {
+    console.log('🔍 Fetching user achievements with status for userId:', userId);
+    const res = await axiosInstance.get(`/users/${userId}/achievements/all`, {
+      headers: getDynamicAuthHeader(),
+    });
+    console.log('✅ Successfully fetched user achievements');
+    return res.data.achievements;
+  } catch (error) {
+    console.error('❌ Error fetching user achievements:', error);
+    
+    // Check if it's a network error
+    if (error.code === 'ERR_NETWORK' || error.message.includes('Network Error')) {
+      console.error('🌐 Network error - backend may be down');
+      throw new Error('Unable to connect to achievement server. Please check if the backend is running.');
+    }
+    
+    // Check if it's a response error
+    if (error.response) {
+      console.error('📊 Response error:', error.response.status, error.response.data);
+      throw new Error(`Server error: ${error.response.status} - ${error.response.data?.error || 'Unknown error'}`);
+    }
+    
+    // Re-throw the original error
+    throw error;
+  }
 }
 
 export async function updateAchievementProgress(

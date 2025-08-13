@@ -116,7 +116,6 @@ export async function getMixedQuestions(level = 1, count = 10) {
   }
 }
 
-// Enhanced submit function that handles all question types
 export async function submitQuestionAnswer({
   questionId,
   userId,
@@ -124,8 +123,19 @@ export async function submitQuestionAnswer({
   isCorrect,
   timeSpent,
   questionType = null,
+  gameMode = 'practice', // 🔧 ADD THIS - defaults to practice
 }) {
   try {
+    // Validate required parameters
+    if (!questionId) {
+      console.error('❌ Question ID is required but not provided');
+      return {
+        success: false,
+        error: 'Question ID is required',
+        details: 'Cannot submit answer without a valid question ID'
+      };
+    }
+
     const headers = {
       'Content-Type': 'application/json',
     };
@@ -137,6 +147,13 @@ export async function submitQuestionAnswer({
       }
     }
 
+    console.log('🚀 Submitting answer:', {
+      questionId,
+      userId,
+      gameMode,
+      questionType
+    });
+
     const response = await fetch(
       `${API_BASE_URL}/question/${questionId}/submit`,
       {
@@ -147,11 +164,25 @@ export async function submitQuestionAnswer({
           userId,
           questionType,
           timeSpent,
+          gameMode, // 🔧 Include gameMode
         }),
       },
     );
 
+    // Check if the response is JSON before parsing
+    const contentType = response.headers.get('content-type');
+    if (!contentType || !contentType.includes('application/json')) {
+      const text = await response.text();
+      console.error('❌ Non-JSON response received:', text.substring(0, 200));
+      return {
+        success: false,
+        error: 'Server returned non-JSON response',
+        details: `Expected JSON but got ${contentType}. Response: ${text.substring(0, 100)}...`
+      };
+    }
+
     const data = await response.json();
+    console.log('🔍 API Response:', data);
 
     if (!response.ok) {
       return {

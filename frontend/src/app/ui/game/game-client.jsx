@@ -97,7 +97,7 @@ export default function GameClient({ game, level }) {
           <QuestionsTracker
             questions={questions}
             submitCallback={submitCallback}
-            lives={15}
+            lives={6}
           />
         </div>
       )}

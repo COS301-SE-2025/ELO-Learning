@@ -1,6 +1,6 @@
-import { handleOAuthUser } from '@/services/api'
-import CredentialsProvider from 'next-auth/providers/credentials'
-import GoogleProvider from 'next-auth/providers/google'
+import { handleOAuthUser } from '@/services/api';
+import CredentialsProvider from 'next-auth/providers/credentials';
+import GoogleProvider from 'next-auth/providers/google';
 
 export const authOptions = {
   providers: [
@@ -19,7 +19,7 @@ export const authOptions = {
           console.log(
             '🔐 Attempting credentials login for:',
             credentials.email,
-          )
+          );
 
           // Call your backend login endpoint directly
           const response = await fetch(
@@ -34,16 +34,16 @@ export const authOptions = {
                 password: credentials.password,
               }),
             },
-          )
+          );
 
-          const data = await response.json()
+          const data = await response.json();
           console.log('🔐 Backend response:', {
             success: response.ok,
             status: response.status,
-          })
+          });
 
           if (response.ok && data.user) {
-            console.log('✅ Login successful for user:', data.user.username)
+            console.log('✅ Login successful for user:', data.user.username);
             // Return user object if authentication successful
             return {
               id: data.user.id,
@@ -55,14 +55,14 @@ export const authOptions = {
               currentLevel: data.user.currentLevel || 1,
               joinDate: data.user.joinDate,
               avatar: data.user.avatar,
-            }
+            };
           } else {
-            console.log('❌ Login failed:', data.error || 'Unknown error')
-            return null
+            console.log('❌ Login failed:', data.error || 'Unknown error');
+            return null;
           }
         } catch (error) {
-          console.error('🚫 Authentication error:', error)
-          return null
+          console.error('🚫 Authentication error:', error);
+          return null;
         }
       },
     }),
@@ -78,32 +78,32 @@ export const authOptions = {
             user.name,
             user.image,
             account.provider,
-          )
+          );
 
           // Attach database user data to the user object
           // This will be available in the JWT callback
-          user.id = response.user.id
-          user.username = response.user.username
-          user.surname = response.user.surname
-          user.xp = response.user.xp
-          user.currentLevel = response.user.currentLevel
-          user.joinDate = response.user.joinDate
-          user.avatar = response.user.avatar
+          user.id = response.user.id;
+          user.username = response.user.username;
+          user.surname = response.user.surname;
+          user.xp = response.user.xp;
+          user.currentLevel = response.user.currentLevel;
+          user.joinDate = response.user.joinDate;
+          user.avatar = response.user.avatar;
 
-          return true
+          return true;
         } catch (error) {
-          console.error('🚫 Error handling OAuth user:', error)
-          return false // This will prevent sign in
+          console.error('🚫 Error handling OAuth user:', error);
+          return false; // This will prevent sign in
         }
       }
 
       // For credentials provider, no additional processing needed
-      return true
+      return true;
     },
     async jwt({ token, account, user, trigger, session }) {
       // Persist the OAuth access_token to the token right after signin
       if (account) {
-        token.accessToken = account.access_token
+        token.accessToken = account.access_token;
       }
 
       console.log('JWT callback:', {
@@ -112,62 +112,61 @@ export const authOptions = {
         token,
         trigger,
         session,
-      })
+      });
 
       if (trigger === 'update' && session?.user) {
         // Update token with user data from session
-        token.id = session.user.id
-        token.email = session.user.email
-        token.name = session.user.name
-        token.surname = session.user.surname
-        token.username = session.user.username
-        token.xp = session.user.xp || 0
-        token.currentLevel = session.user.currentLevel || 1
-        token.joinDate = session.user.joinDate
-        token.avatar = session.user.avatar
-
+        token.id = session.user.id;
+        token.email = session.user.email;
+        token.name = session.user.name;
+        token.surname = session.user.surname;
+        token.username = session.user.username;
+        token.xp = session.user.xp || 0;
+        token.currentLevel = session.user.currentLevel || 1;
+        token.joinDate = session.user.joinDate;
+        token.avatar = session.user.avatar;
       }
 
       // Persist user data in the token right after signin
       if (user) {
-        token.id = user.id
-        token.email = user.email
-        token.name = user.name
-        token.surname = user.surname // Add surname for OAuth users
+        token.id = user.id;
+        token.email = user.email;
+        token.name = user.name;
+        token.surname = user.surname; // Add surname for OAuth users
         token.username =
-          user.username || user.name || user.email?.split('@')[0] // Fallback for Google users
-        token.xp = user.xp || 0 // Default XP for new users
-        token.currentLevel = user.currentLevel || 1 // Default level
-        token.joinDate = user.joinDate // Add join date
-        token.avatar = user.avatar
+          user.username || user.name || user.email?.split('@')[0]; // Fallback for Google users
+        token.xp = user.xp || 0; // Default XP for new users
+        token.currentLevel = user.currentLevel || 1; // Default level
+        token.joinDate = user.joinDate; // Add join date
+        token.avatar = user.avatar;
       }
 
-      return token
+      return token;
     },
     async session({ session, token, trigger, newSession }) {
       // Send properties to the client, getting data from the token
-      session.accessToken = token.accessToken
+      session.accessToken = token.accessToken;
       console.log('Session callback:', {
         user: session.user,
         token,
         trigger,
         newSession,
-      })
+      });
 
       // Pass user data from token to session
       if (token) {
-        session.user.id = token.id
-        session.user.email = token.email
-        session.user.name = token.name
-        session.user.surname = token.surname
-        session.user.username = token.username
-        session.user.xp = token.xp
-        session.user.currentLevel = token.currentLevel
-        session.user.joinDate = token.joinDate
-        session.user.avatar = token.avatar
+        session.user.id = token.id;
+        session.user.email = token.email;
+        session.user.name = token.name;
+        session.user.surname = token.surname;
+        session.user.username = token.username;
+        session.user.xp = token.xp;
+        session.user.currentLevel = token.currentLevel;
+        session.user.joinDate = token.joinDate;
+        session.user.avatar = token.avatar;
       }
 
-      return session
+      return session;
     },
   },
   pages: {
@@ -177,7 +176,7 @@ export const authOptions = {
   events: {
     async signOut(message) {
       // This runs when user signs out
-      console.log('User signed out:', message)
+      console.log('User signed out:', message);
     },
   },
-}
+};

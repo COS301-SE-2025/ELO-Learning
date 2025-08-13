@@ -2,6 +2,7 @@
 
 import MathInputTemplate from '@/app/ui/math-keyboard/math-input-template';
 import ProgressBar from '@/app/ui/progress-bar';
+import { showAchievementNotificationsWhenReady } from '@/utils/achievementNotifications';
 import { submitQuestionAnswer } from '@/utils/api';
 import { Heart, X } from 'lucide-react';
 import Link from 'next/link';
@@ -133,23 +134,10 @@ export default function MathKeyboardWrapper({ questions }) {
             result.data.unlockedAchievements,
           );
 
-          // Use global achievement notification system for consistency
-          if (
-            typeof window !== 'undefined' &&
-            window.showMultipleAchievements
-          ) {
-            setTimeout(() => {
-              try {
-                window.showMultipleAchievements(result.data.unlockedAchievements);
-                console.log('✅ Achievement notifications triggered successfully');
-              } catch (notificationError) {
-                console.error('❌ Error showing achievement notifications:', notificationError);
-              }
-            }, 1000); // Wait 1 second after feedback before showing achievements
-          } else {
-            console.error('❌ Achievement notification system not ready');
-            console.log('Available window functions:', Object.keys(window).filter(key => key.includes('Achievement')));
-          }
+          // Use centralized achievement notification utility
+          showAchievementNotificationsWhenReady(result.data.unlockedAchievements)
+            .then(() => console.log('✅ Achievement notifications triggered successfully'))
+            .catch(error => console.error('❌ Failed to show achievements:', error));
         } else {
           console.log('ℹ️  No achievements unlocked for this question');
         }

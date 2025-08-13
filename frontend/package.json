@@ -33,6 +33,7 @@
     "workbox-webpack-plugin": "^7.3.0"
   },
   "devDependencies": {
+    "@babel/eslint-parser": "^7.28.0",
     "@eslint/eslintrc": "^3",
     "@tailwindcss/postcss": "^4",
     "@types/cypress": "^0.1.6",

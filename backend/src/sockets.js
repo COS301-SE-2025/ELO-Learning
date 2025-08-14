@@ -319,6 +319,14 @@ export default (io, socket) => {
 
     //I added the multiPlayerArray functionality. Can you see if that will work.
 
+    const multiPlayerArray = [
+      firstPlayerToFinishResults,
+      secondPlayerToFinishResults,
+    ];
+    console.log('first', multiPlayerArray[0]);
+    console.log('\n--------------------\n');
+    console.log('second', multiPlayerArray[1]);
+
     // Clean up the matchMap entry
     matchMap.delete(gameId);
   };

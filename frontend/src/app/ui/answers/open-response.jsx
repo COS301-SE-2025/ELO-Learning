@@ -40,28 +40,25 @@ export default function OpenResponseTemplate({
           placeholder="Write your answer"
           className="w-full p-4 resize-none text-sm min-h-[200px] 
                      focus:outline-none
-                     bg-white text-gray-900 placeholder-gray-500
                      transition-all duration-200"
           style={{
-            border: '3px solid #ffffff',
-            borderRadius: '8px',
+            border: '1px solid #696969',
+            borderRadius: '5px',
             boxShadow: '0 0 0 1px rgba(255, 255, 255, 0.8)',
           }}
           onFocus={(e) => {
-            e.target.style.border = '3px solid #7D32CE';
-            e.target.style.boxShadow = '0 0 0 3px rgba(125, 50, 206, 0.2)';
+            e.target.style.border = '1px solid #ff6e99';
+            e.target.style.boxShadow = '0 0 0 1px rgba(125, 50, 206, 0.2)';
           }}
           onBlur={(e) => {
-            e.target.style.border = '3px solid #ffffff';
+            e.target.style.border = '1px solid #ffffff';
             e.target.style.boxShadow = '0 0 0 1px rgba(255, 255, 255, 0.8)';
           }}
           rows={8}
         />
-        
+
         {/* Character count or word count (optional) */}
-        <div className="text-xs text-gray-500 text-right">
-          {inputValue.length} characters
-        </div>
+        <div className="text-xs text-right">{inputValue.length} characters</div>
       </div>
     </div>
   );

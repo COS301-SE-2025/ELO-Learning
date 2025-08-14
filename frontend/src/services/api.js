@@ -277,6 +277,14 @@ export async function submitSinglePlayerAttempt(data) {
   return res.data;
 }
 
+//14. POST /multiplayer
+export async function submitMultiplayerResult(data) {
+  const res = await axiosInstance.post('/multiplayer', data, {
+    headers: getDynamicAuthHeader(),
+  });
+  return res.data;
+}
+
 export async function sendPasswordResetEmail(email) {
   const res = await axiosInstance.post('/forgot-password', { email });
   return res.data;

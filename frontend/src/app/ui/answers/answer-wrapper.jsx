@@ -1,4 +1,5 @@
 // ui/answers/answer-wrapper.jsx
+import { useCallback, useRef } from 'react';
 import ExpressionBuilderTemplate from '@/app/ui/answers/expression-builder';
 import MathInputTemplate from '@/app/ui/answers/input-question';
 import MultipleChoiceTemplate from '@/app/ui/answers/multiple-choice';
@@ -14,64 +15,200 @@ export default function AnswerWrapper({
   setIsValidExpression,
   answer,
 }) {
+  // Use refs to prevent infinite validation loops
+  const lastValidatedAnswer = useRef(null);
+  const validationInProgress = useRef(false);
+
   // Debug logging to see what question type we're handling
   console.log('Question type:', question.type);
   console.log('All available answers:', currAnswers);
 
-  // Enhanced validation function that considers ALL correct answers
-  const handleAnswerValidation = async (studentAnswer) => {
-    if (!studentAnswer || !currAnswers || currAnswers.length === 0) {
-      setIsAnswerCorrect(false);
-      return;
-    }
+  // NEW: Validate answer format for specific question types
+  const validateAnswerFormat = (studentAnswer, questionType, questionText) => {
+    const cleanAnswer = studentAnswer.trim();
 
-    // Get ALL correct answers, not just the first one
-    const correctAnswers = currAnswers
-      .filter((answer) => answer.isCorrect)
-      .map((answer) => answer.answer_text || answer.answerText)
-      .filter(Boolean); // Remove any null/undefined values
-
-    if (correctAnswers.length === 0) {
-      console.warn('No correct answers found in currAnswers:', currAnswers);
-      setIsAnswerCorrect(false);
-      return;
-    }
-
-    console.log('Checking student answer against all correct answers:', {
-      student: studentAnswer,
-      correctAnswers: correctAnswers,
-      questionText: question.questionText,
+    console.log('🔍 Validating answer format:', {
+      studentAnswer,
+      questionType,
+      questionText: questionText?.substring(0, 50),
     });
 
-    // Check if student answer matches ANY of the correct answers
-    let isCorrect = false;
-    let matchedAnswer = null;
+    // For Expression Builder questions expecting equations
+    if (questionType === 'Expression Builder') {
+      // If question asks for equation of line, expect proper equation format
+      if (questionText.toLowerCase().includes('equation of')) {
+        // Must contain variables and operators, not just numbers
+        const hasVariables = /[a-zA-Z]/.test(cleanAnswer);
+        const hasOperators = /[+\-=]/.test(cleanAnswer);
+        const isJustNumbers = /^\d+(\s+\d+)*$/.test(cleanAnswer);
 
-    for (const correctAnswer of correctAnswers) {
-      const individualResult = await validateAnswerEnhanced(
-        studentAnswer,
-        correctAnswer,
-        question.questionText || '',
-        question.type || '',
-      );
+        if (isJustNumbers || (!hasVariables && !hasOperators)) {
+          console.log(
+            '❌ Expression Builder expects equation format, got just numbers:',
+            cleanAnswer,
+          );
+          return false;
+        }
 
-      if (individualResult) {
-        isCorrect = true;
-        matchedAnswer = correctAnswer;
-        break; // Found a match, no need to check further
+        // Must have = sign for equations
+        if (!cleanAnswer.includes('=')) {
+          console.log('❌ Equation expected but no = sign found:', cleanAnswer);
+          return false;
+        }
+      }
+
+      // For slope-intercept or point-slope form, expect proper variables
+      if (
+        questionText.toLowerCase().includes('slope') &&
+        questionText.toLowerCase().includes('line')
+      ) {
+        const hasY = /y/.test(cleanAnswer);
+        const hasX = /x/.test(cleanAnswer);
+
+        if (!hasY || !hasX) {
+          console.log(
+            '❌ Line equation expected y and x variables:',
+            cleanAnswer,
+          );
+          return false;
+        }
       }
     }
 
-    console.log('Validation result:', {
-      student: studentAnswer,
-      correctAnswers: correctAnswers,
-      questionText: question.questionText,
-      isCorrect: isCorrect,
-      matchedAnswer: matchedAnswer,
-    });
+    // For Math Input - allow numbers but validate they're reasonable
+    if (questionType === 'Math Input') {
+      // Should be a number or simple mathematical expression
+      const isValidMathInput =
+        /^[0-9+\-*/().x\s=]+$/.test(cleanAnswer) ||
+        /^\d+(\.\d+)?$/.test(cleanAnswer);
+      if (!isValidMathInput) {
+        console.log(
+          '❌ Math Input expects numerical format, got:',
+          cleanAnswer,
+        );
+        return false;
+      }
 
-    setIsAnswerCorrect(isCorrect);
+      // For evaluation questions, expect a numerical result
+      if (questionText.toLowerCase().includes('evaluate')) {
+        const isNumber = /^\d+(\.\d+)?$/.test(cleanAnswer);
+        if (!isNumber) {
+          console.log(
+            '❌ Evaluation question expects numerical answer:',
+            cleanAnswer,
+          );
+          return false;
+        }
+      }
+    }
+
+    // For Open Response - more lenient but still check for basic validity
+    if (questionType === 'Open Response') {
+      if (cleanAnswer.length === 0) {
+        console.log('❌ Open Response cannot be empty');
+        return false;
+      }
+    }
+
+    console.log('✅ Answer format is valid for question type');
+    return true;
   };
+
+  // Enhanced validation function that considers ALL correct answers
+  const handleAnswerValidation = useCallback(
+    async (studentAnswer) => {
+      // Prevent validation if already in progress or same answer
+      if (
+        validationInProgress.current ||
+        lastValidatedAnswer.current === studentAnswer
+      ) {
+        return;
+      }
+
+      if (!studentAnswer || !currAnswers || currAnswers.length === 0) {
+        setIsAnswerCorrect(false);
+        lastValidatedAnswer.current = studentAnswer;
+        return;
+      }
+
+      // Set validation in progress
+      validationInProgress.current = true;
+      lastValidatedAnswer.current = studentAnswer;
+
+      try {
+        // Get ALL correct answers, not just the first one
+        const correctAnswers = currAnswers
+          .filter((answer) => answer.isCorrect)
+          .map((answer) => answer.answer_text || answer.answerText)
+          .filter(Boolean); // Remove any null/undefined values
+
+        if (correctAnswers.length === 0) {
+          console.warn('No correct answers found in currAnswers:', currAnswers);
+          setIsAnswerCorrect(false);
+          return;
+        }
+
+        console.log('Checking student answer against all correct answers:', {
+          student: studentAnswer,
+          correctAnswers: correctAnswers,
+          questionText: question.questionText,
+        });
+
+        // STEP 1: Check if answer format makes sense for question type
+        const isValidFormat = validateAnswerFormat(
+          studentAnswer,
+          question.type,
+          question.questionText,
+        );
+
+        if (!isValidFormat) {
+          console.log(
+            '❌ Answer format validation failed - marking as incorrect',
+          );
+          setIsAnswerCorrect(false);
+          return;
+        }
+
+        // STEP 2: Check if student answer matches ANY of the correct answers
+        let isCorrect = false;
+        let matchedAnswer = null;
+
+        for (const correctAnswer of correctAnswers) {
+          const individualResult = await validateAnswerEnhanced(
+            studentAnswer,
+            correctAnswer,
+            question.questionText || '',
+            question.type || '',
+          );
+
+          if (individualResult) {
+            isCorrect = true;
+            matchedAnswer = correctAnswer;
+            break; // Found a match, no need to check further
+          }
+        }
+
+        console.log('Final validation result:', {
+          student: studentAnswer,
+          correctAnswers: correctAnswers,
+          questionText: question.questionText,
+          formatValid: isValidFormat,
+          isCorrect: isCorrect,
+          matchedAnswer: matchedAnswer,
+        });
+
+        // Only mark correct if BOTH format is valid AND content matches
+        setIsAnswerCorrect(isCorrect && isValidFormat);
+      } catch (error) {
+        console.error('Validation error:', error);
+        setIsAnswerCorrect(false);
+      } finally {
+        // Reset validation flag
+        validationInProgress.current = false;
+      }
+    },
+    [currAnswers, question.questionText, question.type, setIsAnswerCorrect],
+  );
 
   // Helper function to get all correct answers as an array
   const getAllCorrectAnswers = () => {
@@ -80,6 +217,22 @@ export default function AnswerWrapper({
       .map((answer) => answer.answer_text || answer.answerText)
       .filter(Boolean);
   };
+
+  // Debounced answer handler to prevent rapid validation calls
+  const handleAnswerChange = useCallback(
+    (newAnswer) => {
+      setAnswer(newAnswer);
+
+      // Only validate if answer actually changed
+      if (newAnswer !== lastValidatedAnswer.current) {
+        // Add small delay to prevent rapid fire validation
+        setTimeout(() => {
+          handleAnswerValidation(newAnswer);
+        }, 150);
+      }
+    },
+    [setAnswer, handleAnswerValidation],
+  );
 
   return (
     <div className="m-2">
@@ -97,10 +250,7 @@ export default function AnswerWrapper({
         <MathInputTemplate
           correctAnswers={getAllCorrectAnswers()} // Pass all correct answers
           correctAnswer={currAnswers[0]?.answer_text} // Keep for backward compatibility
-          setStudentAnswer={(answer) => {
-            setAnswer(answer);
-            handleAnswerValidation(answer);
-          }}
+          setStudentAnswer={handleAnswerChange}
           setIsAnswerCorrect={setIsAnswerCorrect}
           setIsValidExpression={setIsValidExpression}
           studentAnswer={answer}
@@ -111,10 +261,7 @@ export default function AnswerWrapper({
       {/* Open Response Questions */}
       {question.type === 'Open Response' && (
         <OpenResponseTemplate
-          setAnswer={(answer) => {
-            setAnswer(answer);
-            handleAnswerValidation(answer);
-          }}
+          setAnswer={handleAnswerChange}
           answer={answer}
           setIsAnswerCorrect={setIsAnswerCorrect}
         />
@@ -124,10 +271,7 @@ export default function AnswerWrapper({
       {question.type === 'Expression Builder' && (
         <ExpressionBuilderTemplate
           question={question}
-          setAnswer={(answer) => {
-            setAnswer(answer);
-            handleAnswerValidation(answer);
-          }}
+          setAnswer={handleAnswerChange}
           answer={answer}
           setIsAnswerCorrect={setIsAnswerCorrect}
         />
@@ -166,11 +310,7 @@ export default function AnswerWrapper({
             <input
               type="text"
               value={answer || ''}
-              onChange={(e) => {
-                const newAnswer = e.target.value;
-                setAnswer(newAnswer);
-                handleAnswerValidation(newAnswer);
-              }}
+              onChange={(e) => handleAnswerChange(e.target.value)}
               placeholder="Enter your answer..."
               className="w-full max-w-md mx-auto p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
             />

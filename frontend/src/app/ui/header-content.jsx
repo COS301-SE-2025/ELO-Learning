@@ -1,27 +1,28 @@
+// FIXED header-content.jsx
 'use client';
 
 import clsx from 'clsx';
 import { Shield } from 'lucide-react';
 import { memo, useMemo } from 'react';
-import { useSessionWithCache } from '../../hooks/useSessionWithCache';
+import { useSession } from 'next-auth/react'; // ← CHANGED: Use NextAuth directly
 
 const HeaderContent = memo(function HeaderContent() {
-  const session = useSessionWithCache();
+  const { data: session, status } = useSession(); // ← SIMPLIFIED: Just use NextAuth
 
-  // Memoize all user data processing to avoid recalculations
+  // Memoize user data processing
   const userData = useMemo(() => {
-    if (session.status !== 'authenticated' || !session?.user) {
+    if (status !== 'authenticated' || !session?.user) {
       return null;
     }
 
     return {
-      username: session.getUsername(),
-      xp: Math.round(session.getXP()),
+      username: session.user.username || session.user.name || session.user.email?.split('@')[0] || 'User',
+      xp: Math.round(session.user.xp || 0),
     };
-  }, [session]);
+  }, [session, status]);
 
   // Show loading state while session is being loaded
-  if (session.status === 'loading') {
+  if (status === 'loading') {
     return (
       <div className="w-full md:w-auto">
         <div
@@ -32,13 +33,17 @@ const HeaderContent = memo(function HeaderContent() {
           <div className="flex items-center gap-2">
             <div className="h-4 w-16 bg-gray-700 rounded animate-pulse"></div>
           </div>
+          <div className="flex items-center gap-2">
+            <Shield size={24} fill="#4D5DED" stroke="#4D5DED" />
+            <div className="h-4 w-12 bg-gray-700 rounded animate-pulse"></div>
+          </div>
         </div>
       </div>
     );
   }
 
   // Don't render anything if not authenticated
-  if (session.status !== 'authenticated' || !userData) {
+  if (status !== 'authenticated' || !userData) {
     return null;
   }
 

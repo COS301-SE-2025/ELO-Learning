@@ -1,8 +1,9 @@
+// api.js - FIXED VERSION
 import axios from 'axios';
-import { cache, CACHE_EXPIRY, CACHE_KEYS } from '../utils/cache';
+import { performanceCache, CACHE_DURATIONS } from '../utils/performanceCache';
 
-const BASE_URL = 'http://localhost:3000'; // Change this when deploying
 
+const BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
 const isServer = typeof window === 'undefined';
 
 const axiosInstance = axios.create({
@@ -12,13 +13,11 @@ const axiosInstance = axios.create({
   },
 });
 
-// Add request interceptor to include auth token
 axiosInstance.interceptors.request.use(async (config) => {
   if (isServer) {
     const { cookies } = await import('next/headers');
     const awaitedCookies = await cookies();
 
-    // Try to get NextAuth session token first
     const nextAuthToken = awaitedCookies
       .getAll()
       .find(
@@ -30,7 +29,6 @@ axiosInstance.interceptors.request.use(async (config) => {
     if (nextAuthToken) {
       config.headers.Authorization = `Bearer ${nextAuthToken.value}`;
     } else {
-      // Fallback to regular token
       const tokenCookie = awaitedCookies
         .getAll()
         .filter((item) => item.name === 'token')
@@ -41,140 +39,95 @@ axiosInstance.interceptors.request.use(async (config) => {
     }
     return config;
   } else {
-    // Client-side: Check NextAuth session first, then fallback to cached tokens
+    // CLIENT-SIDE: SIMPLE TOKEN RETRIEVAL (NO CACHE!)
     let token = null;
 
-    // Try to get NextAuth session token from cache or localStorage
-    const nextAuthSession = cache.get(CACHE_KEYS.NEXTAUTH_SESSION);
-    if (nextAuthSession?.accessToken) {
-      token = nextAuthSession.accessToken;
-    } else {
-      // Fallback to our cached tokens
-      const provider = cache.get('auth_provider') || 'credentials';
-
-      if (provider === 'google' || provider === 'oauth') {
-        token = cache.get('oauth_token') || localStorage.getItem('oauth_token');
-      } else {
-        token = cache.get(CACHE_KEYS.TOKEN) || localStorage.getItem('token');
-      }
+    try {
+      // Try direct localStorage access only
+      token = localStorage.getItem('token') || localStorage.getItem('oauth_token');
+      
+      console.log('🔐 Token retrieved for API call:', token ? 'Found' : 'Not found');
+      
+    } catch (error) {
+      console.warn('Token retrieval failed:', error);
     }
 
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
+    
     return config;
   }
 });
 
-// Helper to attach auth token
+// Helper to attach auth token (for backward compatibility)
 const authHeader = {
   Authorization: 'Bearer testtoken123',
 };
 
-// 1. GET /users
+// LEADERBOARD - Cache 
 export async function fetchAllUsers() {
-  // Try to get from cache first
-  const cachedUsers = cache.get(CACHE_KEYS.LEADERBOARD);
-  if (cachedUsers) {
-    return cachedUsers;
+  try {
+    const cached = performanceCache.get('users', CACHE_DURATIONS.QUICK);
+    if (cached) return cached;
+
+    console.log('🌐 Fetching fresh users data...');
+    const res = await axiosInstance.get('/users');
+    
+    performanceCache.set('users', res.data);
+    return res.data;
+  } catch (error) {
+    console.error('❌ Failed to fetch users:', error);
+    throw error;
   }
-
-  // If not in cache or expired, fetch from API
-  const res = await axiosInstance.get('/users');
-  // Cache the response with 5-minute expiry
-  cache.set(CACHE_KEYS.LEADERBOARD, res.data, CACHE_EXPIRY.SHORT);
-  return res.data;
 }
 
-// 2. GET /user/:id
-export async function fetchUserById(id) {
-  const res = await axiosInstance.get(`/user/${id}`, {
-    headers: authHeader,
-  });
-  return res.data;
-}
-
-// 3. GET /users/:id/achievements
-export async function fetchUserAchievements(id) {
-  const res = await axiosInstance.get(`/users/${id}/achievements`, {
-    headers: authHeader,
-  });
-  return res.data;
-}
-
-// 4. POST /user/:id/xp
-export async function updateUserXP(id, xp) {
-  const res = await axiosInstance.post(
-    `/user/${id}/xp`,
-    { xp },
-    { headers: authHeader },
-  );
-  return res.data;
-}
-
-// 5. GET /questions
+// QUESTIONS - Cache for 30 minutes (rarely change)
 export async function fetchAllQuestions() {
-  // Try to get from cache first
-  const cachedQuestions = cache.get(CACHE_KEYS.QUESTIONS);
-  if (cachedQuestions) {
-    return cachedQuestions;
+  try {
+    const cached = performanceCache.get('questions', CACHE_DURATIONS.LONG);
+    if (cached) return cached;
+
+    console.log('🌐 Fetching fresh questions data...');
+    const res = await axiosInstance.get('/questions');
+    
+    performanceCache.set('questions', res.data);
+    return res.data;
+  } catch (error) {
+    console.error('❌ Failed to fetch questions:', error);
+    throw error;
   }
-
-  const res = await axiosInstance.get('/questions');
-  // Cache for 30 minutes
-  cache.set(CACHE_KEYS.QUESTIONS, res.data, CACHE_EXPIRY.MEDIUM);
-  return res.data;
 }
 
-// 6. GET /question/:level
-export async function fetchQuestionsByLevel(level) {
-  const res = await axiosInstance.get(`/question/${level}`, {
-    headers: authHeader,
-  });
-  return res.data;
-}
-
-// 7. GET /question/:id/answer
-export async function fetchQuestionAnswer(id) {
-  const res = await axiosInstance.get(`/question/${id}/answer`, {
-    headers: authHeader,
-  });
-  return res.data;
-}
-
-// 8. GET /questions/topic?topic=Algebra
-export async function fetchQuestionsByTopic(topic) {
-  const res = await axiosInstance.get(`/questions/topic`, {
-    params: { topic },
-  });
-  return res.data;
-}
-
-// 9. GET /questions/level/topic?level=2&topic=Algebra
-export async function fetchQuestionsByLevelAndTopic(level, topic) {
-  const res = await axiosInstance.get('/questions/level/topic', {
-    params: { level, topic },
-  });
-  return res.data;
-}
-
-// 10. POST /question/:id/answer
-export async function submitAnswer(id, answer) {
-  const res = await axiosInstance.post(`/question/${id}/answer`, {
-    question: [{ answer }],
-  });
-  return res.data;
-}
 
 export async function loginUser(email, password) {
-  const res = await axiosInstance.post('/login', { email, password });
-  // Cache the user data and token
-  cache.set(CACHE_KEYS.TOKEN, res.data.token, CACHE_EXPIRY.LONG);
-  cache.set(CACHE_KEYS.USER, res.data.user, CACHE_EXPIRY.LONG);
-  // Still store in localStorage for persistence
-  localStorage.setItem('token', res.data.token);
-  localStorage.setItem('user', JSON.stringify(res.data.user));
-  return res.data;
+  try {
+    console.log('🚀 Starting login...');
+    
+    const res = await axiosInstance.post('/login', { email, password });
+    
+    console.log('✅ Login API response:', res.data);
+    
+    // SIMPLE, DIRECT STORAGE
+    if (res.data.token) {
+      localStorage.setItem('token', res.data.token);
+      console.log('✅ Token stored:', res.data.token);
+    }
+    
+    if (res.data.user) {
+      localStorage.setItem('user', JSON.stringify(res.data.user));
+      console.log('✅ User data stored:', res.data.user);
+    }
+    
+    localStorage.setItem('auth_provider', 'credentials');
+    
+    console.log('🎉 Login completed successfully');
+    return res.data;
+    
+  } catch (error) {
+    console.error('❌ Login failed:', error);
+    throw error;
+  }
 }
 
 export async function registerUser(
@@ -186,54 +139,293 @@ export async function registerUser(
   currentLevel,
   joinDate,
 ) {
-  const res = await axiosInstance.post('/register', {
-    name,
-    surname,
-    username,
-    email,
-    password,
-    currentLevel,
-    joinDate,
-  });
-  // Cache the user data and token
-  cache.set(CACHE_KEYS.TOKEN, res.data.token, CACHE_EXPIRY.LONG);
-  cache.set(CACHE_KEYS.USER, res.data.user, CACHE_EXPIRY.LONG);
-  // Store in localStorage for persistence
-  localStorage.setItem('token', res.data.token);
-  localStorage.setItem('user', JSON.stringify(res.data.user));
-  return res.data;
+  try {
+    console.log('🚀 Starting registration...');
+    
+    const res = await axiosInstance.post('/register', {
+      name,
+      surname,
+      username,
+      email,
+      password,
+      currentLevel,
+      joinDate,
+    });
+    
+    console.log('✅ Registration API response:', res.data);
+    
+    // SIMPLE, DIRECT STORAGE - No complex caching
+    if (res.data.token) {
+      localStorage.setItem('token', res.data.token);
+      console.log('✅ Token stored');
+    }
+    
+    if (res.data.user) {
+      localStorage.setItem('user', JSON.stringify(res.data.user));
+      console.log('✅ User data stored:', res.data.user);
+    }
+    
+    // Set auth provider
+    localStorage.setItem('auth_provider', 'credentials');
+    
+    console.log('🎉 Registration completed successfully');
+    return res.data;
+    
+  } catch (error) {
+    console.error('❌ Registration failed:', error);
+    console.error('Error response:', error.response?.data);
+    throw error;
+  }
 }
 
+
+// LOGOUT - Clear performance cache
 export async function logoutUser() {
-  // Clear both cache and localStorage
-  cache.clear();
-  localStorage.removeItem('token');
-  localStorage.removeItem('user');
+  try {
+    // Clear auth data
+    localStorage.removeItem('token');
+    localStorage.removeItem('oauth_token');
+    localStorage.removeItem('user');
+    localStorage.removeItem('auth_provider');
+    
+    // Clear performance cache
+    performanceCache.clear();
+    
+    console.log('🧹 Logout cleanup completed (auth + cache cleared)');
+    return true;
+  } catch (error) {
+    console.error('Logout cleanup failed:', error);
+    return false;
+  }
 }
 
-// 11. GET /topics
-export async function fetchAllTopics() {
-  const res = await axiosInstance.get('/topics');
-  return res.data.topics;
+
+// Handle OAuth user creation/retrieval
+export async function handleOAuthUser(email, name, image, provider) {
+  try {
+    const res = await axiosInstance.post('/oauth/user', {
+      email,
+      name,
+      image,
+      provider,
+    });
+    
+    // SIMPLE STORAGE - consistent with login/register
+    if (res.data.token) {
+      localStorage.setItem('oauth_token', res.data.token);
+      localStorage.setItem('auth_provider', provider);
+    }
+    if (res.data.user) {
+      localStorage.setItem('user', JSON.stringify(res.data.user));
+    }
+    
+    return res.data;
+  } catch (error) {
+    console.error('OAuth user handling failed:', error);
+    throw error;
+  }
 }
 
-// 12. GET /questions/random
-
-export async function fetchRandomQuestions(level) {
-  const res = await axiosInstance.get('/questions/random', {
-    params: {
-      level,
-    },
-  });
-  return res.data;
-}
-
-//13. POST /singleplayer
-export async function submitSinglePlayerAttempt(data) {
-  const res = await axiosInstance.post('/singleplayer', data, {
+// OTHER API FUNCTIONS (unchanged but with better error handling)
+export async function fetchUserById(id) {
+  const res = await axiosInstance.get(`/user/${id}`, {
     headers: authHeader,
   });
   return res.data;
+}
+
+// USER ACHIEVEMENTS - Cache for 10 minutes per user
+export async function fetchUserAchievements(id) {
+  try {
+    const cacheKey = `achievements_${id}`;
+    const cached = performanceCache.get(cacheKey, CACHE_DURATIONS.MEDIUM);
+    if (cached) return cached;
+
+    console.log(`🌐 Fetching achievements for user ${id}...`);
+    const res = await axiosInstance.get(`/users/${id}/achievements`, {
+      headers: authHeader,
+    });
+    
+    performanceCache.set(cacheKey, res.data);
+    return res.data;
+  } catch (error) {
+    console.error(`❌ Failed to fetch achievements for user ${id}:`, error);
+    throw error;
+  }
+}
+
+// UPDATE USER XP - Smart cache invalidation
+export async function updateUserXP(id, xp) {
+  try {
+    console.log(`🚀 Updating XP for user ${id} to ${xp}...`);
+    
+    const res = await axiosInstance.post(
+      `/user/${id}/xp`,
+      { xp },
+      { headers: authHeader },
+    );
+    
+    // SMART INVALIDATION: XP changed, so invalidate related caches
+    performanceCache.refresh('users'); // Leaderboard will change
+    performanceCache.refresh(`achievements_${id}`); // User achievements might change
+    
+    // Update user data in localStorage too
+    const currentUser = localStorage.getItem('user');
+    if (currentUser) {
+      try {
+        const userData = JSON.parse(currentUser);
+        if (userData.id === parseInt(id)) {
+          userData.xp = xp;
+          localStorage.setItem('user', JSON.stringify(userData));
+          console.log('✅ User XP updated in localStorage');
+        }
+      } catch (error) {
+        console.warn('Failed to update user XP in localStorage:', error);
+      }
+    }
+    
+    console.log('✅ XP update completed with cache invalidation');
+    return res.data;
+  } catch (error) {
+    console.error('❌ Failed to update XP:', error);
+    throw error;
+  }
+}
+
+// QUESTIONS BY LEVEL - Cache for 30 minutes per level
+export async function fetchQuestionsByLevel(level) {
+  try {
+    const cacheKey = `questions_level_${level}`;
+    const cached = performanceCache.get(cacheKey, CACHE_DURATIONS.LONG);
+    if (cached) return cached;
+
+    console.log(`🌐 Fetching questions for level ${level}...`);
+    const res = await axiosInstance.get(`/question/${level}`, {
+      headers: authHeader,
+    });
+    
+    performanceCache.set(cacheKey, res.data);
+    return res.data;
+  } catch (error) {
+    console.error(`❌ Failed to fetch questions for level ${level}:`, error);
+    throw error;
+  }
+}
+
+export async function fetchQuestionAnswer(id) {
+  const res = await axiosInstance.get(`/question/${id}/answer`, {
+    headers: authHeader,
+  });
+  return res.data;
+}
+
+// QUESTIONS BY TOPIC - Cache for 30 minutes per topic
+export async function fetchQuestionsByTopic(topic) {
+  try {
+    const cacheKey = `questions_topic_${topic}`;
+    const cached = performanceCache.get(cacheKey, CACHE_DURATIONS.LONG);
+    if (cached) return cached;
+
+    console.log(`🌐 Fetching questions for topic ${topic}...`);
+    const res = await axiosInstance.get(`/questions/topic`, {
+      params: { topic },
+    });
+    
+    performanceCache.set(cacheKey, res.data);
+    return res.data;
+  } catch (error) {
+    console.error(`❌ Failed to fetch questions for topic ${topic}:`, error);
+    throw error;
+  }
+}
+
+// QUESTIONS BY LEVEL AND TOPIC - Cache for 30 minutes per combination
+export async function fetchQuestionsByLevelAndTopic(level, topic) {
+  try {
+    const cacheKey = `questions_${level}_${topic}`;
+    const cached = performanceCache.get(cacheKey, CACHE_DURATIONS.LONG);
+    if (cached) return cached;
+
+    console.log(`🌐 Fetching questions for level ${level}, topic ${topic}...`);
+    const res = await axiosInstance.get('/questions/level/topic', {
+      params: { level, topic },
+    });
+    
+    performanceCache.set(cacheKey, res.data);
+    return res.data;
+  } catch (error) {
+    console.error(`❌ Failed to fetch questions for level ${level}, topic ${topic}:`, error);
+    throw error;
+  }
+}
+
+export async function submitAnswer(id, answer) {
+  const res = await axiosInstance.post(`/question/${id}/answer`, {
+    question: [{ answer }],
+  });
+  return res.data;
+}
+
+// TOPICS - Cache for 30 minutes (rarely change)
+export async function fetchAllTopics() {
+  try {
+    const cached = performanceCache.get('topics', CACHE_DURATIONS.LONG);
+    if (cached) return cached;
+
+    console.log('🌐 Fetching fresh topics data...');
+    const res = await axiosInstance.get('/topics');
+    
+    performanceCache.set('topics', res.data.topics);
+    return res.data.topics;
+  } catch (error) {
+    console.error('❌ Failed to fetch topics:', error);
+    throw error;
+  }
+}
+
+// RANDOM QUESTIONS - Cache for 10 minutes per level
+export async function fetchRandomQuestions(level) {
+  try {
+    const cacheKey = `random_questions_${level}`;
+    const cached = performanceCache.get(cacheKey, CACHE_DURATIONS.MEDIUM);
+    if (cached) return cached;
+
+    console.log(`🌐 Fetching random questions for level ${level}...`);
+    const res = await axiosInstance.get('/questions/random', {
+      params: { level },
+    });
+    
+    performanceCache.set(cacheKey, res.data);
+    return res.data;
+  } catch (error) {
+    console.error(`❌ Failed to fetch random questions for level ${level}:`, error);
+    throw error;
+  }
+}
+
+//  SUBMIT SINGLE PLAYER ATTEMPT - Invalidate relevant caches
+export async function submitSinglePlayerAttempt(data) {
+  try {
+    console.log('🚀 Submitting single player attempt...');
+    
+    const res = await axiosInstance.post('/singleplayer', data, {
+      headers: authHeader,
+    });
+    
+    // If this updates XP or achievements, invalidate caches
+    if (res.data.xpAwarded || res.data.achievementUnlocked) {
+      performanceCache.refresh('users'); // Leaderboard might change
+      if (data.userId) {
+        performanceCache.refresh(`achievements_${data.userId}`);
+      }
+      console.log('🔄 Invalidated caches due to XP/achievement changes');
+    }
+    
+    return res.data;
+  } catch (error) {
+    console.error('❌ Failed to submit single player attempt:', error);
+    throw error;
+  }
 }
 
 export async function sendPasswordResetEmail(email) {
@@ -267,18 +459,6 @@ export async function verifyResetToken(token) {
   return res.data;
 }
 
-// Handle OAuth user creation/retrieval
-export async function handleOAuthUser(email, name, image, provider) {
-  const res = await axiosInstance.post('/oauth/user', {
-    email,
-    name,
-    image,
-    provider,
-  });
-  return res.data;
-}
-
-// Update user avatar
 export async function updateUserAvatar(userId, avatar) {
   const res = await axiosInstance.post(
     `/user/${userId}/avatar`,

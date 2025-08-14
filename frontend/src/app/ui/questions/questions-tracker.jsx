@@ -137,60 +137,45 @@ export default function QuestionsTracker({
   };
 
   const submitAnswer = async () => {
-    try {
-      setIsSubmitting(true);
+    // Get fresh validation result before handling lives
+    const correctAnswerObj = currAnswers.find((ans) => ans.isCorrect === true);
+    const correctAnswerText = correctAnswerObj?.answer_text || correctAnswerObj;
 
-      // Get fresh validation result before handling lives
-      const correctAnswerObj = currAnswers.find(
-        (ans) => ans.isCorrect === true,
-      );
-      const correctAnswerText =
-        correctAnswerObj?.answer_text || correctAnswerObj;
+    const freshValidationResult = await validateAnswerEnhanced(
+      answer,
+      correctAnswerText,
+      currQuestion?.questionText || '',
+      currQuestion?.type || 'Math Input',
+    );
 
-      const freshValidationResult = await validateAnswerEnhanced(
-        answer,
-        correctAnswerText,
-        currQuestion?.questionText || '',
-        currQuestion?.type || 'Math Input',
-      );
+    console.log('🔄 Fresh validation for life calculation:', {
+      studentAnswer: answer,
+      correctAnswer: correctAnswerText,
+      isCorrect: freshValidationResult,
+    });
 
-      console.log('🔄 Fresh validation for life calculation:', {
-        studentAnswer: answer,
-        correctAnswer: correctAnswerText,
-        isCorrect: freshValidationResult,
-      });
+    await setLocalStorage();
+    const gameOver = handleLives(freshValidationResult); // Pass fresh result
 
-      await setLocalStorage();
-      const gameOver = handleLives(freshValidationResult);
-
-      if (gameOver) {
-        return;
-      }
-
-      // Increment the current step and reset states
-      setCurrentStep((prev) => prev + 1);
-      setIsDisabled(true);
-      setAnswer('');
-      setIsAnswerCorrect(false);
-
-      if (currentStep >= allQuestions.length) {
-        submitCallback();
-        return;
-      }
-
-      // Safe access to next question
-      const nextQuestion = allQuestions[currentStep] || null;
-      setCurrQuestion(nextQuestion);
-      setCurrAnswers(nextQuestion?.answers || []);
-    } catch (error) {
-      console.error('Error in submitAnswer:', error);
-
-      // Show error feedback to user
-      alert('Failed to submit answer. Please try again.');
-
-      // Reset submitting state but don't move to next question
-      setIsSubmitting(false);
+    if (gameOver) {
+      return;
     }
+
+    // Increment the current step and reset states
+    setCurrentStep((prev) => prev + 1);
+    setIsDisabled(true);
+    setAnswer('');
+    setIsAnswerCorrect(false);
+
+    if (currentStep >= allQuestions.length) {
+      submitCallback();
+      return;
+    }
+
+    // ✅ Safe access to next question
+    const nextQuestion = allQuestions[currentStep] || null;
+    setCurrQuestion(nextQuestion);
+    setCurrAnswers(nextQuestion?.answers || []);
   };
 
   return (

@@ -1,31 +1,9 @@
 import QuestionsTracker from '@/app/ui/questions/questions-tracker';
 import { authOptions } from '@/lib/auth';
+import { fetchRandomQuestions } from '@/services/api';
 import { resetXPCalculationState } from '@/utils/gameSession';
 import { getServerSession } from 'next-auth/next';
 import { redirect } from 'next/navigation';
-
-// Create server-safe API call (no caching)
-async function fetchRandomQuestionsServer(level) {
-  try {
-    const response = await fetch(
-      `${process.env.NEXT_PUBLIC_API_URL}/questions/random?level=${level}`,
-      {
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      },
-    );
-
-    if (!response.ok) {
-      throw new Error('Failed to fetch questions');
-    }
-
-    return await response.json();
-  } catch (error) {
-    console.error('Server-side question fetch failed:', error);
-    return { questions: [] };
-  }
-}
 
 export default async function SinglePlayerGame() {
   const session = await getServerSession(authOptions);
@@ -33,6 +11,9 @@ export default async function SinglePlayerGame() {
   if (!session?.user) {
     redirect('/api/auth/signin');
   }
+
+  // Reset XP calculation state for new game
+  // This will be executed on the client side through the QuestionsTracker component
 
   const level = session.user.currentLevel || 1; // Default to level 1 if not set
   const questions = await fetchRandomQuestions(level);
@@ -43,6 +24,7 @@ export default async function SinglePlayerGame() {
 
   return (
     <div className="full-screen w-full h-full flex flex-col justify-between">
+      {/* <ClientWrapper questions={questions.questions} /> */}
       <QuestionsTracker
         questions={questions.questions}
         submitCallback={submitCallback}

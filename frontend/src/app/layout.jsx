@@ -56,21 +56,7 @@ export const viewport = {
 export default function RootLayout({ children }) {
   return (
     <html lang="en">
-      <head>
-        {/* Load debug utilities in development only */}
-        {process.env.NODE_ENV === 'development' && (
-          <script
-            type="module"
-            dangerouslySetInnerHTML={{
-              __html: `
-                if (typeof window !== 'undefined') {
-                  import('/src/utils/debug.js').catch(console.error);
-                }
-              `,
-            }}
-          />
-        )}
-      </head>
+      <head>{/* Debug utilities removed: debug.js no longer exists */}</head>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >

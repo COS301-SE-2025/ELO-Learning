@@ -45,19 +45,24 @@ export const cache = {
         parsedItem = JSON.parse(item);
       } catch (parseError) {
         // If JSON.parse fails, it might be a raw token - return it directly
-        console.warn(`Cache key '${key}' contains non-JSON data, returning raw value`);
+        console.warn(
+          `Cache key '${key}' contains non-JSON data, returning raw value`,
+        );
         return item; // Return the raw token/string
       }
 
       // Check if it's our cache format (has timestamp and expiryTime)
-      if (parsedItem && typeof parsedItem === 'object' && 
-          'timestamp' in parsedItem && 'expiryTime' in parsedItem) {
-        
+      if (
+        parsedItem &&
+        typeof parsedItem === 'object' &&
+        'timestamp' in parsedItem &&
+        'expiryTime' in parsedItem
+      ) {
         const { data, timestamp, expiryTime } = parsedItem;
         const now = Date.now();
 
         // FIX: Correct expiry logic
-        if (now > (timestamp + expiryTime)) {
+        if (now > timestamp + expiryTime) {
           localStorage.removeItem(key);
           return null;
         }

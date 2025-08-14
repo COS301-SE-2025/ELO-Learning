@@ -14,7 +14,7 @@ class ErrorBoundary extends React.Component {
   componentDidCatch(error, errorInfo) {
     this.setState({
       error: error,
-      errorInfo: errorInfo
+      errorInfo: errorInfo,
     });
 
     // Only log in development
@@ -33,7 +33,8 @@ class ErrorBoundary extends React.Component {
                 Something went wrong
               </h2>
               <p className="text-gray-600 mb-6">
-                We're sorry, but something unexpected happened. Please try refreshing the page.
+                We're sorry, but something unexpected happened. Please try
+                refreshing the page.
               </p>
               <div className="space-y-3">
                 <button
@@ -43,7 +44,7 @@ class ErrorBoundary extends React.Component {
                   Refresh Page
                 </button>
                 <button
-                  onClick={() => window.location.href = '/dashboard'}
+                  onClick={() => (window.location.href = '/dashboard')}
                   className="w-full bg-gray-600 text-white py-2 px-4 rounded hover:bg-gray-700"
                 >
                   Go to Dashboard

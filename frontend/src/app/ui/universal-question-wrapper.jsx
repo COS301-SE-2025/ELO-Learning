@@ -140,7 +140,7 @@ export default function UniversalQuestionWrapper({ questions }) {
       console.error('Error submitting answer:', error);
       setFeedbackMessage('Failed to submit answer. Please try again.');
       setShowFeedback(true);
-      
+
       // Don't move to next question on error
       setIsSubmitting(false);
       return;

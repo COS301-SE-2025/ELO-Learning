@@ -20,7 +20,9 @@ export default function Page() {
 
     try {
       const result = await signIn('credentials', {
-        callbackUrl: `${process.env.NEXT_PUBLIC_FRONTEND_URL || 'http://localhost:8080'}/dashboard`,
+        callbackUrl: `${
+          process.env.NEXT_PUBLIC_FRONTEND_URL || 'http://localhost:8080'
+        }/dashboard`,
         email,
         password,
         redirect: false,
@@ -123,7 +125,9 @@ export default function Page() {
             cache.clear();
 
             signIn('google', {
-              callbackUrl: `${process.env.NEXT_PUBLIC_FRONTEND_URL || 'http://localhost:8080'}/dashboard`,
+              callbackUrl: `${
+                process.env.NEXT_PUBLIC_FRONTEND_URL || 'http://localhost:8080'
+              }/dashboard`,
             });
           }}
         >

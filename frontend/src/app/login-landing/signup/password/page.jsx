@@ -65,7 +65,7 @@ export default function Page() {
         reg.currentLevel,
         reg.joinDate,
       );
-      
+
       console.log('✅ Registration API successful:', response);
 
       // Step 2: Immediately sign in with NextAuth to create proper session
@@ -78,23 +78,24 @@ export default function Page() {
 
       if (signInResult?.error) {
         console.error('❌ NextAuth signin failed:', signInResult.error);
-        setError('Registration successful but login failed. Please try logging in.');
+        setError(
+          'Registration successful but login failed. Please try logging in.',
+        );
         return;
       }
 
       console.log('🎉 NextAuth session created successfully!');
-      
+
       // Step 3: Clean up and redirect
       clearRegistration();
-      
+
       // Clear any old localStorage auth data
       localStorage.removeItem('token');
       localStorage.removeItem('user');
       localStorage.removeItem('auth_provider');
-      
+
       console.log('🔄 Redirecting to dashboard...');
       router.push('/dashboard');
-      
     } catch (err) {
       console.error('❌ Registration failed:', err);
       setError(err?.response?.data?.error || 'Registration failed. Try again.');

@@ -7,18 +7,22 @@ import { redirect } from 'next/navigation';
 async function fetchQuestionsByLevelAndTopicServer(level, topic) {
   try {
     const response = await fetch(
-      `${process.env.NEXT_PUBLIC_API_URL}/questions/level/topic?level=${level}&topic=${encodeURIComponent(topic)}`,
+      `${
+        process.env.NEXT_PUBLIC_API_URL
+      }/questions/level/topic?level=${level}&topic=${encodeURIComponent(
+        topic,
+      )}`,
       {
         headers: {
           'Content-Type': 'application/json',
         },
-      }
+      },
     );
-    
+
     if (!response.ok) {
       throw new Error('Failed to fetch questions');
     }
-    
+
     return await response.json();
   } catch (error) {
     console.error('Server-side question fetch failed:', error);

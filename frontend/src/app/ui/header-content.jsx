@@ -16,7 +16,11 @@ const HeaderContent = memo(function HeaderContent() {
     }
 
     return {
-      username: session.user.username || session.user.name || session.user.email?.split('@')[0] || 'User',
+      username:
+        session.user.username ||
+        session.user.name ||
+        session.user.email?.split('@')[0] ||
+        'User',
       xp: Math.round(session.user.xp || 0),
     };
   }, [session, status]);

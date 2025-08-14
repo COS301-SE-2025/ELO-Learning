@@ -6,16 +6,19 @@ import { redirect } from 'next/navigation';
 // Create server-safe API call (no caching)
 async function fetchRandomQuestionsServer(level) {
   try {
-    const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/questions/random?level=${level}`, {
-      headers: {
-        'Content-Type': 'application/json',
+    const response = await fetch(
+      `${process.env.NEXT_PUBLIC_API_URL}/questions/random?level=${level}`,
+      {
+        headers: {
+          'Content-Type': 'application/json',
+        },
       },
-    });
-    
+    );
+
     if (!response.ok) {
       throw new Error('Failed to fetch questions');
     }
-    
+
     return await response.json();
   } catch (error) {
     console.error('Server-side question fetch failed:', error);

@@ -1,9 +1,9 @@
 // src/utils/performanceCache.js
 
 const CACHE_DURATIONS = {
-  QUICK: 2 * 60 * 1000,      // 2 minutes - for frequently changing data (leaderboard)
-  MEDIUM: 10 * 60 * 1000,    // 10 minutes - for semi-static data (user achievements)
-  LONG: 30 * 60 * 1000,      // 30 minutes - for rarely changing data (questions)
+  QUICK: 2 * 60 * 1000, // 2 minutes - for frequently changing data (leaderboard)
+  MEDIUM: 10 * 60 * 1000, // 10 minutes - for semi-static data (user achievements)
+  LONG: 30 * 60 * 1000, // 30 minutes - for rarely changing data (questions)
 };
 
 export const performanceCache = {
@@ -13,7 +13,7 @@ export const performanceCache = {
     if (typeof window === 'undefined') {
       return null;
     }
-    
+
     try {
       const item = localStorage.getItem(`cache_${key}`);
       if (!item) return null;
@@ -26,7 +26,7 @@ export const performanceCache = {
         return null;
       }
 
-      console.log(`📦 Cache HIT for ${key} (${Math.round(age/1000)}s old)`);
+      console.log(`📦 Cache HIT for ${key} (${Math.round(age / 1000)}s old)`);
       return data;
     } catch (error) {
       console.warn(`Cache get error for ${key}:`, error);
@@ -40,11 +40,11 @@ export const performanceCache = {
     if (typeof window === 'undefined') {
       return false;
     }
-    
+
     try {
       const item = {
         data,
-        timestamp: Date.now()
+        timestamp: Date.now(),
       };
       localStorage.setItem(`cache_${key}`, JSON.stringify(item));
       console.log(`💾 Cache SET for ${key}`);
@@ -64,7 +64,7 @@ export const performanceCache = {
   // Clear all performance cache (keep auth data)
   clear: () => {
     const keys = Object.keys(localStorage);
-    keys.forEach(key => {
+    keys.forEach((key) => {
       if (key.startsWith('cache_')) {
         localStorage.removeItem(key);
       }
@@ -76,7 +76,7 @@ export const performanceCache = {
   refresh: (key) => {
     performanceCache.remove(key);
     console.log(`🔄 Cache REFRESH triggered for ${key}`);
-  }
+  },
 };
 
 export { CACHE_DURATIONS };

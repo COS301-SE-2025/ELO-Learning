@@ -126,10 +126,13 @@ export default function QuestionsTracker({ questions, lives, mode }) {
   const submitAnswer = async () => {
     try {
       setIsSubmitting(true);
-      
+
       // Get fresh validation result before handling lives
-      const correctAnswerObj = currAnswers.find((ans) => ans.isCorrect === true);
-      const correctAnswerText = correctAnswerObj?.answer_text || correctAnswerObj;
+      const correctAnswerObj = currAnswers.find(
+        (ans) => ans.isCorrect === true,
+      );
+      const correctAnswerText =
+        correctAnswerObj?.answer_text || correctAnswerObj;
 
       const freshValidationResult = await validateAnswerEnhanced(
         answer,
@@ -168,10 +171,10 @@ export default function QuestionsTracker({ questions, lives, mode }) {
       setCurrAnswers(nextQuestion?.answers || []);
     } catch (error) {
       console.error('Error in submitAnswer:', error);
-      
+
       // Show error feedback to user
       alert('Failed to submit answer. Please try again.');
-      
+
       // Reset submitting state but don't move to next question
       setIsSubmitting(false);
     }

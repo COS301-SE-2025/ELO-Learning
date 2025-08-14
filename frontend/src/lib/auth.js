@@ -4,23 +4,26 @@ import GoogleProvider from 'next-auth/providers/google';
 // Create server-safe OAuth handler (no caching)
 async function handleOAuthUserServer(email, name, image, provider) {
   try {
-    const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/oauth/user`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
+    const response = await fetch(
+      `${process.env.NEXT_PUBLIC_API_URL}/oauth/user`,
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          email,
+          name,
+          image,
+          provider,
+        }),
       },
-      body: JSON.stringify({
-        email,
-        name,
-        image,
-        provider,
-      }),
-    });
-    
+    );
+
     if (!response.ok) {
       throw new Error('OAuth user creation failed');
     }
-    
+
     return await response.json();
   } catch (error) {
     console.error('Server-side OAuth handling failed:', error);
@@ -42,18 +45,24 @@ export const authOptions = {
       },
       async authorize(credentials) {
         try {
-          console.log('🔐 Attempting credentials login for:', credentials.email);
+          console.log(
+            '🔐 Attempting credentials login for:',
+            credentials.email,
+          );
 
-          const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/login`, {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
+          const response = await fetch(
+            `${process.env.NEXT_PUBLIC_API_URL}/login`,
+            {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({
+                email: credentials.email,
+                password: credentials.password,
+              }),
             },
-            body: JSON.stringify({
-              email: credentials.email,
-              password: credentials.password,
-            }),
-          });
+          );
 
           const data = await response.json();
           console.log('🔐 Backend response:', {

@@ -8,7 +8,7 @@ export default function AchievementNotificationManager() {
   const [isReady, setIsReady] = useState(false);
 
   const showAchievement = useCallback((achievement) => {
-    const id = Date.now() + Math.random();
+    const id = achievement?.id || Date.now() + Math.random();
     const newNotification = { ...achievement, id, show: true };
 
     setNotifications((prev) => [...prev, newNotification]);
@@ -66,7 +66,7 @@ export default function AchievementNotificationManager() {
   }, []);
 
   return (
-    <div className="achievement-notifications">
+    <div className="achievement-notifications" role="region" aria-label="Achievement notifications">
       {notifications.map((notification, index) => (
         <div
           key={notification.id}

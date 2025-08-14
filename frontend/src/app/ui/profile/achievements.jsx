@@ -44,20 +44,21 @@ export default function Achievements() {
   const hasMoreAchievements = achievements.length > 3;
 
   return (
-    <div className="m-4">
+    <div className="m-4" data-cy="achievements-section">
       <div className="flex items-center justify-between mb-3">
-        <h3 className="text-xl uppercase font-bold">Achievements</h3>
+        <h3 className="text-xl uppercase font-bold" data-cy="achievements-title">Achievements</h3>
         <Link
           href="/achievements"
           className="text-sm font-medium uppercase"
           style={{ color: '#FF6E99' }}
+          data-cy="view-all-achievements"
         >
           VIEW ALL
         </Link>
       </div>
 
       {achievements.length === 0 ? (
-        <div className="bg-gray-800 rounded-lg p-4 border border-gray-700">
+        <div className="bg-gray-800 rounded-lg p-4 border border-gray-700" data-cy="no-achievements">
           <div className="flex justify-center items-center py-8">
             <div className="text-center">
               <div className="w-16 h-16 mx-auto mb-2 opacity-50">
@@ -78,18 +79,19 @@ export default function Achievements() {
           </div>
         </div>
       ) : (
-        <div className="bg-gray-800 rounded-lg p-4 border border-gray-700">
-          <div className="flex gap-4 justify-center">
+        <div className="bg-gray-800 rounded-lg p-4 border border-gray-700" data-cy="achievements-list">
+          <div className="flex gap-4 justify-center" data-cy="achievement-progress">
             {displayAchievements.map((achievement) => (
               <AchievementBadge
                 key={achievement.achievement_id}
                 achievement={achievement.Achievements}
                 unlocked={true}
                 size="small"
+                data-cy={`achievement-badge-${achievement.achievement_id}`}
               />
             ))}
             {hasMoreAchievements && (
-              <Link href="/achievements" className="flex items-center">
+              <Link href="/achievements" className="flex items-center" data-cy="more-achievements">
                 <div className="w-16 h-20 flex items-center justify-center border-2 border-dashed border-gray-500 rounded-lg">
                   <span className="text-gray-400 text-xs">
                     +{achievements.length - 3}

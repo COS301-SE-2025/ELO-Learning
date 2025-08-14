@@ -44,6 +44,8 @@ export default function AchievementNotification({
 
   return (
     <div
+      role="alert"
+      aria-live="polite"
       className={`
         fixed top-4 left-1/2 transform -translate-x-1/2 z-50
         transition-all duration-500 ease-out

@@ -54,7 +54,9 @@ export const authOptions = {
               xp: data.user.xp || 0,
               currentLevel: data.user.currentLevel || 1,
               joinDate: data.user.joinDate,
-              avatar: data.user.avatar,
+              pfpURL: data.user.pfpURL,
+              // Store the JWT token from backend
+              backendToken: data.token,
             };
           } else {
             console.log('❌ Login failed:', data.error || 'Unknown error');
@@ -138,7 +140,9 @@ export const authOptions = {
         token.xp = user.xp || 0; // Default XP for new users
         token.currentLevel = user.currentLevel || 1; // Default level
         token.joinDate = user.joinDate; // Add join date
-        token.avatar = user.avatar;
+        token.pfpURL = user.pfpURL || user.image; // Use database pfpURL or OAuth image
+        // Store the backend JWT token for API calls
+        token.backendToken = user.backendToken;
       }
 
       return token;
@@ -163,7 +167,9 @@ export const authOptions = {
         session.user.xp = token.xp;
         session.user.currentLevel = token.currentLevel;
         session.user.joinDate = token.joinDate;
-        session.user.avatar = token.avatar;
+        session.user.pfpURL = token.pfpURL;
+        // Pass backend JWT token to session
+        session.backendToken = token.backendToken;
       }
 
       return session;
@@ -177,6 +183,20 @@ export const authOptions = {
     async signOut(message) {
       // This runs when user signs out
       console.log('User signed out:', message);
+    },
+  },
+  debug: process.env.NODE_ENV === 'development',
+  logger: {
+    error(code, metadata) {
+      console.error('NextAuth Error:', code, metadata);
+    },
+    warn(code) {
+      console.warn('NextAuth Warning:', code);
+    },
+    debug(code, metadata) {
+      if (process.env.NODE_ENV === 'development') {
+        console.log('NextAuth Debug:', code, metadata);
+      }
     },
   },
 };

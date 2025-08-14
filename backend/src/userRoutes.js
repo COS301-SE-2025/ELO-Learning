@@ -3,6 +3,7 @@ import bcrypt from 'bcrypt';
 import express from 'express';
 import jwt from 'jsonwebtoken';
 import { supabase } from '../database/supabaseClient.js';
+import { verifyToken } from './middleware/auth.js';
 
 const router = express.Router();
 const TOKEN_EXPIRY = 3600; // 1 hour in seconds
@@ -20,16 +21,8 @@ router.get('/users', async (req, res) => {
 });
 
 // Return specific user: (works)
-router.get('/user/:id', async (req, res) => {
+router.get('/user/:id', verifyToken, async (req, res) => {
   const { id } = req.params;
-
-  // Check for Authorization header (mock for now)
-  const authHeader = req.headers.authorization;
-  if (!authHeader || !authHeader.startsWith('Bearer ')) {
-    return res
-      .status(401)
-      .json({ error: 'You are unauthorized to make this request.' });
-  }
 
   // Fetch user from Supabase
   const { data, error } = await supabase
@@ -50,15 +43,8 @@ router.get('/user/:id', async (req, res) => {
 });
 
 // Return user's achievements: (works)
-router.get('/users/:id/achievements', async (req, res) => {
+router.get('/users/:id/achievements', verifyToken, async (req, res) => {
   const { id } = req.params;
-
-  const authHeader = req.headers.authorization;
-  if (!authHeader || !authHeader.startsWith('Bearer ')) {
-    return res
-      .status(401)
-      .json({ error: 'You are unauthorized to make this request.' });
-  }
 
   const { data, error } = await supabase
     .from('Achievements')
@@ -80,16 +66,9 @@ router.get('/users/:id/achievements', async (req, res) => {
 });
 
 // Update a user's XP: (works)
-router.post('/user/:id/xp', async (req, res) => {
+router.post('/user/:id/xp', verifyToken, async (req, res) => {
   const { id } = req.params;
   const { xp } = req.body;
-
-  const authHeader = req.headers.authorization;
-  if (!authHeader || !authHeader.startsWith('Bearer ')) {
-    return res
-      .status(401)
-      .json({ error: 'You are unauthorized to make this request.' });
-  }
 
   if (typeof xp !== 'number') {
     return res.status(400).json({ error: 'XP must be a number.' });

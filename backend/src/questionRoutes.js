@@ -1,6 +1,7 @@
 import express from 'express';
 import { supabase } from '../database/supabaseClient.js';
 import { backendMathValidator } from './mathValidator.js';
+import { verifyToken } from './middleware/auth.js';
 
 const router = express.Router();
 
@@ -422,15 +423,8 @@ router.get('/questionsById/:id', async (req, res) => {
 });
 
 // Keep all your other existing routes (level, topic, random, etc.) unchanged
-router.get('/question/:level', async (req, res) => {
+router.get('/question/:level', verifyToken, async (req, res) => {
   const { level } = req.params;
-
-  const authHeader = req.headers.authorization;
-  if (!authHeader || !authHeader.startsWith('Bearer ')) {
-    return res
-      .status(401)
-      .json({ error: 'You are unauthorized to make this request.' });
-  }
 
   const levelNum = parseInt(level, 10);
   if (isNaN(levelNum) || levelNum <= 0 || !Number.isInteger(levelNum)) {
@@ -454,15 +448,8 @@ router.get('/question/:level', async (req, res) => {
   res.status(200).json({ questions: data });
 });
 
-router.get('/question/:id/answer', async (req, res) => {
+router.get('/question/:id/answer', verifyToken, async (req, res) => {
   const { id } = req.params;
-
-  const authHeader = req.headers.authorization;
-  if (!authHeader || !authHeader.startsWith('Bearer ')) {
-    return res
-      .status(401)
-      .json({ error: 'You are unauthorized to make this request.' });
-  }
 
   const { data, error } = await supabase
     .from('Answers')

@@ -14,9 +14,11 @@ const axiosInstance = axios.create({
 
 axiosInstance.interceptors.request.use(async (config) => {
   if (isServer) {
+    // Server-side token handling
     const { cookies } = await import('next/headers');
     const awaitedCookies = await cookies();
 
+    // Priority 1: NextAuth session token (for OAuth users)
     const nextAuthToken = awaitedCookies
       .getAll()
       .find(
@@ -28,30 +30,27 @@ axiosInstance.interceptors.request.use(async (config) => {
     if (nextAuthToken) {
       config.headers.Authorization = `Bearer ${nextAuthToken.value}`;
     } else {
+      // Priority 2: Custom JWT token (for credential users)
       const tokenCookie = awaitedCookies
         .getAll()
         .filter((item) => item.name === 'token')
         .map((item) => item.value);
       if (tokenCookie.length > 0) {
-        config.headers.Authorization = `Bearer ${tokenCookie}`;
+        config.headers.Authorization = `Bearer ${tokenCookie[0]}`;
       }
     }
     return config;
   } else {
-    // CLIENT-SIDE: SIMPLE TOKEN RETRIEVAL (NO CACHE!)
+    // Client-side token handling
     let token = null;
 
-    try {
-      // Try direct localStorage access only
-      token =
-        localStorage.getItem('token') || localStorage.getItem('oauth_token');
-
-      console.log(
-        '🔐 Token retrieved for API call:',
-        token ? 'Found' : 'Not found',
-      );
-    } catch (error) {
-      console.warn('Token retrieval failed:', error);
+    // Priority 1: NextAuth session from cache
+    const nextAuthSession = cache.get(CACHE_KEYS.NEXTAUTH_SESSION);
+    if (nextAuthSession?.accessToken) {
+      token = nextAuthSession.accessToken;
+    } else {
+      // Priority 2: JWT token from localStorage
+      token = cache.get(CACHE_KEYS.TOKEN) || localStorage.getItem('token');
     }
 
     if (token) {
@@ -62,10 +61,53 @@ axiosInstance.interceptors.request.use(async (config) => {
   }
 });
 
-// Helper to attach auth token (for backward compatibility)
-const authHeader = {
-  Authorization: 'Bearer testtoken123',
-};
+// Helper to get dynamic auth token
+function getDynamicAuthHeader() {
+  if (typeof window === 'undefined') {
+    // Server-side: return empty object, let interceptor handle it
+    return {};
+  }
+
+  // Client-side: try to get token from various sources
+
+  // 1. Try NextAuth session (with backend JWT token)
+  const nextAuthSession = cache.get(CACHE_KEYS.NEXTAUTH_SESSION);
+  if (nextAuthSession?.backendToken) {
+    return { Authorization: `Bearer ${nextAuthSession.backendToken}` };
+  }
+
+  // 2. Try NextAuth OAuth access token (for OAuth users)
+  if (nextAuthSession?.accessToken) {
+    return { Authorization: `Bearer ${nextAuthSession.accessToken}` };
+  }
+
+  // 3. Fallback to localStorage token (direct JWT login)
+  const token =
+    localStorage.getItem('token') ||
+    localStorage.getItem('authToken') ||
+    localStorage.getItem('jwt_token');
+  if (token) {
+    return { Authorization: `Bearer ${token}` };
+  }
+
+  // 4. Check for cookie-based authentication (manual JWT storage)
+  try {
+    const tokenCookie = document.cookie
+      .split('; ')
+      .find((row) => row.startsWith('token='));
+
+    if (tokenCookie) {
+      const token = tokenCookie.split('=')[1];
+      return { Authorization: `Bearer ${token}` };
+    }
+  } catch (error) {
+    console.error('Error parsing token cookie:', error);
+  }
+
+  // No token available - this will cause 401 for protected routes
+  console.warn('No authentication token found for API request');
+  return {};
+}
 
 // LEADERBOARD - Cache
 export async function fetchAllUsers() {
@@ -226,92 +268,54 @@ export async function handleOAuthUser(email, name, image, provider) {
 // OTHER API FUNCTIONS (unchanged but with better error handling)
 export async function fetchUserById(id) {
   const res = await axiosInstance.get(`/user/${id}`, {
-    headers: authHeader,
+    headers: getDynamicAuthHeader(),
   });
   return res.data;
 }
 
 // USER ACHIEVEMENTS - Cache for 10 minutes per user
 export async function fetchUserAchievements(id) {
-  try {
-    const cacheKey = `achievements_${id}`;
-    const cached = performanceCache.get(cacheKey, CACHE_DURATIONS.MEDIUM);
-    if (cached) return cached;
-
-    console.log(`🌐 Fetching achievements for user ${id}...`);
-    const res = await axiosInstance.get(`/users/${id}/achievements`, {
-      headers: authHeader,
-    });
-
-    performanceCache.set(cacheKey, res.data);
-    return res.data;
-  } catch (error) {
-    console.error(`❌ Failed to fetch achievements for user ${id}:`, error);
-    throw error;
-  }
+  const res = await axiosInstance.get(`/users/${id}/achievements`, {
+    headers: getDynamicAuthHeader(),
+  });
+  return res.data;
 }
 
 // UPDATE USER XP - Smart cache invalidation
 export async function updateUserXP(id, xp) {
-  try {
-    console.log(`🚀 Updating XP for user ${id} to ${xp}...`);
-
-    const res = await axiosInstance.post(
-      `/user/${id}/xp`,
-      { xp },
-      { headers: authHeader },
-    );
-
-    // SMART INVALIDATION: XP changed, so invalidate related caches
-    performanceCache.refresh('users'); // Leaderboard will change
-    performanceCache.refresh(`achievements_${id}`); // User achievements might change
-
-    // Update user data in localStorage too
-    const currentUser = localStorage.getItem('user');
-    if (currentUser) {
-      try {
-        const userData = JSON.parse(currentUser);
-        if (userData.id === parseInt(id)) {
-          userData.xp = xp;
-          localStorage.setItem('user', JSON.stringify(userData));
-          console.log('✅ User XP updated in localStorage');
-        }
-      } catch (error) {
-        console.warn('Failed to update user XP in localStorage:', error);
-      }
-    }
-
-    console.log('✅ XP update completed with cache invalidation');
-    return res.data;
-  } catch (error) {
-    console.error('❌ Failed to update XP:', error);
-    throw error;
-  }
+  const res = await axiosInstance.post(
+    `/user/${id}/xp`,
+    { xp },
+    { headers: getDynamicAuthHeader() },
+  );
+  return res.data;
 }
 
-// QUESTIONS BY LEVEL - Cache for 30 minutes per level
-export async function fetchQuestionsByLevel(level) {
-  try {
-    const cacheKey = `questions_level_${level}`;
-    const cached = performanceCache.get(cacheKey, CACHE_DURATIONS.LONG);
-    if (cached) return cached;
-
-    console.log(`🌐 Fetching questions for level ${level}...`);
-    const res = await axiosInstance.get(`/question/${level}`, {
-      headers: authHeader,
-    });
-
-    performanceCache.set(cacheKey, res.data);
-    return res.data;
-  } catch (error) {
-    console.error(`❌ Failed to fetch questions for level ${level}:`, error);
-    throw error;
+// 5. GET /questions
+export async function fetchAllQuestions() {
+  // Try to get from cache first
+  const cachedQuestions = cache.get(CACHE_KEYS.QUESTIONS);
+  if (cachedQuestions) {
+    return cachedQuestions;
   }
+
+  const res = await axiosInstance.get('/questions');
+  // Cache for 30 minutes
+  cache.set(CACHE_KEYS.QUESTIONS, res.data, CACHE_EXPIRY.MEDIUM);
+  return res.data;
+}
+
+// 6. GET /question/:level
+export async function fetchQuestionsByLevel(level) {
+  const res = await axiosInstance.get(`/question/${level}`, {
+    headers: getDynamicAuthHeader(),
+  });
+  return res.data;
 }
 
 export async function fetchQuestionAnswer(id) {
   const res = await axiosInstance.get(`/question/${id}/answer`, {
-    headers: authHeader,
+    headers: getDynamicAuthHeader(),
   });
   return res.data;
 }
@@ -338,31 +342,20 @@ export async function fetchQuestionsByTopic(topic) {
 
 // QUESTIONS BY LEVEL AND TOPIC - Cache for 30 minutes per combination
 export async function fetchQuestionsByLevelAndTopic(level, topic) {
-  try {
-    const cacheKey = `questions_${level}_${topic}`;
-    const cached = performanceCache.get(cacheKey, CACHE_DURATIONS.LONG);
-    if (cached) return cached;
-
-    console.log(`🌐 Fetching questions for level ${level}, topic ${topic}...`);
-    const res = await axiosInstance.get('/questions/level/topic', {
-      params: { level, topic },
-    });
-
-    performanceCache.set(cacheKey, res.data);
-    return res.data;
-  } catch (error) {
-    console.error(
-      `❌ Failed to fetch questions for level ${level}, topic ${topic}:`,
-      error,
-    );
-    throw error;
-  }
+  const res = await axiosInstance.get('/questions/level/topic', {
+    params: { level, topic },
+  });
+  return res.data;
 }
 
-export async function submitAnswer(id, answer) {
-  const res = await axiosInstance.post(`/question/${id}/answer`, {
-    question: [{ answer }],
-  });
+// 10. POST /question/:id/answer
+// 9. POST /answer
+export async function submitAnswer(questionId, answer) {
+  const res = await axiosInstance.post(
+    '/answer',
+    { questionId, answer },
+    { headers: getDynamicAuthHeader() },
+  );
   return res.data;
 }
 
@@ -408,27 +401,10 @@ export async function fetchRandomQuestions(level) {
 
 //  SUBMIT SINGLE PLAYER ATTEMPT - Invalidate relevant caches
 export async function submitSinglePlayerAttempt(data) {
-  try {
-    console.log('🚀 Submitting single player attempt...');
-
-    const res = await axiosInstance.post('/singleplayer', data, {
-      headers: authHeader,
-    });
-
-    // If this updates XP or achievements, invalidate caches
-    if (res.data.xpAwarded || res.data.achievementUnlocked) {
-      performanceCache.refresh('users'); // Leaderboard might change
-      if (data.userId) {
-        performanceCache.refresh(`achievements_${data.userId}`);
-      }
-      console.log('🔄 Invalidated caches due to XP/achievement changes');
-    }
-
-    return res.data;
-  } catch (error) {
-    console.error('❌ Failed to submit single player attempt:', error);
-    throw error;
-  }
+  const res = await axiosInstance.post('/singleplayer', data, {
+    headers: getDynamicAuthHeader(),
+  });
+  return res.data;
 }
 
 export async function sendPasswordResetEmail(email) {
@@ -445,15 +421,11 @@ export async function resetPassword(token, newPassword) {
 }
 
 export async function changePassword(userId, currentPassword, newPassword) {
-  if (!userId) {
-    throw new Error('User ID is required');
-  }
-
-  const res = await axiosInstance.post('/change-password', {
-    userId,
-    currentPassword,
-    newPassword,
-  });
+  const res = await axiosInstance.post(
+    `/user/${userId}/change-password`,
+    { currentPassword, newPassword },
+    { headers: getDynamicAuthHeader() },
+  );
   return res.data;
 }
 

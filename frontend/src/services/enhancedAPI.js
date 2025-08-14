@@ -64,15 +64,26 @@ export const enhancedAPI = {
     }
   },
 
-  // Get auth token (works with NextAuth)
+  // Get auth token (works with NextAuth and JWT)
   getAuthToken() {
+    // Priority 1: NextAuth session token
     const nextAuthSession = cache.get(CACHE_KEYS.NEXTAUTH_SESSION);
     if (nextAuthSession?.accessToken) {
       return nextAuthSession.accessToken;
     }
 
-    // Fallback to localStorage token
-    return localStorage.getItem('token');
+    // Priority 2: JWT token from cache or localStorage
+    const jwtToken = cache.get(CACHE_KEYS.TOKEN);
+    if (jwtToken) {
+      return jwtToken;
+    }
+
+    // Priority 3: JWT token from localStorage
+    if (typeof window !== 'undefined') {
+      return localStorage.getItem('token');
+    }
+
+    return null;
   },
 
   // Cached fetch functions

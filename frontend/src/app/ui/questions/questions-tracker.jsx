@@ -8,8 +8,15 @@ import QuestionTemplate from '@/app/ui/question-template';
 import QuestionFooter from '@/app/ui/questions/question-footer';
 import QuestionHeader from '@/app/ui/questions/question-header';
 import { validateAnswerEnhanced } from '@/utils/answerValidator';
+import { resetXPCalculationState } from '@/utils/gameSession';
 
-export default function QuestionsTracker({ questions, lives, mode }) {
+export default function QuestionsTracker({
+  questions,
+  submitCallback,
+  lives,
+  mode,
+  resetXPState,
+}) {
   const router = useRouter();
 
   // ✅ Safe array handling
@@ -67,6 +74,16 @@ export default function QuestionsTracker({ questions, lives, mode }) {
     setQuestionStartTime(Date.now());
   }, [currQuestion]);
 
+  // Reset XP calculation state for new game session
+  useEffect(() => {
+    if (resetXPState) {
+      const success = resetXPCalculationState();
+      if (success) {
+        console.log('🎮 New game session started - XP calculation state reset');
+      }
+    }
+  }, [resetXPState]);
+
   const setLocalStorage = async () => {
     // Calculate time elapsed in seconds
     const timeElapsed = Math.round((Date.now() - questionStartTime) / 1000);
@@ -119,10 +136,6 @@ export default function QuestionsTracker({ questions, lives, mode }) {
     return false;
   };
 
-  const handleQuizComplete = () => {
-    router.push(`/end-screen?mode=${mode}`);
-  };
-
   const submitAnswer = async () => {
     try {
       setIsSubmitting(true);
@@ -160,10 +173,10 @@ export default function QuestionsTracker({ questions, lives, mode }) {
       setAnswer('');
       setIsAnswerCorrect(false);
 
-      if (currentStep >= allQuestions.length) {
-        handleQuizComplete();
-        return;
-      }
+    if (currentStep >= allQuestions.length) {
+      submitCallback();
+      return;
+    }
 
       // Safe access to next question
       const nextQuestion = allQuestions[currentStep] || null;

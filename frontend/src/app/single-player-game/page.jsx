@@ -1,5 +1,6 @@
 import QuestionsTracker from '@/app/ui/questions/questions-tracker';
 import { authOptions } from '@/lib/auth';
+import { resetXPCalculationState } from '@/utils/gameSession';
 import { getServerSession } from 'next-auth/next';
 import { redirect } from 'next/navigation';
 
@@ -33,9 +34,8 @@ export default async function SinglePlayerGame() {
     redirect('/api/auth/signin');
   }
 
-  const level = session.user.currentLevel || 1;
-  const questions = await fetchRandomQuestionsServer(level); // Use server-safe version
-
+  const level = session.user.currentLevel || 1; // Default to level 1 if not set
+  const questions = await fetchRandomQuestions(level);
   const submitCallback = async () => {
     'use server';
     redirect('/end-screen?mode=single-player');
@@ -48,6 +48,7 @@ export default async function SinglePlayerGame() {
         submitCallback={submitCallback}
         lives={5}
         mode="single-player"
+        resetXPState={true} // Flag to indicate this is a new game
       />
     </div>
   );

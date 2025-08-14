@@ -97,13 +97,6 @@ router.post('/user/:id/avatar', async (req, res) => {
   const { id } = req.params;
   const { avatar } = req.body;
 
-  const authHeader = req.headers.authorization;
-  if (!authHeader || !authHeader.startsWith('Bearer ')) {
-    return res
-      .status(401)
-      .json({ error: 'You are unauthorized to make this request.' });
-  }
-
   const { data, error } = await supabase
     .from('Users')
     .update({ avatar })

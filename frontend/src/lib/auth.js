@@ -1,6 +1,32 @@
-import { handleOAuthUser } from '@/services/api';
 import CredentialsProvider from 'next-auth/providers/credentials';
 import GoogleProvider from 'next-auth/providers/google';
+
+// Create server-safe OAuth handler (no caching)
+async function handleOAuthUserServer(email, name, image, provider) {
+  try {
+    const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/oauth/user`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        email,
+        name,
+        image,
+        provider,
+      }),
+    });
+    
+    if (!response.ok) {
+      throw new Error('OAuth user creation failed');
+    }
+    
+    return await response.json();
+  } catch (error) {
+    console.error('Server-side OAuth handling failed:', error);
+    throw error;
+  }
+}
 
 export const authOptions = {
   providers: [
@@ -16,25 +42,18 @@ export const authOptions = {
       },
       async authorize(credentials) {
         try {
-          console.log(
-            '🔐 Attempting credentials login for:',
-            credentials.email,
-          );
+          console.log('🔐 Attempting credentials login for:', credentials.email);
 
-          // Call your backend login endpoint directly
-          const response = await fetch(
-            `${process.env.NEXT_PUBLIC_API_URL}/login`,
-            {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/json',
-              },
-              body: JSON.stringify({
-                email: credentials.email,
-                password: credentials.password,
-              }),
+          const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/login`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
             },
-          );
+            body: JSON.stringify({
+              email: credentials.email,
+              password: credentials.password,
+            }),
+          });
 
           const data = await response.json();
           console.log('🔐 Backend response:', {
@@ -44,7 +63,6 @@ export const authOptions = {
 
           if (response.ok && data.user) {
             console.log('✅ Login successful for user:', data.user.username);
-            // Return user object if authentication successful
             return {
               id: data.user.id,
               email: data.user.email,
@@ -69,19 +87,16 @@ export const authOptions = {
   ],
   callbacks: {
     async signIn({ user, account, profile }) {
-      // Handle OAuth providers (Google, etc.)
       if (account?.provider === 'google') {
         try {
-          // Call our backend to handle OAuth user creation/retrieval
-          const response = await handleOAuthUser(
+          // Use server-safe OAuth handler (no caching)
+          const response = await handleOAuthUserServer(
             user.email,
             user.name,
             user.image,
             account.provider,
           );
 
-          // Attach database user data to the user object
-          // This will be available in the JWT callback
           user.id = response.user.id;
           user.username = response.user.username;
           user.surname = response.user.surname;
@@ -93,11 +108,10 @@ export const authOptions = {
           return true;
         } catch (error) {
           console.error('🚫 Error handling OAuth user:', error);
-          return false; // This will prevent sign in
+          return false;
         }
       }
 
-      // For credentials provider, no additional processing needed
       return true;
     },
     async jwt({ token, account, user, trigger, session }) {

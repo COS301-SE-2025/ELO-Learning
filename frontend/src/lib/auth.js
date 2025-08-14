@@ -1,4 +1,5 @@
 import { handleOAuthUser } from '@/services/api';
+import { handleOAuthUser } from '@/services/api';
 import CredentialsProvider from 'next-auth/providers/credentials';
 import GoogleProvider from 'next-auth/providers/google';
 
@@ -90,7 +91,7 @@ export const authOptions = {
           user.xp = response.user.xp;
           user.currentLevel = response.user.currentLevel;
           user.joinDate = response.user.joinDate;
-          user.pfpURL = response.user.pfpURL;
+          user.avatar = response.user.avatar;
 
           return true;
         } catch (error) {
@@ -102,10 +103,31 @@ export const authOptions = {
       // For credentials provider, no additional processing needed
       return true;
     },
-    async jwt({ token, account, user }) {
+    async jwt({ token, account, user, trigger, session }) {
       // Persist the OAuth access_token to the token right after signin
       if (account) {
         token.accessToken = account.access_token;
+      }
+
+      console.log('JWT callback:', {
+        user,
+        account,
+        token,
+        trigger,
+        session,
+      });
+
+      if (trigger === 'update' && session?.user) {
+        // Update token with user data from session
+        token.id = session.user.id;
+        token.email = session.user.email;
+        token.name = session.user.name;
+        token.surname = session.user.surname;
+        token.username = session.user.username;
+        token.xp = session.user.xp || 0;
+        token.currentLevel = session.user.currentLevel || 1;
+        token.joinDate = session.user.joinDate;
+        token.avatar = session.user.avatar;
       }
 
       // Persist user data in the token right after signin
@@ -126,9 +148,15 @@ export const authOptions = {
 
       return token;
     },
-    async session({ session, token }) {
+    async session({ session, token, trigger, newSession }) {
       // Send properties to the client, getting data from the token
       session.accessToken = token.accessToken;
+      console.log('Session callback:', {
+        user: session.user,
+        token,
+        trigger,
+        newSession,
+      });
 
       // Pass user data from token to session
       if (token) {

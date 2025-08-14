@@ -314,3 +314,15 @@ export async function handleOAuthUser(email, name, image, provider) {
   });
   return res.data;
 }
+
+// Update user avatar
+export async function updateUserAvatar(userId, avatar) {
+  const res = await axiosInstance.post(
+    `/user/${userId}/avatar`,
+    { avatar },
+    {
+      headers: authHeader,
+    },
+  );
+  return res;
+}

@@ -1,30 +1,30 @@
 if (!self.define) {
   let e,
     a = {};
-  const i = (i, c) => (
-    (i = new URL(i + '.js', c).href),
-    a[i] ||
+  const s = (s, i) => (
+    (s = new URL(s + '.js', i).href),
+    a[s] ||
       new Promise((a) => {
         if ('document' in self) {
           const e = document.createElement('script');
-          (e.src = i), (e.onload = a), document.head.appendChild(e);
-        } else (e = i), importScripts(i), a();
+          (e.src = s), (e.onload = a), document.head.appendChild(e);
+        } else (e = s), importScripts(s), a();
       }).then(() => {
-        let e = a[i];
-        if (!e) throw new Error(`Module ${i} didn’t register its module`);
+        let e = a[s];
+        if (!e) throw new Error(`Module ${s} didn’t register its module`);
         return e;
       })
   );
-  self.define = (c, s) => {
+  self.define = (i, c) => {
     const t =
       e ||
       ('document' in self ? document.currentScript.src : '') ||
       location.href;
     if (a[t]) return;
     let n = {};
-    const r = (e) => i(e, t),
+    const r = (e) => s(e, t),
       d = { module: { uri: t }, exports: n, require: r };
-    a[t] = Promise.all(c.map((e) => d[e] || r(e))).then((e) => (s(...e), n));
+    a[t] = Promise.all(i.map((e) => d[e] || r(e))).then((e) => (c(...e), n));
   };
 }
 define(['./workbox-291962df'], function (e) {
@@ -69,6 +69,10 @@ define(['./workbox-291962df'], function (e) {
         {
           url: '/_next/static/chunks/2108-94b3026b2acb64f8.js',
           revision: '94b3026b2acb64f8',
+        },
+        {
+          url: '/_next/static/chunks/2378-a34e24c06e1a37fd.js',
+          revision: 'a34e24c06e1a37fd',
         },
         {
           url: '/_next/static/chunks/2816-af5d8dfda86ac0d5.js',
@@ -127,16 +131,24 @@ define(['./workbox-291962df'], function (e) {
           revision: '6cf5252d890c6c84',
         },
         {
-          url: '/_next/static/chunks/app/_not-found/page-0ad19fcc44c3c784.js',
-          revision: '0ad19fcc44c3c784',
+          url: '/_next/static/chunks/app/_not-found/page-c052c118a44d16d0.js',
+          revision: 'c052c118a44d16d0',
         },
         {
-          url: '/_next/static/chunks/app/api/auth/%5B...nextauth%5D/route-0ad19fcc44c3c784.js',
-          revision: '0ad19fcc44c3c784',
+          url: '/_next/static/chunks/app/api/auth/%5B...nextauth%5D/route-c052c118a44d16d0.js',
+          revision: 'c052c118a44d16d0',
         },
         {
-          url: '/_next/static/chunks/app/base-assessment/page-0ad19fcc44c3c784.js',
-          revision: '0ad19fcc44c3c784',
+          url: '/_next/static/chunks/app/base-assessment/page-c052c118a44d16d0.js',
+          revision: 'c052c118a44d16d0',
+        },
+        {
+          url: '/_next/static/chunks/app/create-avatar/layout-c052c118a44d16d0.js',
+          revision: 'c052c118a44d16d0',
+        },
+        {
+          url: '/_next/static/chunks/app/create-avatar/page-7c446227bda915a1.js',
+          revision: '7c446227bda915a1',
         },
         {
           url: '/_next/static/chunks/app/dashboard/layout-53386f54bb0cf75f.js',
@@ -147,40 +159,40 @@ define(['./workbox-291962df'], function (e) {
           revision: 'd175444e14461954',
         },
         {
-          url: '/_next/static/chunks/app/end-screen/layout-0ad19fcc44c3c784.js',
-          revision: '0ad19fcc44c3c784',
+          url: '/_next/static/chunks/app/end-screen/layout-c052c118a44d16d0.js',
+          revision: 'c052c118a44d16d0',
         },
         {
           url: '/_next/static/chunks/app/end-screen/page-fda8cb7d1ed2b240.js',
           revision: 'fda8cb7d1ed2b240',
         },
         {
-          url: '/_next/static/chunks/app/game/%5Bgame%5D/layout-0ad19fcc44c3c784.js',
-          revision: '0ad19fcc44c3c784',
+          url: '/_next/static/chunks/app/game/%5Bgame%5D/layout-c052c118a44d16d0.js',
+          revision: 'c052c118a44d16d0',
         },
         {
           url: '/_next/static/chunks/app/game/%5Bgame%5D/page-3a4b0834584bd231.js',
           revision: '3a4b0834584bd231',
         },
         {
-          url: '/_next/static/chunks/app/help/layout-0ad19fcc44c3c784.js',
-          revision: '0ad19fcc44c3c784',
+          url: '/_next/static/chunks/app/help/layout-c052c118a44d16d0.js',
+          revision: 'c052c118a44d16d0',
         },
         {
           url: '/_next/static/chunks/app/help/page-deadd62b48f2aab3.js',
           revision: 'deadd62b48f2aab3',
         },
         {
-          url: '/_next/static/chunks/app/layout-b6a2fc73c80303fe.js',
-          revision: 'b6a2fc73c80303fe',
+          url: '/_next/static/chunks/app/layout-e208bc8600dd7a93.js',
+          revision: 'e208bc8600dd7a93',
         },
         {
           url: '/_next/static/chunks/app/login-landing/forgot-password/page-ecc8cf6eb64af215.js',
           revision: 'ecc8cf6eb64af215',
         },
         {
-          url: '/_next/static/chunks/app/login-landing/layout-0ad19fcc44c3c784.js',
-          revision: '0ad19fcc44c3c784',
+          url: '/_next/static/chunks/app/login-landing/layout-c052c118a44d16d0.js',
+          revision: 'c052c118a44d16d0',
         },
         {
           url: '/_next/static/chunks/app/login-landing/login/page-71bc77a178e70453.js',
@@ -219,8 +231,8 @@ define(['./workbox-291962df'], function (e) {
           revision: '1ddab06ea63512a0',
         },
         {
-          url: '/_next/static/chunks/app/match-endscreen/layout-0ad19fcc44c3c784.js',
-          revision: '0ad19fcc44c3c784',
+          url: '/_next/static/chunks/app/match-endscreen/layout-c052c118a44d16d0.js',
+          revision: 'c052c118a44d16d0',
         },
         {
           url: '/_next/static/chunks/app/match-endscreen/page-c4533246141bd18b.js',
@@ -235,24 +247,24 @@ define(['./workbox-291962df'], function (e) {
           revision: 'da79a7855f978018',
         },
         {
-          url: '/_next/static/chunks/app/memo/layout-0ad19fcc44c3c784.js',
-          revision: '0ad19fcc44c3c784',
+          url: '/_next/static/chunks/app/memo/layout-c052c118a44d16d0.js',
+          revision: 'c052c118a44d16d0',
         },
         {
           url: '/_next/static/chunks/app/memo/page-03a197dc8b9a4ac1.js',
           revision: '03a197dc8b9a4ac1',
         },
         {
-          url: '/_next/static/chunks/app/not-found-0ad19fcc44c3c784.js',
-          revision: '0ad19fcc44c3c784',
+          url: '/_next/static/chunks/app/not-found-c052c118a44d16d0.js',
+          revision: 'c052c118a44d16d0',
         },
         {
           url: '/_next/static/chunks/app/offline/page-917149f8a8bf3f91.js',
           revision: '917149f8a8bf3f91',
         },
         {
-          url: '/_next/static/chunks/app/page-759494dc2f1683c1.js',
-          revision: '759494dc2f1683c1',
+          url: '/_next/static/chunks/app/page-a0daa00c2a3137fb.js',
+          revision: 'a0daa00c2a3137fb',
         },
         {
           url: '/_next/static/chunks/app/practice/layout-4757830e60097dfb.js',
@@ -267,8 +279,8 @@ define(['./workbox-291962df'], function (e) {
           revision: '3525f84af2db3559',
         },
         {
-          url: '/_next/static/chunks/app/profile/page-978cba413c75e0fa.js',
-          revision: '978cba413c75e0fa',
+          url: '/_next/static/chunks/app/profile/page-bffac05246e1a08e.js',
+          revision: 'bffac05246e1a08e',
         },
         {
           url: '/_next/static/chunks/app/question-templates/expression-builder/page-c66824cf0e4e54c3.js',
@@ -283,8 +295,8 @@ define(['./workbox-291962df'], function (e) {
           revision: '8fbee85c2dadf76e',
         },
         {
-          url: '/_next/static/chunks/app/question-templates/layout-0ad19fcc44c3c784.js',
-          revision: '0ad19fcc44c3c784',
+          url: '/_next/static/chunks/app/question-templates/layout-c052c118a44d16d0.js',
+          revision: 'c052c118a44d16d0',
         },
         {
           url: '/_next/static/chunks/app/question-templates/math-input/page-4040114cdef722c3.js',
@@ -303,8 +315,8 @@ define(['./workbox-291962df'], function (e) {
           revision: '700d9ca93ff145e8',
         },
         {
-          url: '/_next/static/chunks/app/question-templates/page-0ad19fcc44c3c784.js',
-          revision: '0ad19fcc44c3c784',
+          url: '/_next/static/chunks/app/question-templates/page-c052c118a44d16d0.js',
+          revision: 'c052c118a44d16d0',
         },
         {
           url: '/_next/static/chunks/app/settings/change-password/page-d723a3669233b1c5.js',
@@ -315,12 +327,12 @@ define(['./workbox-291962df'], function (e) {
           revision: '86811a9297790eb4',
         },
         {
-          url: '/_next/static/chunks/app/settings/template-0ad19fcc44c3c784.js',
-          revision: '0ad19fcc44c3c784',
+          url: '/_next/static/chunks/app/settings/template-c052c118a44d16d0.js',
+          revision: 'c052c118a44d16d0',
         },
         {
-          url: '/_next/static/chunks/app/single-player-game/layout-0ad19fcc44c3c784.js',
-          revision: '0ad19fcc44c3c784',
+          url: '/_next/static/chunks/app/single-player-game/layout-c052c118a44d16d0.js',
+          revision: 'c052c118a44d16d0',
         },
         {
           url: '/_next/static/chunks/app/single-player-game/page-b5bb7862a652f1ec.js',
@@ -343,8 +355,8 @@ define(['./workbox-291962df'], function (e) {
           revision: 'c856db4f8e045dc1',
         },
         {
-          url: '/_next/static/chunks/app/topic/%5Btopic%5D/layout-0ad19fcc44c3c784.js',
-          revision: '0ad19fcc44c3c784',
+          url: '/_next/static/chunks/app/topic/%5Btopic%5D/layout-c052c118a44d16d0.js',
+          revision: 'c052c118a44d16d0',
         },
         {
           url: '/_next/static/chunks/app/topic/%5Btopic%5D/page-b5bb7862a652f1ec.js',
@@ -387,12 +399,12 @@ define(['./workbox-291962df'], function (e) {
           revision: '09dfadb69bdaa005',
         },
         {
-          url: '/_next/static/css/71ed234ca1080339.css',
-          revision: '71ed234ca1080339',
+          url: '/_next/static/css/0ee7da6d44e74b1b.css',
+          revision: '0ee7da6d44e74b1b',
         },
         {
-          url: '/_next/static/css/72fcbbc413a5189d.css',
-          revision: '72fcbbc413a5189d',
+          url: '/_next/static/css/cca8f9f912383bf9.css',
+          revision: 'cca8f9f912383bf9',
         },
         {
           url: '/_next/static/media/569ce4b8f30dc480-s.p.woff2',
@@ -659,6 +671,26 @@ define(['./workbox-291962df'], function (e) {
           revision: '8ea4f719af3312a055caf09f34c89a77',
         },
         {
+          url: '/avatar-icons/Background.svg',
+          revision: 'f8526747a51252ec251bc17e72c3df74',
+        },
+        {
+          url: '/avatar-icons/Body.svg',
+          revision: '9d7706c9d0c1022d98aa88ab91e7232d',
+        },
+        {
+          url: '/avatar-icons/Colour.svg',
+          revision: '34e0511c98fa536b02f6f003db3a5778',
+        },
+        {
+          url: '/avatar-icons/Eyes.svg',
+          revision: 'af3f088701bc028d23c42d5500b18a8e',
+        },
+        {
+          url: '/avatar-icons/Mouth.svg',
+          revision: '2e19071d8d80d75229681147cd7588b6',
+        },
+        {
           url: '/browserconfig.xml',
           revision: '21ca83c4dade7947e57ea59afe75846a',
         },
@@ -669,6 +701,134 @@ define(['./workbox-291962df'], function (e) {
         {
           url: '/elo-aninmation.gif',
           revision: '50eeabd4eed7565160093c7a3814e2e1',
+        },
+        {
+          url: '/eyes/Eye 1.svg',
+          revision: '88557eb137956c00a7d7bf6657ac09f0',
+        },
+        {
+          url: '/eyes/Eye 10.svg',
+          revision: 'c41fc97e6f0cc49d1f4f5a54c4005acb',
+        },
+        {
+          url: '/eyes/Eye 11.svg',
+          revision: 'fd626034d058837e5355e312606cfc0b',
+        },
+        {
+          url: '/eyes/Eye 12.svg',
+          revision: '881f00a198dbf5bbb242b6ea9c2a53f0',
+        },
+        {
+          url: '/eyes/Eye 13.svg',
+          revision: '705fd48a77af524474e0028ba2826779',
+        },
+        {
+          url: '/eyes/Eye 14.svg',
+          revision: 'b2bba58d990344998d99c7a54dc0891e',
+        },
+        {
+          url: '/eyes/Eye 15.svg',
+          revision: '0c2a7a1bd492ca0b3f8ae1b5242e9ea9',
+        },
+        {
+          url: '/eyes/Eye 16.svg',
+          revision: 'a4111ed84d798948a244caa6f79abe2d',
+        },
+        {
+          url: '/eyes/Eye 17.svg',
+          revision: 'c331b900125922f598198ea1483b2aac',
+        },
+        {
+          url: '/eyes/Eye 18.svg',
+          revision: '213a8667a7b4d724856c256803b6d598',
+        },
+        {
+          url: '/eyes/Eye 19.svg',
+          revision: '3ccf14ed0955f4f8b816b8696a2df52b',
+        },
+        {
+          url: '/eyes/Eye 2.svg',
+          revision: '5f9c616cbf21de27841dfb9dc16c953f',
+        },
+        {
+          url: '/eyes/Eye 20.svg',
+          revision: '0fbfcbc55067da9e50bdf7371eca5c8a',
+        },
+        {
+          url: '/eyes/Eye 21.svg',
+          revision: '29c06e027696d6df235ea70fcc6d6e2a',
+        },
+        {
+          url: '/eyes/Eye 22.svg',
+          revision: '2721f7e3896bb2f3169deca0da32bc2e',
+        },
+        {
+          url: '/eyes/Eye 23.svg',
+          revision: 'b9c2641c1c39cdf917e5dbd87c38321e',
+        },
+        {
+          url: '/eyes/Eye 24.svg',
+          revision: '5d16f0c63f1ed226c999eafc4e7d1a89',
+        },
+        {
+          url: '/eyes/Eye 25.svg',
+          revision: '29ffa196806cea00925a5f90e601f1c6',
+        },
+        {
+          url: '/eyes/Eye 26.svg',
+          revision: '831a9a75e9edfc95675829089030d075',
+        },
+        {
+          url: '/eyes/Eye 27.svg',
+          revision: 'a3866e04f0fa1e5efba00dd22bd70c86',
+        },
+        {
+          url: '/eyes/Eye 28.svg',
+          revision: '365248c483143a030e2491fe5f370b62',
+        },
+        {
+          url: '/eyes/Eye 29.svg',
+          revision: '65a22b5b4ca90be824bdafa6154216ca',
+        },
+        {
+          url: '/eyes/Eye 3.svg',
+          revision: '03ad3d80bfc3858f48fa6bdfca550989',
+        },
+        {
+          url: '/eyes/Eye 30.svg',
+          revision: 'e7dafcf41e35e8109ad43a6143d0e109',
+        },
+        {
+          url: '/eyes/Eye 31.svg',
+          revision: 'ed783e76169542560d660387093b3db0',
+        },
+        {
+          url: '/eyes/Eye 32.svg',
+          revision: 'c82e86af8fa206351db465a25912e970',
+        },
+        {
+          url: '/eyes/Eye 4.svg',
+          revision: '0d1b77a80372cdde9679905dd246ddfa',
+        },
+        {
+          url: '/eyes/Eye 5.svg',
+          revision: '25328a9243edfab9a25ef5ea7b931bfa',
+        },
+        {
+          url: '/eyes/Eye 6.svg',
+          revision: '1dd14c2cecc83405ec285172365590e7',
+        },
+        {
+          url: '/eyes/Eye 7.svg',
+          revision: 'fdb231f48f0e82f20ea08f3aec13e26d',
+        },
+        {
+          url: '/eyes/Eye 8.svg',
+          revision: 'c3a2af3f32c19a80379def248f2a7536',
+        },
+        {
+          url: '/eyes/Eye 9.svg',
+          revision: 'eea0b5b7a8d4d35f95bad9d8d5602def',
         },
         { url: '/file.svg', revision: '5a7cf15203348f0915990406e4fe2fc2' },
         { url: '/globe.svg', revision: '0666a56cc38cb6872fad06c182ef2660' },
@@ -705,9 +865,165 @@ define(['./workbox-291962df'], function (e) {
           revision: '74a02ebb60aaa9cfa1582fd62f8fb809',
         },
         { url: '/manifest.json', revision: '77c4eb41e8328b496cdbdd7e15aa8b5c' },
+        {
+          url: '/mouths/Mouth 1.svg',
+          revision: '104d892cb4bea0c2cc04b7cc552b63a2',
+        },
+        {
+          url: '/mouths/Mouth 10.svg',
+          revision: '226a487f292d7333ca24283d52aa18f5',
+        },
+        {
+          url: '/mouths/Mouth 11.svg',
+          revision: '47392be020bea490c62ec3e77c7d78fa',
+        },
+        {
+          url: '/mouths/Mouth 12.svg',
+          revision: '5ea1f24a2146fa015a4945a2737e82a9',
+        },
+        {
+          url: '/mouths/Mouth 13.svg',
+          revision: 'd339abda9500bb26219f273376b90303',
+        },
+        {
+          url: '/mouths/Mouth 14.svg',
+          revision: '5b697ff258e58d41578c0288482e519d',
+        },
+        {
+          url: '/mouths/Mouth 15.svg',
+          revision: 'e0bc7415a4193cce1240ced82e1d2d92',
+        },
+        {
+          url: '/mouths/Mouth 16.svg',
+          revision: '48f7eaf566090395373f9fd397cd0de5',
+        },
+        {
+          url: '/mouths/Mouth 17.svg',
+          revision: '276eaaa084dd86fe2a4e332dc38cd34d',
+        },
+        {
+          url: '/mouths/Mouth 18.svg',
+          revision: 'd8feb338d3cc5f3c9143df0e6df44076',
+        },
+        {
+          url: '/mouths/Mouth 19.svg',
+          revision: '204e0c53dca2398209829f207a43dfc9',
+        },
+        {
+          url: '/mouths/Mouth 2.svg',
+          revision: '0b50a7c9038867c5729caef6103b3f8b',
+        },
+        {
+          url: '/mouths/Mouth 20.svg',
+          revision: 'de527d583763aeb5589dff38a7faf29d',
+        },
+        {
+          url: '/mouths/Mouth 21.svg',
+          revision: 'bd89723ad79f7d908eb48b750001216d',
+        },
+        {
+          url: '/mouths/Mouth 22.svg',
+          revision: 'd7b7b49244017e2012d48b7b9dd8d748',
+        },
+        {
+          url: '/mouths/Mouth 23.svg',
+          revision: '61c0fc1448e3e3599ccace65d2279c7f',
+        },
+        {
+          url: '/mouths/Mouth 24.svg',
+          revision: '0932dc01294c82aad326484aa3d41c11',
+        },
+        {
+          url: '/mouths/Mouth 25.svg',
+          revision: 'a124187304d56c27fed6540ba17ea732',
+        },
+        {
+          url: '/mouths/Mouth 26.svg',
+          revision: 'db265a1b2fff2d9ec02b9fb74a447878',
+        },
+        {
+          url: '/mouths/Mouth 27.svg',
+          revision: 'd6a39038153b089ecbc5b66fcf1837a1',
+        },
+        {
+          url: '/mouths/Mouth 28.svg',
+          revision: '34bda4ba246f80cde40fa2431b6d7685',
+        },
+        {
+          url: '/mouths/Mouth 29.svg',
+          revision: '484dc2f5324997cc70011a4101f3a72d',
+        },
+        {
+          url: '/mouths/Mouth 3.svg',
+          revision: '2c2d6a2b4c3b2faaff1d26bfcec35ee1',
+        },
+        {
+          url: '/mouths/Mouth 30.svg',
+          revision: '7a59c4abcdf541f4da3c923d24df0a80',
+        },
+        {
+          url: '/mouths/Mouth 31.svg',
+          revision: '438aa4533f8a8cd7a142a1a76fe2652c',
+        },
+        {
+          url: '/mouths/Mouth 32.svg',
+          revision: '29dc3d2f0968af38d7e0d937c5ca8d87',
+        },
+        {
+          url: '/mouths/Mouth 4.svg',
+          revision: '7076e06c4a9bdcc6ca34d7b6c3288d5d',
+        },
+        {
+          url: '/mouths/Mouth 5.svg',
+          revision: 'f16de3f44df5b45c1a86551fd44179de',
+        },
+        {
+          url: '/mouths/Mouth 6.svg',
+          revision: 'aaa6b244a7cfc98a60c9bd655eed5abf',
+        },
+        {
+          url: '/mouths/Mouth 7.svg',
+          revision: '4ba735209372a7be83589414c34c2a11',
+        },
+        {
+          url: '/mouths/Mouth 8.svg',
+          revision: '8ec22b0f5ac24d570da83eea8b14a5f8',
+        },
+        {
+          url: '/mouths/Mouth 9.svg',
+          revision: '03fa93a3b666586bac90df94781ab030',
+        },
         { url: '/next.svg', revision: '2c469ea859f2cba868be3a6bd258a961' },
         { url: '/offline', revision: '6pZhDAn3TunWWYgANJHDQ' },
         { url: '/progress.gif', revision: '2f056a626b2955ea4dd724afaa6219ba' },
+        {
+          url: '/shapes/Circle.svg',
+          revision: '3c6d66d5df8b03e32b468cc9044c4b88',
+        },
+        {
+          url: '/shapes/Heart.svg',
+          revision: '2fe1fd401b5aa4d1cbb84089d578cf2d',
+        },
+        {
+          url: '/shapes/Pentagon.svg',
+          revision: '6d22c6352cd79587d076b354774a0c29',
+        },
+        {
+          url: '/shapes/Polygon.svg',
+          revision: '89e38e70da8b40b65c97eaf9d201ea72',
+        },
+        {
+          url: '/shapes/Square.svg',
+          revision: '97d27322335ace43ddb1d3f457a3963b',
+        },
+        {
+          url: '/shapes/Taco.svg',
+          revision: 'b5d9ff78ff6ec2308d19f85b267fcbe4',
+        },
+        {
+          url: '/shapes/Triangle.svg',
+          revision: '801a652f2c7ddcde1c2899da58fa3916',
+        },
         { url: '/user.svg', revision: '6669c08a60a894418ae66f651fae617d' },
         { url: '/vercel.svg', revision: '5570ba747e9dd6fdb68e7e2dd32d1cec' },
         { url: '/window.svg', revision: 'f2d60ec0c2c0d62aac6a19dc14ea108d' },
@@ -725,8 +1041,8 @@ define(['./workbox-291962df'], function (e) {
             cacheWillUpdate: async ({
               request: e,
               response: a,
-              event: i,
-              state: c,
+              event: s,
+              state: i,
             }) =>
               a && 'opaqueredirect' === a.type
                 ? new Response(a.body, {

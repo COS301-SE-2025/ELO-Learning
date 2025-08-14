@@ -92,6 +92,36 @@ router.post('/user/:id/xp', verifyToken, async (req, res) => {
   res.status(200).json(data);
 });
 
+// Update a user's avatar
+router.post('/user/:id/avatar', async (req, res) => {
+  const { id } = req.params;
+  const { avatar } = req.body;
+
+  const authHeader = req.headers.authorization;
+  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    return res
+      .status(401)
+      .json({ error: 'You are unauthorized to make this request.' });
+  }
+
+  const { data, error } = await supabase
+    .from('Users')
+    .update({ avatar })
+    .eq('id', id)
+    .select()
+    .single();
+
+  if (error) {
+    if (error.code === 'PGRST116') {
+      return res.status(404).json({ error: "User doesn't exist" });
+    }
+    console.error('Error updating AVATAR:', error.message);
+    return res.status(500).json({ error: 'Failed to update AVATAR' });
+  }
+
+  res.status(200).json(data);
+});
+
 // Register new user
 router.post('/register', async (req, res) => {
   const { name, surname, username, email, password, joinDate } = req.body;

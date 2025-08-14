@@ -11,7 +11,9 @@
     "test:unit": "NODE_ENV=test cypress run --spec 'cypress/unit/**/*.test.cy.js'",
     "test:integration": "NODE_ENV=test cypress run --spec 'cypress/integration/**/*.cy.js'",
     "test:e2e": "NODE_ENV=test cypress run --spec 'cypress/e2e/**/*.cy.jsx'",
-    "test:all": "NODE_ENV=test cypress run"
+    "test:all": "NODE_ENV=test cypress run",
+    "snyk-test": "snyk test",
+    "snyk-monitor": "snyk monitor"
   },
   "dependencies": {
     "@vercel/analytics": "^1.5.0",
@@ -43,6 +45,10 @@
     "eslint": "^9",
     "eslint-config-next": "15.3.2",
     "sinon": "^21.0.0",
+    "snyk": "^1.1298.3",
     "tailwindcss": "^4"
+  },
+  "resolutions": {
+    "serialize-javascript": "^6.0.2"
   }
 }

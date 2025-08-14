@@ -1,8 +1,8 @@
+import ErrorBoundary from '@/components/ErrorBoundary';
 import { Geist, Geist_Mono } from 'next/font/google';
 import './globals.css';
 import Providers from './providers';
 import PWALifecycle from './ui/pwa-lifecycle';
-import ErrorBoundary from '@/components/ErrorBoundary';
 
 const geistSans = Geist({
   variable: '--font-geist-sans',
@@ -56,6 +56,21 @@ export const viewport = {
 export default function RootLayout({ children }) {
   return (
     <html lang="en">
+      <head>
+        {/* Load debug utilities in development only */}
+        {process.env.NODE_ENV === 'development' && (
+          <script
+            type="module"
+            dangerouslySetInnerHTML={{
+              __html: `
+                if (typeof window !== 'undefined') {
+                  import('/src/utils/debug.js').catch(console.error);
+                }
+              `,
+            }}
+          />
+        )}
+      </head>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
@@ -63,17 +78,7 @@ export default function RootLayout({ children }) {
           <Providers>
             <PWALifecycle />
             {children}
-            {process.env.NODE_ENV === 'development' && (
-            <script
-              dangerouslySetInnerHTML={{
-                __html: `
-                  // Load debug utilities in development
-                  import('/src/utils/debug.js').catch(console.error);
-                `,
-              }}
-            />
-          )}
-        </Providers>
+          </Providers>
         </ErrorBoundary>
       </body>
     </html>

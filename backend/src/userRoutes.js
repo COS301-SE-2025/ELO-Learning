@@ -12,7 +12,7 @@ const TOKEN_EXPIRY = 3600; // 1 hour in seconds
 router.get('/users', async (req, res) => {
   const { data, error } = await supabase
     .from('Users')
-    .select('id,name,surname,username,email,currentLevel,joinDate,xp,pfpURL');
+    .select('id,name,surname,username,email,currentLevel,joinDate,xp,avatar');
   if (error) {
     console.error('Error fetching users:', error.message);
     return res.status(500).json({ error: 'Failed to fetch users' });
@@ -27,7 +27,7 @@ router.get('/user/:id', verifyToken, async (req, res) => {
   // Fetch user from Supabase
   const { data, error } = await supabase
     .from('Users')
-    .select('id,name,surname,username,email,currentLevel,joinDate,xp,pfpURL')
+    .select('id,name,surname,username,email,currentLevel,joinDate,xp,avatar')
     .eq('id', id)
     .single();
 
@@ -96,13 +96,6 @@ router.post('/user/:id/xp', verifyToken, async (req, res) => {
 router.post('/user/:id/avatar', async (req, res) => {
   const { id } = req.params;
   const { avatar } = req.body;
-
-  const authHeader = req.headers.authorization;
-  if (!authHeader || !authHeader.startsWith('Bearer ')) {
-    return res
-      .status(401)
-      .json({ error: 'You are unauthorized to make this request.' });
-  }
 
   const { data, error } = await supabase
     .from('Users')
@@ -209,7 +202,7 @@ router.post('/login', async (req, res) => {
   const { data: user, error: fetchError } = await supabase
     .from('Users')
     .select(
-      'id,name,surname,username,email,password,currentLevel,joinDate,xp,pfpURL',
+      'id,name,surname,username,email,password,currentLevel,joinDate,xp,avatar',
     )
     .eq('email', email)
     .single();
@@ -244,7 +237,7 @@ router.post('/login', async (req, res) => {
       currentLevel: user.currentLevel || 5, // Default to level 1 if not set
       joinDate: user.joinDate || new Date().toISOString(), // Default to current date if not set
       xp: user.xp || 0, // Default to 0 XP if not set
-      pfpURL: user.pfpURL,
+      avatar: user.avatar,
     },
   });
 });

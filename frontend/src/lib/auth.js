@@ -81,7 +81,7 @@ export const authOptions = {
               xp: data.user.xp || 0,
               currentLevel: data.user.currentLevel || 1,
               joinDate: data.user.joinDate,
-              pfpURL: data.user.pfpURL,
+              avatar: data.user.avatar,
               // Store the JWT token from backend
               backendToken: data.token,
             };
@@ -163,7 +163,7 @@ export const authOptions = {
         token.xp = user.xp || 0; // Default XP for new users
         token.currentLevel = user.currentLevel || 1; // Default level
         token.joinDate = user.joinDate; // Add join date
-        token.pfpURL = user.pfpURL || user.image; // Use database pfpURL or OAuth image
+        token.avatar = user.avatar; // Use database pfpURL or OAuth image
         // Store the backend JWT token for API calls
         token.backendToken = user.backendToken;
       }
@@ -190,7 +190,7 @@ export const authOptions = {
         session.user.xp = token.xp;
         session.user.currentLevel = token.currentLevel;
         session.user.joinDate = token.joinDate;
-        session.user.pfpURL = token.pfpURL;
+        session.user.avatar = token.avatar;
         // Pass backend JWT token to session
         session.backendToken = token.backendToken;
       }

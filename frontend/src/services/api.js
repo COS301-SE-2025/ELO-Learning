@@ -321,7 +321,7 @@ export async function updateUserAvatar(userId, avatar) {
     `/user/${userId}/avatar`,
     { avatar },
     {
-      headers: authHeader,
+      headers: getDynamicAuthHeader(),
     },
   );
   return res;

@@ -173,10 +173,10 @@ export default function QuestionsTracker({
       setAnswer('');
       setIsAnswerCorrect(false);
 
-    if (currentStep >= allQuestions.length) {
-      submitCallback();
-      return;
-    }
+      if (currentStep >= allQuestions.length) {
+        submitCallback();
+        return;
+      }
 
       // Safe access to next question
       const nextQuestion = allQuestions[currentStep] || null;

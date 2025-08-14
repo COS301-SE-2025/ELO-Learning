@@ -13,16 +13,19 @@ const safeJSONParse = (value) => {
     if (typeof value === 'object' && value !== null) {
       return value;
     }
-    
+
     // Handle empty or null values
     if (!value || value === 'undefined' || value === 'null') {
       return null;
     }
-    
+
     // Try to parse as JSON
     return JSON.parse(value);
   } catch (error) {
-    console.warn(`🚨 Cache: Invalid JSON data found, clearing corrupted entry:`, error.message);
+    console.warn(
+      `🚨 Cache: Invalid JSON data found, clearing corrupted entry:`,
+      error.message,
+    );
     return null;
   }
 };
@@ -59,7 +62,7 @@ export const performanceCache = {
       }
 
       const { data, timestamp } = parsed;
-      
+
       // Check if the parsed object has the expected structure
       if (typeof timestamp !== 'number') {
         console.warn(`🚨 Cache: Invalid cache structure for ${key}, removing`);
@@ -78,12 +81,18 @@ export const performanceCache = {
       console.log(`📦 Cache HIT for ${key} (${Math.round(age / 1000)}s old)`);
       return data;
     } catch (error) {
-      console.warn(`🚨 Cache get error for ${key}, clearing entry:`, error.message);
+      console.warn(
+        `🚨 Cache get error for ${key}, clearing entry:`,
+        error.message,
+      );
       // Clear the problematic cache entry
       try {
         localStorage.removeItem(`cache_${key}`);
       } catch (clearError) {
-        console.warn(`🚨 Cache: Failed to clear corrupted entry:`, clearError.message);
+        console.warn(
+          `🚨 Cache: Failed to clear corrupted entry:`,
+          clearError.message,
+        );
       }
       return null;
     }
@@ -101,13 +110,13 @@ export const performanceCache = {
         data,
         timestamp: Date.now(),
       };
-      
+
       const serialized = safeJSONStringify(item);
       if (!serialized) {
         console.warn(`🚨 Cache: Failed to serialize data for ${key}`);
         return false;
       }
-      
+
       localStorage.setItem(`cache_${key}`, serialized);
       console.log(`💾 Cache SET for ${key}`);
       return true;
@@ -122,7 +131,7 @@ export const performanceCache = {
     if (typeof window === 'undefined') {
       return;
     }
-    
+
     try {
       localStorage.removeItem(`cache_${key}`);
       console.log(`🗑️ Cache REMOVED for ${key}`);
@@ -136,7 +145,7 @@ export const performanceCache = {
     if (typeof window === 'undefined') {
       return;
     }
-    
+
     try {
       const keys = Object.keys(localStorage);
       keys.forEach((key) => {
@@ -161,14 +170,14 @@ export const performanceCache = {
     if (typeof window === 'undefined') {
       return { cacheEntries: 0, isServer: true };
     }
-    
+
     try {
       const keys = Object.keys(localStorage);
-      const cacheKeys = keys.filter(key => key.startsWith('cache_'));
+      const cacheKeys = keys.filter((key) => key.startsWith('cache_'));
       return {
         cacheEntries: cacheKeys.length,
         totalLocalStorageKeys: keys.length,
-        isServer: false
+        isServer: false,
       };
     } catch (error) {
       console.warn('🚨 Cache stats error:', error.message);

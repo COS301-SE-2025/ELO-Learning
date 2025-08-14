@@ -156,8 +156,12 @@ export default function UniversalQuestionWrapper({ questions, numLives = 5 }) {
       }, 2000);
     } catch (error) {
       console.error('Error submitting answer:', error);
-      setFeedbackMessage('Error submitting answer. Please try again.');
+      setFeedbackMessage('Failed to submit answer. Please try again.');
       setShowFeedback(true);
+
+      // Don't move to next question on error
+      setIsSubmitting(false);
+      return;
     } finally {
       setIsSubmitting(false);
     }

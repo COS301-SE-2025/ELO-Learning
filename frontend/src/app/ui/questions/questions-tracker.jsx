@@ -12,6 +12,7 @@ import { resetXPCalculationState } from '@/utils/gameSession';
 
 export default function QuestionsTracker({
   questions,
+  submitCallback,
   lives,
   mode,
   resetXPState,
@@ -199,13 +200,6 @@ export default function QuestionsTracker({
     return false;
   };
 
-  const handleQuizComplete = () => {
-    // Use setTimeout to ensure navigation happens after current render cycle
-    setTimeout(() => {
-      router.push(`/end-screen?mode=${mode}`);
-    }, 0);
-  };
-
   const submitAnswer = async () => {
     // Get ALL correct answers, not just the first one
     const correctAnswers = currAnswers
@@ -253,7 +247,7 @@ export default function QuestionsTracker({
     setIsAnswerCorrect(false);
 
     if (currentStep >= allQuestions.length) {
-      handleQuizComplete();
+      submitCallback();
       return;
     }
 

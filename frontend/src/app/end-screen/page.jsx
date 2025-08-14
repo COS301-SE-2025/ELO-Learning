@@ -6,6 +6,7 @@ import { updateUserXP } from '@/services/api';
 import Image from 'next/image';
 import Link from 'next/link';
 import { redirect, useRouter, useSearchParams } from 'next/navigation';
+import { getSession } from 'next-auth/react';
 import { Suspense, useEffect, useState } from 'react';
 
 function EndScreen() {
@@ -33,6 +34,7 @@ function EndScreen() {
     try {
       setIsLoading(true);
 
+      /*
       // Get user data from cookie
       const userCookie = document.cookie
         .split('; ')
@@ -48,6 +50,19 @@ function EndScreen() {
       const encodedUserData = userCookie.split('=')[1];
       const decodedUserData = decodeURIComponent(encodedUserData);
       const userData = JSON.parse(decodedUserData);
+
+      */
+
+      //Get session from Next.js auth
+      const session = await getSession();
+
+      if (!session || !session.user) {
+        console.error('No authenticated session found');
+        router.push('/dashboard');
+        return;
+      }
+
+      const userData = session.user;
 
       // Calculate XP earned using the same logic as TotalXP component
       const questions = JSON.parse(

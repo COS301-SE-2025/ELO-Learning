@@ -1,3 +1,4 @@
+import ErrorBoundary from '@/components/ErrorBoundary';
 import { Geist, Geist_Mono } from 'next/font/google';
 import './globals.css';
 import Providers from './providers';
@@ -55,23 +56,16 @@ export const viewport = {
 export default function RootLayout({ children }) {
   return (
     <html lang="en">
+      <head>{/* Debug utilities removed: debug.js no longer exists */}</head>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        <Providers>
-          <PWALifecycle />
-          {children}
-          {process.env.NODE_ENV === 'development' && (
-            <script
-              dangerouslySetInnerHTML={{
-                __html: `
-                  // Load debug utilities in development
-                  import('/src/utils/debug.js').catch(console.error);
-                `,
-              }}
-            />
-          )}
-        </Providers>
+        <ErrorBoundary>
+          <Providers>
+            <PWALifecycle />
+            {children}
+          </Providers>
+        </ErrorBoundary>
       </body>
     </html>
   );

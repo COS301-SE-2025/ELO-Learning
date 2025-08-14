@@ -13,6 +13,8 @@ const router = express.Router();
 
 router.post('/multiplayer', async (req, res) => {
   try {
+    console.log('Using multiplayer route... --------------------');
+    console.log('Received multiplayer request:', req.body);
     const { player1_id, player2_id, question_id, score1, xpTotal } = req.body;
 
     if (

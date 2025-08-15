@@ -453,11 +453,6 @@ export async function fetchUserById(id) {
   return res.data;
 }
 
-export async function fetchUserAchievements(id) {
-  const res = await axiosInstance.get(`/users/${id}/achievements`);
-  return res.data;
-}
-
 export async function updateUserXP(id, xp) {
   const res = await axiosInstance.post(`/user/${id}/xp`, { xp });
   return res.data;

@@ -466,9 +466,7 @@ export async function submitSinglePlayerAttempt(data) {
 }
 
 export async function submitMultiplayerResult(data) {
-  const res = await axiosInstance.post('/multiplayer', data, {
-    headers: getDynamicAuthHeader(),
-  });
+  const res = await axiosInstance.post('/multiplayer', data, {});
   return res.data;
 }
 

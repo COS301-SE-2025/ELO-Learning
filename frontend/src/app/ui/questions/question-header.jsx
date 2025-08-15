@@ -10,20 +10,26 @@ export default function QuestionHeader({ currentStep, totalSteps, numLives }) {
     // Generate unique game session ID when game starts
     const gameSessionId =
       Date.now() + '-' + Math.random().toString(36).substr(2, 9);
-    localStorage.setItem('currentGameSession', gameSessionId);
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('currentGameSession', gameSessionId);
+    }
     console.log('🎮 Started new game session:', gameSessionId);
 
     // Clear any previous XP calculation states
-    sessionStorage.removeItem('submittedOnce');
-    sessionStorage.removeItem('calculatingXP');
+    if (typeof window !== 'undefined') {
+      sessionStorage.removeItem('submittedOnce');
+      sessionStorage.removeItem('calculatingXP');
+    }
     console.log('🧹 Cleared previous game states');
   }, []);
 
   const handleClose = () => {
-    localStorage.removeItem('questionsObj');
-    localStorage.removeItem('currentGameSession');
-    sessionStorage.removeItem('submittedOnce');
-    sessionStorage.removeItem('calculatingXP');
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem('questionsObj');
+      localStorage.removeItem('currentGameSession');
+      sessionStorage.removeItem('submittedOnce');
+      sessionStorage.removeItem('calculatingXP');
+    }
     console.log('🚪 Game ended - cleaned up session data');
   };
   return (

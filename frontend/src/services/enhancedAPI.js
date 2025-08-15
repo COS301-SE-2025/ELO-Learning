@@ -31,8 +31,9 @@ export const enhancedAPI = {
   // Submit answer and update user data if XP is awarded
   async submitAnswerWithXPUpdate(questionId, answer, userId) {
     try {
-      // This would be your existing submit answer API call
-      const response = await fetch('http://localhost:3000/submit-answer', {
+      const API_BASE_URL =
+        process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
+      const response = await fetch(`${API_BASE_URL}/submit-answer`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

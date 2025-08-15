@@ -75,7 +75,11 @@ export default function Page() {
         />
       </div>
       <div className="flex flex-col justify-between">
-        <UserInfo ranking="1st" xp={user.xp || 0} />
+        <UserInfo
+          elo={user.elo_rating || 0}
+          xp={user.xp || 0}
+          ranking={user.rank || 'Unranked'}
+        />
         <MatchStats />
         <Achievements />
       </div>

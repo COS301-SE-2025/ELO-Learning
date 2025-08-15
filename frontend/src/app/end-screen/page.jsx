@@ -6,6 +6,7 @@ import { useSession } from 'next-auth/react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { redirect, useRouter, useSearchParams } from 'next/navigation';
+import { getSession } from 'next-auth/react';
 import { Suspense, useEffect, useState } from 'react';
 
 function EndScreen() {
@@ -34,21 +35,11 @@ function EndScreen() {
     try {
       setIsLoading(true);
 
-      // Get user data from cookie or session
-      let userData = null;
-      
-      // First try to get from NextAuth session
-      if (session?.user) {
-        userData = {
-          id: session.user.id,
-          username: session.user.name || session.user.username,
-          email: session.user.email
-        };
-      } else {
-        // Fallback to cookie method
-        const userCookie = document.cookie
-          .split('; ')
-          .find((row) => row.startsWith('user='));
+      /*
+      // Get user data from cookie
+      const userCookie = document.cookie
+        .split('; ')
+        .find((row) => row.startsWith('user='));
 
         if (!userCookie) {
           console.error('User cookie not found and no session available');
@@ -60,11 +51,23 @@ function EndScreen() {
           return;
         }
 
-        // Decode the URL-encoded cookie value
-        const encodedUserData = userCookie.split('=')[1];
-        const decodedUserData = decodeURIComponent(encodedUserData);
-        userData = JSON.parse(decodedUserData);
+      // Decode the URL-encoded cookie value
+      const encodedUserData = userCookie.split('=')[1];
+      const decodedUserData = decodeURIComponent(encodedUserData);
+      const userData = JSON.parse(decodedUserData);
+
+      */
+
+      //Get session from Next.js auth
+      const session = await getSession();
+
+      if (!session || !session.user) {
+        console.error('No authenticated session found');
+        router.push('/dashboard');
+        return;
       }
+
+      const userData = session.user;
 
       // Calculate XP earned using the same logic as TotalXP component
       const questions = JSON.parse(

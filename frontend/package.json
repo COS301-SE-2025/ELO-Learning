@@ -11,13 +11,14 @@
     "test": "jest",
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage",
-    "test:unit": "jest --testPathPattern=tests/unit",
-    "test:integration": "jest --testPathPattern=tests/integration",
-    "test:e2e": "cypress run --spec 'cypress/e2e/**/*.cy.jsx'",
-    "test:cypress": "cypress run",
+    "test:unit": "NODE_ENV=test jest --testPathPattern=tests/unit",
+    "test:integration": "NODE_ENV=test jest --testPathPattern=tests/integration",
+    "test:e2e": "NODE_ENV=test cypress run --spec 'cypress/e2e/**/*.cy.jsx'",
+    "test:cypress": "NODE_ENV=test cypress run",
     "test:all": "npm run test && npm run test:e2e"
   },
   "dependencies": {
+    "@vercel/analytics": "^1.5.0",
     "axios": "1.11.0",
     "clsx": "^2.1.1",
     "katex": "^0.16.22",
@@ -36,6 +37,7 @@
     "workbox-webpack-plugin": "^7.3.0"
   },
   "devDependencies": {
+    "@babel/eslint-parser": "^7.28.0",
     "@eslint/eslintrc": "^3",
     "@tailwindcss/postcss": "^4",
     "@testing-library/jest-dom": "^6.1.5",

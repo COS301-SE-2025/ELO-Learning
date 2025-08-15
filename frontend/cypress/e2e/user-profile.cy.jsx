@@ -174,7 +174,6 @@ describe('User Profile & Gamification', () => {
     });
 
     it('should display the leaderboard with correct headers', () => {
-      cy.visit('/dashboard');
       cy.wait('@getUsers'); // Wait for the users data to load
       cy.get('h1').should('contain', 'Leaderboard');
       cy.get('table').should('be.visible');

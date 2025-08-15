@@ -1,13 +1,15 @@
+// cache.js - FIXED VERSION
 const CACHE_KEYS = {
   USER: 'user',
   TOKEN: 'token',
-  NEXTAUTH_SESSION: 'nextauth_session', // For NextAuth session data
+  NEXTAUTH_SESSION: 'nextauth_session',
   QUESTIONS: 'cached_questions',
   LEADERBOARD: 'cached_leaderboard',
   USER_ACHIEVEMENTS: 'user_achievements',
   USER_PROGRESS: 'user_progress',
   LAST_FETCH: 'last_fetch_timestamp',
   AUTH_PROVIDER: 'auth_provider',
+  OAUTH_TOKEN: 'oauth_token',
 };
 
 const CACHE_EXPIRY = {
@@ -37,53 +39,68 @@ export const cache = {
       const item = localStorage.getItem(key);
       if (!item) return null;
 
-      // Try to parse as cache format first
-      let parsed;
+      // FIX: Handle both cache format and raw tokens
+      let parsedItem;
       try {
-        parsed = JSON.parse(item);
+        parsedItem = JSON.parse(item);
       } catch (parseError) {
-        // If JSON parsing fails, this might be legacy data stored as plain string
-        console.warn(`Cache item "${key}" is not in expected format, treating as legacy data:`, parseError.message);
-        
-        // Special handling for JWT tokens (they start with 'eyJ')
-        if (key === CACHE_KEYS.TOKEN && item.startsWith('eyJ')) {
-          console.log('Detected legacy JWT token, migrating to proper cache format');
-          // Migrate legacy JWT token to proper cache format
-          cache.set(key, item);
-          return item;
-        }
-        
-        // For other legacy data, return the raw string but remove it to force refresh
-        localStorage.removeItem(key);
-        return item.startsWith('{') || item.startsWith('[') ? null : item;
+        // If JSON.parse fails, it might be a raw token - return it directly
+        console.warn(
+          `Cache key '${key}' contains non-JSON data, returning raw value`,
+        );
+        return item; // Return the raw token/string
       }
 
-      // Check if it's in the expected cache format
-      if (parsed && typeof parsed === 'object' && parsed.hasOwnProperty('data') && parsed.hasOwnProperty('timestamp')) {
-        const { data, timestamp, expiryTime } = parsed;
+      // Check if it's our cache format (has timestamp and expiryTime)
+      if (
+        parsedItem &&
+        typeof parsedItem === 'object' &&
+        'timestamp' in parsedItem &&
+        'expiryTime' in parsedItem
+      ) {
+        const { data, timestamp, expiryTime } = parsedItem;
         const now = Date.now();
 
-        if (now - timestamp > expiryTime) {
+        // FIX: Correct expiry logic
+        if (now > timestamp + expiryTime) {
           localStorage.removeItem(key);
           return null;
         }
 
         return data;
       } else {
-        // If it's not in cache format, treat as legacy data
-        console.warn(`Cache item "${key}" is not in expected cache format, removing legacy data`);
-        localStorage.removeItem(key);
-        return null;
+        // It's not our cache format, but valid JSON - return as is
+        return parsedItem;
       }
     } catch (error) {
       console.error('Cache get error:', error);
-      // Remove corrupted cache item
+      // Try to return raw value as fallback
       try {
-        localStorage.removeItem(key);
-      } catch (removeError) {
-        console.error('Failed to remove corrupted cache item:', removeError);
+        return localStorage.getItem(key);
+      } catch (fallbackError) {
+        return null;
       }
+    }
+  },
+
+  // NEW: Safe method to get raw values (for tokens)
+  getRaw: (key) => {
+    try {
+      return localStorage.getItem(key);
+    } catch (error) {
+      console.error('Cache getRaw error:', error);
       return null;
+    }
+  },
+
+  // NEW: Safe method to set raw values (for tokens)
+  setRaw: (key, value) => {
+    try {
+      localStorage.setItem(key, value);
+      return true;
+    } catch (error) {
+      console.error('Cache setRaw error:', error);
+      return false;
     }
   },
 
@@ -109,11 +126,21 @@ export const cache = {
     }
   },
 
+  // NEW: Clear everything (including raw tokens)
+  clearAll: () => {
+    try {
+      localStorage.clear();
+      return true;
+    } catch (error) {
+      console.error('Cache clearAll error:', error);
+      return false;
+    }
+  },
+
   // NextAuth-specific methods
   setNextAuthSession: (session) => {
     try {
       cache.set(CACHE_KEYS.NEXTAUTH_SESSION, session, CACHE_EXPIRY.LONG);
-      // Also cache user data separately for easier access
       if (session?.user) {
         cache.set(CACHE_KEYS.USER, session.user, CACHE_EXPIRY.LONG);
       }

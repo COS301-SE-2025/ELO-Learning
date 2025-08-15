@@ -1,0 +1,44 @@
+name: Frontend CI
+
+on:
+  push:
+    paths:
+      - 'frontend/**'
+  pull_request:
+    branches: [development]
+    paths:
+      - 'frontend/**'
+
+jobs:
+  cypress-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Use Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 23
+          cache: yarn
+          cache-dependency-path: frontend/yarn.lock
+
+      - name: Install frontend dependencies
+        working-directory: frontend
+        run: yarn install --frozen-lockfile
+
+      - name: Cypress Tests
+        uses: cypress-io/github-action@v6
+        with:
+          start: yarn dev
+          wait-on: 'http://localhost:8080'
+          working-directory: frontend
+        env:
+          NEXT_PUBLIC_API_URL: http://localhost:8080
+          NEXT_PUBLIC_SOCKET_URL: http://localhost:8080
+          NEXT_PUBLIC_FRONTEND_URL: http://localhost:8080
+          NEXTAUTH_URL: http://localhost:8080
+          NEXTAUTH_SECRET: test-secret
+          GOOGLE_CLIENT_ID: test-client-id
+          GOOGLE_CLIENT_SECRET: test-client-secret
+          NODE_ENV: test
+        timeout-minutes: 15

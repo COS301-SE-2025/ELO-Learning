@@ -10,24 +10,6 @@ import { redirect } from 'next/navigation';
 import { useEffect, useState } from 'react';
 
 export default function MathKeyboardWrapper({ questions }) {
-  // ✅ Add client-side mounting check to prevent SSR issues
-  const [mounted, setMounted] = useState(false);
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
-
-  // ✅ During SSR or before mounting, show loading
-  if (!mounted) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center p-8">
-          <div className="text-2xl text-gray-600">Loading questions...</div>
-        </div>
-      </div>
-    );
-  }
-
   // ✅ Safe array handling
   const mathQuestions = questions || [];
   const totalSteps = mathQuestions.length;

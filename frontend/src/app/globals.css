@@ -535,6 +535,11 @@ textarea:focus-visible {
   border-radius: 0px !important;
 }
 
+/* Avatar triangle shape */
+.clip-triangle {
+  clip-path: polygon(50% 0%, 0% 100%, 100% 100%);
+}
+
 .text-pink-custom {
   color: #ff6e99;
 }

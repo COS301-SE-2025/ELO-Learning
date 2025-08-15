@@ -124,7 +124,7 @@ export default function Page() {
                   {/* <span className="font-medium text-black">Username:</span> */}
                   <span>{opponent.username}</span>
                   <span className="text-[#FF6E99] font-bold">
-                    {opponent.xp} XP
+                    Rank: {opponent.rank}
                   </span>
                 </div>
               </div>

@@ -1,7 +1,6 @@
 import SubCategories from '@/app/ui/subcategories';
 import { fetchAllTopics } from '@/services/api';
 
-// Force dynamic rendering since this page uses session data in the layout
 export const dynamic = 'force-dynamic';
 
 export default async function Page() {

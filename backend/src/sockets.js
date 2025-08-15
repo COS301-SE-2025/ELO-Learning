@@ -8,12 +8,29 @@ export default (io, socket) => {
   const queueForGame = async (userData) => {
     console.log('Queueing for game:', socket.id, 'User:', userData?.username);
 
+    // Fetch complete user data from database (including rank)
+    const { data: dbUser, error } = await supabase
+      .from('Users')
+      .select(
+        'name, email, id, surname, username, xp, currentLevel, rank, joinDate',
+      )
+      .eq('id', userData.id)
+      .single();
+
+    if (error || !dbUser) {
+      console.error('Could not fetch user data from DB:', error);
+      return;
+    }
+
+    // Merge DB user data (including rank) with incoming userData
+    const mergedUserData = { ...userData, ...dbUser, rank: dbUser.rank };
+
     // 🎯 NEW: Track queue join for achievements
-    if (userData?.id) {
+    if (mergedUserData?.id) {
       try {
-        console.log(`🎯 QUEUE ACHIEVEMENT: Checking queue achievements for user ${userData.id}`);
+        console.log(`🎯 QUEUE ACHIEVEMENT: Checking queue achievements for user ${mergedUserData.id}`);
         const { checkQueueAchievements } = await import('./achievementRoutes.js');
-        const queueAchievements = await checkQueueAchievements(userData.id);
+        const queueAchievements = await checkQueueAchievements(mergedUserData.id);
         
         if (queueAchievements.length > 0) {
           console.log(`🏆 Queue achievements unlocked:`, queueAchievements.map(a => a.name));
@@ -30,8 +47,8 @@ export default (io, socket) => {
       }
     }
 
-    // Store user data with the socket
-    socket.userData = userData;
+    // Store merged user data with the socket
+    socket.userData = mergedUserData;
 
     if (!queue.includes(socket)) {
       queue.push(socket);
@@ -44,18 +61,21 @@ export default (io, socket) => {
       console.log('Starting game between:', player1.id, 'and', player2.id);
       console.log('Player 1:', player1.userData?.username);
       console.log('Player 2:', player2.userData?.username);
+      console.log('Player 1 rank:', player1.userData.rank);
+      console.log('Player 2 rank:', player2.userData.rank);
 
       const gameId = uuidv4();
       player1.join(gameId);
       player2.join(gameId);
 
-      // Send game start with opponent data
+      // Send game start with opponent data (including rank)
       io.to(player1.id).emit('startGame', {
         gameId,
         opponent: {
           name: player2.userData?.name,
           username: player2.userData?.username,
           xp: player2.userData?.xp,
+          rank: player2.userData?.rank, // 🎯 Include rank
         },
       });
       io.to(player2.id).emit('startGame', {
@@ -64,6 +84,7 @@ export default (io, socket) => {
           name: player1.userData?.name,
           username: player1.userData?.username,
           xp: player1.userData?.xp,
+          rank: player1.userData?.rank, // 🎯 Include rank
         },
       });
 
@@ -162,7 +183,7 @@ export default (io, socket) => {
           `Game ${gameId} - Player levels: ${playerLevels}, Average level: ${averageLevel}`,
         );
 
-        // Fetch 15 random questions for the calculated average level
+        // Fetch 6 random questions for the calculated average level
         const { data: questions, error: qError } = await supabase
           .from('Questions')
           .select('*')
@@ -183,9 +204,9 @@ export default (io, socket) => {
           return;
         }
 
-        // Shuffle and pick 15
+        // Shuffle and pick 6
         const shuffled = questions.sort(() => 0.5 - Math.random());
-        const selected = shuffled.slice(0, 16);
+        const selected = shuffled.slice(0, 6);
 
         //fetch the answers for the above questions
         const questionIds = selected.map((q) => q.Q_id);
@@ -203,17 +224,6 @@ export default (io, socket) => {
         selected.forEach((q) => {
           q.answers = answers.filter((a) => a.question_id === q.Q_id);
         });
-
-        // Map to clean structure
-        // const cleanQuestions = selected.map((q) => ({
-        //     id: q.Q_id,
-        //     topic: q.topic,
-        //     difficulty: q.difficulty,
-        //     level: q.level,
-        //     question: q.questionText,
-        //     xpGain: q.xpGain,
-        //     type: q.type,
-        // }))
 
         // Emit the questions to both players
         io.to(gameId).emit('gameReady', {
@@ -320,6 +330,13 @@ export default (io, socket) => {
     //TODO: process the results, here is where the elo logic comes in. A object is passed through from the FE with all of the questions and their answers. Can we update the ELO algorithm so that it can give back the amount of XP for each player?
 
     //I added the multiPlayerArray functionality. Can you see if that will work.
+    const multiPlayerArray = [
+      firstPlayerToFinishResults,
+      secondPlayerToFinishResults,
+    ];
+    console.log('first', multiPlayerArray[0]);
+    console.log('\n--------------------\n');
+    console.log('second', multiPlayerArray[1]);
 
     // Clean up the matchMap entry
     matchMap.delete(gameId);

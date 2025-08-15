@@ -15,6 +15,7 @@ import { resetXPCalculationState } from '@/utils/gameSession';
 
 export default function QuestionsTracker({
   questions,
+  submitCallback, // ✅ Keep this parameter - it's important!
   lives,
   mode,
   resetXPState,
@@ -437,6 +438,24 @@ export default function QuestionsTracker({
           .catch(error => console.error('Failed to show achievements:', error));
       }
 
+      // 🎯 Call submitCallback if provided (important for parent components!)
+      if (submitCallback && typeof submitCallback === 'function') {
+        try {
+          await submitCallback({
+            questionId: currQuestion?.Q_id || currQuestion?.id,
+            userAnswer: answer,
+            isCorrect: freshValidationResult,
+            timeSpent: Math.round((Date.now() - questionStartTime) / 1000),
+            currentStep,
+            totalSteps,
+            result
+          });
+        } catch (callbackError) {
+          console.error('Error in submitCallback:', callbackError);
+          // Don't fail the entire submission if callback fails
+        }
+      }
+
       await setLocalStorage(freshValidationResult);
       const gameOver = handleLives(freshValidationResult);
 
@@ -475,6 +494,23 @@ export default function QuestionsTracker({
         currQuestion?.questionText || '',
         currQuestion?.type || 'Math Input',
       );
+
+      // 🎯 Still call submitCallback even in error case (if provided)
+      if (submitCallback && typeof submitCallback === 'function') {
+        try {
+          await submitCallback({
+            questionId: currQuestion?.Q_id || currQuestion?.id,
+            userAnswer: answer,
+            isCorrect: freshValidationResult,
+            timeSpent: Math.round((Date.now() - questionStartTime) / 1000),
+            currentStep,
+            totalSteps,
+            error: true
+          });
+        } catch (callbackError) {
+          console.error('Error in submitCallback (fallback):', callbackError);
+        }
+      }
 
       await setLocalStorage(freshValidationResult);
       const gameOver = handleLives(freshValidationResult);

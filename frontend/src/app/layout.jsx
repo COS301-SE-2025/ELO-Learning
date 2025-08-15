@@ -1,4 +1,5 @@
 import AchievementNotificationManager from '@/app/ui/achievements/achievement-notification-manager';
+import ErrorBoundary from '@/components/ErrorBoundary';
 import { Geist, Geist_Mono } from 'next/font/google';
 import './globals.css';
 import Providers from './providers';
@@ -56,17 +57,19 @@ export const viewport = {
 export default function RootLayout({ children }) {
   return (
     <html lang="en">
+      <head>{/* Debug utilities removed: debug.js no longer exists */}</head>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        <Providers>
-          <PWALifecycle />
-
-          {children}
-          
-          {/* Achievement notifications - appears above all content */}
-          <AchievementNotificationManager />
-        </Providers>
+        <ErrorBoundary>
+          <Providers>
+            <PWALifecycle />
+            {children}
+            
+            {/* Achievement notifications - appears above all content */}
+            <AchievementNotificationManager />
+          </Providers>
+        </ErrorBoundary>
       </body>
     </html>
   );

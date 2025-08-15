@@ -1,6 +1,35 @@
-import { handleOAuthUser } from '@/services/api';
 import CredentialsProvider from 'next-auth/providers/credentials';
 import GoogleProvider from 'next-auth/providers/google';
+
+// Create server-safe OAuth handler (no caching)
+async function handleOAuthUserServer(email, name, image, provider) {
+  try {
+    const response = await fetch(
+      `${process.env.NEXT_PUBLIC_API_URL}/oauth/user`,
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          email,
+          name,
+          image,
+          provider,
+        }),
+      },
+    );
+
+    if (!response.ok) {
+      throw new Error('OAuth user creation failed');
+    }
+
+    return await response.json();
+  } catch (error) {
+    console.error('Server-side OAuth handling failed:', error);
+    throw error;
+  }
+}
 
 export const authOptions = {
   providers: [
@@ -21,17 +50,19 @@ export const authOptions = {
             credentials.email,
           );
 
-          // Call your backend login endpoint directly
-          const response = await fetch('http://localhost:3000/login', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
+          const response = await fetch(
+            `${process.env.NEXT_PUBLIC_API_URL}/login`,
+            {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({
+                email: credentials.email,
+                password: credentials.password,
+              }),
             },
-            body: JSON.stringify({
-              email: credentials.email,
-              password: credentials.password,
-            }),
-          });
+          );
 
           const data = await response.json();
           console.log('🔐 Backend response:', {
@@ -41,7 +72,6 @@ export const authOptions = {
 
           if (response.ok && data.user) {
             console.log('✅ Login successful for user:', data.user.username);
-            // Return user object if authentication successful
             return {
               id: data.user.id,
               email: data.user.email,
@@ -51,7 +81,7 @@ export const authOptions = {
               xp: data.user.xp || 0,
               currentLevel: data.user.currentLevel || 1,
               joinDate: data.user.joinDate,
-              pfpURL: data.user.pfpURL,
+              avatar: data.user.avatar,
               // Store the JWT token from backend
               backendToken: data.token,
             };
@@ -68,44 +98,58 @@ export const authOptions = {
   ],
   callbacks: {
     async signIn({ user, account, profile }) {
-      // Handle OAuth providers (Google, etc.)
       if (account?.provider === 'google') {
         try {
-          // Call our backend to handle OAuth user creation/retrieval
-          const response = await handleOAuthUser(
+          // Use server-safe OAuth handler (no caching)
+          const response = await handleOAuthUserServer(
             user.email,
             user.name,
             user.image,
             account.provider,
           );
 
-          // Attach database user data to the user object
-          // This will be available in the JWT callback
           user.id = response.user.id;
           user.username = response.user.username;
           user.surname = response.user.surname;
           user.xp = response.user.xp;
           user.currentLevel = response.user.currentLevel;
           user.joinDate = response.user.joinDate;
-          user.pfpURL = response.user.pfpURL;
-          
-          // 🔑 IMPORTANT: Pass the JWT token for OAuth users too
-          user.accessToken = response.token;
+          user.avatar = response.user.avatar;
 
           return true;
         } catch (error) {
           console.error('🚫 Error handling OAuth user:', error);
-          return false; // This will prevent sign in
+          return false;
         }
       }
 
-      // For credentials provider, no additional processing needed
       return true;
     },
-    async jwt({ token, account, user }) {
+    async jwt({ token, account, user, trigger, session }) {
       // Persist the OAuth access_token to the token right after signin
       if (account) {
         token.accessToken = account.access_token;
+      }
+
+      console.log('JWT callback:', {
+        user,
+        account,
+        token,
+        trigger,
+        session,
+      });
+
+      if (trigger === 'update' && session?.user) {
+        // Update token with user data from session
+        token.id = session.user.id;
+        token.email = session.user.email;
+        token.name = session.user.name;
+        token.surname = session.user.surname;
+        token.username = session.user.username;
+        token.xp = session.user.xp || 0;
+        token.currentLevel = session.user.currentLevel || 1;
+        token.joinDate = session.user.joinDate;
+        token.avatar = session.user.avatar;
       }
 
       // Persist user data in the token right after signin
@@ -119,16 +163,22 @@ export const authOptions = {
         token.xp = user.xp || 0; // Default XP for new users
         token.currentLevel = user.currentLevel || 1; // Default level
         token.joinDate = user.joinDate; // Add join date
-        token.pfpURL = user.pfpURL || user.image; // Use database pfpURL or OAuth image
+        token.avatar = user.avatar; // Use database pfpURL or OAuth image
         // Store the backend JWT token for API calls
         token.backendToken = user.backendToken;
       }
 
       return token;
     },
-    async session({ session, token }) {
+    async session({ session, token, trigger, newSession }) {
       // Send properties to the client, getting data from the token
       session.accessToken = token.accessToken;
+      console.log('Session callback:', {
+        user: session.user,
+        token,
+        trigger,
+        newSession,
+      });
 
       // Pass user data from token to session
       if (token) {
@@ -140,7 +190,7 @@ export const authOptions = {
         session.user.xp = token.xp;
         session.user.currentLevel = token.currentLevel;
         session.user.joinDate = token.joinDate;
-        session.user.pfpURL = token.pfpURL;
+        session.user.avatar = token.avatar;
         // Pass backend JWT token to session
         session.backendToken = token.backendToken;
       }

@@ -1,8 +1,11 @@
 'use client';
-import Picture from '@/app/ui/profile/picture-block';
+import ClickableAvatar from '@/app/ui/profile/clickable-avatar';
 import { Cog } from 'lucide-react';
 import { useSession } from 'next-auth/react';
 import Link from 'next/link';
+import { useAvatar } from '../context/avatar-context';
+import { gradients } from '../ui/avatar/avatar-colors';
+import { AvatarColors } from '../ui/avatar/color';
 import Achievements from '../ui/profile/achievements';
 import MatchStats from '../ui/profile/match-stats';
 import UserInfo from '../ui/profile/user-info';
@@ -10,6 +13,7 @@ import UsernameBlock from '../ui/profile/username-block';
 
 export default function Page() {
   const { data: session, status } = useSession();
+  const { avatar } = useAvatar();
 
   if (status === 'loading') return <div>Loading...</div>;
   if (status === 'unauthenticated')
@@ -18,15 +22,38 @@ export default function Page() {
 
   const user = session.user;
 
+  const getBackgroundStyle = (backgroundType) => {
+    let style = { backgroundColor: '#421e68' };
+    if (backgroundType && backgroundType.startsWith('solid-')) {
+      const idx = parseInt(backgroundType.split('-')[1], 10);
+      style = { backgroundColor: AvatarColors[idx] || '#421e68' };
+    } else if (backgroundType && backgroundType.startsWith('gradient-')) {
+      const idx = parseInt(backgroundType.split('-')[1], 10);
+      const g = gradients[idx];
+      if (g) {
+        style = {
+          background: `linear-gradient(135deg, ${g.colors.join(', ')})`,
+        };
+      }
+    }
+    return style;
+  };
+
   return (
     <div className="h-full">
-      <div className="bg-[#FF6E99] flex items-center justify-between px-4">
+      <div
+        className="flex items-center justify-between px-4"
+        style={getBackgroundStyle(avatar?.background)}
+      >
         <div className="flex-1"></div>
         <div className="flex-2 flex justify-center">
-          <Picture src={user.pfpURL || '/user.svg'} />
+          <ClickableAvatar avatar={{ ...avatar, background: 'transparent' }} />
         </div>
         <div className="flex-1 flex justify-center">
-          <Link href="settings">
+          <Link
+            href="settings"
+            className="transition-transform hover:scale-105 active:scale-95"
+          >
             <Cog stroke="black" size={40} />
           </Link>
         </div>

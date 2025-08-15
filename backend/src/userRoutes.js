@@ -3,6 +3,7 @@ import bcrypt from 'bcrypt';
 import express from 'express';
 import jwt from 'jsonwebtoken';
 import { supabase } from '../database/supabaseClient.js';
+import { verifyToken } from './middleware/auth.js';
 
 const router = express.Router();
 const TOKEN_EXPIRY = 3600; // 1 hour in seconds
@@ -11,7 +12,7 @@ const TOKEN_EXPIRY = 3600; // 1 hour in seconds
 router.get('/users', async (req, res) => {
   const { data, error } = await supabase
     .from('Users')
-    .select('id,name,surname,username,email,currentLevel,joinDate,xp,pfpURL');
+    .select('id,name,surname,username,email,currentLevel,joinDate,xp,avatar');
   if (error) {
     console.error('Error fetching users:', error.message);
     return res.status(500).json({ error: 'Failed to fetch users' });
@@ -20,21 +21,13 @@ router.get('/users', async (req, res) => {
 });
 
 // Return specific user: (works)
-router.get('/user/:id', async (req, res) => {
+router.get('/user/:id', verifyToken, async (req, res) => {
   const { id } = req.params;
-
-  // Check for Authorization header (mock for now)
-  const authHeader = req.headers.authorization;
-  if (!authHeader || !authHeader.startsWith('Bearer ')) {
-    return res
-      .status(401)
-      .json({ error: 'You are unauthorized to make this request.' });
-  }
 
   // Fetch user from Supabase
   const { data, error } = await supabase
     .from('Users')
-    .select('id,name,surname,username,email,currentLevel,joinDate,xp,pfpURL')
+    .select('id,name,surname,username,email,currentLevel,joinDate,xp,avatar')
     .eq('id', id)
     .single();
 
@@ -50,15 +43,8 @@ router.get('/user/:id', async (req, res) => {
 });
 
 // Return user's achievements: (works)
-router.get('/users/:id/achievements', async (req, res) => {
+router.get('/users/:id/achievements', verifyToken, async (req, res) => {
   const { id } = req.params;
-
-  const authHeader = req.headers.authorization;
-  if (!authHeader || !authHeader.startsWith('Bearer ')) {
-    return res
-      .status(401)
-      .json({ error: 'You are unauthorized to make this request.' });
-  }
 
   const { data, error } = await supabase
     .from('Achievements')
@@ -80,16 +66,9 @@ router.get('/users/:id/achievements', async (req, res) => {
 });
 
 // Update a user's XP: (works)
-router.post('/user/:id/xp', async (req, res) => {
+router.post('/user/:id/xp', verifyToken, async (req, res) => {
   const { id } = req.params;
   const { xp } = req.body;
-
-  const authHeader = req.headers.authorization;
-  if (!authHeader || !authHeader.startsWith('Bearer ')) {
-    return res
-      .status(401)
-      .json({ error: 'You are unauthorized to make this request.' });
-  }
 
   if (typeof xp !== 'number') {
     return res.status(400).json({ error: 'XP must be a number.' });
@@ -108,6 +87,29 @@ router.post('/user/:id/xp', async (req, res) => {
     }
     console.error('Error updating XP:', error.message);
     return res.status(500).json({ error: 'Failed to update XP' });
+  }
+
+  res.status(200).json(data);
+});
+
+// Update a user's avatar
+router.post('/user/:id/avatar', async (req, res) => {
+  const { id } = req.params;
+  const { avatar } = req.body;
+
+  const { data, error } = await supabase
+    .from('Users')
+    .update({ avatar })
+    .eq('id', id)
+    .select()
+    .single();
+
+  if (error) {
+    if (error.code === 'PGRST116') {
+      return res.status(404).json({ error: "User doesn't exist" });
+    }
+    console.error('Error updating AVATAR:', error.message);
+    return res.status(500).json({ error: 'Failed to update AVATAR' });
   }
 
   res.status(200).json(data);
@@ -200,7 +202,7 @@ router.post('/login', async (req, res) => {
   const { data: user, error: fetchError } = await supabase
     .from('Users')
     .select(
-      'id,name,surname,username,email,password,currentLevel,joinDate,xp,pfpURL',
+      'id,name,surname,username,email,password,currentLevel,joinDate,xp,avatar',
     )
     .eq('email', email)
     .single();
@@ -235,7 +237,7 @@ router.post('/login', async (req, res) => {
       currentLevel: user.currentLevel || 5, // Default to level 1 if not set
       joinDate: user.joinDate || new Date().toISOString(), // Default to current date if not set
       xp: user.xp || 0, // Default to 0 XP if not set
-      pfpURL: user.pfpURL,
+      avatar: user.avatar,
     },
   });
 });

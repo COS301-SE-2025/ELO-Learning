@@ -1,7 +1,11 @@
 import express from 'express';
 import { supabase } from '../database/supabaseClient.js';
 import { calculateSinglePlayerXP } from './utils/xpCalculator.js';
-import { updateSinglePlayerElo } from './utils/eloCalculator.js';
+import {
+  updateSinglePlayerElo,
+  calculateExpectedRating,
+  updateEloRating,
+} from './utils/eloCalculator.js';
 import { checkAndUpdateRankAndLevel } from './utils/userProgression.js';
 import pushNotificationService from './services/pushNotificationService.js';
 
@@ -53,6 +57,10 @@ router.post('/singleplayer', async (req, res) => {
     if (qError || !questionData)
       return res.status(404).json({ error: 'Question not found' });
 
+    console.log('Submitting question:', question_id);
+
+    const questionElo = questionData.elo_rating ?? 5.0;
+
     const xpEarned = await calculateSinglePlayerXP({
       CA: isCorrect ? 1 : 0,
       XPGain: questionData.xpGain,
@@ -64,6 +72,7 @@ router.post('/singleplayer', async (req, res) => {
 
     const newXP = currentXP + xpEarned;
 
+    //ELO Calculation for player
     const newElo = updateSinglePlayerElo({
       playerRating: currentElo,
       questionRating: questionData.elo_rating ?? 5.0,
@@ -72,6 +81,23 @@ router.post('/singleplayer', async (req, res) => {
 
     const eloChange = parseFloat((newElo - currentElo).toFixed(2));
 
+    //Elo calculation for question (treated as opponent)
+    const expectedForQuestion = calculateExpectedRating(
+      questionElo,
+      currentElo,
+    );
+    const actualForQuestion = isCorrect ? 1 : 0;
+    const newQuestionElo = updateEloRating({
+      rating: questionElo,
+      expected: expectedForQuestion,
+      actual: actualForQuestion,
+    }).toFixed(2);
+
+    const questionEloChange = parseFloat(
+      (newQuestionElo - questionElo).toFixed(2),
+    );
+
+    //Update user level and rank
     const { newLevel, newRank } = await checkAndUpdateRankAndLevel({
       user_id,
       newXP,
@@ -81,6 +107,7 @@ router.post('/singleplayer', async (req, res) => {
 
     let rankUp = false,
       rankDown = false;
+
     if (currentRank !== newRank) {
       const { data: allRanks } = await supabase
         .from('Ranks')
@@ -122,43 +149,18 @@ router.post('/singleplayer', async (req, res) => {
       })
       .eq('id', user_id);
 
-    // Send push notifications for achievements
-    try {
-      // Send level up notification
-      if (newLevel > currentLevel) {
-        await pushNotificationService.sendLevelUpNotification(
-          user_id,
-          newLevel,
-        );
-      }
-
-      // Send rank up notification
-      if (rankUp) {
-        await pushNotificationService.sendToUser(
-          user_id,
-          {
-            title: '🏆 Rank Up!',
-            body: `Congratulations! You've been promoted to ${newRank}!`,
-            clickAction: '/profile',
-          },
-          {
-            type: 'rank_up',
-            newRank,
-          },
-        );
-      }
-    } catch (notificationError) {
-      // Don't fail the main request if notifications fail
-      console.warn(
-        'Failed to send push notification:',
-        notificationError.message,
-      );
-    }
+    //Update question ELO
+    await supabase
+      .from('Questions')
+      .update({ elo_rating: newQuestionElo })
+      .eq('Q_id', question_id);
 
     return res.status(200).json({
       xpEarned,
       eloChange,
+      questionEloChange,
       newElo,
+      newQuestionElo,
       leveledUp: newLevel > currentLevel,
       newRank,
       rankUp,

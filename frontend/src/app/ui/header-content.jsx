@@ -1,14 +1,15 @@
+// FIXED header-content.jsx
 'use client';
 
 import clsx from 'clsx';
 import { Shield } from 'lucide-react';
-import { useSession } from 'next-auth/react';
 import { memo, useMemo } from 'react';
+import { useSession } from 'next-auth/react'; // ← CHANGED: Use NextAuth directly
 
 const HeaderContent = memo(function HeaderContent() {
-  const { data: session, status } = useSession();
+  const { data: session, status } = useSession(); // ← SIMPLIFIED: Just use NextAuth
 
-  // Memoize all user data processing to avoid recalculations
+  // Memoize user data processing
   const userData = useMemo(() => {
     if (status !== 'authenticated' || !session?.user) {
       return null;
@@ -35,6 +36,10 @@ const HeaderContent = memo(function HeaderContent() {
         >
           <div className="flex items-center gap-2">
             <div className="h-4 w-16 bg-gray-700 rounded animate-pulse"></div>
+          </div>
+          <div className="flex items-center gap-2">
+            <Shield size={24} fill="#4D5DED" stroke="#4D5DED" />
+            <div className="h-4 w-12 bg-gray-700 rounded animate-pulse"></div>
           </div>
         </div>
       </div>

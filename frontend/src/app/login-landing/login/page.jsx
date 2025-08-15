@@ -15,49 +15,36 @@ export default function Page() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    // setError('');
-    // setIsLoading(true);
+    setError('');
+    setIsLoading(true);
 
-    // try {
-    //   const response = await loginUser(email, password);
-    //   await setCookie(response);
-
-    //   // Store the token and user data
-    //   localStorage.setItem('token', response.token);
-    //   localStorage.setItem('user', JSON.stringify(response.user));
-
-    //   // Redirect to dashboard
-    //   router.push('/dashboard');
-    // } catch (err) {
-    //   console.error('Login failed:', err);
-    //   setError('Username or password incorrect, please try again');
-    // } finally {
-    //   setIsLoading(false);
-    // }
-    signIn('credentials', {
-      callbackUrl: 'http://localhost:8080/dashboard',
-      email,
-      password,
-      redirect: false,
-    })
-      .then((response) => {
-        if (response.error) {
-          setError('Username or password incorrect, please try again');
-        } else {
-          // // Store the token and user data
-          // setCookie(response);
-          // localStorage.setItem('token', response.token);
-          localStorage.setItem('user', JSON.stringify(response.user));
-
-          // // Redirect to dashboard
-          router.push('/dashboard');
-          console.log('Login successful:', response);
-        }
-      })
-      .catch((err) => {
-        console.error('Login failed:', err);
-        setError('Username or password incorrect, please try again');
+    try {
+      const result = await signIn('credentials', {
+        callbackUrl: `${
+          process.env.NEXT_PUBLIC_FRONTEND_URL || 'http://localhost:8080'
+        }/dashboard`,
+        email,
+        password,
+        redirect: false,
       });
+
+      if (result?.error) {
+        setError('Username or password incorrect, please try again');
+      } else {
+        // Clear any existing cache before redirecting
+        const { cache } = await import('../../../utils/cache');
+        cache.clear();
+
+        // Redirect to dashboard
+        router.push('/dashboard');
+        console.log('Login successful:', result);
+      }
+    } catch (err) {
+      console.error('Login failed:', err);
+      setError('Username or password incorrect, please try again');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const togglePasswordVisibility = () => {
@@ -132,9 +119,17 @@ export default function Page() {
       <div className="px-4 text-center">
         <div
           className="google-button flex items-center justify-around gap-10 m-2"
-          onClick={() =>
-            signIn('google', { callbackUrl: 'http://localhost:8080/dashboard' })
-          }
+          onClick={async () => {
+            // Clear cache before OAuth sign in
+            const { cache } = await import('../../../utils/cache');
+            cache.clear();
+
+            signIn('google', {
+              callbackUrl: `${
+                process.env.NEXT_PUBLIC_FRONTEND_URL || 'http://localhost:8080'
+              }/dashboard`,
+            });
+          }}
         >
           {/* <FaGoogle size={24} /> */}
           <p className="p-3">Sign in with Google</p>

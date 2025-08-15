@@ -290,6 +290,11 @@ export default (io, socket) => {
     const user1Id = gameData.playerData[player1Id].id;
     const user2Id = gameData.playerData[player2Id].id;
 
+    console.log('Player 1 id:', user1Id);
+    console.log('Player 1 totalXPGain:', player1Stats.xpGain);
+    console.log('Player 2 id:', user2Id);
+    console.log('Player 2 totalXPGain:', player2Stats.xpGain);
+
     // Prepare match data for frontend
     const matchResults = {
       players: [user1Id, user2Id],

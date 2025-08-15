@@ -8,52 +8,52 @@ const testScenarios = [
     name: 'Text Only Answers',
     examples: [
       {
-        student: { "0": "derivative", "1": "integral" },
-        correct: { "0": "derivative", "1": "integral" },
-        expected: true
+        student: { 0: 'derivative', 1: 'integral' },
+        correct: { 0: 'derivative', 1: 'integral' },
+        expected: true,
       },
       {
-        student: { "0": "DERIVATIVE", "1": "integral" },
-        correct: { "0": "derivative", "1": "integral" },
-        expected: true
-      }
-    ]
+        student: { 0: 'DERIVATIVE', 1: 'integral' },
+        correct: { 0: 'derivative', 1: 'integral' },
+        expected: true,
+      },
+    ],
   },
   {
     name: 'Mathematical Expressions',
     examples: [
       {
-        student: { "0": "2*x", "1": "x^2" },
-        correct: { "0": "2x", "1": "x*x" },
-        note: "Would use math validator in real implementation"
+        student: { 0: '2*x', 1: 'x^2' },
+        correct: { 0: '2x', 1: 'x*x' },
+        note: 'Would use math validator in real implementation',
       },
       {
-        student: { "0": "sin(pi/2)" },
-        correct: { "0": "1" },
-        note: "Trigonometric evaluation"
-      }
-    ]
+        student: { 0: 'sin(pi/2)' },
+        correct: { 0: '1' },
+        note: 'Trigonometric evaluation',
+      },
+    ],
   },
   {
     name: 'Multiple Answer Options',
     examples: [
       {
-        student: { "0": "2*x" },
-        correct: { "0": "2x|2*x|x+x|x*2" },
-        expected: true
-      }
-    ]
+        student: { 0: '2*x' },
+        correct: { 0: '2x|2*x|x+x|x*2' },
+        expected: true,
+      },
+    ],
   },
   {
     name: 'Mixed Content',
     examples: [
       {
-        student: { "0": "derivative", "1": "2*x", "2": "continuous" },
-        correct: { "0": "derivative", "1": "2x", "2": "continuous" },
-        note: "Text and math together"
-      }
-    ]
-  }
+        student: { 0: 'derivative', 1: '2*x', 2: 'continuous' },
+        correct: { 0: 'derivative', 1: '2x', 2: 'continuous' },
+        note: 'Text and math together',
+      },
+    ],
+  },
 ];
 
 console.log('📝 Enhanced Fill-in-Blank Features:');
@@ -62,7 +62,7 @@ console.log('');
 testScenarios.forEach((scenario, index) => {
   console.log(`${index + 1}. ${scenario.name}`);
   console.log('   ' + '─'.repeat(scenario.name.length + 3));
-  
+
   scenario.examples.forEach((example, exIndex) => {
     console.log(`   Example ${exIndex + 1}:`);
     console.log(`     Student: ${JSON.stringify(example.student)}`);

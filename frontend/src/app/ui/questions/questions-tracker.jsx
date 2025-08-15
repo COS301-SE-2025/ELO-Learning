@@ -50,7 +50,7 @@ export default function QuestionsTracker({
     };
 
     window.addEventListener('lifeLost', handleMatchLifeLost);
-    
+
     return () => {
       window.removeEventListener('lifeLost', handleMatchLifeLost);
     };
@@ -118,7 +118,7 @@ export default function QuestionsTracker({
   const setLocalStorage = async () => {
     // Only proceed if we're in the browser
     if (typeof window === 'undefined') return;
-    
+
     // Calculate time elapsed in seconds
     const timeElapsed = Math.round((Date.now() - questionStartTime) / 1000);
 
@@ -149,8 +149,8 @@ export default function QuestionsTracker({
         revalidatedResult = true;
         matchedAnswer = correctAnswer;
         // Find the original answer object for this matched answer
-        correctAnswerObj = currAnswers.find(ans => 
-          (ans.answer_text || ans.answerText) === correctAnswer
+        correctAnswerObj = currAnswers.find(
+          (ans) => (ans.answer_text || ans.answerText) === correctAnswer,
         );
         break; // Found a match, no need to check further
       }
@@ -192,7 +192,7 @@ export default function QuestionsTracker({
         }
         return newLives;
       });
-      
+
       if (numLives <= 1) {
         return true; // Game over
       }

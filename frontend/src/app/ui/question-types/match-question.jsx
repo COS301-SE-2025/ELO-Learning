@@ -336,7 +336,9 @@ export default function MatchQuestionTemplate({
     const matchKey = `${leftItem.text}→${rightItem.text}`;
 
     console.log(
-      `🔍 Match validation: ${leftItem.text} → ${rightItem.text} = ${isThisMatchCorrect ? 'CORRECT' : 'INCORRECT'}`,
+      `🔍 Match validation: ${leftItem.text} → ${rightItem.text} = ${
+        isThisMatchCorrect ? 'CORRECT' : 'INCORRECT'
+      }`,
     );
 
     if (!isThisMatchCorrect) {
@@ -382,7 +384,9 @@ export default function MatchQuestionTemplate({
     setIsAnswerCorrect(isCorrect && allMatched);
 
     console.log(
-      `🔍 Overall validation: ${isCorrect ? 'VALID' : 'INVALID'}, All matched: ${allMatched}`,
+      `🔍 Overall validation: ${
+        isCorrect ? 'VALID' : 'INVALID'
+      }, All matched: ${allMatched}`,
     );
   };
 

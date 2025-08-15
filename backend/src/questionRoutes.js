@@ -3,15 +3,15 @@ import { supabase } from '../database/supabaseClient.js';
 import { backendMathValidator } from './mathValidator.js';
 import { verifyToken } from './middleware/auth.js';
 
-const router = express.Router()
+const router = express.Router();
 
 const validateMatchQuestion = async (studentAnswer, questionId) => {
   try {
     console.log('Validating match question:', { studentAnswer, questionId });
-    
+
     // studentAnswer should be an object like:
     // { "left-0": "right-2", "left-1": "right-0", ... }
-    
+
     if (typeof studentAnswer !== 'object' || !studentAnswer) {
       console.log('Invalid student answer format');
       return false;
@@ -35,7 +35,7 @@ const validateMatchQuestion = async (studentAnswer, questionId) => {
     const correctPairs = [];
     correctAnswers.forEach((answer, index) => {
       let left, right;
-      
+
       // Method 1: Check for explicit match_left and match_right fields
       if (answer.match_left && answer.match_right) {
         left = answer.match_left;
@@ -45,27 +45,27 @@ const validateMatchQuestion = async (studentAnswer, questionId) => {
       else if (answer.answer_text) {
         const answerText = answer.answer_text;
         if (answerText.includes(' → ')) {
-          [left, right] = answerText.split(' → ').map(item => item.trim());
+          [left, right] = answerText.split(' → ').map((item) => item.trim());
         } else if (answerText.includes('→')) {
-          [left, right] = answerText.split('→').map(item => item.trim());
+          [left, right] = answerText.split('→').map((item) => item.trim());
         } else if (answerText.includes(' | ')) {
-          [left, right] = answerText.split(' | ').map(item => item.trim());
+          [left, right] = answerText.split(' | ').map((item) => item.trim());
         } else if (answerText.includes('|')) {
-          [left, right] = answerText.split('|').map(item => item.trim());
+          [left, right] = answerText.split('|').map((item) => item.trim());
         } else if (answerText.includes(': ')) {
-          [left, right] = answerText.split(': ').map(item => item.trim());
+          [left, right] = answerText.split(': ').map((item) => item.trim());
         } else if (answerText.includes(':')) {
-          [left, right] = answerText.split(':').map(item => item.trim());
+          [left, right] = answerText.split(':').map((item) => item.trim());
         }
       }
-      
+
       if (left && right) {
         correctPairs.push({
           leftId: `left-${index}`,
           rightId: `right-${index}`,
           leftText: left,
           rightText: right,
-          pairIndex: index
+          pairIndex: index,
         });
       }
     });
@@ -75,9 +75,11 @@ const validateMatchQuestion = async (studentAnswer, questionId) => {
     // Validate student matches against correct pairs
     const studentMatches = Object.keys(studentAnswer);
     const totalPairs = correctPairs.length;
-    
+
     if (studentMatches.length !== totalPairs) {
-      console.log(`Incomplete: ${studentMatches.length}/${totalPairs} pairs matched`);
+      console.log(
+        `Incomplete: ${studentMatches.length}/${totalPairs} pairs matched`,
+      );
       return false;
     }
 
@@ -85,23 +87,26 @@ const validateMatchQuestion = async (studentAnswer, questionId) => {
 
     for (const leftId in studentAnswer) {
       const studentRightId = studentAnswer[leftId];
-      
+
       // Find the correct pair for this leftId
-      const correctPair = correctPairs.find(pair => pair.leftId === leftId);
-      
+      const correctPair = correctPairs.find((pair) => pair.leftId === leftId);
+
       if (correctPair && correctPair.rightId === studentRightId) {
         correctMatchCount++;
         console.log(`✅ Correct match: ${leftId} → ${studentRightId}`);
       } else {
-        console.log(`❌ Incorrect match: ${leftId} → ${studentRightId} (should be ${correctPair?.rightId})`);
+        console.log(
+          `❌ Incorrect match: ${leftId} → ${studentRightId} (should be ${correctPair?.rightId})`,
+        );
       }
     }
 
     const isAllCorrect = correctMatchCount === totalPairs;
-    console.log(`Match validation result: ${correctMatchCount}/${totalPairs} correct. All correct: ${isAllCorrect}`);
-    
-    return isAllCorrect;
+    console.log(
+      `Match validation result: ${correctMatchCount}/${totalPairs} correct. All correct: ${isAllCorrect}`,
+    );
 
+    return isAllCorrect;
   } catch (error) {
     console.error('Error validating match question:', error);
     return false;
@@ -112,10 +117,10 @@ const validateMatchQuestion = async (studentAnswer, questionId) => {
 const validateMatchQuestionLegacy = (studentAnswer, correctAnswer) => {
   try {
     console.log('Legacy match validation:', { studentAnswer, correctAnswer });
-    
+
     // Handle different formats of correctAnswer
     let correctPairs;
-    
+
     if (typeof correctAnswer === 'string') {
       try {
         correctPairs = JSON.parse(correctAnswer);
@@ -133,24 +138,24 @@ const validateMatchQuestionLegacy = (studentAnswer, correctAnswer) => {
     const expectedMatches = {};
     correctPairs.forEach((pair, index) => {
       let left, right;
-      
+
       if (typeof pair === 'string') {
         if (pair.includes(' → ')) {
-          [left, right] = pair.split(' → ').map(item => item.trim());
+          [left, right] = pair.split(' → ').map((item) => item.trim());
         } else if (pair.includes('→')) {
-          [left, right] = pair.split('→').map(item => item.trim());
+          [left, right] = pair.split('→').map((item) => item.trim());
         } else if (pair.includes(' | ')) {
-          [left, right] = pair.split(' | ').map(item => item.trim());
+          [left, right] = pair.split(' | ').map((item) => item.trim());
         } else if (pair.includes('|')) {
-          [left, right] = pair.split('|').map(item => item.trim());
+          [left, right] = pair.split('|').map((item) => item.trim());
         } else if (pair.includes(': ')) {
-          [left, right] = pair.split(': ').map(item => item.trim());
+          [left, right] = pair.split(': ').map((item) => item.trim());
         }
       } else if (pair.left && pair.right) {
         left = pair.left;
         right = pair.right;
       }
-      
+
       if (left && right) {
         expectedMatches[`left-${index}`] = `right-${index}`;
       }
@@ -174,7 +179,6 @@ const validateMatchQuestionLegacy = (studentAnswer, correctAnswer) => {
     }
 
     return true;
-
   } catch (error) {
     console.error('Error in legacy match validation:', error);
     return false;
@@ -202,12 +206,15 @@ router.post('/question/:id/submit', async (req, res) => {
     let isCorrect = false;
 
     // Handle match questions with enhanced validation
-    if (actualQuestionType === 'Match Question' || actualQuestionType === 'Matching') {
+    if (
+      actualQuestionType === 'Match Question' ||
+      actualQuestionType === 'Matching'
+    ) {
       console.log('Processing match question submission');
-      
+
       // Use the enhanced match validation
       isCorrect = await validateMatchQuestion(studentAnswer, id);
-      
+
       if (!isCorrect) {
         // Fallback to legacy validation if new method fails
         const { data: correctAnswerData, error: answerError } = await supabase
@@ -217,8 +224,11 @@ router.post('/question/:id/submit', async (req, res) => {
           .eq('isCorrect', true);
 
         if (!answerError && correctAnswerData) {
-          const correctAnswers = correctAnswerData.map(a => a.answer_text);
-          isCorrect = validateMatchQuestionLegacy(studentAnswer, correctAnswers);
+          const correctAnswers = correctAnswerData.map((a) => a.answer_text);
+          isCorrect = validateMatchQuestionLegacy(
+            studentAnswer,
+            correctAnswers,
+          );
         }
       }
     } else {
@@ -233,12 +243,17 @@ router.post('/question/:id/submit', async (req, res) => {
       if (answerError || !correctAnswerData) {
         return res.status(404).json({
           error: 'Correct answer not found',
-          debug: { answerError, question_id: id }
+          debug: { answerError, question_id: id },
         });
       }
 
-      const correctAnswer = correctAnswerData.answer_text || correctAnswerData.answerText;
-      isCorrect = validateAnswerByType(actualQuestionType, studentAnswer, correctAnswer);
+      const correctAnswer =
+        correctAnswerData.answer_text || correctAnswerData.answerText;
+      isCorrect = validateAnswerByType(
+        actualQuestionType,
+        studentAnswer,
+        correctAnswer,
+      );
     }
 
     // Award XP if correct
@@ -283,7 +298,6 @@ router.post('/question/:id/submit', async (req, res) => {
         questionType: actualQuestionType,
       },
     });
-
   } catch (error) {
     console.error('Error submitting answer:', error);
     res.status(500).json({
@@ -294,7 +308,7 @@ router.post('/question/:id/submit', async (req, res) => {
   }
 });
 
-export { validateMatchQuestion, validateMatchQuestionLegacy }
+export { validateMatchQuestion, validateMatchQuestionLegacy };
 
 // Enhanced answer validation for different question types
 const validateAnswerByType = (questionType, studentAnswer, correctAnswer) => {
@@ -313,15 +327,15 @@ const validateAnswerByType = (questionType, studentAnswer, correctAnswer) => {
 
     case 'Fill-in-the-Blank':
     case 'Fill-in-the-Blanks':
-      return validateFillInBlank(studentAnswer, correctAnswer)
+      return validateFillInBlank(studentAnswer, correctAnswer);
 
     case 'Match Question':
     case 'Matching':
-      return validateMatchQuestion(studentAnswer, correctAnswer)
+      return validateMatchQuestion(studentAnswer, correctAnswer);
 
     case 'True/False':
     case 'True-False':
-      return validateTrueFalse(studentAnswer, correctAnswer)
+      return validateTrueFalse(studentAnswer, correctAnswer);
 
     default:
       return studentAnswer === correctAnswer;
@@ -374,40 +388,49 @@ const validateFillInBlank = (studentAnswer, correctAnswer) => {
         : JSON.parse(correctAnswer);
 
     for (let blankId in correctAnswers) {
-      const studentBlank = studentAnswers[blankId]?.trim()
-      const correctBlank = correctAnswers[blankId].trim()
+      const studentBlank = studentAnswers[blankId]?.trim();
+      const correctBlank = correctAnswers[blankId].trim();
 
       if (!studentBlank) {
-        return false // Empty answer
+        return false; // Empty answer
       }
 
       const possibleAnswers = correctBlank.split('|').map((ans) => ans.trim());
 
       // Check each possible answer
-      let isCorrect = false
+      let isCorrect = false;
       for (const possibleAnswer of possibleAnswers) {
         // First try exact match (case-insensitive)
         if (studentBlank.toLowerCase() === possibleAnswer.toLowerCase()) {
-          isCorrect = true
-          break
+          isCorrect = true;
+          break;
         }
 
         // If it looks like a math expression, use the math validator
-        if (isMathExpression(studentBlank) || isMathExpression(possibleAnswer)) {
+        if (
+          isMathExpression(studentBlank) ||
+          isMathExpression(possibleAnswer)
+        ) {
           try {
-            if (backendMathValidator.validateAnswer(studentBlank, possibleAnswer)) {
-              isCorrect = true
-              break
+            if (
+              backendMathValidator.validateAnswer(studentBlank, possibleAnswer)
+            ) {
+              isCorrect = true;
+              break;
             }
           } catch (mathError) {
-            console.debug('Math validation failed for blank:', blankId, mathError)
+            console.debug(
+              'Math validation failed for blank:',
+              blankId,
+              mathError,
+            );
             // Continue to next possible answer
           }
         }
       }
 
       if (!isCorrect) {
-        return false
+        return false;
       }
     }
 
@@ -416,7 +439,7 @@ const validateFillInBlank = (studentAnswer, correctAnswer) => {
     console.error('Error validating fill in blank:', error);
     return false;
   }
-}
+};
 
 const validateTrueFalse = (studentAnswer, correctAnswer) => {
   try {
@@ -434,11 +457,11 @@ const validateTrueFalse = (studentAnswer, correctAnswer) => {
     console.error('Error validating true/false:', error);
     return false;
   }
-}
+};
 
 // Helper function to detect if a string looks like a math expression
 const isMathExpression = (str) => {
-  if (!str || typeof str !== 'string') return false
+  if (!str || typeof str !== 'string') return false;
 
   // Check for mathematical operators, functions, or patterns
   const mathPatterns = [
@@ -449,10 +472,10 @@ const isMathExpression = (str) => {
     /\b(pi|e|infinity)\b/i, // Math constants
     /\d+[a-z]/i, // Number with variable like 2x
     /[a-z]\d+/i, // Variable with number like x2
-  ]
+  ];
 
-  return mathPatterns.some((pattern) => pattern.test(str))
-}
+  return mathPatterns.some((pattern) => pattern.test(str));
+};
 
 // Get questions by type - UPDATED to use only existing columns
 router.get('/questions/type/:type', async (req, res) => {
@@ -500,7 +523,7 @@ router.get('/questions/type/:type', async (req, res) => {
       .from('Answers')
       .select('*')
       .in('question_id', questionIds)
-      .not('answer_text', 'is', null)
+      .not('answer_text', 'is', null);
 
     if (aError) {
       return res.status(500).json({
@@ -516,21 +539,23 @@ router.get('/questions/type/:type', async (req, res) => {
       );
 
       // Add placeholder fields for frontend compatibility (all null for now)
-      question.inputLabels = null
-      question.expressionTiles = null
-      question.fillInText = null
-      question.showMathHelper = false
-    })
+      question.inputLabels = null;
+      question.expressionTiles = null;
+      question.fillInText = null;
+      question.showMathHelper = false;
+    });
 
     // Filter out questions with no answers (for match questions this means incomplete data)
-    const questionsWithAnswers = questions.filter(q => q.answers && q.answers.length > 0)
+    const questionsWithAnswers = questions.filter(
+      (q) => q.answers && q.answers.length > 0,
+    );
 
     res.status(200).json({
       success: true,
       data: questionsWithAnswers,
       type: type,
       count: questionsWithAnswers.length,
-    })
+    });
   } catch (err) {
     console.error('Unexpected error:', err);
     res.status(500).json({ error: 'Unexpected server error' });
@@ -728,10 +753,10 @@ const getFeedbackMessage = (questionType, isCorrect) => {
     'Fill-in-the-Blank': 'Correct! All blanks filled properly!',
     'Fill-in-the-Blanks': 'Correct! All blanks filled properly!',
     'Match Question': 'Excellent! All pairs matched correctly!',
-    'Matching': 'Excellent! All pairs matched correctly!',
+    Matching: 'Excellent! All pairs matched correctly!',
     'True/False': 'Correct! You chose the right answer!',
     'True-False': 'Correct! You chose the right answer!',
-  }
+  };
 
   const incorrectMessages = {
     'Multiple Choice': 'Incorrect. Try again!',
@@ -746,11 +771,10 @@ const getFeedbackMessage = (questionType, isCorrect) => {
       'Some blanks are incorrect. Double-check your answers.',
     'Match Question':
       'Some pairs are not matched correctly. Review your connections.',
-    'Matching':
-      'Some pairs are not matched correctly. Review your connections.',
+    Matching: 'Some pairs are not matched correctly. Review your connections.',
     'True/False': 'Incorrect. Think about the statement more carefully.',
     'True-False': 'Incorrect. Think about the statement more carefully.',
-  }
+  };
 
   return isCorrect
     ? correctMessages[questionType] || 'Correct!'

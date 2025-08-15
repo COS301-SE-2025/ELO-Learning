@@ -28,10 +28,12 @@ export const validateAnswer = async (
   // Special handling for Open Response questions
   if (questionType === 'Open Response') {
     console.log('🔍 Processing Open Response question');
-    
+
     // For Open Response, we need stricter validation logic
     // Try exact match first (case insensitive)
-    if (studentAnswer.trim().toLowerCase() === correctAnswer.trim().toLowerCase()) {
+    if (
+      studentAnswer.trim().toLowerCase() === correctAnswer.trim().toLowerCase()
+    ) {
       console.log('✅ Open Response: Exact match found');
       return true;
     }
@@ -39,28 +41,27 @@ export const validateAnswer = async (
     // Try numerical match for financial questions with strict comparison
     const studentNum = parseFloat(studentAnswer.replace(/[^\d.-]/g, ''));
     const correctNum = parseFloat(correctAnswer.replace(/[^\d.-]/g, ''));
-    
+
     if (!isNaN(studentNum) && !isNaN(correctNum)) {
       const isCorrect = Math.abs(studentNum - correctNum) < 0.001;
       console.log('Open Response numerical comparison:', {
         studentNum,
         correctNum,
         isCorrect,
-        difference: Math.abs(studentNum - correctNum)
+        difference: Math.abs(studentNum - correctNum),
       });
       return isCorrect;
     }
 
     // For non-numerical Open Response, try partial matching
     if (isNaN(parseFloat(studentAnswer)) && isNaN(parseFloat(correctAnswer))) {
-      const isCorrect = (
+      const isCorrect =
         studentAnswer.toLowerCase().includes(correctAnswer.toLowerCase()) ||
-        correctAnswer.toLowerCase().includes(studentAnswer.toLowerCase())
-      );
+        correctAnswer.toLowerCase().includes(studentAnswer.toLowerCase());
       console.log('Open Response partial match:', {
         student: studentAnswer,
         correct: correctAnswer,
-        isCorrect
+        isCorrect,
       });
       return isCorrect;
     }
@@ -546,9 +547,12 @@ export const validateAnswerSync = (
     // Special handling for Open Response questions
     if (questionType === 'Open Response') {
       console.log('🔍 Sync validation for Open Response question');
-      
+
       // Try exact match first (case insensitive)
-      if (studentAnswer.trim().toLowerCase() === correctAnswer.trim().toLowerCase()) {
+      if (
+        studentAnswer.trim().toLowerCase() ===
+        correctAnswer.trim().toLowerCase()
+      ) {
         console.log('✅ Open Response sync: Exact match found');
         return true;
       }
@@ -556,28 +560,30 @@ export const validateAnswerSync = (
       // Try numerical match for financial questions with strict comparison
       const studentNum = parseFloat(studentAnswer.replace(/[^\d.-]/g, ''));
       const correctNum = parseFloat(correctAnswer.replace(/[^\d.-]/g, ''));
-      
+
       if (!isNaN(studentNum) && !isNaN(correctNum)) {
         const isCorrect = Math.abs(studentNum - correctNum) < 0.001;
         console.log('Open Response sync numerical comparison:', {
           studentNum,
           correctNum,
           isCorrect,
-          difference: Math.abs(studentNum - correctNum)
+          difference: Math.abs(studentNum - correctNum),
         });
         return isCorrect;
       }
 
       // For non-numerical Open Response, try partial matching
-      if (isNaN(parseFloat(studentAnswer)) && isNaN(parseFloat(correctAnswer))) {
-        const isCorrect = (
+      if (
+        isNaN(parseFloat(studentAnswer)) &&
+        isNaN(parseFloat(correctAnswer))
+      ) {
+        const isCorrect =
           studentAnswer.toLowerCase().includes(correctAnswer.toLowerCase()) ||
-          correctAnswer.toLowerCase().includes(studentAnswer.toLowerCase())
-        );
+          correctAnswer.toLowerCase().includes(studentAnswer.toLowerCase());
         console.log('Open Response sync partial match:', {
           student: studentAnswer,
           correct: correctAnswer,
-          isCorrect
+          isCorrect,
         });
         return isCorrect;
       }
@@ -633,7 +639,10 @@ export const isValidExpression = (expression) => {
 
     // Reject expressions that are just operators or punctuation
     if (/^[+\-*/^()=,\s\[\]{}]+$/.test(cleaned)) {
-      console.debug('Rejecting expression with only operators/punctuation:', cleaned);
+      console.debug(
+        'Rejecting expression with only operators/punctuation:',
+        cleaned,
+      );
       return false;
     }
 
@@ -687,5 +696,5 @@ export const isValidExpression = (expression) => {
     return false;
   }
 };
-  
-// Fast validation for single-player mode (prioritizes frontend validation) 
+
+// Fast validation for single-player mode (prioritizes frontend validation)

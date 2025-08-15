@@ -1,6 +1,14 @@
 'use client';
 
-import { BookOpen, Brain, Check, CheckSquare, Layers, Target, X } from 'lucide-react';
+import {
+  BookOpen,
+  Brain,
+  Check,
+  CheckSquare,
+  Layers,
+  Target,
+  X,
+} from 'lucide-react';
 import Link from 'next/link';
 
 export default function QuestionTemplatesPage() {
@@ -54,7 +62,7 @@ export default function QuestionTemplatesPage() {
       id: 'match-question',
       title: 'Match Question',
       description: 'Connect related items by matching pairs',
-      icon: <span style={{fontSize: '32px'}}>🔗</span>,
+      icon: <span style={{ fontSize: '32px' }}>🔗</span>,
       color: 'bg-pink-100 border-pink-300 text-pink-800',
       hoverColor: 'hover:bg-pink-200',
       path: '/question-templates/match-question',
@@ -63,7 +71,12 @@ export default function QuestionTemplatesPage() {
       id: 'true-false',
       title: 'True/False',
       description: 'Determine if statements are true or false',
-      icon: <div className="flex gap-1"><Check size={16} /><X size={16} /></div>,
+      icon: (
+        <div className="flex gap-1">
+          <Check size={16} />
+          <X size={16} />
+        </div>
+      ),
       color: 'bg-red-100 border-red-300 text-red-800',
       hoverColor: 'hover:bg-red-200',
       path: '/question-templates/true-false',
@@ -88,8 +101,9 @@ export default function QuestionTemplatesPage() {
             Question Templates
           </h1>
           <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-            Practice with different types of questions to improve your mathematical skills. 
-            Each template offers a unique way to engage with learning content.
+            Practice with different types of questions to improve your
+            mathematical skills. Each template offers a unique way to engage
+            with learning content.
           </p>
         </div>
 
@@ -98,15 +112,15 @@ export default function QuestionTemplatesPage() {
           {questionTypes.map((type) => (
             <Link key={type.id} href={type.path}>
               <div
-                className={`${type.color} ${type.hoverColor} 
-                  border-2 rounded-xl p-6 transition-all duration-200 
+                className={`${type.color} ${type.hoverColor}
+                  border-2 rounded-xl p-6 transition-all duration-200
                   hover:shadow-lg hover:scale-[1.02] cursor-pointer`}
               >
                 <div className="flex flex-col items-center text-center space-y-4">
                   <div className="flex items-center justify-center w-16 h-16 rounded-full bg-white shadow-md">
                     {type.icon}
                   </div>
-                  
+
                   <div>
                     <h3 className="text-lg font-bold mb-2">{type.title}</h3>
                     <p className="text-sm opacity-80 leading-relaxed">
@@ -124,38 +138,47 @@ export default function QuestionTemplatesPage() {
           <h2 className="text-2xl font-bold text-gray-800 mb-6 text-center">
             How to Use Question Templates
           </h2>
-          
+
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             <div className="text-center">
               <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
                 <span className="text-2xl font-bold text-blue-600">1</span>
               </div>
               <h3 className="font-semibold text-lg mb-2">Choose a Type</h3>
-              <p className="text-gray-600">Select the question template that matches your learning goals or what you want to practice.</p>
+              <p className="text-gray-600">
+                Select the question template that matches your learning goals or
+                what you want to practice.
+              </p>
             </div>
-            
+
             <div className="text-center">
               <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
                 <span className="text-2xl font-bold text-green-600">2</span>
               </div>
               <h3 className="font-semibold text-lg mb-2">Practice</h3>
-              <p className="text-gray-600">Work through the questions at your own pace. Each type offers unique interaction methods.</p>
+              <p className="text-gray-600">
+                Work through the questions at your own pace. Each type offers
+                unique interaction methods.
+              </p>
             </div>
-            
+
             <div className="text-center">
               <div className="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-4">
                 <span className="text-2xl font-bold text-purple-600">3</span>
               </div>
               <h3 className="font-semibold text-lg mb-2">Learn & Improve</h3>
-              <p className="text-gray-600">Get instant feedback and explanations to help you understand and improve your skills.</p>
+              <p className="text-gray-600">
+                Get instant feedback and explanations to help you understand and
+                improve your skills.
+              </p>
             </div>
           </div>
         </div>
 
         {/* Back to Dashboard */}
         <div className="text-center mt-8">
-          <Link 
-            href="/practice" 
+          <Link
+            href="/practice"
             className="inline-flex items-center gap-2 px-6 py-3 bg-[#7D32CE] text-white rounded-lg hover:bg-[#6B2AB8] transition-colors"
           >
             Back to Practice

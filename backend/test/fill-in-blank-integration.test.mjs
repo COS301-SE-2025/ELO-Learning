@@ -53,14 +53,23 @@ const validateFillInBlank = (studentAnswer, correctAnswer) => {
         }
 
         // If it looks like a math expression, use the math validator
-        if (isMathExpression(studentBlank) || isMathExpression(possibleAnswer)) {
+        if (
+          isMathExpression(studentBlank) ||
+          isMathExpression(possibleAnswer)
+        ) {
           try {
-            if (backendMathValidator.validateAnswer(studentBlank, possibleAnswer)) {
+            if (
+              backendMathValidator.validateAnswer(studentBlank, possibleAnswer)
+            ) {
               isCorrect = true;
               break;
             }
           } catch (mathError) {
-            console.debug('Math validation failed for blank:', blankId, mathError);
+            console.debug(
+              'Math validation failed for blank:',
+              blankId,
+              mathError,
+            );
             // Continue to next possible answer
           }
         }
@@ -86,82 +95,82 @@ const runTests = async () => {
   const testCases = [
     {
       name: 'Basic text matching',
-      student: { "0": "derivative", "1": "function" },
-      correct: { "0": "derivative", "1": "function" },
+      student: { 0: 'derivative', 1: 'function' },
+      correct: { 0: 'derivative', 1: 'function' },
       expected: true,
-      description: 'Should match exact text answers'
+      description: 'Should match exact text answers',
     },
     {
       name: 'Case insensitive text',
-      student: { "0": "DERIVATIVE", "1": "Function" },
-      correct: { "0": "derivative", "1": "function" },
+      student: { 0: 'DERIVATIVE', 1: 'Function' },
+      correct: { 0: 'derivative', 1: 'function' },
       expected: true,
-      description: 'Should handle case variations'
+      description: 'Should handle case variations',
     },
     {
       name: 'Basic math expressions',
-      student: { "0": "2*x", "1": "x^2" },
-      correct: { "0": "2x", "1": "x*x" },
+      student: { 0: '2*x', 1: 'x^2' },
+      correct: { 0: '2x', 1: 'x*x' },
       expected: true,
-      description: 'Should validate equivalent math expressions'
+      description: 'Should validate equivalent math expressions',
     },
     {
       name: 'Advanced math expressions',
-      student: { "0": "sin(pi/2)", "1": "(x+1)^2" },
-      correct: { "0": "1", "1": "x^2+2*x+1" },
+      student: { 0: 'sin(pi/2)', 1: '(x+1)^2' },
+      correct: { 0: '1', 1: 'x^2+2*x+1' },
       expected: true,
-      description: 'Should handle complex mathematical equivalences'
+      description: 'Should handle complex mathematical equivalences',
     },
     {
       name: 'Multiple possible answers',
-      student: { "0": "x+x" },
-      correct: { "0": "2x|2*x|x+x" },
+      student: { 0: 'x+x' },
+      correct: { 0: '2x|2*x|x+x' },
       expected: true,
-      description: 'Should match one of multiple correct answers'
+      description: 'Should match one of multiple correct answers',
     },
     {
       name: 'Mixed text and math',
-      student: { 
-        "0": "derivative", 
-        "1": "2*x", 
-        "2": "continuous" 
+      student: {
+        0: 'derivative',
+        1: '2*x',
+        2: 'continuous',
       },
-      correct: { 
-        "0": "derivative", 
-        "1": "2x", 
-        "2": "continuous" 
+      correct: {
+        0: 'derivative',
+        1: '2x',
+        2: 'continuous',
       },
       expected: true,
-      description: 'Should handle both text and math in the same question'
+      description: 'Should handle both text and math in the same question',
     },
     {
       name: 'JSON string input',
       student: '{"0": "2*x", "1": "derivative"}',
       correct: '{"0": "2x", "1": "derivative"}',
       expected: true,
-      description: 'Should parse JSON string inputs correctly'
+      description: 'Should parse JSON string inputs correctly',
     },
     {
       name: 'Empty answer rejection',
-      student: { "0": "", "1": "2x" },
-      correct: { "0": "derivative", "1": "2x" },
+      student: { 0: '', 1: '2x' },
+      correct: { 0: 'derivative', 1: '2x' },
       expected: false,
-      description: 'Should reject empty answers'
+      description: 'Should reject empty answers',
     },
     {
       name: 'Incorrect math expression',
-      student: { "0": "3*x" },
-      correct: { "0": "2x" },
+      student: { 0: '3*x' },
+      correct: { 0: '2x' },
       expected: false,
-      description: 'Should reject incorrect mathematical expressions'
+      description: 'Should reject incorrect mathematical expressions',
     },
     {
       name: 'Whitespace handling',
-      student: { "0": "  2*x  ", "1": " derivative " },
-      correct: { "0": "2x", "1": "derivative" },
+      student: { 0: '  2*x  ', 1: ' derivative ' },
+      correct: { 0: '2x', 1: 'derivative' },
       expected: true,
-      description: 'Should handle whitespace in answers'
-    }
+      description: 'Should handle whitespace in answers',
+    },
   ];
 
   let passed = 0;
@@ -171,11 +180,11 @@ const runTests = async () => {
     try {
       const result = validateFillInBlank(testCase.student, testCase.correct);
       const status = result === testCase.expected ? '✅ PASS' : '❌ FAIL';
-      
+
       console.log(`${status} ${testCase.name}`);
       console.log(`   ${testCase.description}`);
       console.log(`   Result: ${result}, Expected: ${testCase.expected}`);
-      
+
       if (result === testCase.expected) {
         passed++;
       } else {
@@ -193,17 +202,25 @@ const runTests = async () => {
   console.log('📊 Test Results:');
   console.log(`   ✅ Passed: ${passed}`);
   console.log(`   ❌ Failed: ${failed}`);
-  console.log(`   📈 Success Rate: ${((passed / (passed + failed)) * 100).toFixed(1)}%`);
-  
+  console.log(
+    `   📈 Success Rate: ${((passed / (passed + failed)) * 100).toFixed(1)}%`,
+  );
+
   if (failed === 0) {
-    console.log('\n🎉 All tests passed! The enhanced fill-in-blank validator is working correctly.');
+    console.log(
+      '\n🎉 All tests passed! The enhanced fill-in-blank validator is working correctly.',
+    );
   } else {
-    console.log('\n⚠️  Some tests failed. Please review the failing cases above.');
+    console.log(
+      '\n⚠️  Some tests failed. Please review the failing cases above.',
+    );
   }
-  
+
   console.log('\n💡 Summary of Enhancements:');
   console.log('   • Added mathematical expression detection');
-  console.log('   • Integrated with backend math validator for math expressions');
+  console.log(
+    '   • Integrated with backend math validator for math expressions',
+  );
   console.log('   • Maintained case-insensitive text matching');
   console.log('   • Support for multiple correct answers with | separator');
   console.log('   • Proper handling of whitespace and empty answers');

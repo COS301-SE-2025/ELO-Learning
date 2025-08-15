@@ -13,61 +13,80 @@ export default function MatchQuestionPage() {
     async function fetchQuestions() {
       try {
         setLoading(true);
-        
+
         // First try to fetch from backend
         console.log('🔥 MATCH QUESTION: Starting fetch...');
         const result = await getQuestionsByType('Matching', 10);
         console.log('🔥 MATCH QUESTION: API result:', result);
 
         if (result.success && result.data && result.data.length > 0) {
-          console.log('Match Question questions fetched from backend:', result.data.length);
+          console.log(
+            'Match Question questions fetched from backend:',
+            result.data.length,
+          );
           setQuestions(result.data);
           setError(null);
           return;
         }
 
         // Fallback: Use sample questions if backend fails or has no data
-        console.warn('Backend fetch failed or no questions found, using sample questions');
+        console.warn(
+          'Backend fetch failed or no questions found, using sample questions',
+        );
         const sampleQuestions = [
           {
             Q_id: 'sample-match-1',
-            questionText: "Match the countries with their capitals:",
-            type: "Match Question",
-            subject: "Geography",
-            difficulty: "Medium",
+            questionText: 'Match the countries with their capitals:',
+            type: 'Match Question',
+            subject: 'Geography',
+            difficulty: 'Medium',
             answers: [
-              { id: 1, answer_text: "France → Paris", isCorrect: true },
-              { id: 2, answer_text: "Italy → Rome", isCorrect: true },
-              { id: 3, answer_text: "Spain → Madrid", isCorrect: true },
-              { id: 4, answer_text: "Germany → Berlin", isCorrect: true }
-            ]
+              { id: 1, answer_text: 'France → Paris', isCorrect: true },
+              { id: 2, answer_text: 'Italy → Rome', isCorrect: true },
+              { id: 3, answer_text: 'Spain → Madrid', isCorrect: true },
+              { id: 4, answer_text: 'Germany → Berlin', isCorrect: true },
+            ],
           },
           {
             Q_id: 'sample-match-2',
-            questionText: "Match the programming languages with their primary use:",
-            type: "Match Question",
-            subject: "Computer Science",
-            difficulty: "Medium",
+            questionText:
+              'Match the programming languages with their primary use:',
+            type: 'Match Question',
+            subject: 'Computer Science',
+            difficulty: 'Medium',
             answers: [
-              { id: 1, answer_text: "JavaScript | Web Development", isCorrect: true },
-              { id: 2, answer_text: "Python | Data Science", isCorrect: true },
-              { id: 3, answer_text: "Java | Enterprise Applications", isCorrect: true },
-              { id: 4, answer_text: "C++ | System Programming", isCorrect: true }
-            ]
+              {
+                id: 1,
+                answer_text: 'JavaScript | Web Development',
+                isCorrect: true,
+              },
+              { id: 2, answer_text: 'Python | Data Science', isCorrect: true },
+              {
+                id: 3,
+                answer_text: 'Java | Enterprise Applications',
+                isCorrect: true,
+              },
+              {
+                id: 4,
+                answer_text: 'C++ | System Programming',
+                isCorrect: true,
+              },
+            ],
           },
           {
             Q_id: 'sample-match-3',
-            questionText: "Match the mathematical operations with their symbols:",
-            type: "Match Question",
-            subject: "Mathematics",
-            difficulty: "Easy",
+            questionText:
+              'Match the mathematical operations with their symbols:',
+            type: 'Match Question',
+            subject: 'Mathematics',
+            difficulty: 'Easy',
             answers: [
-              { id: 1, answer_text: "Addition: +", isCorrect: true },
-              { id: 2, answer_text: "Subtraction: -", isCorrect: true },
-              { id: 3, answer_text: "Multiplication: ×", isCorrect: true },
-              { id: 4, answer_text: "Division: ÷", isCorrect: true }
-            ]
-          }
+              { id: 1, answer_text: 'Addition: +', isCorrect: true },
+              { id: 2, answer_text: 'Subtraction: -', isCorrect: true },
+              { id: 3, answer_text: 'Multiplication: ×', isCorrect: true },
+              { id: 4, answer_text: 'Division: ÷', isCorrect: true },
+            ],
+          },
         ];
 
         console.log('Using sample match questions:', sampleQuestions.length);
@@ -75,24 +94,24 @@ export default function MatchQuestionPage() {
         setError(null);
       } catch (err) {
         console.error('Unexpected error:', err);
-        
+
         // Even if there's an error, provide sample questions
         const sampleQuestions = [
           {
             Q_id: 'fallback-match-1',
-            questionText: "Match the animals with their habitats:",
-            type: "Match Question",
-            subject: "Biology",
-            difficulty: "Easy",
+            questionText: 'Match the animals with their habitats:',
+            type: 'Match Question',
+            subject: 'Biology',
+            difficulty: 'Easy',
             answers: [
-              { id: 1, answer_text: "Fish → Ocean", isCorrect: true },
-              { id: 2, answer_text: "Bear → Forest", isCorrect: true },
-              { id: 3, answer_text: "Eagle → Sky", isCorrect: true },
-              { id: 4, answer_text: "Camel → Desert", isCorrect: true }
-            ]
-          }
+              { id: 1, answer_text: 'Fish → Ocean', isCorrect: true },
+              { id: 2, answer_text: 'Bear → Forest', isCorrect: true },
+              { id: 3, answer_text: 'Eagle → Sky', isCorrect: true },
+              { id: 4, answer_text: 'Camel → Desert', isCorrect: true },
+            ],
+          },
         ];
-        
+
         setQuestions(sampleQuestions);
         setError('Using sample questions (backend unavailable)');
       } finally {

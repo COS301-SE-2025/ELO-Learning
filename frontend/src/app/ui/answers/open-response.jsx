@@ -38,7 +38,7 @@ export default function OpenResponseTemplate({
           value={inputValue}
           onChange={handleInputChange}
           placeholder="Write your answer"
-          className="w-full p-4 resize-none text-sm min-h-[200px] 
+          className="w-full p-4 resize-none text-sm min-h-[200px]
                      focus:outline-none
                      transition-all duration-200"
           style={{

@@ -85,7 +85,7 @@ axiosInstance.interceptors.request.use(async (config) => {
   if (config.url === '/questions/random') {
     return config;
   }
-  
+
   if (isServer) {
     const { cookies } = await import('next/headers');
     const awaitedCookies = await cookies();
@@ -354,7 +354,7 @@ export async function fetchRandomQuestions(level) {
     console.log('fetchRandomQuestions called with level:', level);
     console.log('BASE_URL:', BASE_URL);
     console.log('isServer:', typeof window === 'undefined');
-    
+
     const res = await axiosInstance.get('/questions/random', {
       params: { level },
     });
@@ -472,7 +472,7 @@ export async function fetchQuestionsByTopic(topic) {
       data: error.response?.data,
       topic: topic,
       url: error.config?.url,
-      baseURL: error.config?.baseURL
+      baseURL: error.config?.baseURL,
     });
 
     throw error;

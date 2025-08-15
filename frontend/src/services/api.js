@@ -351,20 +351,19 @@ export async function fetchRandomQuestions(level) {
     }
 
     console.log(`🌐 Fetching random questions for level ${level}...`);
-    try {
     console.log('fetchRandomQuestions called with level:', level);
     console.log('BASE_URL:', BASE_URL);
     console.log('isServer:', typeof window === 'undefined');
     
     const res = await axiosInstance.get('/questions/random', {
-        params: { level },
-      });
+      params: { level },
+    });
 
     if (process.env.NODE_ENV !== 'test') {
       performanceCache.set(`random_questions_${level}`, res.data);
-      }
+    }
 
-    
+    return res.data;
   } catch (error) {
     console.error(
       `❌ Failed to fetch random questions for level ${level}:`,

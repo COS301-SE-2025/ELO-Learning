@@ -1,13 +1,6 @@
 'use client';
 
-import {
-  BookOpen,
-  Brain,
-  Check,
-  Layers,
-  Target,
-  X
-} from 'lucide-react';
+import { BookOpen, Brain, Check, Layers, Target, X } from 'lucide-react';
 import Link from 'next/link';
 
 export default function QuestionTemplatesPage() {

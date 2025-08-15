@@ -278,12 +278,20 @@ export default (io, socket) => {
 
     // Determine winner based on time (faster wins)
     let score1;
-    if (player1Stats.timeTaken < player2Stats.timeTaken) {
-      score1 = 1; // Player 1 wins
-    } else if (player1Stats.timeTaken > player2Stats.timeTaken) {
-      score1 = 0; // Player 2 wins
+    // First compare XP
+    if (player1Stats.xpGain > player2Stats.xpGain) {
+      score1 = 1;
+    } else if (player1Stats.xpGain < player2Stats.xpGain) {
+      score1 = 0;
     } else {
-      score1 = 0.5; // Draw
+      // XP tie - use time as tiebreaker
+      if (player1Stats.timeTaken < player2Stats.timeTaken) {
+        score1 = 1;
+      } else if (player1Stats.timeTaken > player2Stats.timeTaken) {
+        score1 = 0;
+      } else {
+        score1 = 0.5; // Complete tie
+      }
     }
 
     // Get user IDs

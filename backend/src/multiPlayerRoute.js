@@ -60,7 +60,7 @@ router.post('/multiplayer', async (req, res) => {
         rating: player1.elo_rating,
         expected: expected1,
         actual: actual1,
-      }).toFixed(2),
+      }),
     );
 
     const newElo2 = parseFloat(
@@ -68,7 +68,7 @@ router.post('/multiplayer', async (req, res) => {
         rating: player2.elo_rating,
         expected: expected2,
         actual: actual2,
-      }).toFixed(2),
+      }),
     );
 
     const eloChange1 = newElo1 - player1.elo_rating;

@@ -1,10 +1,10 @@
 'use client';
 
-import { useEffect, useState } from 'react';
 import UniversalQuestionWrapper from '@/app/ui/universal-question-wrapper';
 import { getQuestionsByType } from '@/utils/api';
+import { useEffect, useState } from 'react';
 
-export default function FillInBlankPage() {
+export default function TrueFalsePage() {
   const [questions, setQuestions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -13,7 +13,7 @@ export default function FillInBlankPage() {
     async function fetchQuestions() {
       try {
         setLoading(true);
-        const result = await getQuestionsByType('Fill-in-the-Blank', 10);
+        const result = await getQuestionsByType('True/False', 10);
 
         if (!result.success) {
           console.error('Error:', result.error);
@@ -24,13 +24,13 @@ export default function FillInBlankPage() {
         const fetchedQuestions = result.data || [];
 
         if (fetchedQuestions.length === 0) {
-          console.warn('No Fill-in-the-Blank questions found');
-          setError('No Fill-in-the-Blank questions found in the database.');
+          console.warn('No True/False questions found');
+          setError('No True/False questions found in the database.');
           return;
         }
 
         console.log(
-          'Fill-in-the-Blank questions fetched successfully:',
+          'True/False questions fetched successfully:',
           fetchedQuestions.length,
         );
         setQuestions(fetchedQuestions);
@@ -52,7 +52,7 @@ export default function FillInBlankPage() {
         <div className="text-center p-8">
           <div className="w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
           <h2 className="text-xl font-semibold text-gray-800">
-            Loading Fill-in-the-Blank Questions...
+            Loading True/False Questions...
           </h2>
           <p className="text-gray-600 mt-2">
             Please wait while we fetch your practice questions.

@@ -1,10 +1,12 @@
 // ui/answers/answer-wrapper.jsx
-import { useCallback, useRef } from 'react';
 import ExpressionBuilderTemplate from '@/app/ui/answers/expression-builder';
 import MathInputTemplate from '@/app/ui/answers/input-question';
 import MultipleChoiceTemplate from '@/app/ui/answers/multiple-choice';
 import OpenResponseTemplate from '@/app/ui/answers/open-response';
+import MatchQuestionTemplate from '@/app/ui/question-types/match-question';
 import { validateAnswerEnhanced } from '@/utils/answerValidator';
+import { Check, X } from 'lucide-react';
+import { useCallback, useRef } from 'react';
 
 export default function AnswerWrapper({
   question,
@@ -277,14 +279,78 @@ export default function AnswerWrapper({
         />
       )}
 
-      {/* Fill in the Blank - Future Implementation */}
-      {question.type === 'Fill-in-the-Blank' && (
-        <div className="text-center py-8 bg-gray-50 rounded-lg border-2 border-dashed border-gray-300">
-          <div className="text-4xl mb-4">📝</div>
-          <h3 className="text-lg font-semibold text-gray-700 mb-2">
-            Fill in the Blank
-          </h3>
-          <p className="text-gray-600">Interactive blanks coming soon!</p>
+      {/* Fill in the Blank - Not implemented */}
+      {(question.type === 'Fill-in-the-Blank' ||
+        question.type === 'Fill-in-the-Blanks') && (
+        <div className="text-center p-8">
+          <p className="text-yellow-600 font-medium">
+            Fill-in-the-blank questions are not yet implemented.
+          </p>
+        </div>
+      )}
+
+      {/* Match Question */}
+      {(question.type === 'Match Question' || question.type === 'Matching') && (
+        <MatchQuestionTemplate
+          question={question}
+          answers={currAnswers}
+          setAnswer={(answer) => {
+            setAnswer(answer);
+            // Note: Match questions handle their own validation via setIsAnswerCorrect
+            // so we don't call handleAnswerValidation here to avoid conflicts
+          }}
+          setIsAnswerCorrect={setIsAnswerCorrect}
+          answer={answer}
+        />
+      )}
+
+      {/* True/False Questions */}
+      {(question.type === 'True/False' || question.type === 'True-False') && (
+        <div className="space-y-6">
+          {/* True/False Options - styled exactly like multiple choice */}
+          <div className="flex flex-col gap-4 md:gap-2 items-center">
+            {[
+              { id: 'true', answer_text: 'True', isCorrect: false },
+              { id: 'false', answer_text: 'False', isCorrect: false },
+            ].map((option) => {
+              // Determine if this option is correct based on the currAnswers from database
+              let isOptionCorrect = false;
+              if (currAnswers && currAnswers.length > 0) {
+                const correctAnswerObj = currAnswers.find(
+                  (ans) => ans.isCorrect,
+                );
+                if (correctAnswerObj) {
+                  isOptionCorrect =
+                    option.answer_text.toLowerCase() ===
+                    correctAnswerObj.answer_text?.toLowerCase();
+                }
+              }
+
+              const isSelected = answer === option.answer_text;
+
+              return (
+                <button
+                  key={option.id}
+                  onClick={() => {
+                    setAnswer(option.answer_text);
+
+                    // Use the enhanced validation function
+                    handleAnswerValidation(option.answer_text);
+                  }}
+                  className={`mc-button px-4 py-5 w-48 flex items-center justify-center gap-2 ${
+                    isSelected ? 'opacity-80' : ''
+                  }`}
+                >
+                  {option.answer_text === 'True' ? (
+                    <Check size={24} className="text-white" />
+                  ) : (
+                    <X size={24} className="text-white" />
+                  )}
+                  <span>{option.answer_text}</span>
+                </button>
+              );
+            })}
+          </div>
         </div>
       )}
 
@@ -295,6 +361,10 @@ export default function AnswerWrapper({
         'Open Response',
         'Expression Builder',
         'Fill-in-the-Blank',
+        'Match Question',
+        'Matching',
+        'True/False',
+        'True-False',
       ].includes(question.type) && (
         <div className="text-center py-8 bg-yellow-50 rounded-lg border border-yellow-200">
           <div className="text-4xl mb-4">❓</div>

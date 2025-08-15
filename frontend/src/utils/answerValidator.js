@@ -25,6 +25,51 @@ export const validateAnswer = async (
     type: questionType,
   });
 
+  // Special handling for Open Response questions
+  if (questionType === 'Open Response') {
+    console.log('🔍 Processing Open Response question');
+
+    // For Open Response, we need stricter validation logic
+    // Try exact match first (case insensitive)
+    if (
+      studentAnswer.trim().toLowerCase() === correctAnswer.trim().toLowerCase()
+    ) {
+      console.log('✅ Open Response: Exact match found');
+      return true;
+    }
+
+    // Try numerical match for financial questions with strict comparison
+    const studentNum = parseFloat(studentAnswer.replace(/[^\d.-]/g, ''));
+    const correctNum = parseFloat(correctAnswer.replace(/[^\d.-]/g, ''));
+
+    if (!isNaN(studentNum) && !isNaN(correctNum)) {
+      const isCorrect = Math.abs(studentNum - correctNum) < 0.001;
+      console.log('Open Response numerical comparison:', {
+        studentNum,
+        correctNum,
+        isCorrect,
+        difference: Math.abs(studentNum - correctNum),
+      });
+      return isCorrect;
+    }
+
+    // For non-numerical Open Response, try partial matching
+    if (isNaN(parseFloat(studentAnswer)) && isNaN(parseFloat(correctAnswer))) {
+      const isCorrect =
+        studentAnswer.toLowerCase().includes(correctAnswer.toLowerCase()) ||
+        correctAnswer.toLowerCase().includes(studentAnswer.toLowerCase());
+      console.log('Open Response partial match:', {
+        student: studentAnswer,
+        correct: correctAnswer,
+        isCorrect,
+      });
+      return isCorrect;
+    }
+
+    console.log('❌ Open Response: No match found');
+    return false;
+  }
+
   // First, try frontend math validation for Math Input types
   if (
     questionType === 'Math Input' ||
@@ -84,6 +129,12 @@ export const validateAnswer = async (
   if (normalizedStudent === normalizedCorrect) {
     console.log('✅ Direct match found');
     return true;
+  }
+
+  // For True/False questions, direct comparison should be final
+  if (questionType === 'True/False' || questionType === 'True-False') {
+    console.log('❌ True/False question - no match found');
+    return false;
   }
 
   // Check for systems of equations (contains x= and y=)
@@ -493,6 +544,54 @@ export const validateAnswerSync = (
   if (!studentAnswer || !correctAnswer) return false;
 
   try {
+    // Special handling for Open Response questions
+    if (questionType === 'Open Response') {
+      console.log('🔍 Sync validation for Open Response question');
+
+      // Try exact match first (case insensitive)
+      if (
+        studentAnswer.trim().toLowerCase() ===
+        correctAnswer.trim().toLowerCase()
+      ) {
+        console.log('✅ Open Response sync: Exact match found');
+        return true;
+      }
+
+      // Try numerical match for financial questions with strict comparison
+      const studentNum = parseFloat(studentAnswer.replace(/[^\d.-]/g, ''));
+      const correctNum = parseFloat(correctAnswer.replace(/[^\d.-]/g, ''));
+
+      if (!isNaN(studentNum) && !isNaN(correctNum)) {
+        const isCorrect = Math.abs(studentNum - correctNum) < 0.001;
+        console.log('Open Response sync numerical comparison:', {
+          studentNum,
+          correctNum,
+          isCorrect,
+          difference: Math.abs(studentNum - correctNum),
+        });
+        return isCorrect;
+      }
+
+      // For non-numerical Open Response, try partial matching
+      if (
+        isNaN(parseFloat(studentAnswer)) &&
+        isNaN(parseFloat(correctAnswer))
+      ) {
+        const isCorrect =
+          studentAnswer.toLowerCase().includes(correctAnswer.toLowerCase()) ||
+          correctAnswer.toLowerCase().includes(studentAnswer.toLowerCase());
+        console.log('Open Response sync partial match:', {
+          student: studentAnswer,
+          correct: correctAnswer,
+          isCorrect,
+        });
+        return isCorrect;
+      }
+
+      console.log('❌ Open Response sync: No match found');
+      return false;
+    }
+
     // Use frontend math validation for Math Input types - but only if both are valid
     if (
       questionType === 'Math Input' ||
@@ -529,8 +628,33 @@ export const isValidExpression = (expression) => {
 
     const cleaned = expression.trim();
 
+    // Reject single characters that are clearly incomplete or invalid
+    if (cleaned.length === 1) {
+      // Only allow single digits or complete variable assignments
+      if (!/^[a-zA-Z0-9]$/.test(cleaned)) {
+        console.debug('Rejecting invalid single character:', cleaned);
+        return false;
+      }
+    }
+
+    // Reject expressions that are just operators or punctuation
+    if (/^[+\-*/^()=,\s\[\]{}]+$/.test(cleaned)) {
+      console.debug(
+        'Rejecting expression with only operators/punctuation:',
+        cleaned,
+      );
+      return false;
+    }
+
+    // Reject incomplete parentheses expressions
+    if (cleaned === '(' || cleaned === ')' || cleaned === '()') {
+      console.debug('Rejecting incomplete parentheses:', cleaned);
+      return false;
+    }
+
     // First check if it's a valid math expression using the frontend validator
     if (!isValidMathExpression(cleaned)) {
+      console.debug('Failed math expression validation:', cleaned);
       return false;
     }
 
@@ -572,3 +696,5 @@ export const isValidExpression = (expression) => {
     return false;
   }
 };
+
+// Fast validation for single-player mode (prioritizes frontend validation)

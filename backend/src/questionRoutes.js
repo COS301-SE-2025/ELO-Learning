@@ -624,32 +624,6 @@ router.post('/question/:id/submit', async (req, res) => {
   }
 });
 
-// Helper function for feedback messages
-const getFeedbackMessage = (questionType, isCorrect) => {
-  const correctMessages = {
-    'Multiple Choice': 'Correct! Well done!',
-    'Math Input': 'Correct! Your mathematical expression is right!',
-    'Open Response':
-      'Great response! Your explanation demonstrates good understanding.',
-    'Expression Builder': 'Perfect! Your expression is correctly constructed!',
-    'Fill-in-the-Blank': 'Correct! All blanks filled properly!',
-  };
-
-  const incorrectMessages = {
-    'Multiple Choice': 'Incorrect. Try again!',
-    'Math Input': 'Not quite right. Check your mathematical expression.',
-    'Open Response':
-      'Your response needs more detail or accuracy. Try explaining step by step.',
-    'Expression Builder':
-      "Your expression isn't quite right. Try rearranging the tiles.",
-    'Fill-in-the-Blank':
-      'Some blanks are incorrect. Double-check your answers.',
-  };
-
-  return isCorrect
-    ? correctMessages[questionType] || 'Correct!'
-    : incorrectMessages[questionType] || 'Incorrect. Try again!';
-};
 
 // Keep all your existing routes exactly as they are
 router.get('/questions', async (req, res) => {

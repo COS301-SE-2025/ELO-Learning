@@ -491,6 +491,11 @@ export async function submitSinglePlayerAttempt(data) {
   return res.data;
 }
 
+export async function submitMultiplayerResult(data) {
+  const res = await axiosInstance.post('/multiplayer', data, {});
+  return res.data;
+}
+
 export async function sendPasswordResetEmail(email) {
   const res = await axiosInstance.post('/forgot-password', { email });
   return res.data;

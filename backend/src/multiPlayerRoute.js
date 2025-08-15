@@ -15,12 +15,11 @@ router.post('/multiplayer', async (req, res) => {
   try {
     console.log('Using multiplayer route... --------------------');
     console.log('Received multiplayer request:', req.body);
-    const { player1_id, player2_id, question_id, score1, xpTotal } = req.body;
+    const { player1_id, player2_id, score1, xpTotal } = req.body;
 
     if (
       !player1_id ||
       !player2_id ||
-      !question_id ||
       (score1 !== 0 && score1 !== 0.5 && score1 !== 1) ||
       typeof xpTotal !== 'number' ||
       xpTotal <= 0
@@ -129,7 +128,7 @@ router.post('/multiplayer', async (req, res) => {
 
     const inserts = [
       {
-        question_id,
+        question_id: null,
         user_id: player1_id,
         isCorrect: score1 === 1,
         timeSpent: null,
@@ -143,7 +142,7 @@ router.post('/multiplayer', async (req, res) => {
         attemptType: 'multi',
       },
       {
-        question_id,
+        question_id: null,
         user_id: player2_id,
         isCorrect: score1 === 0,
         timeSpent: null,
@@ -166,6 +165,8 @@ router.post('/multiplayer', async (req, res) => {
       return res.status(500).json({ error: 'Error saving attempts' });
     }
 
+    console.log('Player1 XP change:', xp1_raw);
+    console.log('Player2 XP change:', xp2_raw);
     // Final JSON response
     return res.status(200).json({
       message: 'Multiplayer match processed successfully',

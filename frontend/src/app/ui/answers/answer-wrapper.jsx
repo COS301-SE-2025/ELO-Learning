@@ -1,13 +1,12 @@
 // ui/answers/answer-wrapper.jsx
-import { useCallback, useRef } from 'react';
 import ExpressionBuilderTemplate from '@/app/ui/answers/expression-builder';
 import MathInputTemplate from '@/app/ui/answers/input-question';
 import MultipleChoiceTemplate from '@/app/ui/answers/multiple-choice';
 import OpenResponseTemplate from '@/app/ui/answers/open-response';
-import FillInBlankTemplate from '@/app/ui/question-types/fill-in-blank';
 import MatchQuestionTemplate from '@/app/ui/question-types/match-question';
 import { validateAnswerEnhanced } from '@/utils/answerValidator';
 import { Check, X } from 'lucide-react';
+import { useCallback, useRef } from 'react';
 
 export default function AnswerWrapper({
   question,
@@ -280,19 +279,14 @@ export default function AnswerWrapper({
         />
       )}
 
-      {/* Fill in the Blank */}
+      {/* Fill in the Blank - Not implemented */}
       {(question.type === 'Fill-in-the-Blank' ||
         question.type === 'Fill-in-the-Blanks') && (
-        <FillInBlankTemplate
-          question={question}
-          answers={currAnswers}
-          setAnswer={(answer) => {
-            setAnswer(answer);
-            handleAnswerValidation(answer);
-          }}
-          setIsAnswerCorrect={setIsAnswerCorrect}
-          answer={answer}
-        />
+        <div className="text-center p-8">
+          <p className="text-yellow-600 font-medium">
+            Fill-in-the-blank questions are not yet implemented.
+          </p>
+        </div>
       )}
 
       {/* Match Question */}

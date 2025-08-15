@@ -12,7 +12,6 @@ import { useEffect, useState } from 'react';
 
 // Import all question type components
 import ExpressionBuilderTemplate from '@/app/ui/question-types/expression-builder';
-import FillInBlankTemplate from '@/app/ui/question-types/fill-in-blank';
 import MatchQuestionTemplate from '@/app/ui/question-types/match-question';
 import MultipleChoiceTemplate from '@/app/ui/question-types/multiple-choice';
 import OpenResponseTemplate from '@/app/ui/question-types/open-response';
@@ -237,7 +236,13 @@ export default function UniversalQuestionWrapper({ questions, numLives = 5 }) {
 
       case 'Fill-in-the-Blank':
       case 'Fill-in-the-Blanks':
-        return <FillInBlankTemplate {...commonProps} />;
+        return (
+          <div className="text-center p-8">
+            <p className="text-yellow-600 font-medium">
+              Fill-in-the-blank questions are not yet implemented.
+            </p>
+          </div>
+        );
 
       case 'Match Question':
       case 'Matching':

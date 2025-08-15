@@ -327,7 +327,8 @@ const validateAnswerByType = (questionType, studentAnswer, correctAnswer) => {
 
     case 'Fill-in-the-Blank':
     case 'Fill-in-the-Blanks':
-      return validateFillInBlank(studentAnswer, correctAnswer);
+      // Fill-in-the-blank functionality not implemented yet
+      return false;
 
     case 'Match Question':
     case 'Matching':
@@ -372,71 +373,6 @@ const validateExpressionBuilder = (studentAnswer, correctAnswer) => {
     );
   } catch (error) {
     console.error('Error validating expression builder:', error);
-    return false;
-  }
-};
-
-const validateFillInBlank = (studentAnswer, correctAnswer) => {
-  try {
-    const studentAnswers =
-      typeof studentAnswer === 'object'
-        ? studentAnswer
-        : JSON.parse(studentAnswer);
-    const correctAnswers =
-      typeof correctAnswer === 'object'
-        ? correctAnswer
-        : JSON.parse(correctAnswer);
-
-    for (let blankId in correctAnswers) {
-      const studentBlank = studentAnswers[blankId]?.trim();
-      const correctBlank = correctAnswers[blankId].trim();
-
-      if (!studentBlank) {
-        return false; // Empty answer
-      }
-
-      const possibleAnswers = correctBlank.split('|').map((ans) => ans.trim());
-
-      // Check each possible answer
-      let isCorrect = false;
-      for (const possibleAnswer of possibleAnswers) {
-        // First try exact match (case-insensitive)
-        if (studentBlank.toLowerCase() === possibleAnswer.toLowerCase()) {
-          isCorrect = true;
-          break;
-        }
-
-        // If it looks like a math expression, use the math validator
-        if (
-          isMathExpression(studentBlank) ||
-          isMathExpression(possibleAnswer)
-        ) {
-          try {
-            if (
-              backendMathValidator.validateAnswer(studentBlank, possibleAnswer)
-            ) {
-              isCorrect = true;
-              break;
-            }
-          } catch (mathError) {
-            console.debug(
-              'Math validation failed for blank:',
-              blankId,
-              mathError,
-            );
-            // Continue to next possible answer
-          }
-        }
-      }
-
-      if (!isCorrect) {
-        return false;
-      }
-    }
-
-    return true;
-  } catch (error) {
-    console.error('Error validating fill in blank:', error);
     return false;
   }
 };

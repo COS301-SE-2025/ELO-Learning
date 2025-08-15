@@ -4,10 +4,9 @@ import {
   BookOpen,
   Brain,
   Check,
-  CheckSquare,
   Layers,
   Target,
-  X,
+  X
 } from 'lucide-react';
 import Link from 'next/link';
 
@@ -48,15 +47,6 @@ export default function QuestionTemplatesPage() {
       color: 'bg-orange-100 border-orange-300 text-orange-800',
       hoverColor: 'hover:bg-orange-200',
       path: '/question-templates/expression-builder',
-    },
-    {
-      id: 'fill-in-blank',
-      title: 'Fill in the Blanks',
-      description: 'Complete statements by filling in missing words',
-      icon: <CheckSquare size={32} />,
-      color: 'bg-teal-100 border-teal-300 text-teal-800',
-      hoverColor: 'hover:bg-teal-200',
-      path: '/question-templates/fill-in-blank',
     },
     {
       id: 'match-question',

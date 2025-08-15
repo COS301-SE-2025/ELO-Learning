@@ -1,4 +1,5 @@
-// app/ui/profile/achievements.jsx
+// 🔧 FIXED achievements.jsx component
+
 'use client';
 import { fetchUserAchievements } from '@/services/api';
 import { useSession } from 'next-auth/react';
@@ -7,7 +8,7 @@ import { useEffect, useState } from 'react';
 import AchievementBadge from '../achievements/achievement-badge';
 
 export default function Achievements() {
-  const [achievements, setAchievements] = useState([]);
+  const [achievements, setAchievements] = useState([]); // ✅ Always start with empty array
   const [loading, setLoading] = useState(true);
   const { data: session, status } = useSession();
 
@@ -19,14 +20,37 @@ export default function Achievements() {
     if (status === 'authenticated' && session?.user?.id) {
       fetchUserAchievements(session.user.id)
         .then((data) => {
-          setAchievements(data);
+          console.log('🎯 Raw achievements data received:', data, typeof data);
+          
+          // 🔧 ROBUST DATA HANDLING: Always ensure we have an array
+          let achievementsArray = [];
+          
+          if (Array.isArray(data)) {
+            achievementsArray = data;
+          } else if (data && Array.isArray(data.achievements)) {
+            achievementsArray = data.achievements;
+          } else if (data && typeof data === 'object') {
+            // If data is an object but not an array, convert to empty array
+            console.warn('🎯 Achievements data is not an array:', data);
+            achievementsArray = [];
+          } else {
+            // If data is null, undefined, or any other type
+            console.warn('🎯 No valid achievements data received:', data);
+            achievementsArray = [];
+          }
+          
+          console.log('✅ Setting achievements array:', achievementsArray);
+          setAchievements(achievementsArray);
           setLoading(false);
         })
         .catch((error) => {
-          console.error('Failed to fetch achievements:', error);
+          console.error('❌ Failed to fetch achievements:', error);
+          setAchievements([]); // ✅ Always set empty array on error
           setLoading(false);
         });
     } else {
+      console.log('🎯 No authenticated session, setting empty achievements');
+      setAchievements([]); // ✅ Always set empty array when not authenticated
       setLoading(false);
     }
   }, [session, status]);
@@ -40,13 +64,19 @@ export default function Achievements() {
     );
   }
 
-  const displayAchievements = achievements.slice(0, 3); // Show only first 3 in profile
-  const hasMoreAchievements = achievements.length > 3;
+  // 🔧 SAFETY CHECK: Ensure achievements is always an array before using .slice()
+  const safeAchievements = Array.isArray(achievements) ? achievements : [];
+  console.log('🔍 Safe achievements for rendering:', safeAchievements);
+
+  const displayAchievements = safeAchievements.slice(0, 3); // ✅ Now safe to use .slice()
+  const hasMoreAchievements = safeAchievements.length > 3;
 
   return (
     <div className="m-4" data-cy="achievements-section">
       <div className="flex items-center justify-between mb-3">
-        <h3 className="text-xl uppercase font-bold" data-cy="achievements-title">Achievements</h3>
+        <h3 className="text-xl uppercase font-bold" data-cy="achievements-title">
+          Achievements
+        </h3>
         <Link
           href="/achievements"
           className="text-sm font-medium uppercase"
@@ -56,8 +86,8 @@ export default function Achievements() {
           VIEW ALL
         </Link>
       </div>
-
-      {achievements.length === 0 ? (
+      
+      {safeAchievements.length === 0 ? (
         <div className="bg-gray-800 rounded-lg p-4 border border-gray-700" data-cy="no-achievements">
           <div className="flex justify-center items-center py-8">
             <div className="text-center">
@@ -81,20 +111,20 @@ export default function Achievements() {
       ) : (
         <div className="bg-gray-800 rounded-lg p-4 border border-gray-700" data-cy="achievements-list">
           <div className="flex gap-4 justify-center" data-cy="achievement-progress">
-            {displayAchievements.map((achievement) => (
+            {displayAchievements.map((achievement, index) => (
               <AchievementBadge
-                key={achievement.achievement_id}
-                achievement={achievement.Achievements}
+                key={achievement.achievement_id || index} // ✅ Fallback key
+                achievement={achievement.Achievements || achievement} // ✅ Handle different data structures
                 unlocked={true}
                 size="small"
-                data-cy={`achievement-badge-${achievement.achievement_id}`}
+                data-cy={`achievement-badge-${achievement.achievement_id || index}`}
               />
             ))}
             {hasMoreAchievements && (
               <Link href="/achievements" className="flex items-center" data-cy="more-achievements">
                 <div className="w-16 h-20 flex items-center justify-center border-2 border-dashed border-gray-500 rounded-lg">
                   <span className="text-gray-400 text-xs">
-                    +{achievements.length - 3}
+                    +{safeAchievements.length - 3}
                   </span>
                 </div>
               </Link>

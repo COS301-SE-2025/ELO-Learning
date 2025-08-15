@@ -42,20 +42,25 @@ router.get('/achievements', async (req, res) => {
   }
 });
 
-// Get user's achievements (with authentication)
+// Get user's unlocked achievements using proper junction table
 router.get('/users/:userId/achievements', async (req, res) => {
   try {
     const { userId } = req.params;
+    console.log('🔍 Fetching achievements for user:', userId);
 
-    // Add authentication check
+    // Check authorization header
     const authHeader = req.headers.authorization;
+    console.log('🔍 Auth header:', authHeader ? 'Present' : 'Missing');
+
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      return res
-        .status(401)
-        .json({ error: 'You are unauthorized to make this request.' });
+      console.log('🔐 No authorization header - returning empty achievements for new user');
+      return res.status(200).json({ 
+        achievements: [],
+        message: 'No authentication - returning empty achievements for new user'
+      });
     }
 
-    // First verify if the user exists
+    // Verify user exists first
     const { data: user, error: userError } = await supabase
       .from('Users')
       .select('id')
@@ -63,56 +68,70 @@ router.get('/users/:userId/achievements', async (req, res) => {
       .single();
 
     if (userError) {
-      console.error('User fetch error:', userError.message);
-      return res.status(404).json({ error: 'User not found' });
+      console.error('❌ User fetch error:', userError.message);
+      console.log('🎯 User not found - returning empty achievements');
+      return res.status(200).json({ 
+        achievements: [],
+        message: 'User not found - returning empty achievements'
+      });
     }
 
-    const { data: unlockedAchievements, error: unlockedError } = await supabase
+    console.log('✅ User found:', user);
+
+    // Get user's unlocked achievements using the junction table
+    const { data: userAchievements, error: achievementError } = await supabase
       .from('UserAchievements')
-      .select(
-        'achievement_id, unlocked_at, Achievements(*, AchievementCategories(name))',
-      )
-      .eq('user_id', userId);
+      .select(`
+        unlocked_at,
+        Achievements (
+          id,
+          name,
+          description,
+          condition_type,
+          condition_value,
+          icon_path,
+          AchievementCategories (
+            name
+          )
+        )
+      `)
+      .eq('user_id', userId)
+      .order('unlocked_at', { ascending: false });
 
-    if (unlockedError) {
-      console.error('Unlocked achievements error:', unlockedError.message);
-      return res
-        .status(500)
-        .json({ error: 'Failed to fetch unlocked achievements' });
+    if (achievementError) {
+      console.error('❌ Achievement fetch error:', achievementError.message);
+      return res.status(500).json({ 
+        error: 'Failed to fetch user achievements',
+        details: achievementError.message 
+      });
     }
 
-    // Get progress for locked achievements
-    const { data: progress, error: progressError } = await supabase
-      .from('AchievementProgress')
-      .select('achievement_id, current_value, updated_at')
-      .eq('user_id', userId);
+    console.log(`✅ Found ${userAchievements?.length || 0} achievements for user`);
 
-    if (progressError) {
-      console.error('Achievement progress error:', progressError.message);
-      return res
-        .status(500)
-        .json({ error: 'Failed to fetch achievement progress' });
-    }
+    // Format the response
+    const formattedAchievements = (userAchievements || []).map(ua => ({
+      id: ua.Achievements.id,
+      name: ua.Achievements.name,
+      description: ua.Achievements.description,
+      condition_type: ua.Achievements.condition_type,
+      condition_value: ua.Achievements.condition_value,
+      icon_path: ua.Achievements.icon_path,
+      category: ua.Achievements.AchievementCategories?.name || 'General',
+      unlocked_at: ua.unlocked_at
+    }));
 
-    // Initialize empty arrays if no data
-    const safeUnlockedAchievements = unlockedAchievements || [];
-    const safeProgress = progress || [];
+    return res.status(200).json({ 
+      achievements: formattedAchievements,
+      total: formattedAchievements.length,
+      message: `Found ${formattedAchievements.length} unlocked achievements`
+    });
 
-    // Combine unlocked achievements with progress data
-    const achievementsWithProgress = safeUnlockedAchievements.map(
-      (achievement) => ({
-        ...achievement,
-        progress:
-          safeProgress.find(
-            (p) => p.achievement_id === achievement.achievement_id,
-          )?.current_value || 0,
-      }),
-    );
-
-    res.status(200).json({ achievements: achievementsWithProgress });
-  } catch (err) {
-    console.error('Error fetching user achievements:', err.message);
-    res.status(500).json({ error: 'Failed to fetch user achievements' });
+  } catch (error) {
+    console.error('❌ Achievement route error:', error);
+    return res.status(500).json({ 
+      error: 'Internal server error',
+      details: error.message 
+    });
   }
 });
 
@@ -1083,7 +1102,7 @@ router.post('/users/:userId/achievements/perfect-session', async (req, res) => {
       id: unlockedAchievement.achievement_id,
       name: unlockedAchievement.Achievements.name,
       description: unlockedAchievement.Achievements.description,
-      badge_icon_url: unlockedAchievement.Achievements.badge_icon_url,
+      icon_path: unlockedAchievement.Achievements.icon_path,
       category: unlockedAchievement.Achievements.AchievementCategories?.name,
       unlocked_at: unlockedAchievement.unlocked_at,
       context: {

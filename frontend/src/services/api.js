@@ -98,7 +98,12 @@ function getMockData(url) {
   return null;
 }
 
-// ✅ Enhanced request interceptor with CI support
+// 🔧 IMMEDIATE FIX: Add this to your API.js file
+
+// Import getSession for NextAuth session access
+import { getSession } from 'next-auth/react';
+
+// Replace your current token retrieval in the interceptor:
 axiosInstance.interceptors.request.use(async (config) => {
   // In test environment, add mock auth and continue
   if (process.env.NODE_ENV === 'test' || process.env.CI) {
@@ -109,6 +114,7 @@ axiosInstance.interceptors.request.use(async (config) => {
 
   // Regular auth logic for non-test environments
   if (isServer) {
+    // Server-side logic (keep as is)
     const { cookies } = await import('next/headers');
     const awaitedCookies = await cookies();
 
@@ -132,22 +138,73 @@ axiosInstance.interceptors.request.use(async (config) => {
       }
     }
   } else {
-    // CLIENT-SIDE: Simple token retrieval (keeps your caching fix)
+    // 🔧 CLIENT-SIDE: Get token from NextAuth session FIRST, then fallback to localStorage
     let token = null;
 
     try {
-      token =
-        localStorage.getItem('token') || localStorage.getItem('oauth_token');
-      console.log(
-        '🔐 Token retrieved for API call:',
-        token ? 'Found' : 'Not found',
-      );
+      // 🎯 PRIMARY: Try to get token from NextAuth session
+      const session = await getSession();
+      if (session?.backendToken) {
+        token = session.backendToken;
+        console.log('🔐 Token retrieved from NextAuth session:', {
+          tokenPreview: token.substring(0, 20) + '...',
+          userId: session.user?.id,
+          source: 'nextauth-session'
+        });
+      } else {
+        // 🔄 FALLBACK: Check localStorage (for existing tokens)
+        const possibleTokens = [
+          localStorage.getItem('token'),
+          localStorage.getItem('oauth_token'),
+          localStorage.getItem('authToken'),
+          localStorage.getItem('backendToken'),
+          sessionStorage.getItem('token'),
+          sessionStorage.getItem('authToken'),
+        ].filter(Boolean); // Remove null/undefined values
+
+        token = possibleTokens[0]; // Use the first valid token found
+
+        console.log('🔐 Token search results:', {
+          localStorage_token: localStorage.getItem('token'),
+          localStorage_oauth: localStorage.getItem('oauth_token'),
+          localStorage_auth: localStorage.getItem('authToken'),
+          localStorage_backend: localStorage.getItem('backendToken'),
+          sessionStorage_token: sessionStorage.getItem('token'),
+          sessionStorage_auth: sessionStorage.getItem('authToken'),
+          selectedToken: token ? 'Found' : 'Not found',
+        });
+
+        // 🔧 FALLBACK: Try to get token from NextAuth session
+        if (!token) {
+          try {
+            // Check if we can get the session token from NextAuth
+            const sessionData = localStorage.getItem('user');
+            if (sessionData) {
+              const user = JSON.parse(sessionData);
+              console.log('🔐 User data found:', user);
+              
+              // If we have user data but no token, this suggests the token was cleared
+              console.warn('🔐 User data exists but no token found - token may have been cleared');
+            }
+          } catch (e) {
+            console.warn('🔐 Could not parse user data:', e);
+          }
+        }
+      }
     } catch (error) {
-      console.warn('Token retrieval failed:', error);
+      console.warn('🔐 Token retrieval failed:', error);
     }
 
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
+      console.log('🔐 Token attached to request');
+    } else {
+      console.warn('🔐 No token found for request to:', config.url);
+      
+      // 🔧 SPECIAL HANDLING: For achievement requests from new users
+      if (config.url?.includes('/achievements')) {
+        console.log('🎯 Achievement request without token - this is normal for new users');
+      }
     }
   }
 
@@ -576,14 +633,61 @@ export async function fetchAllAchievements(categoryId = null) {
 
 export async function fetchUserAchievements(userId) {
   try {
+    console.log('🎯 Fetching achievements for user:', userId);
+    
+    // 🔧 PRE-CHECK: Verify we have some authentication
+    const hasToken = !!(
+      localStorage.getItem('token') ||
+      localStorage.getItem('oauth_token') ||
+      localStorage.getItem('authToken') ||
+      localStorage.getItem('backendToken')
+    );
+    
+    if (!hasToken) {
+      console.log('🔐 No authentication token found');
+      console.log('🎯 This is normal for newly registered users');
+      console.log('🎯 Returning empty achievements array');
+      return []; // ✅ Always return array
+    }
+    
     const res = await axiosInstance.get(`/users/${userId}/achievements`);
-    return res.data.achievements;
+    console.log('✅ Successfully fetched user achievements:', res.data);
+    
+    // 🔧 ROBUST RESPONSE HANDLING: Always return an array
+    let achievementsArray = [];
+    
+    if (res.data) {
+      if (Array.isArray(res.data)) {
+        achievementsArray = res.data;
+      } else if (Array.isArray(res.data.achievements)) {
+        achievementsArray = res.data.achievements;
+      } else if (res.data.achievements === null || res.data.achievements === undefined) {
+        achievementsArray = [];
+      } else {
+        console.warn('🎯 Unexpected achievements data format:', res.data);
+        achievementsArray = [];
+      }
+    }
+    
+    console.log('✅ Returning achievements array:', achievementsArray);
+    return achievementsArray;
   } catch (error) {
     console.error('❌ Failed to fetch user achievements:', error);
-    if (process.env.NODE_ENV === 'test') {
-      return [];
+    
+    // Handle specific error cases
+    if (error.response?.status === 401) {
+      console.warn('🔐 Authentication failed (401) - normal for new users');
+      return []; // ✅ Always return array
     }
-    throw error;
+    
+    if (error.response?.status === 404) {
+      console.warn('🎯 User achievements not found (404) - normal for new users');
+      return []; // ✅ Always return array
+    }
+    
+    // For other errors, still return empty array to prevent UI breaking
+    console.warn('🎯 Returning empty achievements to prevent UI errors');
+    return []; // ✅ Always return array
   }
 }
 

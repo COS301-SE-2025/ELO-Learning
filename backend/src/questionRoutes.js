@@ -179,7 +179,7 @@ const validateMatchQuestionLegacy = (studentAnswer, correctAnswer) => {
 };
 
 
-export { validateMatchQuestion, validateMatchQuestionLegacy }
+export { validateMatchQuestion, validateMatchQuestionLegacy };
 
 // Enhanced answer validation for different question types
 const validateAnswerByType = (questionType, studentAnswer, correctAnswer) => {
@@ -517,112 +517,7 @@ router.get('/questions/mixed', async (req, res) => {
   }
 });
 
-// Enhanced submit route with support for all question types - UPDATED
-router.post('/question/:id/submit', async (req, res) => {
-  const { id } = req.params;
-  const { studentAnswer, userId, questionType } = req.body;
-
-  try {
-    // Fetch question and correct answer
-    const { data: questionData, error: questionError } = await supabase
-      .from('Questions')
-      .select('type, xpGain')
-      .eq('Q_id', id)
-      .single();
-
-    if (questionError || !questionData) {
-      return res.status(404).json({ error: 'Question not found' });
-    }
-
-    const { data: correctAnswerData, error: answerError } = await supabase
-      .from('Answers')
-      .select('*') // Select all fields
-      .eq('question_id', id)
-      .eq('isCorrect', true)
-      .single();
-
-    // Add debugging
-    console.log('Answer query result:', { correctAnswerData, answerError });
-
-    if (answerError || !correctAnswerData) {
-      console.log('Answer error details:', answerError);
-      return res.status(404).json({
-        error: 'Correct answer not found',
-        debug: { answerError, question_id: id },
-      });
-    }
-
-    const correctAnswer =
-      correctAnswerData.answer_text || correctAnswerData.answerText;
-    const actualQuestionType = questionType || questionData.type;
-
-    // Validate answer based on question type
-    const isCorrect = validateAnswerByType(
-      actualQuestionType,
-      studentAnswer,
-      correctAnswer,
-    );
-
-    // Award XP if correct and userId provided
-    let updatedUser = null;
-    let xpAwarded = 0;
-
-    if (isCorrect && userId) {
-      const { data: currentUser, error: userError } = await supabase
-        .from('Users')
-        .select('xp')
-        .eq('id', userId)
-        .single();
-
-      if (!userError && currentUser) {
-        xpAwarded = questionData.xpGain || 10;
-        const newXp = (currentUser.xp || 0) + xpAwarded;
-
-        const { data: updated, error: updateError } = await supabase
-          .from('Users')
-          .update({ xp: newXp })
-          .eq('id', userId)
-          .select('id, xp')
-          .single();
-
-        if (!updateError) {
-          updatedUser = updated;
-        }
-      }
-    }
-
-    // Generate feedback message based on question type
-    let feedbackMessage;
-    if (isCorrect) {
-      feedbackMessage = getFeedbackMessage(actualQuestionType, true);
-    } else {
-      feedbackMessage = getFeedbackMessage(actualQuestionType, false);
-    }
-
-    res.status(200).json({
-      success: true,
-      data: {
-        isCorrect,
-        studentAnswer,
-        correctAnswer:
-          actualQuestionType === 'Open Response'
-            ? 'See rubric for details'
-            : correctAnswer,
-        message: feedbackMessage,
-        xpAwarded,
-        updatedUser,
-        questionType: actualQuestionType,
-      },
-    });
-  } catch (error) {
-    console.error('Error submitting answer:', error);
-    res.status(500).json({
-      success: false,
-      error: 'Failed to submit answer',
-      details: error.message,
-    });
-  }
-});
+// This route is now handled by the enhanced version below that includes achievement processing
 
 
 // Keep all your existing routes exactly as they are
@@ -991,83 +886,94 @@ router.post('/question/:id/submit', async (req, res) => {
 
     if (userId) {
       try {
-        // Import achievement checking functions
+        console.log('🎯 Starting achievement checks for user:', userId);
+        
+        // Use dynamic import to avoid circular dependency issues
+        const achievementModule = await import('./achievementRoutes.js');
         const { 
           checkQuestionAchievements, 
           checkFastSolveAchievements, 
           checkLeaderboardAchievements,
           checkBadgeCollectorAchievement,
           checkTopicMasteryAchievements
-        } = await import('./achievementRoutes.js');
+        } = achievementModule;
 
         if (isCorrect) {
-          // Check Topic Mastery Achievements first
-          if (topicName) {
-            try {
-              const topicAchievements = await checkTopicMasteryAchievements(userId, topicName, isCorrect);
-              if (topicAchievements && topicAchievements.length > 0) {
-                unlockedAchievements.push(...topicAchievements);
-              }
-            } catch (topicError) {
-              console.error('Topic achievement error:', topicError.message);
+          // Check question achievements  
+          try {
+            const questionAchievements = await checkQuestionAchievements(
+              userId,
+              isCorrect,
+              gameMode || 'practice'
+            );
+            
+            if (questionAchievements && questionAchievements.length > 0) {
+              unlockedAchievements.push(...questionAchievements);
+              console.log('🎯 Question achievements unlocked:', questionAchievements.length);
             }
+          } catch (qError) {
+            console.error('Question achievement error:', qError.message);
           }
-          
-          // Continue with existing question achievements  
-          const questionAchievements = await checkQuestionAchievements(
-            userId,
-            isCorrect,
-            gameMode || 'practice'
-          );
-          
-          if (questionAchievements && questionAchievements.length > 0) {
-            unlockedAchievements.push(...questionAchievements);
-          }
-        }
 
-        // Practice mode specific enhancements
-        if (gameMode === 'practice' || !gameMode) {
           // Check Fast Solve achievements
-          if (isCorrect && timeSpent && typeof timeSpent === 'number') {
+          if (timeSpent && typeof timeSpent === 'number') {
             try {
               const fastSolveAchievements = await checkFastSolveAchievements(userId, timeSpent, isCorrect);
               if (fastSolveAchievements && fastSolveAchievements.length > 0) {
                 unlockedAchievements.push(...fastSolveAchievements);
+                console.log('🎯 Fast solve achievements unlocked:', fastSolveAchievements.length);
               }
             } catch (fastSolveError) {
               console.error('Fast solve achievement error:', fastSolveError.message);
             }
           }
 
-          // Check Badge Collector achievements when new achievements are unlocked
-          if (unlockedAchievements.length > 0) {
+          // Check Topic Mastery Achievements
+          if (topicName) {
             try {
-              const badgeCollectorAchievements = await checkBadgeCollectorAchievement(userId);
-              if (badgeCollectorAchievements && badgeCollectorAchievements.length > 0) {
-                unlockedAchievements.push(...badgeCollectorAchievements);
+              const topicAchievements = await checkTopicMasteryAchievements(userId, topicName, isCorrect);
+              if (topicAchievements && topicAchievements.length > 0) {
+                unlockedAchievements.push(...topicAchievements);
+                console.log('🎯 Topic achievements unlocked:', topicAchievements.length);
               }
-            } catch (badgeError) {
-              console.error('Badge collector achievement error:', badgeError.message);
-            }
-          }
-
-          // Check leaderboard achievements if user gained XP
-          if (updatedUser && xpAwarded > 0) {
-            try {
-              const leaderboardAchievements = await checkLeaderboardAchievements(userId);
-              if (leaderboardAchievements && leaderboardAchievements.length > 0) {
-                unlockedAchievements.push(...leaderboardAchievements);
-              }
-            } catch (leaderboardError) {
-              console.error('Leaderboard achievement error:', leaderboardError.message);
+            } catch (topicError) {
+              console.error('Topic achievement error:', topicError.message);
             }
           }
         }
+
+        // Check Badge Collector achievements when new achievements are unlocked
+        if (unlockedAchievements.length > 0) {
+          try {
+            const badgeCollectorAchievements = await checkBadgeCollectorAchievement(userId);
+            if (badgeCollectorAchievements && badgeCollectorAchievements.length > 0) {
+              unlockedAchievements.push(...badgeCollectorAchievements);
+              console.log('🎯 Badge collector achievements unlocked:', badgeCollectorAchievements.length);
+            }
+          } catch (badgeError) {
+            console.error('Badge collector achievement error:', badgeError.message);
+          }
+        }
+
+        // Check leaderboard achievements if user gained XP
+        if (updatedUser && xpAwarded > 0) {
+          try {
+            const leaderboardAchievements = await checkLeaderboardAchievements(userId);
+            if (leaderboardAchievements && leaderboardAchievements.length > 0) {
+              unlockedAchievements.push(...leaderboardAchievements);
+              console.log('🎯 Leaderboard achievements unlocked:', leaderboardAchievements.length);
+            }
+          } catch (leaderboardError) {
+            console.error('Leaderboard achievement error:', leaderboardError.message);
+          }
+        }
       } catch (achievementError) {
-        console.error('Error checking achievements:', achievementError);
+        console.error('❌ Error checking achievements:', achievementError);
         // Don't fail the whole request if achievements fail
       }
     }
+
+    console.log('🏆 Final unlocked achievements:', unlockedAchievements);
 
     // Generate feedback message
     const feedbackMessage = getFeedbackMessage(actualQuestionType, isCorrect);
@@ -1083,7 +989,7 @@ router.post('/question/:id/submit', async (req, res) => {
         newXP: updatedUser?.xp,
         updatedUser,
         questionType: actualQuestionType,
-        unlockedAchievements: unlockedAchievements,
+        unlockedAchievements: unlockedAchievements || [],
       },
     };
 

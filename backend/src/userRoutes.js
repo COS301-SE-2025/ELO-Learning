@@ -42,27 +42,55 @@ router.get('/user/:id', verifyToken, async (req, res) => {
   res.status(200).json(data);
 });
 
-// Return user's achievements: (works)
+// Return user's achievements: (using proper junction table)
 router.get('/users/:id/achievements', verifyToken, async (req, res) => {
   const { id } = req.params;
 
+  // Use the proper junction table approach
   const { data, error } = await supabase
-    .from('Achievements')
-    .select('*')
-    .eq('user_id', id);
+    .from('UserAchievements')
+    .select(`
+      unlocked_at,
+      Achievements (
+        id,
+        name,
+        description,
+        condition_type,
+        condition_value,
+        icon_path,
+        AchievementCategories (
+          name
+        )
+      )
+    `)
+    .eq('user_id', id)
+    .order('unlocked_at', { ascending: false });
 
   if (error) {
     console.error('Error fetching achievements:', error.message);
     return res.status(500).json({ error: 'Failed to fetch achievements' });
   }
 
-  if (data.length === 0) {
-    return res
-      .status(404)
-      .json({ error: "User doesn't exist or has no achievements" });
+  // Format the response to match expected structure
+  const formattedAchievements = (data || []).map(ua => ({
+    id: ua.Achievements.id,
+    name: ua.Achievements.name,
+    description: ua.Achievements.description,
+    condition_type: ua.Achievements.condition_type,
+    condition_value: ua.Achievements.condition_value,
+    icon_path: ua.Achievements.icon_path,
+    category: ua.Achievements.AchievementCategories?.name || 'General',
+    unlocked_at: ua.unlocked_at
+  }));
+
+  if (formattedAchievements.length === 0) {
+    return res.status(200).json({ 
+      achievements: [],
+      message: "User has no achievements yet" 
+    });
   }
 
-  res.status(200).json({ achievements: data });
+  res.status(200).json({ achievements: formattedAchievements });
 });
 
 // Update a user's XP: (works)

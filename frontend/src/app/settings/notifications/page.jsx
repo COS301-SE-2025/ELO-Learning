@@ -5,6 +5,7 @@ import { useSession } from 'next-auth/react';
 
 export default function NotificationsPage() {
   const { data: session, status } = useSession();
+  console.log('NotificationsPage session:', session);
 
   if (status === 'loading') {
     return (
@@ -59,7 +60,10 @@ export default function NotificationsPage() {
         </div>
 
         {/* Notification Settings Component */}
-        <NotificationSettings userId={session.user.id} />
+        <NotificationSettings
+          userId={session.user.id}
+          accessToken={session.backendToken}
+        />
 
         {/* Additional Info Section */}
         <div className="mt-8 bg-blue-50 dark:bg-blue-900/20 rounded-lg p-4">
@@ -98,17 +102,20 @@ export default function NotificationsPage() {
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
             <button
-              onClick={() => {
-                // This would trigger a test API call
-                fetch(
-                  `${process.env.NEXT_PUBLIC_API_URL}/notifications/send-test`,
+              onClick={async () => {
+                await fetch(
+                  `${process.env.NEXT_PUBLIC_API_URL}/notifications/send-level-up`,
                   {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
+                    headers: {
+                      'Content-Type': 'application/json',
+                      ...(session?.backendToken && {
+                        Authorization: `Bearer ${session.backendToken}`,
+                      }),
+                    },
                     body: JSON.stringify({
                       userId: session.user.id,
-                      title: '🎉 Level Up!',
-                      body: 'Congratulations! You reached level 10!',
+                      newLevel: 10,
                     }),
                   },
                 );
@@ -119,16 +126,20 @@ export default function NotificationsPage() {
             </button>
 
             <button
-              onClick={() => {
-                fetch(
-                  `${process.env.NEXT_PUBLIC_API_URL}/notifications/send-test`,
+              onClick={async () => {
+                await fetch(
+                  `${process.env.NEXT_PUBLIC_API_URL}/notifications/send-achievement`,
                   {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
+                    headers: {
+                      'Content-Type': 'application/json',
+                      ...(session?.backendToken && {
+                        Authorization: `Bearer ${session.backendToken}`,
+                      }),
+                    },
                     body: JSON.stringify({
                       userId: session.user.id,
-                      title: '🏆 Achievement Unlocked!',
-                      body: 'You earned the "Math Master" achievement!',
+                      achievementName: 'Math Master',
                     }),
                   },
                 );
@@ -139,12 +150,17 @@ export default function NotificationsPage() {
             </button>
 
             <button
-              onClick={() => {
-                fetch(
+              onClick={async () => {
+                await fetch(
                   `${process.env.NEXT_PUBLIC_API_URL}/notifications/send-test`,
                   {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
+                    headers: {
+                      'Content-Type': 'application/json',
+                      ...(session?.backendToken && {
+                        Authorization: `Bearer ${session.backendToken}`,
+                      }),
+                    },
                     body: JSON.stringify({
                       userId: session.user.id,
                       title: '🎮 Game Invitation',
@@ -159,12 +175,17 @@ export default function NotificationsPage() {
             </button>
 
             <button
-              onClick={() => {
-                fetch(
+              onClick={async () => {
+                await fetch(
                   `${process.env.NEXT_PUBLIC_API_URL}/notifications/send-test`,
                   {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
+                    headers: {
+                      'Content-Type': 'application/json',
+                      ...(session?.backendToken && {
+                        Authorization: `Bearer ${session.backendToken}`,
+                      }),
+                    },
                     body: JSON.stringify({
                       userId: session.user.id,
                       title: '📚 Practice Reminder',

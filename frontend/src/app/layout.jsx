@@ -1,4 +1,5 @@
 import ErrorBoundary from '@/components/ErrorBoundary';
+import { Toaster } from 'react-hot-toast';
 import { Geist, Geist_Mono } from 'next/font/google';
 import './globals.css';
 import Providers from './providers';
@@ -63,6 +64,7 @@ export default function RootLayout({ children }) {
         <ErrorBoundary>
           <Providers>
             <PWALifecycle />
+            <Toaster position="top-right" />
             {children}
           </Providers>
         </ErrorBoundary>

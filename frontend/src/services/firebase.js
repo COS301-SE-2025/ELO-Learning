@@ -71,15 +71,16 @@ export const onMessageListener = () => {
 };
 
 // Function to register FCM token with your backend
-export const registerFCMToken = async (userId, token) => {
+export const registerFCMToken = async (userId, token, accessToken) => {
   try {
+    console.log('registerFCMToken backendToken:', accessToken);
     const response = await fetch(
       `${process.env.NEXT_PUBLIC_API_URL}/notifications/register-token`,
       {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${localStorage.getItem('authToken')}`, // Adjust based on your auth system
+          Authorization: `Bearer ${accessToken}`,
         },
         body: JSON.stringify({
           userId,
@@ -101,7 +102,7 @@ export const registerFCMToken = async (userId, token) => {
 };
 
 // Function to remove FCM token (on logout)
-export const removeFCMToken = async (userId) => {
+export const removeFCMToken = async (userId, accessToken) => {
   try {
     const response = await fetch(
       `${process.env.NEXT_PUBLIC_API_URL}/notifications/remove-token`,
@@ -109,7 +110,7 @@ export const removeFCMToken = async (userId) => {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${localStorage.getItem('authToken')}`,
+          Authorization: `Bearer ${accessToken}`,
         },
         body: JSON.stringify({ userId }),
       },

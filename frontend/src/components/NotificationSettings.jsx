@@ -1,8 +1,9 @@
 // components/NotificationSettings.jsx
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { Toaster, toast } from 'react-hot-toast';
 import { usePushNotifications } from '../hooks/usePushNotifications.jsx';
 
-const NotificationSettings = ({ userId }) => {
+const NotificationSettings = ({ userId, accessToken }) => {
   const {
     fcmToken,
     notificationPermission,
@@ -12,7 +13,44 @@ const NotificationSettings = ({ userId }) => {
     sendTestNotification,
     clearForegroundMessage,
     isSupported,
-  } = usePushNotifications(userId);
+  } = usePushNotifications(userId, accessToken);
+
+  // Show toast when foregroundMessage changes
+  useEffect(() => {
+    if (foregroundMessage && foregroundMessage.notification) {
+      toast.custom(
+        (t) => (
+          <div
+            className={`max-w-xs w-full bg-white shadow-lg rounded-lg pointer-events-auto flex ring-1 ring-black ring-opacity-5 p-4 ${
+              t.visible ? 'animate-enter' : 'animate-leave'
+            }`}
+          >
+            <div className="flex-1 w-0">
+              <div className="flex items-center">
+                <span className="text-xl mr-2">📢</span>
+                <span className="font-semibold">
+                  {foregroundMessage.notification.title}
+                </span>
+              </div>
+              <div className="mt-1 text-gray-700 text-sm">
+                {foregroundMessage.notification.body}
+              </div>
+            </div>
+            <button
+              onClick={() => {
+                toast.dismiss(t.id);
+                clearForegroundMessage();
+              }}
+              className="ml-4 text-gray-400 hover:text-gray-600"
+            >
+              ✕
+            </button>
+          </div>
+        ),
+        { duration: 6000 },
+      );
+    }
+  }, [foregroundMessage, clearForegroundMessage]);
 
   const [isSendingTest, setIsSendingTest] = useState(false);
 
@@ -164,30 +202,8 @@ const NotificationSettings = ({ userId }) => {
         </div>
       </div>
 
-      {/* Foreground Message Display */}
-      {foregroundMessage && (
-        <div className="mt-4 bg-green-50 border border-green-200 rounded-lg p-4">
-          <div className="flex items-start justify-between">
-            <div className="flex-1">
-              <h4 className="font-medium text-green-900">
-                📨 New Notification
-              </h4>
-              <p className="text-green-800 font-medium mt-1">
-                {foregroundMessage.notification?.title}
-              </p>
-              <p className="text-green-700 text-sm mt-1">
-                {foregroundMessage.notification?.body}
-              </p>
-            </div>
-            <button
-              onClick={clearForegroundMessage}
-              className="text-green-600 hover:text-green-800 ml-2"
-            >
-              ✕
-            </button>
-          </div>
-        </div>
-      )}
+      {/* Toast container for notifications */}
+      <Toaster position="top-right" />
     </div>
   );
 };

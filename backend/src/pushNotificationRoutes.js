@@ -6,6 +6,8 @@ import pushNotificationService from './services/pushNotificationService.js';
 const router = express.Router();
 
 // Middleware to verify user authentication (you may need to adjust this)
+import jwt from 'jsonwebtoken'; // Add this at the top
+
 const authenticateUser = async (req, res, next) => {
   try {
     const token = req.headers.authorization?.replace('Bearer ', '');
@@ -13,9 +15,15 @@ const authenticateUser = async (req, res, next) => {
       return res.status(401).json({ error: 'No authorization token provided' });
     }
 
-    // Add your JWT verification logic here
-    // For now, assuming user ID is passed in the request
-    next();
+    // JWT verification logic
+    const secret = process.env.JWT_SECRET; // Make sure to set this in your environment
+    try {
+      const decoded = jwt.verify(token, secret);
+      req.user = decoded; // Attach user info to request
+      next();
+    } catch (err) {
+      return res.status(401).json({ error: 'Invalid or expired token' });
+    }
   } catch (error) {
     res.status(401).json({ error: 'Invalid token' });
   }

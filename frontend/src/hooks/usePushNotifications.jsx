@@ -7,43 +7,14 @@ import {
   removeFCMToken,
 } from '../services/firebase.js';
 
-export const usePushNotifications = (userId) => {
+export const usePushNotifications = (userId, accessToken) => {
   const [fcmToken, setFcmToken] = useState(null);
   const [notificationPermission, setNotificationPermission] =
     useState('default');
   const [foregroundMessage, setForegroundMessage] = useState(null);
 
   // Initialize push notifications
-  useEffect(() => {
-    if (userId && typeof window !== 'undefined') {
-      initializePushNotifications();
-    }
-  }, [userId]);
-
-  // Listen for foreground messages
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      onMessageListener()
-        .then((payload) => {
-          console.log('Foreground message received:', payload);
-          setForegroundMessage(payload);
-
-          // Show browser notification for foreground messages
-          if (Notification.permission === 'granted') {
-            new Notification(payload.notification.title, {
-              body: payload.notification.body,
-              icon: payload.notification.icon || '/ELO-Logo-Horizontal.png',
-              tag: payload.data?.type || 'foreground',
-            });
-          }
-        })
-        .catch((err) =>
-          console.log('Failed to receive foreground message:', err),
-        );
-    }
-  }, []);
-
-  const initializePushNotifications = async () => {
+  const initializePushNotifications = useCallback(async () => {
     try {
       // Check current permission status
       if ('Notification' in window) {
@@ -58,7 +29,7 @@ export const usePushNotifications = (userId) => {
         setNotificationPermission('granted');
 
         // Register token with backend
-        const registered = await registerFCMToken(userId, token);
+        const registered = await registerFCMToken(userId, token, accessToken);
         if (registered) {
           console.log('FCM token successfully registered with backend');
         }
@@ -69,7 +40,27 @@ export const usePushNotifications = (userId) => {
       console.error('Error initializing push notifications:', error);
       setNotificationPermission('denied');
     }
-  };
+  }, [userId, accessToken]);
+
+  useEffect(() => {
+    if (userId && typeof window !== 'undefined') {
+      initializePushNotifications();
+    }
+  }, [userId, initializePushNotifications]);
+
+  // Listen for foreground messages
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      onMessageListener()
+        .then((payload) => {
+          console.log('Foreground message received:', payload);
+          setForegroundMessage(payload);
+        })
+        .catch((err) =>
+          console.log('Failed to receive foreground message:', err),
+        );
+    }
+  }, []);
 
   const requestPermission = async () => {
     try {
@@ -80,7 +71,7 @@ export const usePushNotifications = (userId) => {
         setNotificationPermission('granted');
 
         if (userId) {
-          await registerFCMToken(userId, token);
+          await registerFCMToken(userId, token, accessToken);
         }
 
         return true;
@@ -115,7 +106,7 @@ export const usePushNotifications = (userId) => {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            Authorization: `Bearer ${localStorage.getItem('authToken')}`,
+            Authorization: `Bearer ${accessToken}`,
           },
           body: JSON.stringify({
             userId,

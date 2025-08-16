@@ -89,7 +89,7 @@ export const sessionManager = {
 
     // Then use NextAuth signOut
     return signOut({
-      callbackUrl: '/login-landing',
+      callbackUrl: '/',
       ...options,
     });
   },

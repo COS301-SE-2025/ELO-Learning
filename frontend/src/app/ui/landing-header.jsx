@@ -83,8 +83,8 @@ export default function LandingHeader() {
 
   return (
     <>
-      <div className="flex items-center justify-between p-4 bg-white shadow-sm border-b">
-        <div className="flex items-center space-x-2">
+      <div className="flex w-full items-center justify-between p-4 shadow-sm">
+        <div className="flex items-center">
           <Image
             src="/ELO-Learning-Mascot.png"
             width={60}

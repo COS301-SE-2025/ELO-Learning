@@ -63,13 +63,8 @@ export default function QuestionsTracker({
     return (
       <div className="flex items-center justify-center h-full">
         <div className="text-center p-8">
-          <div className="text-4xl mb-4">📝</div>
-          <h2 className="text-xl font-bold text-gray-800 mb-2">
-            No Questions Available
-          </h2>
-          <p className="text-gray-600">
-            No questions found for this practice session.
-          </p>
+          <h2 className="text-xl font-bold mb-2">No Questions Available</h2>
+          <p className="">No questions found for this practice session.</p>
         </div>
       </div>
     );
@@ -80,7 +75,7 @@ export default function QuestionsTracker({
     return (
       <div className="flex items-center justify-center h-full">
         <div className="text-center p-8">
-          <div className="text-2xl text-gray-600">Loading question...</div>
+          <div className="text-2xl">Loading question...</div>
         </div>
       </div>
     );

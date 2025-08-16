@@ -32,7 +32,14 @@ export default function Page() {
         setLoading(true);
         setError(null);
 
-        const data = await fetchUsersByRank(session?.user?.rank);
+        // Only fetch leaderboard if user has a rank
+        if (session?.user?.rank == null) {
+          setUsers([]);
+          setLoading(false);
+          return;
+        }
+
+        const data = await fetchUsersByRank(session.user.rank);
 
         // Use setTimeout to defer sorting and avoid blocking the UI
         timeoutId = setTimeout(() => {
@@ -94,6 +101,7 @@ export default function Page() {
   if (error) {
     return (
       <div className="flex flex-col items-center justify-center min-h-screen">
+        <h1>Leaderboard</h1>
         <div className="text-red-500 text-lg font-bold mb-4">{error}</div>
         <button
           onClick={() => window.location.reload()}
@@ -115,14 +123,22 @@ export default function Page() {
       <h1 className="text-3xl text-center py-10 md:py-5 mt-10 md:mt-0">
         Leaderboard
       </h1>
-      <h2 className="text-center text-2xl font-bold pb-5">
-        Rank: <span className="text-[#FF6E99]">{session?.user?.rank}</span>
-      </h2>
-      <LeaderboardTable
-        users={users}
-        sortType={sortType}
-        onSortTypeChange={handleSortTypeChange}
-      />
+      {session?.user?.rank != null ? (
+        <h2 className="text-center text-2xl font-bold pb-5">
+          Rank: <span className="text-[#FF6E99]">{session.user.rank}</span>
+        </h2>
+      ) : (
+        <p className="text-center text-md pb-5 text-[#FF6E99]">
+          Answer some questions to get ranked!
+        </p>
+      )}
+      {session?.user?.rank != null && (
+        <LeaderboardTable
+          users={users}
+          sortType={sortType}
+          onSortTypeChange={handleSortTypeChange}
+        />
+      )}
     </div>
   );
 }

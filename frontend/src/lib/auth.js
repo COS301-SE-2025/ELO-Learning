@@ -154,7 +154,7 @@ export const authOptions = {
         token.currentLevel = session.user.currentLevel || 1;
         token.joinDate = session.user.joinDate;
         token.avatar = session.user.avatar;
-        elo_rating = session.user.elo_rating;
+        token.elo_rating = session.user.elo_rating;
         token.rank = session.user.rank;
       }
 

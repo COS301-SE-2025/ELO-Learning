@@ -81,6 +81,11 @@ axiosInstance.interceptors.request.use(async (config) => {
   }
 
   // Regular auth logic for non-test environments
+  // Skip auth for random questions endpoint to improve performance
+  if (config.url === '/questions/random') {
+    return config
+  }
+
   if (isServer) {
     const { cookies } = await import('next/headers')
     const awaitedCookies = await cookies()
@@ -359,6 +364,11 @@ export async function fetchRandomQuestions(level) {
     }
 
     console.log(`🌐 Fetching random questions for level ${level}...`)
+    console.log(`🌐 Fetching random questions for level ${level}...`)
+    console.log('fetchRandomQuestions called with level:', level)
+    console.log('BASE_URL:', BASE_URL)
+    console.log('isServer:', typeof window === 'undefined')
+
     const res = await axiosInstance.get('/questions/random', {
       params: { level },
     })
@@ -475,6 +485,11 @@ export async function submitAnswer(id, answer) {
 
 export async function submitSinglePlayerAttempt(data) {
   const res = await axiosInstance.post('/singleplayer', data)
+  return res.data
+}
+
+export async function submitMultiplayerResult(data) {
+  const res = await axiosInstance.post('/multiplayer', data, {})
   return res.data
 }
 

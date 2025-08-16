@@ -11,15 +11,22 @@ import { redirect } from 'next/navigation';
 import { useEffect, useState } from 'react';
 
 // Import all question type components
+import ExpressionBuilderTemplate from '@/app/ui/question-types/expression-builder';
+import MatchQuestionTemplate from '@/app/ui/question-types/match-question';
 import MultipleChoiceTemplate from '@/app/ui/question-types/multiple-choice';
 import OpenResponseTemplate from '@/app/ui/question-types/open-response';
-import ExpressionBuilderTemplate from '@/app/ui/question-types/expression-builder';
-import FillInBlankTemplate from '@/app/ui/question-types/fill-in-blank';
+import TrueFalseTemplate from '@/app/ui/question-types/true-false';
 
-export default function UniversalQuestionWrapper({ questions }) {
+export default function UniversalQuestionWrapper({ questions, numLives = 5 }) {
   // ✅ Safe array handling
   const allQuestions = questions || [];
   const totalSteps = allQuestions.length;
+
+  console.log(
+    '🔥 UniversalQuestionWrapper - Received questions:',
+    allQuestions,
+  );
+  console.log('🔥 UniversalQuestionWrapper - Total questions:', totalSteps);
 
   // ✅ Safe initialization
   const [currQuestion, setCurrQuestion] = useState(allQuestions[0] || null);
@@ -33,6 +40,7 @@ export default function UniversalQuestionWrapper({ questions }) {
     'UniversalQuestionWrapper - currQuestion.type:',
     currQuestion?.type,
   );
+  console.log('UniversalQuestionWrapper - currAnswers:', currAnswers);
 
   // Universal answer state - can handle any answer type
   const [answer, setAnswer] = useState(null);
@@ -100,10 +108,19 @@ export default function UniversalQuestionWrapper({ questions }) {
         isValid = answer && answer.length > 0; // Has at least some tiles
         break;
       case 'Fill-in-the-Blank':
+      case 'Fill-in-the-Blanks':
         isValid =
           answer &&
           Object.keys(answer).length > 0 &&
           Object.values(answer).every((val) => val && val.trim());
+        break;
+      case 'Match Question':
+      case 'Matching':
+        isValid = answer && Object.keys(answer).length > 0;
+        break;
+      case 'True/False':
+      case 'True-False':
+        isValid = answer !== null && (answer === 'True' || answer === 'False');
         break;
       default:
         isValid = answer !== null;
@@ -218,7 +235,26 @@ export default function UniversalQuestionWrapper({ questions }) {
         return <ExpressionBuilderTemplate {...commonProps} />;
 
       case 'Fill-in-the-Blank':
-        return <FillInBlankTemplate {...commonProps} />;
+      case 'Fill-in-the-Blanks':
+        return (
+          <div className="text-center p-8">
+            <p className="text-yellow-600 font-medium">
+              Fill-in-the-blank questions are not yet implemented.
+            </p>
+          </div>
+        );
+
+      case 'Match Question':
+      case 'Matching':
+        console.log(
+          '🔥 UniversalQuestionWrapper - Rendering MatchQuestionTemplate!',
+          currQuestion,
+        );
+        return <MatchQuestionTemplate {...commonProps} />;
+
+      case 'True/False':
+      case 'True-False':
+        return <TrueFalseTemplate {...commonProps} />;
 
       default:
         return (
@@ -246,24 +282,15 @@ export default function UniversalQuestionWrapper({ questions }) {
 
           <div className="flex items-center gap-2">
             <Heart size={24} fill="#FF6E99" stroke="#FF6E99" />
-            <span className="font-semibold text-lg">5</span>
+            <span className="font-semibold text-lg">{numLives}</span>
           </div>
         </div>
       </div>
 
       {/* Main Content */}
-      <div className="space-y-8 pb-35 md:pb-50 pt-24 max-w-4xl mx-auto px-4">
+      <div className="pb-35 md:pb-50 pt-24">
         {/* Question Section */}
-        <div className="p-8">
-          <div className="flex items-center gap-3 mb-6">
-            <span className="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm font-semibold">
-              {currQuestion?.type || 'Loading...'}
-            </span>
-            <span className="px-3 py-1 bg-purple-100 text-purple-800 rounded-full text-sm font-semibold">
-              Question {currentStep} of {totalSteps}
-            </span>
-          </div>
-
+        <div className="">
           <h2 className="text-2xl font-bold text-center leading-relaxed">
             {currQuestion?.questionText || 'Loading question...'}
           </h2>

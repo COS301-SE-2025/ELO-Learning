@@ -5,6 +5,311 @@ import { verifyToken } from './middleware/auth.js';
 
 const router = express.Router();
 
+const validateMatchQuestion = async (studentAnswer, questionId) => {
+  try {
+    console.log('Validating match question:', { studentAnswer, questionId });
+
+    // studentAnswer should be an object like:
+    // { "left-0": "right-2", "left-1": "right-0", ... }
+
+    if (typeof studentAnswer !== 'object' || !studentAnswer) {
+      console.log('Invalid student answer format');
+      return false;
+    }
+
+    // Fetch all correct answers/pairs for this question
+    const { data: correctAnswers, error } = await supabase
+      .from('Answers')
+      .select('*')
+      .eq('question_id', questionId)
+      .eq('isCorrect', true);
+
+    if (error || !correctAnswers || correctAnswers.length === 0) {
+      console.error('No correct answers found:', error);
+      return false;
+    }
+
+    console.log('Found correct answers:', correctAnswers);
+
+    // Parse the correct pairs from the database
+    const correctPairs = [];
+    correctAnswers.forEach((answer, index) => {
+      let left, right;
+
+      // Method 1: Check for explicit match_left and match_right fields
+      if (answer.match_left && answer.match_right) {
+        left = answer.match_left;
+        right = answer.match_right;
+      }
+      // Method 2: Parse from answer_text
+      else if (answer.answer_text) {
+        const answerText = answer.answer_text;
+        if (answerText.includes(' → ')) {
+          [left, right] = answerText.split(' → ').map((item) => item.trim());
+        } else if (answerText.includes('→')) {
+          [left, right] = answerText.split('→').map((item) => item.trim());
+        } else if (answerText.includes(' | ')) {
+          [left, right] = answerText.split(' | ').map((item) => item.trim());
+        } else if (answerText.includes('|')) {
+          [left, right] = answerText.split('|').map((item) => item.trim());
+        } else if (answerText.includes(': ')) {
+          [left, right] = answerText.split(': ').map((item) => item.trim());
+        } else if (answerText.includes(':')) {
+          [left, right] = answerText.split(':').map((item) => item.trim());
+        }
+      }
+
+      if (left && right) {
+        correctPairs.push({
+          leftId: `left-${index}`,
+          rightId: `right-${index}`,
+          leftText: left,
+          rightText: right,
+          pairIndex: index,
+        });
+      }
+    });
+
+    console.log('Parsed correct pairs:', correctPairs);
+
+    // Validate student matches against correct pairs
+    const studentMatches = Object.keys(studentAnswer);
+    const totalPairs = correctPairs.length;
+
+    if (studentMatches.length !== totalPairs) {
+      console.log(
+        `Incomplete: ${studentMatches.length}/${totalPairs} pairs matched`,
+      );
+      return false;
+    }
+
+    let correctMatchCount = 0;
+
+    for (const leftId in studentAnswer) {
+      const studentRightId = studentAnswer[leftId];
+
+      // Find the correct pair for this leftId
+      const correctPair = correctPairs.find((pair) => pair.leftId === leftId);
+
+      if (correctPair && correctPair.rightId === studentRightId) {
+        correctMatchCount++;
+        console.log(`✅ Correct match: ${leftId} → ${studentRightId}`);
+      } else {
+        console.log(
+          `❌ Incorrect match: ${leftId} → ${studentRightId} (should be ${correctPair?.rightId})`,
+        );
+      }
+    }
+
+    const isAllCorrect = correctMatchCount === totalPairs;
+    console.log(
+      `Match validation result: ${correctMatchCount}/${totalPairs} correct. All correct: ${isAllCorrect}`,
+    );
+
+    return isAllCorrect;
+  } catch (error) {
+    console.error('Error validating match question:', error);
+    return false;
+  }
+};
+
+// Updated validateMatchQuestion function for your existing code
+const validateMatchQuestionLegacy = (studentAnswer, correctAnswer) => {
+  try {
+    console.log('Legacy match validation:', { studentAnswer, correctAnswer });
+
+    // Handle different formats of correctAnswer
+    let correctPairs;
+
+    if (typeof correctAnswer === 'string') {
+      try {
+        correctPairs = JSON.parse(correctAnswer);
+      } catch {
+        // If it's not JSON, treat as a single pair
+        correctPairs = [correctAnswer];
+      }
+    } else if (Array.isArray(correctAnswer)) {
+      correctPairs = correctAnswer;
+    } else {
+      correctPairs = [correctAnswer];
+    }
+
+    // Build expected match object from correct pairs
+    const expectedMatches = {};
+    correctPairs.forEach((pair, index) => {
+      let left, right;
+
+      if (typeof pair === 'string') {
+        if (pair.includes(' → ')) {
+          [left, right] = pair.split(' → ').map((item) => item.trim());
+        } else if (pair.includes('→')) {
+          [left, right] = pair.split('→').map((item) => item.trim());
+        } else if (pair.includes(' | ')) {
+          [left, right] = pair.split(' | ').map((item) => item.trim());
+        } else if (pair.includes('|')) {
+          [left, right] = pair.split('|').map((item) => item.trim());
+        } else if (pair.includes(': ')) {
+          [left, right] = pair.split(': ').map((item) => item.trim());
+        }
+      } else if (pair.left && pair.right) {
+        left = pair.left;
+        right = pair.right;
+      }
+
+      if (left && right) {
+        expectedMatches[`left-${index}`] = `right-${index}`;
+      }
+    });
+
+    console.log('Expected matches:', expectedMatches);
+    console.log('Student matches:', studentAnswer);
+
+    // Compare student answer with expected matches
+    const expectedKeys = Object.keys(expectedMatches);
+    const studentKeys = Object.keys(studentAnswer);
+
+    if (studentKeys.length !== expectedKeys.length) {
+      return false;
+    }
+
+    for (const leftId in expectedMatches) {
+      if (studentAnswer[leftId] !== expectedMatches[leftId]) {
+        return false;
+      }
+    }
+
+    return true;
+  } catch (error) {
+    console.error('Error in legacy match validation:', error);
+    return false;
+  }
+};
+
+// Enhanced submission route with proper match question handling
+router.post('/question/:id/submit', async (req, res) => {
+  const { id } = req.params;
+  const { studentAnswer, userId, questionType } = req.body;
+
+  try {
+    // Fetch question data
+    const { data: questionData, error: questionError } = await supabase
+      .from('Questions')
+      .select('type, xpGain, questionText')
+      .eq('Q_id', id)
+      .single();
+
+    if (questionError || !questionData) {
+      return res.status(404).json({ error: 'Question not found' });
+    }
+
+    const actualQuestionType = questionType || questionData.type;
+    let isCorrect = false;
+
+    // Handle match questions with enhanced validation
+    if (
+      actualQuestionType === 'Match Question' ||
+      actualQuestionType === 'Matching'
+    ) {
+      console.log('Processing match question submission');
+
+      // Use the enhanced match validation
+      isCorrect = await validateMatchQuestion(studentAnswer, id);
+
+      if (!isCorrect) {
+        // Fallback to legacy validation if new method fails
+        const { data: correctAnswerData, error: answerError } = await supabase
+          .from('Answers')
+          .select('answer_text')
+          .eq('question_id', id)
+          .eq('isCorrect', true);
+
+        if (!answerError && correctAnswerData) {
+          const correctAnswers = correctAnswerData.map((a) => a.answer_text);
+          isCorrect = validateMatchQuestionLegacy(
+            studentAnswer,
+            correctAnswers,
+          );
+        }
+      }
+    } else {
+      // Handle other question types with existing validation
+      const { data: correctAnswerData, error: answerError } = await supabase
+        .from('Answers')
+        .select('*')
+        .eq('question_id', id)
+        .eq('isCorrect', true)
+        .single();
+
+      if (answerError || !correctAnswerData) {
+        return res.status(404).json({
+          error: 'Correct answer not found',
+          debug: { answerError, question_id: id },
+        });
+      }
+
+      const correctAnswer =
+        correctAnswerData.answer_text || correctAnswerData.answerText;
+      isCorrect = validateAnswerByType(
+        actualQuestionType,
+        studentAnswer,
+        correctAnswer,
+      );
+    }
+
+    // Award XP if correct
+    let updatedUser = null;
+    let xpAwarded = 0;
+
+    if (isCorrect && userId) {
+      const { data: currentUser, error: userError } = await supabase
+        .from('Users')
+        .select('xp')
+        .eq('id', userId)
+        .single();
+
+      if (!userError && currentUser) {
+        xpAwarded = questionData.xpGain || 10;
+        const newXp = (currentUser.xp || 0) + xpAwarded;
+
+        const { data: updated, error: updateError } = await supabase
+          .from('Users')
+          .update({ xp: newXp })
+          .eq('id', userId)
+          .select('id, xp')
+          .single();
+
+        if (!updateError) {
+          updatedUser = updated;
+        }
+      }
+    }
+
+    // Generate feedback message
+    const feedbackMessage = getFeedbackMessage(actualQuestionType, isCorrect);
+
+    res.status(200).json({
+      success: true,
+      data: {
+        isCorrect,
+        studentAnswer,
+        message: feedbackMessage,
+        xpAwarded,
+        updatedUser,
+        questionType: actualQuestionType,
+      },
+    });
+  } catch (error) {
+    console.error('Error submitting answer:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to submit answer',
+      details: error.message,
+    });
+  }
+});
+
+export { validateMatchQuestion, validateMatchQuestionLegacy };
+
 // Enhanced answer validation for different question types
 const validateAnswerByType = (questionType, studentAnswer, correctAnswer) => {
   switch (questionType) {
@@ -21,7 +326,17 @@ const validateAnswerByType = (questionType, studentAnswer, correctAnswer) => {
       return validateExpressionBuilder(studentAnswer, correctAnswer);
 
     case 'Fill-in-the-Blank':
-      return validateFillInBlank(studentAnswer, correctAnswer);
+    case 'Fill-in-the-Blanks':
+      // Fill-in-the-blank functionality not implemented yet
+      return false;
+
+    case 'Match Question':
+    case 'Matching':
+      return validateMatchQuestion(studentAnswer, correctAnswer);
+
+    case 'True/False':
+    case 'True-False':
+      return validateTrueFalse(studentAnswer, correctAnswer);
 
     default:
       return studentAnswer === correctAnswer;
@@ -62,33 +377,40 @@ const validateExpressionBuilder = (studentAnswer, correctAnswer) => {
   }
 };
 
-const validateFillInBlank = (studentAnswer, correctAnswer) => {
+const validateTrueFalse = (studentAnswer, correctAnswer) => {
   try {
-    const studentAnswers =
-      typeof studentAnswer === 'object'
-        ? studentAnswer
-        : JSON.parse(studentAnswer);
-    const correctAnswers =
-      typeof correctAnswer === 'object'
-        ? correctAnswer
-        : JSON.parse(correctAnswer);
-
-    for (let blankId in correctAnswers) {
-      const studentBlank = studentAnswers[blankId]?.trim().toLowerCase();
-      const correctBlank = correctAnswers[blankId].trim().toLowerCase();
-
-      const possibleAnswers = correctBlank.split('|').map((ans) => ans.trim());
-
-      if (!possibleAnswers.includes(studentBlank)) {
-        return false;
-      }
+    if (!studentAnswer || !correctAnswer) {
+      return false;
     }
 
-    return true;
+    // Normalize both answers to lowercase for comparison
+    const normalizedStudent = studentAnswer.toString().toLowerCase().trim();
+    const normalizedCorrect = correctAnswer.toString().toLowerCase().trim();
+
+    // Direct comparison
+    return normalizedStudent === normalizedCorrect;
   } catch (error) {
-    console.error('Error validating fill in blank:', error);
+    console.error('Error validating true/false:', error);
     return false;
   }
+};
+
+// Helper function to detect if a string looks like a math expression
+const isMathExpression = (str) => {
+  if (!str || typeof str !== 'string') return false;
+
+  // Check for mathematical operators, functions, or patterns
+  const mathPatterns = [
+    /[+\-*/^()=]/, // Basic operators and parentheses
+    /\b(sin|cos|tan|log|ln|sqrt|exp|abs)\b/i, // Math functions
+    /\d+\.\d+/, // Decimal numbers
+    /[a-z]\s*[=]/i, // Variable assignments like x=
+    /\b(pi|e|infinity)\b/i, // Math constants
+    /\d+[a-z]/i, // Number with variable like 2x
+    /[a-z]\d+/i, // Variable with number like x2
+  ];
+
+  return mathPatterns.some((pattern) => pattern.test(str));
 };
 
 // Get questions by type - UPDATED to use only existing columns
@@ -136,7 +458,8 @@ router.get('/questions/type/:type', async (req, res) => {
     const { data: answers, error: aError } = await supabase
       .from('Answers')
       .select('*')
-      .in('question_id', questionIds);
+      .in('question_id', questionIds)
+      .not('answer_text', 'is', null);
 
     if (aError) {
       return res.status(500).json({
@@ -158,11 +481,16 @@ router.get('/questions/type/:type', async (req, res) => {
       question.showMathHelper = false;
     });
 
+    // Filter out questions with no answers (for match questions this means incomplete data)
+    const questionsWithAnswers = questions.filter(
+      (q) => q.answers && q.answers.length > 0,
+    );
+
     res.status(200).json({
       success: true,
-      data: questions,
+      data: questionsWithAnswers,
       type: type,
-      count: questions.length,
+      count: questionsWithAnswers.length,
     });
   } catch (err) {
     console.error('Unexpected error:', err);
@@ -359,6 +687,11 @@ const getFeedbackMessage = (questionType, isCorrect) => {
       'Great response! Your explanation demonstrates good understanding.',
     'Expression Builder': 'Perfect! Your expression is correctly constructed!',
     'Fill-in-the-Blank': 'Correct! All blanks filled properly!',
+    'Fill-in-the-Blanks': 'Correct! All blanks filled properly!',
+    'Match Question': 'Excellent! All pairs matched correctly!',
+    Matching: 'Excellent! All pairs matched correctly!',
+    'True/False': 'Correct! You chose the right answer!',
+    'True-False': 'Correct! You chose the right answer!',
   };
 
   const incorrectMessages = {
@@ -370,6 +703,13 @@ const getFeedbackMessage = (questionType, isCorrect) => {
       "Your expression isn't quite right. Try rearranging the tiles.",
     'Fill-in-the-Blank':
       'Some blanks are incorrect. Double-check your answers.',
+    'Fill-in-the-Blanks':
+      'Some blanks are incorrect. Double-check your answers.',
+    'Match Question':
+      'Some pairs are not matched correctly. Review your connections.',
+    Matching: 'Some pairs are not matched correctly. Review your connections.',
+    'True/False': 'Incorrect. Think about the statement more carefully.',
+    'True-False': 'Incorrect. Think about the statement more carefully.',
   };
 
   return isCorrect

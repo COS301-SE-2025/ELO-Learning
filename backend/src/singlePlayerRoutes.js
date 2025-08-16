@@ -11,6 +11,7 @@ import { checkAndUpdateRankAndLevel } from './utils/userProgression.js';
 const router = express.Router();
 
 router.post('/singleplayer', async (req, res) => {
+  console.log('Using singleplayer route... --------------------');
   try {
     const { user_id, question_id, isCorrect, timeSpent } = req.body;
 

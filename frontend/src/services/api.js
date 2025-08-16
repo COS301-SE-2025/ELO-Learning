@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { performanceCache, CACHE_DURATIONS } from '../utils/performanceCache';
+import { CACHE_DURATIONS, performanceCache } from '../utils/performanceCache';
 
 // ✅ Environment-aware base URL with CI support
 const getBaseURL = () => {
@@ -229,7 +229,21 @@ export async function loginUser(email, password) {
     if (process.env.NODE_ENV === 'test') {
       return {
         token: 'mock-jwt-token',
-        user: { id: 1, email, username: 'testuser', currentLevel: 1, xp: 100 },
+        user: {
+          id: 1,
+          email,
+          username: 'testuser',
+          currentLevel: 1,
+          xp: 100,
+          avatar: {
+            eyes: 'Eye 1',
+            mouth: 'Mouth 1',
+            bodyShape: 'Circle',
+            background: 'solid-pink',
+          },
+          elo_rating: 5.0,
+          rank: 'Bronze',
+        },
       };
     }
     throw error;
@@ -245,6 +259,9 @@ export async function registerUser(
   password,
   currentLevel,
   joinDate,
+  avatar,
+  elo_rating,
+  rank,
 ) {
   try {
     console.log('🚀 Starting registration...');
@@ -257,6 +274,9 @@ export async function registerUser(
       password,
       currentLevel,
       joinDate,
+      avatar,
+      elo_rating,
+      rank,
     });
 
     console.log('✅ Registration API response:', res.data);
@@ -281,7 +301,18 @@ export async function registerUser(
     if (process.env.NODE_ENV === 'test') {
       return {
         token: 'mock-jwt-token',
-        user: { id: 1, name, surname, username, email, currentLevel, xp: 0 },
+        user: {
+          id: 1,
+          name,
+          surname,
+          username,
+          email,
+          currentLevel,
+          xp: 0,
+          avatar,
+          elo_rating,
+          rank,
+        },
       };
     }
     throw error;
@@ -350,6 +381,7 @@ export async function fetchRandomQuestions(level) {
       if (cached) return cached;
     }
 
+    console.log(`🌐 Fetching random questions for level ${level}...`);
     console.log(`🌐 Fetching random questions for level ${level}...`);
     console.log('fetchRandomQuestions called with level:', level);
     console.log('BASE_URL:', BASE_URL);
@@ -456,27 +488,10 @@ export async function fetchQuestionAnswer(id) {
 }
 
 export async function fetchQuestionsByTopic(topic) {
-  try {
-    const res = await axiosInstance.get(`/questions/topic`, {
-      params: { topic },
-    });
-    console.log('fetchQuestionsByTopic success:', res.status);
-    console.log('Questions received:', res.data?.questions?.length || 0);
-
-    return res.data;
-  } catch (error) {
-    console.error('fetchQuestionsByTopic error:', {
-      message: error.message,
-      status: error.response?.status,
-      statusText: error.response?.statusText,
-      data: error.response?.data,
-      topic: topic,
-      url: error.config?.url,
-      baseURL: error.config?.baseURL,
-    });
-
-    throw error;
-  }
+  const res = await axiosInstance.get(`/questions/topic`, {
+    params: { topic },
+  });
+  return res.data;
 }
 
 export async function submitAnswer(id, answer) {
@@ -526,4 +541,9 @@ export async function verifyResetToken(token) {
 export async function updateUserAvatar(userId, avatar) {
   const res = await axiosInstance.post(`/user/${userId}/avatar`, { avatar });
   return res;
+}
+
+export async function fetchUsersByRank(rank) {
+  const res = await axiosInstance.get(`/users/rank/${rank}`);
+  return res.data;
 }

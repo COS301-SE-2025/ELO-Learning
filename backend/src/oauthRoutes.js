@@ -16,7 +16,9 @@ router.post('/oauth/user', async (req, res) => {
     // Check if user already exists
     const { data: existingUser, error: fetchError } = await supabase
       .from('Users')
-      .select('id,name,surname,username,email,currentLevel,joinDate,xp,avatar')
+      .select(
+        'id,name,surname,username,email,currentLevel,joinDate,xp,avatar,elo_rating,rank',
+      )
       .eq('email', email)
       .maybeSingle();
 
@@ -39,6 +41,8 @@ router.post('/oauth/user', async (req, res) => {
           joinDate: existingUser.joinDate,
           xp: existingUser.xp,
           avatar: existingUser.avatar,
+          elo_rating: existingUser.elo_rating,
+          rank: existingUser.rank,
         },
       });
     }
@@ -93,6 +97,8 @@ router.post('/oauth/user', async (req, res) => {
             bodyShape: 'Circle',
             background: 'solid-pink',
           },
+          elo_rating: 5.0,
+          rank: 'Bronze',
         },
       ])
       .select()
@@ -115,6 +121,8 @@ router.post('/oauth/user', async (req, res) => {
         joinDate: newUser.joinDate,
         xp: newUser.xp,
         avatar: newUser.avatar,
+        elo_rating: newUser.elo_rating,
+        rank: newUser.rank,
       },
     });
   } catch (error) {

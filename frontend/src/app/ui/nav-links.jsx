@@ -8,8 +8,8 @@ import { usePathname } from 'next/navigation';
 const links = [
   { name: 'Home', href: '/dashboard', icon: House },
   { name: 'Practice', href: '/practice', icon: Calculator },
-  { name: 'Match', href: '/match', icon: Swords },
-  { name: 'Timed', href: '/single-player', icon: Sword },
+  { name: 'Multiplayer', href: '/match', icon: Swords },
+  { name: 'Singleplayer', href: '/single-player', icon: Sword },
   { name: 'Profile', href: '/profile', icon: User },
 ];
 

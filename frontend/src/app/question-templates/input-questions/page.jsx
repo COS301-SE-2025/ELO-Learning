@@ -26,9 +26,7 @@ export default function Page() {
     return (
       <div className="full-screen w-full h-full flex items-center justify-center">
         <div className="text-center">
-          <div className="text-2xl text-gray-600 mb-4">
-            Loading questions...
-          </div>
+          <div className="text-2xl mb-4">Loading questions...</div>
         </div>
       </div>
     );
@@ -52,13 +50,8 @@ export default function Page() {
     return (
       <div className="full-screen w-full h-full flex items-center justify-center">
         <div className="text-center">
-          <div className="text-4xl mb-4">📝</div>
-          <h2 className="text-xl font-bold text-gray-800 mb-2">
-            No Questions Available
-          </h2>
-          <p className="text-gray-600">
-            No Math Input questions found in the database.
-          </p>
+          <h2 className="text-xl font-bold mb-2">No Questions Available</h2>
+          <p className="">No Math Input questions found in the database.</p>
         </div>
       </div>
     );

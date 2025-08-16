@@ -1,20 +1,27 @@
 'use client';
-import { fetchAllUsers } from '@/services/api';
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { fetchUsersByRank } from '@/services/api';
+import { useSession } from 'next-auth/react';
+import { useEffect, useMemo, useState } from 'react';
 import LeaderboardTable from '../ui/leaderboard-table';
 
 export default function Page() {
+  const { data: session, status } = useSession();
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [sortType, setSortType] = useState('xp');
 
-  // Memoize the sorting function to avoid recreating it on every render
-  const sortUsers = useCallback((userData) => {
+  // Sorting function for XP or ELO
+  const sortUsers = (userData, type = 'xp') => {
     return userData.sort((a, b) => {
-      if (b.xp !== a.xp) return b.xp - a.xp;
+      if (type === 'elo') {
+        if ((b.elo ?? 0) !== (a.elo ?? 0)) return (b.elo ?? 0) - (a.elo ?? 0);
+      } else {
+        if (b.xp !== a.xp) return b.xp - a.xp;
+      }
       return a.username.localeCompare(b.username);
     });
-  }, []);
+  };
 
   useEffect(() => {
     let mounted = true;
@@ -25,12 +32,19 @@ export default function Page() {
         setLoading(true);
         setError(null);
 
-        const data = await fetchAllUsers();
+        // Only fetch leaderboard if user has a rank
+        if (session?.user?.rank == null) {
+          setUsers([]);
+          setLoading(false);
+          return;
+        }
+
+        const data = await fetchUsersByRank(session.user.rank);
 
         // Use setTimeout to defer sorting and avoid blocking the UI
         timeoutId = setTimeout(() => {
           if (mounted) {
-            const sortedData = sortUsers([...data]); // Clone array before sorting
+            const sortedData = sortUsers([...data], sortType); // Clone array before sorting
             setUsers(sortedData);
             setLoading(false);
           }
@@ -44,6 +58,7 @@ export default function Page() {
       }
     }
 
+    if (status === 'loading') return; // Don't load users while session is loading
     loadUsers();
 
     // Cleanup function
@@ -53,7 +68,7 @@ export default function Page() {
         clearTimeout(timeoutId);
       }
     };
-  }, [sortUsers]);
+  }, [session?.user?.rank, sortType]);
 
   // Memoize the loading component to prevent unnecessary re-renders
   const LoadingComponent = useMemo(
@@ -86,6 +101,7 @@ export default function Page() {
   if (error) {
     return (
       <div className="flex flex-col items-center justify-center min-h-screen">
+        <h1>Leaderboard</h1>
         <div className="text-red-500 text-lg font-bold mb-4">{error}</div>
         <button
           onClick={() => window.location.reload()}
@@ -97,12 +113,32 @@ export default function Page() {
     );
   }
 
+  // Handler for dropdown change
+  const handleSortTypeChange = (type) => {
+    setSortType(type);
+  };
+
   return (
     <div>
       <h1 className="text-3xl text-center py-10 md:py-5 mt-10 md:mt-0">
         Leaderboard
       </h1>
-      <LeaderboardTable users={users} />
+      {session?.user?.rank != null ? (
+        <h2 className="text-center text-2xl font-bold pb-5">
+          Rank: <span className="text-[#FF6E99]">{session.user.rank}</span>
+        </h2>
+      ) : (
+        <p className="text-center text-md pb-5 text-[#FF6E99]">
+          Answer some questions to get ranked!
+        </p>
+      )}
+      {session?.user?.rank != null && (
+        <LeaderboardTable
+          users={users}
+          sortType={sortType}
+          onSortTypeChange={handleSortTypeChange}
+        />
+      )}
     </div>
   );
 }

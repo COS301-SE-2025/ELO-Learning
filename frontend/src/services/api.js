@@ -1,16 +1,16 @@
-import axios from 'axios'
-import { CACHE_DURATIONS, performanceCache } from '../utils/performanceCache'
+import axios from 'axios';
+import { CACHE_DURATIONS, performanceCache } from '../utils/performanceCache';
 
 // ✅ Environment-aware base URL with CI support
 const getBaseURL = () => {
   if (process.env.NODE_ENV === 'test' || process.env.CI) {
-    return 'http://localhost:3001' // Test server port
+    return 'http://localhost:3001'; // Test server port
   }
-  return process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000'
-}
+  return process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
+};
 
-const BASE_URL = getBaseURL()
-const isServer = typeof window === 'undefined'
+const BASE_URL = getBaseURL();
+const isServer = typeof window === 'undefined';
 
 // ✅ Test-aware axios instance
 const axiosInstance = axios.create({
@@ -19,7 +19,7 @@ const axiosInstance = axios.create({
     'Content-Type': 'application/json',
   },
   timeout: process.env.NODE_ENV === 'test' ? 5000 : 10000,
-})
+});
 
 // ✅ Mock data for tests (prevents API failures)
 function getMockData(url) {
@@ -27,7 +27,7 @@ function getMockData(url) {
     return [
       { id: 1, username: 'testuser1', xp: 150, currentLevel: 1 },
       { id: 2, username: 'testuser2', xp: 200, currentLevel: 2 },
-    ]
+    ];
   }
   if (url.includes('/questions/type/Multiple')) {
     return [
@@ -41,7 +41,7 @@ function getMockData(url) {
           { id: 3, answer_text: '5', isCorrect: false },
         ],
       },
-    ]
+    ];
   }
   if (url.includes('/questions/random')) {
     return {
@@ -53,10 +53,10 @@ function getMockData(url) {
           answers: [{ answer_text: '3', isCorrect: true }],
         },
       ],
-    }
+    };
   }
   if (url.includes('/topics')) {
-    return { topics: ['Algebra', 'Geometry', 'Calculus', 'Statistics'] }
+    return { topics: ['Algebra', 'Geometry', 'Calculus', 'Statistics'] };
   }
   if (url.includes('/questions/level/topic')) {
     return [
@@ -66,29 +66,29 @@ function getMockData(url) {
         type: 'Math Input',
         answers: [{ answer_text: '2', isCorrect: true }],
       },
-    ]
+    ];
   }
-  return null
+  return null;
 }
 
 // ✅ Enhanced request interceptor with CI support
 axiosInstance.interceptors.request.use(async (config) => {
   // In test environment, add mock auth and continue
   if (process.env.NODE_ENV === 'test' || process.env.CI) {
-    config.headers.Authorization = 'Bearer mock-test-token'
-    console.log('🧪 Test mode: Using mock auth token')
-    return config
+    config.headers.Authorization = 'Bearer mock-test-token';
+    console.log('🧪 Test mode: Using mock auth token');
+    return config;
   }
 
   // Regular auth logic for non-test environments
   // Skip auth for random questions endpoint to improve performance
   if (config.url === '/questions/random') {
-    return config
+    return config;
   }
 
   if (isServer) {
-    const { cookies } = await import('next/headers')
-    const awaitedCookies = await cookies()
+    const { cookies } = await import('next/headers');
+    const awaitedCookies = await cookies();
 
     const nextAuthToken = awaitedCookies
       .getAll()
@@ -96,82 +96,82 @@ axiosInstance.interceptors.request.use(async (config) => {
         (item) =>
           item.name === 'next-auth.session-token' ||
           item.name === '__Secure-next-auth.session-token',
-      )
+      );
 
     if (nextAuthToken) {
-      config.headers.Authorization = `Bearer ${nextAuthToken.value}`
+      config.headers.Authorization = `Bearer ${nextAuthToken.value}`;
     } else {
       const tokenCookie = awaitedCookies
         .getAll()
         .filter((item) => item.name === 'token')
-        .map((item) => item.value)
+        .map((item) => item.value);
       if (tokenCookie.length > 0) {
-        config.headers.Authorization = `Bearer ${tokenCookie[0]}`
+        config.headers.Authorization = `Bearer ${tokenCookie[0]}`;
       }
     }
   } else {
     // CLIENT-SIDE: Simple token retrieval (keeps your caching fix)
-    let token = null
+    let token = null;
 
     try {
       token =
-        localStorage.getItem('token') || localStorage.getItem('oauth_token')
+        localStorage.getItem('token') || localStorage.getItem('oauth_token');
       console.log(
         '🔐 Token retrieved for API call:',
         token ? 'Found' : 'Not found',
-      )
+      );
     } catch (error) {
-      console.warn('Token retrieval failed:', error)
+      console.warn('Token retrieval failed:', error);
     }
 
     if (token) {
-      config.headers.Authorization = `Bearer ${token}`
+      config.headers.Authorization = `Bearer ${token}`;
     }
   }
 
-  return config
-})
+  return config;
+});
 
 // ✅ Test-aware response interceptor (prevents CI failures)
 axiosInstance.interceptors.response.use(
   (response) => response,
   (error) => {
     if (process.env.NODE_ENV === 'test' || process.env.CI) {
-      console.warn('🧪 Test API Error, returning mock data:', error.message)
+      console.warn('🧪 Test API Error, returning mock data:', error.message);
       return Promise.resolve({
         data: getMockData(error.config?.url || ''),
         status: 200,
-      })
+      });
     }
-    return Promise.reject(error)
+    return Promise.reject(error);
   },
-)
+);
 
 // ✅ LEADERBOARD - Cache with CI support
 export async function fetchAllUsers() {
   try {
     // Skip caching in tests for predictable behavior
     if (process.env.NODE_ENV !== 'test') {
-      const cached = performanceCache.get('users', CACHE_DURATIONS.QUICK)
-      if (cached) return cached
+      const cached = performanceCache.get('users', CACHE_DURATIONS.QUICK);
+      if (cached) return cached;
     }
 
-    console.log('🌐 Fetching fresh users data...')
-    const res = await axiosInstance.get('/users')
+    console.log('🌐 Fetching fresh users data...');
+    const res = await axiosInstance.get('/users');
 
     // Don't cache in tests
     if (process.env.NODE_ENV !== 'test') {
-      performanceCache.set('users', res.data)
+      performanceCache.set('users', res.data);
     }
 
-    return res.data
+    return res.data;
   } catch (error) {
-    console.error('❌ Failed to fetch users:', error)
+    console.error('❌ Failed to fetch users:', error);
     // In tests, return mock data instead of throwing
     if (process.env.NODE_ENV === 'test') {
-      return getMockData('/users')
+      return getMockData('/users');
     }
-    throw error
+    throw error;
   }
 }
 
@@ -179,67 +179,74 @@ export async function fetchAllUsers() {
 export async function fetchAllQuestions() {
   try {
     if (process.env.NODE_ENV !== 'test') {
-      const cached = performanceCache.get('questions', CACHE_DURATIONS.LONG)
-      if (cached) return cached
+      const cached = performanceCache.get('questions', CACHE_DURATIONS.LONG);
+      if (cached) return cached;
     }
 
-    console.log('🌐 Fetching fresh questions data...')
-    const res = await axiosInstance.get('/questions')
+    console.log('🌐 Fetching fresh questions data...');
+    const res = await axiosInstance.get('/questions');
 
     if (process.env.NODE_ENV !== 'test') {
-      performanceCache.set('questions', res.data)
+      performanceCache.set('questions', res.data);
     }
 
-    return res.data
+    return res.data;
   } catch (error) {
-    console.error('❌ Failed to fetch questions:', error)
+    console.error('❌ Failed to fetch questions:', error);
     if (process.env.NODE_ENV === 'test') {
-      return getMockData('/questions')
+      return getMockData('/questions');
     }
-    throw error
+    throw error;
   }
 }
 
 // ✅ LOGIN - Keep your caching fixes
 export async function loginUser(email, password) {
   try {
-    console.log('🚀 Starting login...')
+    console.log('🚀 Starting login...');
 
-    const res = await axiosInstance.post('/login', { email, password })
+    const res = await axiosInstance.post('/login', { email, password });
 
-    console.log('✅ Login API response:', res.data)
+    console.log('✅ Login API response:', res.data);
 
     // SIMPLE, DIRECT STORAGE (your fix for caching issues)
     if (res.data.token) {
-      localStorage.setItem('token', res.data.token)
-      console.log('✅ Token stored')
+      localStorage.setItem('token', res.data.token);
+      console.log('✅ Token stored');
     }
 
     if (res.data.user) {
-      localStorage.setItem('user', JSON.stringify(res.data.user))
-      console.log('✅ User data stored:', res.data.user)
+      localStorage.setItem('user', JSON.stringify(res.data.user));
+      console.log('✅ User data stored:', res.data.user);
     }
 
-    localStorage.setItem('auth_provider', 'credentials')
+    localStorage.setItem('auth_provider', 'credentials');
 
-    console.log('🎉 Login completed successfully')
-    return res.data
+    console.log('🎉 Login completed successfully');
+    return res.data;
   } catch (error) {
-    console.error('❌ Login failed:', error)
+    console.error('❌ Login failed:', error);
     if (process.env.NODE_ENV === 'test') {
       return {
         token: 'mock-jwt-token',
         user: {
-          id: 1, email, username: 'testuser', currentLevel: 1, xp: 100, avatar: {
+          id: 1,
+          email,
+          username: 'testuser',
+          currentLevel: 1,
+          xp: 100,
+          avatar: {
             eyes: 'Eye 1',
             mouth: 'Mouth 1',
             bodyShape: 'Circle',
             background: 'solid-pink',
-          }, elo_rating: 5.0, rank: 'Bronze',
+          },
+          elo_rating: 5.0,
+          rank: 'Bronze',
         },
-      }
+      };
     }
-    throw error
+    throw error;
   }
 }
 
@@ -254,10 +261,10 @@ export async function registerUser(
   joinDate,
   avatar,
   elo_rating,
-  rank
+  rank,
 ) {
   try {
-    console.log('🚀 Starting registration...')
+    console.log('🚀 Starting registration...');
 
     const res = await axiosInstance.post('/register', {
       name,
@@ -270,53 +277,64 @@ export async function registerUser(
       avatar,
       elo_rating,
       rank,
-    })
+    });
 
-    console.log('✅ Registration API response:', res.data)
+    console.log('✅ Registration API response:', res.data);
 
     // SIMPLE, DIRECT STORAGE - No complex caching (your fix)
     if (res.data.token) {
-      localStorage.setItem('token', res.data.token)
-      console.log('✅ Token stored')
+      localStorage.setItem('token', res.data.token);
+      console.log('✅ Token stored');
     }
 
     if (res.data.user) {
-      localStorage.setItem('user', JSON.stringify(res.data.user))
-      console.log('✅ User data stored:', res.data.user)
+      localStorage.setItem('user', JSON.stringify(res.data.user));
+      console.log('✅ User data stored:', res.data.user);
     }
 
-    localStorage.setItem('auth_provider', 'credentials')
+    localStorage.setItem('auth_provider', 'credentials');
 
-    console.log('🎉 Registration completed successfully')
-    return res.data
+    console.log('🎉 Registration completed successfully');
+    return res.data;
   } catch (error) {
-    console.error('❌ Registration failed:', error)
+    console.error('❌ Registration failed:', error);
     if (process.env.NODE_ENV === 'test') {
       return {
         token: 'mock-jwt-token',
-        user: { id: 1, name, surname, username, email, currentLevel, xp: 0, avatar, elo_rating, rank },
-      }
+        user: {
+          id: 1,
+          name,
+          surname,
+          username,
+          email,
+          currentLevel,
+          xp: 0,
+          avatar,
+          elo_rating,
+          rank,
+        },
+      };
     }
-    throw error
+    throw error;
   }
 }
 
 // ✅ LOGOUT - Clear performance cache (your caching fix)
 export async function logoutUser() {
   try {
-    localStorage.removeItem('token')
-    localStorage.removeItem('oauth_token')
-    localStorage.removeItem('user')
-    localStorage.removeItem('auth_provider')
+    localStorage.removeItem('token');
+    localStorage.removeItem('oauth_token');
+    localStorage.removeItem('user');
+    localStorage.removeItem('auth_provider');
 
     // Clear performance cache (your fix for caching issues)
-    performanceCache.clear()
+    performanceCache.clear();
 
-    console.log('🧹 Logout cleanup completed (auth + cache cleared)')
-    return true
+    console.log('🧹 Logout cleanup completed (auth + cache cleared)');
+    return true;
   } catch (error) {
-    console.error('Logout cleanup failed:', error)
-    return false
+    console.error('Logout cleanup failed:', error);
+    return false;
   }
 }
 
@@ -328,27 +346,27 @@ export async function handleOAuthUser(email, name, image, provider) {
       name,
       image,
       provider,
-    })
+    });
 
     // SIMPLE STORAGE - consistent with login/register (your fix)
     if (res.data.token) {
-      localStorage.setItem('oauth_token', res.data.token)
-      localStorage.setItem('auth_provider', provider)
+      localStorage.setItem('oauth_token', res.data.token);
+      localStorage.setItem('auth_provider', provider);
     }
     if (res.data.user) {
-      localStorage.setItem('user', JSON.stringify(res.data.user))
+      localStorage.setItem('user', JSON.stringify(res.data.user));
     }
 
-    return res.data
+    return res.data;
   } catch (error) {
-    console.error('OAuth user handling failed:', error)
+    console.error('OAuth user handling failed:', error);
     if (process.env.NODE_ENV === 'test') {
       return {
         token: 'mock-oauth-token',
         user: { id: 1, email, name, provider },
-      }
+      };
     }
-    throw error
+    throw error;
   }
 }
 
@@ -358,152 +376,152 @@ export async function handleOAuthUser(email, name, image, provider) {
 export async function fetchRandomQuestions(level) {
   try {
     if (process.env.NODE_ENV !== 'test') {
-      const cacheKey = `random_questions_${level}`
-      const cached = performanceCache.get(cacheKey, CACHE_DURATIONS.MEDIUM)
-      if (cached) return cached
+      const cacheKey = `random_questions_${level}`;
+      const cached = performanceCache.get(cacheKey, CACHE_DURATIONS.MEDIUM);
+      if (cached) return cached;
     }
 
-    console.log(`🌐 Fetching random questions for level ${level}...`)
-    console.log(`🌐 Fetching random questions for level ${level}...`)
-    console.log('fetchRandomQuestions called with level:', level)
-    console.log('BASE_URL:', BASE_URL)
-    console.log('isServer:', typeof window === 'undefined')
+    console.log(`🌐 Fetching random questions for level ${level}...`);
+    console.log(`🌐 Fetching random questions for level ${level}...`);
+    console.log('fetchRandomQuestions called with level:', level);
+    console.log('BASE_URL:', BASE_URL);
+    console.log('isServer:', typeof window === 'undefined');
 
     const res = await axiosInstance.get('/questions/random', {
       params: { level },
-    })
+    });
 
     if (process.env.NODE_ENV !== 'test') {
-      performanceCache.set(`random_questions_${level}`, res.data)
+      performanceCache.set(`random_questions_${level}`, res.data);
     }
 
-    return res.data
+    return res.data;
   } catch (error) {
     console.error(
       `❌ Failed to fetch random questions for level ${level}:`,
       error,
-    )
+    );
     if (process.env.NODE_ENV === 'test') {
-      return getMockData('/questions/random')
+      return getMockData('/questions/random');
     }
-    throw error
+    throw error;
   }
 }
 
 export async function fetchAllTopics() {
   try {
     if (process.env.NODE_ENV !== 'test') {
-      const cached = performanceCache.get('topics', CACHE_DURATIONS.LONG)
-      if (cached) return cached
+      const cached = performanceCache.get('topics', CACHE_DURATIONS.LONG);
+      if (cached) return cached;
     }
 
-    console.log('🌐 Fetching fresh topics data...')
-    const res = await axiosInstance.get('/topics')
+    console.log('🌐 Fetching fresh topics data...');
+    const res = await axiosInstance.get('/topics');
 
     if (process.env.NODE_ENV !== 'test') {
-      performanceCache.set('topics', res.data.topics)
+      performanceCache.set('topics', res.data.topics);
     }
 
-    return res.data.topics
+    return res.data.topics;
   } catch (error) {
-    console.error('❌ Failed to fetch topics:', error)
+    console.error('❌ Failed to fetch topics:', error);
     if (process.env.NODE_ENV === 'test') {
-      return getMockData('/topics').topics
+      return getMockData('/topics').topics;
     }
-    throw error
+    throw error;
   }
 }
 
 export async function fetchQuestionsByLevelAndTopic(level, topic) {
   try {
     if (process.env.NODE_ENV !== 'test') {
-      const cacheKey = `questions_${level}_${topic}`
-      const cached = performanceCache.get(cacheKey, CACHE_DURATIONS.LONG)
-      if (cached) return cached
+      const cacheKey = `questions_${level}_${topic}`;
+      const cached = performanceCache.get(cacheKey, CACHE_DURATIONS.LONG);
+      if (cached) return cached;
     }
 
-    console.log(`🌐 Fetching questions for level ${level}, topic ${topic}...`)
+    console.log(`🌐 Fetching questions for level ${level}, topic ${topic}...`);
     const res = await axiosInstance.get('/questions/level/topic', {
       params: { level, topic },
-    })
+    });
 
     if (process.env.NODE_ENV !== 'test') {
-      performanceCache.set(`questions_${level}_${topic}`, res.data)
+      performanceCache.set(`questions_${level}_${topic}`, res.data);
     }
 
-    return res.data
+    return res.data;
   } catch (error) {
     console.error(
       `❌ Failed to fetch questions for level ${level}, topic ${topic}:`,
       error,
-    )
+    );
     if (process.env.NODE_ENV === 'test') {
-      return getMockData('/questions/level/topic')
+      return getMockData('/questions/level/topic');
     }
-    throw error
+    throw error;
   }
 }
 
 export async function fetchUserById(id) {
-  const res = await axiosInstance.get(`/user/${id}`)
-  return res.data
+  const res = await axiosInstance.get(`/user/${id}`);
+  return res.data;
 }
 
 export async function fetchUserAchievements(id) {
-  const res = await axiosInstance.get(`/users/${id}/achievements`)
-  return res.data
+  const res = await axiosInstance.get(`/users/${id}/achievements`);
+  return res.data;
 }
 
 export async function updateUserXP(id, xp) {
-  const res = await axiosInstance.post(`/user/${id}/xp`, { xp })
-  return res.data
+  const res = await axiosInstance.post(`/user/${id}/xp`, { xp });
+  return res.data;
 }
 
 export async function fetchQuestionsByLevel(level) {
-  const res = await axiosInstance.get(`/question/${level}`)
-  return res.data
+  const res = await axiosInstance.get(`/question/${level}`);
+  return res.data;
 }
 
 export async function fetchQuestionAnswer(id) {
-  const res = await axiosInstance.get(`/question/${id}/answer`)
-  return res.data
+  const res = await axiosInstance.get(`/question/${id}/answer`);
+  return res.data;
 }
 
 export async function fetchQuestionsByTopic(topic) {
   const res = await axiosInstance.get(`/questions/topic`, {
     params: { topic },
-  })
-  return res.data
+  });
+  return res.data;
 }
 
 export async function submitAnswer(id, answer) {
   const res = await axiosInstance.post(`/question/${id}/answer`, {
     question: [{ answer }],
-  })
-  return res.data
+  });
+  return res.data;
 }
 
 export async function submitSinglePlayerAttempt(data) {
-  const res = await axiosInstance.post('/singleplayer', data)
-  return res.data
+  const res = await axiosInstance.post('/singleplayer', data);
+  return res.data;
 }
 
 export async function submitMultiplayerResult(data) {
-  const res = await axiosInstance.post('/multiplayer', data, {})
-  return res.data
+  const res = await axiosInstance.post('/multiplayer', data, {});
+  return res.data;
 }
 
 export async function sendPasswordResetEmail(email) {
-  const res = await axiosInstance.post('/forgot-password', { email })
-  return res.data
+  const res = await axiosInstance.post('/forgot-password', { email });
+  return res.data;
 }
 
 export async function resetPassword(token, newPassword) {
   const res = await axiosInstance.post('/reset-password', {
     token,
     newPassword,
-  })
-  return res.data
+  });
+  return res.data;
 }
 
 export async function changePassword(userId, currentPassword, newPassword) {
@@ -511,21 +529,21 @@ export async function changePassword(userId, currentPassword, newPassword) {
     userId,
     currentPassword,
     newPassword,
-  })
-  return res.data
+  });
+  return res.data;
 }
 
 export async function verifyResetToken(token) {
-  const res = await axiosInstance.get(`/verify-reset-token/${token}`)
-  return res.data
+  const res = await axiosInstance.get(`/verify-reset-token/${token}`);
+  return res.data;
 }
 
 export async function updateUserAvatar(userId, avatar) {
-  const res = await axiosInstance.post(`/user/${userId}/avatar`, { avatar })
-  return res
+  const res = await axiosInstance.post(`/user/${userId}/avatar`, { avatar });
+  return res;
 }
 
 export async function fetchUsersByRank(rank) {
-  const res = await axiosInstance.get(`/users/rank/${rank}`)
-  return res.data
+  const res = await axiosInstance.get(`/users/rank/${rank}`);
+  return res.data;
 }

@@ -60,6 +60,93 @@ const UserRow = memo(function UserRow({
   );
 });
 
+// Custom dropdown component for XP/ELO sort
+function DropdownSort({ sortType, onSortTypeChange }) {
+  const [open, setOpen] = useState(false);
+  const options = [
+    { value: 'xp', label: 'XP' },
+    { value: 'elo', label: 'ELO' },
+  ];
+  // Close dropdown on outside click
+  const ref = useRef();
+  useEffect(() => {
+    function handleClick(e) {
+      if (ref.current && !ref.current.contains(e.target)) setOpen(false);
+    }
+    if (open) document.addEventListener('mousedown', handleClick);
+    return () => document.removeEventListener('mousedown', handleClick);
+  }, [open]);
+
+  return (
+    <div className="relative inline-block text-left w-full" ref={ref}>
+      <button
+        className="flex items-center gap-1 font-bold px-2 py-1 rounded cursor-pointer hover:bg-[#232222] focus:outline-none w-full justify-end"
+        onClick={() => setOpen((v) => !v)}
+        aria-haspopup="listbox"
+        aria-expanded={open}
+        tabIndex={0}
+        type="button"
+      >
+        {sortType === 'elo' ? 'ELO' : 'XP'}
+        <svg
+          className={`w-4 h-4 transition-transform ${open ? 'rotate-180' : ''}`}
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+          viewBox="0 0 24 24"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            d="M19 9l-7 7-7-7"
+          />
+        </svg>
+      </button>
+      {open && (
+        <ul
+          className="absolute right-0 z-20 mt-1 w-24 bg-[#232222] border border-[#444] rounded-lg shadow-lg py-1"
+          style={{ minWidth: '80px' }}
+          role="listbox"
+        >
+          {options.map((opt) => (
+            <li
+              key={opt.value}
+              className={`px-4 py-2 flex items-center gap-2 cursor-pointer select-none ${
+                sortType === opt.value
+                  ? 'bg-[#FF6E99] text-white font-bold'
+                  : 'hover:bg-[#343232] text-white'
+              }`}
+              onClick={() => {
+                onSortTypeChange?.(opt.value);
+                setOpen(false);
+              }}
+              role="option"
+              aria-selected={sortType === opt.value}
+            >
+              {sortType === opt.value && (
+                <svg
+                  className="w-4 h-4 mr-1"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="3"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M5 13l4 4L19 7"
+                  />
+                </svg>
+              )}
+              {opt.label}
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
+  );
+}
+
 const LeaderboardTable = memo(function LeaderboardTable({
   users = [],
   sortType = 'xp',
@@ -120,16 +207,11 @@ const LeaderboardTable = memo(function LeaderboardTable({
             <th className=" w-0.5/5">#</th>
             <th className="w-1.5/5"></th>
             <th className="text-left px-3 w-1/5">Username</th>
-            <th className="text-right px-3 w-2/5">
-              <select
-                className="bg-transparent border-none outline-none font-bold text-right"
-                value={sortType}
-                onChange={(e) => onSortTypeChange?.(e.target.value)}
-                aria-label="Sort leaderboard by"
-              >
-                <option value="xp">XP</option>
-                <option value="elo">ELO</option>
-              </select>
+            <th className="text-right px-3 w-2/5 relative">
+              <DropdownSort
+                sortType={sortType}
+                onSortTypeChange={onSortTypeChange}
+              />
             </th>
           </tr>
         </thead>

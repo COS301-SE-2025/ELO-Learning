@@ -524,3 +524,8 @@ export async function updateUserAvatar(userId, avatar) {
   const res = await axiosInstance.post(`/user/${userId}/avatar`, { avatar })
   return res
 }
+
+export async function fetchUsersByRank(rank) {
+  const res = await axiosInstance.get(`/users/rank/${rank}`)
+  return res.data
+}

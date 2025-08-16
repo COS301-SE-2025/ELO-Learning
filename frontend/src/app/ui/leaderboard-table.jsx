@@ -22,10 +22,21 @@ const getColor = (name) => {
 };
 
 // Memoized row component to prevent unnecessary re-renders
-const UserRow = memo(function UserRow({ user, index, isCurrent, userRowRef }) {
+const UserRow = memo(function UserRow({
+  user,
+  index,
+  isCurrent,
+  userRowRef,
+  sortType,
+}) {
   const colorClass = useMemo(() => getColor(user.username), [user.username]);
   const initial = useMemo(() => user.username.charAt(0), [user.username]);
-  const formattedXp = useMemo(() => user.xp.toFixed(0), [user.xp]);
+  const formattedValue = useMemo(() => {
+    if (sortType === 'elo')
+      return user.elo?.toFixed?.(0) || user.elo_rating || '-';
+    return user.xp.toFixed(0);
+  }, [user.xp, user.elo, sortType]);
+  const valueLabel = sortType === 'elo' ? '' : 'XP';
 
   return (
     <tr
@@ -42,12 +53,18 @@ const UserRow = memo(function UserRow({ user, index, isCurrent, userRowRef }) {
         </span>
       </td>
       <td className="text-left p-2">{user.username}</td>
-      <td className="text-right p-2">{formattedXp} XP</td>
+      <td className="text-right p-2">
+        {formattedValue} {valueLabel}
+      </td>
     </tr>
   );
 });
 
-const LeaderboardTable = memo(function LeaderboardTable({ users = [] }) {
+const LeaderboardTable = memo(function LeaderboardTable({
+  users = [],
+  sortType = 'xp',
+  onSortTypeChange,
+}) {
   const { data: session } = useSession();
   const [currentUser, setCurrentUser] = useState(null);
   const currentUserRowRef = useRef(null);
@@ -86,10 +103,11 @@ const LeaderboardTable = memo(function LeaderboardTable({ users = [] }) {
           index={idx}
           isCurrent={isCurrent}
           userRowRef={isCurrent ? currentUserRowRef : null}
+          sortType={sortType}
         />
       );
     });
-  }, [users, currentUser]);
+  }, [users, currentUser, sortType]);
 
   return (
     <div
@@ -102,7 +120,17 @@ const LeaderboardTable = memo(function LeaderboardTable({ users = [] }) {
             <th className=" w-0.5/5">#</th>
             <th className="w-1.5/5"></th>
             <th className="text-left px-3 w-1/5">Username</th>
-            <th className="text-right px-3 w-2/5">Total XP</th>
+            <th className="text-right px-3 w-2/5">
+              <select
+                className="bg-transparent border-none outline-none font-bold text-right"
+                value={sortType}
+                onChange={(e) => onSortTypeChange?.(e.target.value)}
+                aria-label="Sort leaderboard by"
+              >
+                <option value="xp">XP</option>
+                <option value="elo">ELO</option>
+              </select>
+            </th>
           </tr>
         </thead>
         <tbody>{renderedRows}</tbody>

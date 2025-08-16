@@ -42,6 +42,23 @@ router.get('/user/:id', verifyToken, async (req, res) => {
   res.status(200).json(data)
 })
 
+router.get('/users/rank/:rank', async (req, res) => {
+  const { rank } = req.params
+  // Fetch users by rank from Supabase
+  const { data, error } = await supabase
+    .from('Users')
+    .select('id,username,xp,avatar,elo_rating,rank')
+    .eq('rank', rank)
+  if (error) {
+    console.error('Error fetching users by rank:', error.message)
+    return res.status(500).json({ error: 'Failed to fetch users by rank' })
+  }
+  if (data.length === 0) {
+    return res.status(404).json({ error: "No users found with that rank" })
+  }
+  res.status(200).json(data)
+})
+
 // Return user's achievements: (works)
 router.get('/users/:id/achievements', verifyToken, async (req, res) => {
   const { id } = req.params

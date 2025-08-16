@@ -2,7 +2,7 @@
 'use client';
 
 import clsx from 'clsx';
-import { Gem, Shield, Trophy, Zap } from 'lucide-react';
+import { Gem, Trophy, Zap } from 'lucide-react';
 
 import { useSession } from 'next-auth/react'; // ← CHANGED: Use NextAuth directly
 import { memo, useMemo } from 'react';
@@ -38,10 +38,15 @@ const HeaderContent = memo(function HeaderContent() {
           )}
         >
           <div className="flex items-center gap-2">
+            <Trophy size={24} fill="#FF8000" stroke="#FF8000" />
             <div className="h-4 w-16 bg-gray-700 rounded animate-pulse"></div>
           </div>
           <div className="flex items-center gap-2">
-            <Shield size={24} fill="#4D5DED" stroke="#4D5DED" />
+            <Gem size={24} fill="#50eeff" stroke="#50eeff" />
+            <div className="h-4 w-12 bg-gray-700 rounded animate-pulse"></div>
+          </div>
+          <div className="flex items-center gap-2">
+            <Zap size={24} fill="#FFD000" stroke="#FFD000" />
             <div className="h-4 w-12 bg-gray-700 rounded animate-pulse"></div>
           </div>
         </div>

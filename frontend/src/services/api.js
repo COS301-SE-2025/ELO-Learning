@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { performanceCache, CACHE_DURATIONS } from '../utils/performanceCache';
+import { CACHE_DURATIONS, performanceCache } from '../utils/performanceCache';
 
 // ✅ Environment-aware base URL with CI support
 const getBaseURL = () => {
@@ -435,6 +435,7 @@ export async function fetchRandomQuestions(level) {
     }
 
     console.log(`🌐 Fetching random questions for level ${level}...`);
+    console.log(`🌐 Fetching random questions for level ${level}...`);
     console.log('fetchRandomQuestions called with level:', level);
     console.log('BASE_URL:', BASE_URL);
     console.log('isServer:', typeof window === 'undefined');
@@ -535,27 +536,10 @@ export async function fetchQuestionAnswer(id) {
 }
 
 export async function fetchQuestionsByTopic(topic) {
-  try {
-    const res = await axiosInstance.get(`/questions/topic`, {
-      params: { topic },
-    });
-    console.log('fetchQuestionsByTopic success:', res.status);
-    console.log('Questions received:', res.data?.questions?.length || 0);
-
-    return res.data;
-  } catch (error) {
-    console.error('fetchQuestionsByTopic error:', {
-      message: error.message,
-      status: error.response?.status,
-      statusText: error.response?.statusText,
-      data: error.response?.data,
-      topic: topic,
-      url: error.config?.url,
-      baseURL: error.config?.baseURL,
-    });
-
-    throw error;
-  }
+  const res = await axiosInstance.get(`/questions/topic`, {
+    params: { topic },
+  });
+  return res.data;
 }
 
 export async function submitAnswer(id, answer) {

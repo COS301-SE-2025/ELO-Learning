@@ -3,7 +3,9 @@ describe('API Integration & Data Flow', () => {
   Cypress.on('uncaught:exception', (err) => {
     if (
       err.message.includes('NEXT_REDIRECT') ||
-      err.message.includes('Rendered more hooks than during the previous render') ||
+      err.message.includes(
+        'Rendered more hooks than during the previous render',
+      ) ||
       err.message.includes('Hydration') ||
       err.message.includes('Text content does not match') ||
       err.message.includes('ChunkLoadError') ||
@@ -110,24 +112,25 @@ describe('API Integration & Data Flow', () => {
 
       questionPaths.forEach((path) => {
         cy.visit(path);
-        
+
         // Wait for page to be interactive instead of arbitrary time
         cy.get('body').should('be.visible');
-        
+
         // Check for meaningful content rather than absence of "Error"
         cy.get('body').then(($body) => {
           const bodyText = $body.text();
-          expect(bodyText).to.satisfy((text) => 
-            text.includes('Which measure of central tendency') || 
-            text.includes('Question') || 
-            text.includes('Loading') ||
-            text.length > 100
+          expect(bodyText).to.satisfy(
+            (text) =>
+              text.includes('Which measure of central tendency') ||
+              text.includes('Question') ||
+              text.includes('Loading') ||
+              text.length > 100,
           );
         });
-        
+
         // Verify URL is correct
         cy.url().should('include', path);
-        
+
         // Ensure no critical application errors
         cy.get('body').should('not.contain', 'Something went wrong');
         cy.get('body').should('not.contain', 'Failed to load questions');
@@ -140,17 +143,18 @@ describe('API Integration & Data Flow', () => {
 
       // Wait for content to load properly
       cy.get('body').should('be.visible');
-      
+
       // Look for actual question content instead of checking for "Error"
       cy.get('body').then(($body) => {
         const bodyText = $body.text();
-        expect(bodyText).to.satisfy((text) => 
-          text.includes('central tendency') || 
-          text.includes('Question') ||
-          text.length > 100
+        expect(bodyText).to.satisfy(
+          (text) =>
+            text.includes('central tendency') ||
+            text.includes('Question') ||
+            text.length > 100,
         );
       });
-      
+
       // Verify no critical errors
       cy.get('body').should('not.contain', 'API request failed');
       cy.get('body').should('not.contain', 'Connection timeout');
@@ -172,13 +176,13 @@ describe('API Integration & Data Flow', () => {
       }).as('submitSuccess');
 
       cy.visit('/question-templates/multiple-choice');
-      
+
       // Wait for page content
       cy.get('body').should('be.visible');
-      
+
       // Verify the page loads and could potentially submit answers
       cy.url().should('include', '/question-templates/multiple-choice');
-      
+
       // Check for submit-related elements if they exist
       cy.get('body').then(($body) => {
         if ($body.find('button').length > 0) {
@@ -201,10 +205,10 @@ describe('API Integration & Data Flow', () => {
       });
 
       cy.visit('/question-templates/multiple-choice');
-      
+
       // Wait for initial load
       cy.get('body').should('be.visible');
-      
+
       // Give time for API calls to complete
       cy.wait(3000);
 
@@ -218,7 +222,7 @@ describe('API Integration & Data Flow', () => {
   describe('User Authentication API', () => {
     it('should handle signup form submission', () => {
       cy.visit('/login-landing/signup');
-      
+
       // Wait for page to load
       cy.get('body').should('be.visible');
 
@@ -234,7 +238,7 @@ describe('API Integration & Data Flow', () => {
           cy.get('button[type="submit"]').click();
         }
       });
-      
+
       // Check for authentication-specific errors only
       cy.get('body').should('not.contain', 'Signup failed');
       cy.get('body').should('not.contain', 'Registration error');
@@ -242,7 +246,7 @@ describe('API Integration & Data Flow', () => {
 
     it('should handle login form validation', () => {
       cy.visit('/login-landing/login');
-      
+
       // Wait for page to be ready
       cy.get('body').should('be.visible');
 
@@ -255,7 +259,7 @@ describe('API Integration & Data Flow', () => {
           cy.get('input[placeholder*="Password"]').type('password123');
         }
       });
-      
+
       // Check for specific login errors, not generic "Error"
       cy.get('body').should('not.contain', 'Login failed');
       cy.get('body').should('not.contain', 'Invalid credentials');
@@ -269,7 +273,7 @@ describe('API Integration & Data Flow', () => {
       }).as('authError');
 
       cy.visit('/login-landing/login');
-      
+
       // Wait for page load
       cy.get('body').should('be.visible');
 
@@ -286,10 +290,10 @@ describe('API Integration & Data Flow', () => {
       }).as('networkError');
 
       cy.visit('/question-templates/multiple-choice');
-      
+
       // Page should still load even with network errors
       cy.get('body').should('be.visible');
-      
+
       // Should handle network errors without crashing
       cy.get('body').should('not.contain', 'Uncaught');
       cy.get('body').should('not.contain', 'TypeError: Failed to fetch');
@@ -302,7 +306,7 @@ describe('API Integration & Data Flow', () => {
       }).as('serverError');
 
       cy.visit('/question-templates/multiple-choice');
-      
+
       // Wait for page to attempt loading
       cy.get('body').should('be.visible');
 
@@ -318,7 +322,7 @@ describe('API Integration & Data Flow', () => {
       }).as('malformedResponse');
 
       cy.visit('/question-templates/multiple-choice');
-      
+
       // Wait for processing
       cy.get('body').should('be.visible');
 
@@ -344,7 +348,7 @@ describe('API Integration & Data Flow', () => {
       }).as('slowResponse');
 
       cy.visit('/question-templates/multiple-choice');
-      
+
       // Wait longer for slow response
       cy.get('body', { timeout: 15000 }).should('be.visible');
 
@@ -373,7 +377,7 @@ describe('API Integration & Data Flow', () => {
       }).as('getTestQuestions');
 
       cy.visit('/question-templates/multiple-choice');
-      
+
       // Wait for page to load
       cy.get('body').should('be.visible');
 
@@ -412,13 +416,13 @@ describe('API Integration & Data Flow', () => {
       });
 
       cy.visit('/question-templates/multiple-choice');
-      
+
       // Wait for page load
       cy.get('body').should('be.visible');
 
       // Should maintain user data across navigation
       cy.window().its('localStorage.user').should('exist');
-      
+
       // Check that user data is accessible
       cy.window().then((win) => {
         const userData = JSON.parse(win.localStorage.getItem('user'));
@@ -441,7 +445,7 @@ describe('API Integration & Data Flow', () => {
       }).as('trackApiCalls');
 
       cy.visit('/question-templates/multiple-choice');
-      
+
       // Wait for API calls to complete
       cy.get('body').should('be.visible');
       cy.wait(2000);

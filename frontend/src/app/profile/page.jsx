@@ -88,10 +88,10 @@ export default function Page() {
           {' '}
           {/* Increased from pb-8 to pb-24 */}
           <UserInfo
-          elo={user.elo_rating || 0}
-          xp={user.xp || 0}
-          ranking={user.rank || 'Unranked'}
-        />
+            elo={user.elo_rating || 0}
+            xp={user.xp || 0}
+            ranking={user.rank || 'Unranked'}
+          />
           <MatchStats />
           <Achievements />
         </div>

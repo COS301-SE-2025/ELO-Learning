@@ -80,7 +80,6 @@ router.get('/users/rank/:rank', async (req, res) => {
   res.status(200).json(data);
 });
 
-
 // Return user's achievements: (using proper junction table)
 router.get('/users/:id/achievements', verifyToken, async (req, res) => {
   const { id } = req.params;

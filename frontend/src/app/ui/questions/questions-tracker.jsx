@@ -59,6 +59,7 @@ export default function QuestionsTracker({
       window.removeEventListener('lifeLost', handleMatchLifeLost);
     };
   }, []);
+  
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [questionStartTime, setQuestionStartTime] = useState(Date.now());
   
@@ -116,68 +117,7 @@ export default function QuestionsTracker({
     }
   }, [resetXPState]);
 
-  // 🏆 Add temporary achievement notification system for debugging
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      // Simple notification system for debugging
-      window.showAchievement = (achievement) => {
-        console.log('🏆 showAchievement called:', achievement);
-        
-        // Create a simple notification div
-        const notification = document.createElement('div');
-        notification.style.cssText = `
-          position: fixed;
-          top: 20px;
-          right: 20px;
-          background: #10B981;
-          color: white;
-          padding: 16px 24px;
-          border-radius: 8px;
-          z-index: 9999;
-          font-weight: bold;
-          box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-          max-width: 300px;
-          font-size: 14px;
-        `;
-        notification.innerHTML = `
-          <div style="display: flex; align-items: center; gap: 8px;">
-            🏆 
-            <div>
-              <div style="font-weight: bold;">${achievement.name || achievement.achievement_name}</div>
-              <div style="font-size: 12px; opacity: 0.9;">${achievement.description || 'Achievement unlocked!'}</div>
-            </div>
-          </div>
-        `;
-        document.body.appendChild(notification);
-        
-        // Remove after 5 seconds
-        setTimeout(() => {
-          if (notification.parentNode) {
-            notification.parentNode.removeChild(notification);
-          }
-        }, 5000);
-        
-        // Slide in animation
-        notification.animate([
-          { transform: 'translateX(100%)', opacity: 0 },
-          { transform: 'translateX(0)', opacity: 1 }
-        ], { duration: 300, easing: 'ease-out' });
-      };
-      
-      window.showMultipleAchievements = (achievements) => {
-        console.log('🏆 showMultipleAchievements called:', achievements);
-        achievements.forEach((ach, index) => {
-          setTimeout(() => window.showAchievement(ach), index * 1200);
-        });
-      };
-      
-      // Dispatch ready event
-      window.dispatchEvent(new Event('achievementSystemReady'));
-      console.log('🎯 Achievement notification system ready');
-    }
-  }, []);
-
-  // 🏆 Achievement Functions (add these without breaking existing flow)
+  // 🏆 Achievement Functions
   const checkPerfectSessionAchievement = async () => {
     if (!session?.user?.id) return;
     
@@ -294,57 +234,6 @@ export default function QuestionsTracker({
     }
   };
 
-  // 🏆 Add debug achievement testing function
-  const testAchievement = async () => {
-    console.log('🧪 Testing achievement system...');
-    
-    if (!session?.user?.id) {
-      alert('❌ No user session found');
-      return;
-    }
-    
-    try {
-      // Test 1: Direct API call
-      const response = await fetch('/api/achievements/trigger', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          userId: session.user.id,
-          achievementType: 'Perfect Session',
-          context: {
-            consecutiveCorrect: 10,
-            totalQuestions: 15,
-            mode: 'practice'
-          }
-        }),
-      });
-      
-      console.log('🎯 Test response status:', response.status);
-      
-      if (response.ok) {
-        const result = await response.json();
-        console.log('✅ Test success:', result);
-        
-        if (result.unlockedAchievements?.length > 0) {
-          showAchievementNotificationsWhenReady(result.unlockedAchievements);
-        } else {
-          // Test the notification system anyway
-          window.showAchievement({
-            name: 'Test Achievement',
-            description: 'This is a test achievement notification'
-          });
-        }
-      } else {
-        const error = await response.json();
-        console.error('❌ Test failed:', error);
-        alert(`Test failed: ${JSON.stringify(error)}`);
-      }
-    } catch (error) {
-      console.error('💥 Test error:', error);
-      alert(`Test error: ${error.message}`);
-    }
-  };
-
   const setLocalStorage = async () => {
     // Only proceed if we're in the browser
     if (typeof window === 'undefined') return;
@@ -390,6 +279,8 @@ export default function QuestionsTracker({
     if (!correctAnswerObj) {
       correctAnswerObj = currAnswers.find((ans) => ans.isCorrect === true);
     }
+
+    const correctAnswerText = correctAnswerObj?.answer_text || correctAnswerObj?.answerText || matchedAnswer || 'No correct answer found';
 
     console.log('💾 Storing question with validation:', {
       studentAnswer: answer,
@@ -492,19 +383,11 @@ export default function QuestionsTracker({
           if (result.success && result.data.unlockedAchievements?.length > 0) {
             console.log('🏆 ACHIEVEMENTS UNLOCKED:', result.data.unlockedAchievements);
             
-            // 🚨 TEMPORARY DEBUG: Show alert for immediate feedback
-            const achievementNames = result.data.unlockedAchievements
-              .map(ach => ach.name || ach.achievement_name)
-              .join(', ');
-            console.log('🎉 Achievement names:', achievementNames);
-            
-            // Try the notification system
+            // Use the proper notification system
             showAchievementNotificationsWhenReady(result.data.unlockedAchievements)
               .then(() => console.log('✅ Notifications shown successfully'))
               .catch(error => {
                 console.error('❌ Failed to show achievements:', error);
-                // Fallback: show alert for debugging
-                alert(`🏆 Achievement Unlocked: ${achievementNames}`);
               });
           } else {
             console.log('🤷 No achievements unlocked this time');
@@ -605,17 +488,6 @@ export default function QuestionsTracker({
           isSubmitting={isSubmitting}
           submitAnswer={submitAnswer}
         />
-        {/* 🧪 Debug Achievement Button - Remove in production */}
-        {process.env.NODE_ENV === 'development' && (
-          <div className="mt-2 text-center">
-            <button
-              onClick={testAchievement}
-              className="px-4 py-2 bg-purple-600 text-white rounded-lg text-sm hover:bg-purple-700"
-            >
-              🧪 Test Achievements
-            </button>
-          </div>
-        )}
       </div>
     </div>
   );

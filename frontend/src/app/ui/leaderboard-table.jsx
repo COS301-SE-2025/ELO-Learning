@@ -22,10 +22,21 @@ const getColor = (name) => {
 };
 
 // Memoized row component to prevent unnecessary re-renders
-const UserRow = memo(function UserRow({ user, index, isCurrent, userRowRef }) {
+const UserRow = memo(function UserRow({
+  user,
+  index,
+  isCurrent,
+  userRowRef,
+  sortType,
+}) {
   const colorClass = useMemo(() => getColor(user.username), [user.username]);
   const initial = useMemo(() => user.username.charAt(0), [user.username]);
-  const formattedXp = useMemo(() => user.xp.toFixed(0), [user.xp]);
+  const formattedValue = useMemo(() => {
+    if (sortType === 'elo')
+      return user.elo?.toFixed?.(0) || user.elo_rating || '-';
+    return user.xp.toFixed(0);
+  }, [user.xp, user.elo, sortType]);
+  const valueLabel = sortType === 'elo' ? '' : 'XP';
 
   return (
     <tr
@@ -42,12 +53,105 @@ const UserRow = memo(function UserRow({ user, index, isCurrent, userRowRef }) {
         </span>
       </td>
       <td className="text-left p-2">{user.username}</td>
-      <td className="text-right p-2">{formattedXp} XP</td>
+      <td className="text-right p-2">
+        {formattedValue} {valueLabel}
+      </td>
     </tr>
   );
 });
 
-const LeaderboardTable = memo(function LeaderboardTable({ users = [] }) {
+// Custom dropdown component for XP/ELO sort
+function DropdownSort({ sortType, onSortTypeChange }) {
+  const [open, setOpen] = useState(false);
+  const options = [
+    { value: 'xp', label: 'XP' },
+    { value: 'elo', label: 'ELO' },
+  ];
+  // Close dropdown on outside click
+  const ref = useRef();
+  useEffect(() => {
+    function handleClick(e) {
+      if (ref.current && !ref.current.contains(e.target)) setOpen(false);
+    }
+    if (open) document.addEventListener('mousedown', handleClick);
+    return () => document.removeEventListener('mousedown', handleClick);
+  }, [open]);
+
+  return (
+    <div className="relative inline-block text-left w-full" ref={ref}>
+      <button
+        className="flex items-center gap-1 font-bold px-2 py-1 rounded cursor-pointer hover:bg-[#232222] focus:outline-none w-full justify-end"
+        onClick={() => setOpen((v) => !v)}
+        aria-haspopup="listbox"
+        aria-expanded={open}
+        tabIndex={0}
+        type="button"
+      >
+        {sortType === 'elo' ? 'ELO' : 'XP'}
+        <svg
+          className={`w-4 h-4 transition-transform ${open ? 'rotate-180' : ''}`}
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+          viewBox="0 0 24 24"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            d="M19 9l-7 7-7-7"
+          />
+        </svg>
+      </button>
+      {open && (
+        <ul
+          className="absolute right-0 z-20 mt-1 w-24 bg-[#232222] border border-[#444] rounded-lg shadow-lg py-1"
+          style={{ minWidth: '80px' }}
+          role="listbox"
+        >
+          {options.map((opt) => (
+            <li
+              key={opt.value}
+              className={`px-4 py-2 flex items-center gap-2 cursor-pointer select-none ${
+                sortType === opt.value
+                  ? 'bg-[#FF6E99] text-white font-bold'
+                  : 'hover:bg-[#343232] text-white'
+              }`}
+              onClick={() => {
+                onSortTypeChange?.(opt.value);
+                setOpen(false);
+              }}
+              role="option"
+              aria-selected={sortType === opt.value}
+            >
+              {sortType === opt.value && (
+                <svg
+                  className="w-4 h-4 mr-1"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="3"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M5 13l4 4L19 7"
+                  />
+                </svg>
+              )}
+              {opt.label}
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
+  );
+}
+
+const LeaderboardTable = memo(function LeaderboardTable({
+  users = [],
+  sortType = 'xp',
+  onSortTypeChange,
+}) {
   const { data: session } = useSession();
   const [currentUser, setCurrentUser] = useState(null);
   const currentUserRowRef = useRef(null);
@@ -86,10 +190,11 @@ const LeaderboardTable = memo(function LeaderboardTable({ users = [] }) {
           index={idx}
           isCurrent={isCurrent}
           userRowRef={isCurrent ? currentUserRowRef : null}
+          sortType={sortType}
         />
       );
     });
-  }, [users, currentUser]);
+  }, [users, currentUser, sortType]);
 
   return (
     <div
@@ -102,7 +207,12 @@ const LeaderboardTable = memo(function LeaderboardTable({ users = [] }) {
             <th className=" w-0.5/5">#</th>
             <th className="w-1.5/5"></th>
             <th className="text-left px-3 w-1/5">Username</th>
-            <th className="text-right px-3 w-2/5">Total XP</th>
+            <th className="text-right px-3 w-2/5 relative">
+              <DropdownSort
+                sortType={sortType}
+                onSortTypeChange={onSortTypeChange}
+              />
+            </th>
           </tr>
         </thead>
         <tbody>{renderedRows}</tbody>

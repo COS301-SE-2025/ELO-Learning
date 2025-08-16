@@ -87,7 +87,11 @@ export default function Page() {
         <div className="flex flex-col space-y-4 pb-24">
           {' '}
           {/* Increased from pb-8 to pb-24 */}
-          <UserInfo ranking="1st" xp={user.xp || 0} />
+          <UserInfo
+          elo={user.elo_rating || 0}
+          xp={user.xp || 0}
+          ranking={user.rank || 'Unranked'}
+        />
           <MatchStats />
           <Achievements />
         </div>

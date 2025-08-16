@@ -8,7 +8,10 @@ import { AvatarMouth } from './mouth';
 export function AvatarPreview({ avatar, className = '' }) {
   const showBackground = avatar.background !== 'transparent';
   return (
-    <div className={`relative w-full h-full ${className}`}>
+    <div
+      data-testid="user-avatar"
+      className={`relative w-full h-full ${className}`}
+    >
       {/* Background */}
       {showBackground && (
         <AvatarBackground

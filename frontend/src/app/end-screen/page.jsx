@@ -12,6 +12,7 @@ function EndScreen() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const mode = searchParams.get('mode');
+  const eloRating = searchParams.get('elo');
   const [isLoading, setIsLoading] = useState(false);
   const [xpReady, setXpReady] = useState(false);
 
@@ -135,9 +136,26 @@ function EndScreen() {
           )}
           {/* Blocks with information */}
           {mode === 'baseline' && (
-            <div className="flex flex-row items-center justify-center gap-8 my-7">
-              <TotalXP onLoadComplete={() => setXpReady(true)} />
-              
+            <div className="flex flex-col items-center justify-center gap-4 my-7">
+              <h2 className="text-2xl font-bold text-center">🎉 Baseline Test Complete! 🎉</h2>
+              <p className="text-lg text-center">
+                Congratulations! You've completed your baseline assessment.
+              </p>
+              <p className="text-lg">Your starting ELO rating is:</p>
+              <div className="text-4xl font-extrabold text-blue-600">{eloRating}</div>
+              <p className="text-sm text-center mt-2 text-gray-600 max-w-md">
+                This rating will help us provide you with questions at the right difficulty level.
+                Keep practicing to improve your rating!
+              </p>
+              <button
+                className="primary-button mt-6"
+                onClick={() => {
+                  localStorage.removeItem('baselineQuestionsObj');
+                  router.push('/dashboard');
+                }}
+              >
+                Start Your Learning Journey
+              </button>
             </div>
           )}
         </div>
@@ -172,19 +190,7 @@ function EndScreen() {
             </button>
           )}
           {/* this is where i will change the baseline end screen button */}
-          {mode === 'baseline' && (
-            <button
-              className="secondary-button w-full uppercase"
-              onClick={calculateXP}
-              disabled={isLoading || !xpReady}
-            >
-              {isLoading
-                ? 'Claiming XP...'
-                : !xpReady
-                  ? 'Calculating...'
-                  : 'Claim XP'}
-            </button>
-          )}
+
         </div>
       </div>
     </div>

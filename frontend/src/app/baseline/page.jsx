@@ -1,32 +1,34 @@
-import QuestionsTracker from '@/app/ui/questions/questions-tracker';
-import { authOptions } from '@/lib/auth';
-import { fetchRandomQuestions } from '@/services/api';
-import { getServerSession } from 'next-auth/next';
-import { redirect } from 'next/navigation';
+'use client';
+import Link from 'next/link';
+import { useSession } from 'next-auth/react';
 
-export default async function BaselineTest() {
-  const session = await getServerSession(authOptions);
+export default function Page() {
+  const { data: session } = useSession();
 
-  if (!session?.user) {
-    redirect('/api/auth/signin');
-  }
-
-  const level = session.user.currentLevel || 1; // Default to level 1 if not set
-  const questions = await fetchRandomQuestions(level);
-  const submitCallback = async () => {
-    'use server';
-    redirect('/end-screen?mode=baseline');
-  };
+  const userName = session?.user?.name ?? 'Player';
 
   return (
-    <div className="full-screen w-full h-full flex flex-col justify-between">
-      {/* <ClientWrapper questions={questions.questions} /> */}
-      <QuestionsTracker
-        questions={questions.questions}
-        submitCallback={submitCallback}
-        lives={5}
-        mode="baseline"
-      />
+    <div className="flex flex-col items-center gap-10 min-h-screen justify-center">
+      <div className="text-center">
+        <h2 className="text-2xl font-bold">Ready to take your Baseline</h2>
+        <h2 className="mt-2 text-2xl font-bold text-gray-700 dark:text-gray-300">
+          {userName}?
+        </h2>
+      </div>
+
+      <div className="flex flex-col items-center gap-6">
+        <Link href="/baseline-game">
+          <button className="main-button-landing uppercase">
+            Start Test
+          </button>
+        </Link>
+
+        <Link href="/dashboard">
+          <button className="secondary-button uppercase">
+            Cancel
+          </button>
+        </Link>
+      </div>
     </div>
   );
 }

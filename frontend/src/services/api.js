@@ -1,5 +1,6 @@
 import axios from 'axios';
 
+
 const BASE_URL = 'http://localhost:3000'; // Change this when deploying
 
 const isServer = typeof window === 'undefined';
@@ -218,49 +219,85 @@ export async function handleOAuthUser(email, name, image, provider) {
   return res.data;
 }
 
-//get baseline test value:
-export async function fetchBaselineTestValue(userId) {
-  if (!userId) throw new Error('User ID is required');
+//Baseline Related Functions
 
-  const response = await fetch(`${BASE_URL}/user/${userId}/baseline`, {
-    method: 'GET',
-    headers: {
-      'Content-Type': 'application/json',
-      // Include authorization header if your backend requires JWT token
-      // 'Authorization': `Bearer ${yourTokenHere}`, 
-    },
-  });
+// Fetch all baseline questions
+export async function fetchAllBaselineQuestions() {
+  try {
+    const res = await axiosInstance.get('/questions/random', {
+      params: {
+        level: 5, // Start with level 5 for baseline
+        count: 10 // Get 10 questions
+      }
+    });
+    
+    if (!res.data || !res.data.questions) {
+      throw new Error('No questions received from server');
+    }
 
-  if (!response.ok) {
-    throw new Error('Failed to fetch baseline test value');
+    return res.data.questions;
+  } catch (err) {
+    console.error('fetchBaselineQuestions error:', err);
+    throw new Error('Failed to fetch baseline questions: ' + (err.response?.data?.message || err.message));
   }
-
-  const data = await response.json();
-  return data; // { baseLineTest: boolean }
 }
 
-// Update baseline test value for a user by ID (new)
-export async function updateBaselineTestValue(id, baseLineTest) {
-  const res = await axiosInstance.put(
-    `/user/${id}/baseline`,
-    { baseLineTest },
-    { headers: authHeader }
-  );
-  return res.data;
-}
-
-// Skip baseline test
+// Skip baseline test - When user opts out
 export async function skipBaselineTest(userId) {
-  const res = await axiosInstance.post(`/baseline/skip`, { userId }, {
-    headers: authHeader,
-  });
-  return res.data;
+  if (!userId) throw new Error('Missing userId');
+  try {
+    const res = await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/baseline/skip`, {
+      user_id: userId,
+    });
+    return res.data; // { success: true }
+  } catch (err) {
+    console.error('Failed to skip baseline test:', err);
+    throw err;
+  }
 }
 
-// Start baseline test
-export async function startBaselineTest(userId) {
-  const res = await axiosInstance.post(`/baseline/start`, { userId }, {
-    headers: authHeader,
+// Submit baseline result
+export async function submitBaselineResult(userId, finalElo) {
+  const res = await fetch('/baseline/complete', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ user_id: userId, finalElo })
   });
-  return res.data;
+  const data = await res.json();
+  return data;
+}
+
+export async function fetchCurrentUser() {
+  try {
+    const res = await fetch('/api/user/me'); // you need a backend route returning session info
+    if (!res.ok) throw new Error('Failed to fetch user');
+    return await res.json(); // should return { id, baseLineTest, ... }
+  } catch (err) {
+    console.error(err);
+    return null;
+  }
+}
+
+//temporary:
+export async function fetchBaselineQuestion(level) {
+  try {
+    const res = await axiosInstance.get(`/baseline/questions/${level}`);
+    return res.data;
+  } catch (err) {
+    console.error('Failed to fetch baseline question:', err);
+    throw new Error('Failed to fetch baseline question: ' + (err.response?.data?.message || err.message));
+  }
+}
+
+export async function updateUserElo(userId, elo) {
+  try {
+    const res = await axiosInstance.post('/baseline/complete', {
+      user_id: userId,
+      finalElo: elo
+    });
+    return res.data;
+  } catch (err) {
+    console.error('Failed to update user Elo:', err);
+    throw err;
+  }
 }

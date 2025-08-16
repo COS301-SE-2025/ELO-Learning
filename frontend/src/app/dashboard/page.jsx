@@ -3,7 +3,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useSession } from 'next-auth/react';
 import LeaderboardTable from '../ui/leaderboard-table';
 import BaselineTestPopup from '../ui/pop-up/baseline-test';
-import { fetchAllUsers, fetchBaselineTestValue } from '@/services/api';
+import { fetchAllUsers, fetchUserById } from '@/services/api';
 
 
 export default function Page() {
@@ -31,17 +31,17 @@ async function loadDashboard() {
     setError(null);
 
     //added
-           const data = await fetchAllUsers();
+    const data = await fetchAllUsers();
 
-        // Use setTimeout to defer sorting and avoid blocking the UI
-        timeoutId = setTimeout(() => {
-          if (mounted) {
-            const sortedData = sortUsers([...data]); // Clone array before sorting
-            setUsers(sortedData);
-            setLoading(false);
-          }
-        }, 0);
-      } catch (error) {
+    // Use setTimeout to defer sorting and avoid blocking the UI
+    timeoutId = setTimeout(() => {
+      if (mounted) {
+        const sortedData = sortUsers([...data]); // Clone array before sorting
+        setUsers(sortedData);
+        setLoading(false);
+      }
+      }, 0);
+    } catch (error) {
         console.error('Failed to load users:', error);
         if (mounted) {
           setError('Failed to load leaderboard. Please try again.');
@@ -54,9 +54,9 @@ async function loadDashboard() {
       if (!session?.user?.id) return; // user not loaded yet
 
       try {
-        // Option 2: fetch baseline test from backend
-        const data = await fetchBaselineTestValue(session.user.id);
-        if (data.baseLineTest === false) {
+        // Fetch current user info including baseLineTest
+        const userData = await fetchUserById(session.user.id);
+        if (userData?.baseLineTest === false) {
           setShowPopup(true);
         }
       } catch (error) {
@@ -115,7 +115,14 @@ async function loadDashboard() {
 
   return (
     <>
-      {showPopup && <BaselineTestPopup onClose={() => setShowPopup(false)} />}
+      {/* {showPopup && <BaselineTestPopup onClose={() => setShowPopup(false)} />} */}
+      {showPopup && (
+  < BaselineTestPopup
+    user_id={session?.user?.id}
+    onClose={() => setShowPopup(false)}
+  />
+  )}
+
       <div>
         <h1 className="text-3xl text-center py-10 md:py-5 mt-10 md:mt-0">
           Leaderboard

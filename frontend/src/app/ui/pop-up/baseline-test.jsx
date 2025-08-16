@@ -1,29 +1,33 @@
 'use client';
-import { useSession } from 'next-auth/react';
 import { useState } from 'react';
 import axios from 'axios';
 
-export default function BaselineTestPopup({ onClose }) {
-  const { data: session } = useSession();
+export default function BaselineTestPopup({ user_id, onClose }) {
   const [loading, setLoading] = useState(false);
-  const userId = session?.user?.id;
 
-  const handleNo = async () => {
-    if (!userId) return;
+const handleNo = async () => {
+    if (!user_id) {
+      console.error("No user_id provided to BaselineTestPopup");
+      return;
+    }
+    setLoading(true);
     try {
-      setLoading(true);
-      await axios.patch(`${process.env.NEXT_PUBLIC_API_URL}/users/${userId}`, {
-        baseLineTest: true,
+      // Call skip endpoint
+      await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/baseline/skip`, {
+        user_id,
       });
-      onClose();
-    } catch (error) {
-      console.error('Error updating baseline test:', error);
+
+      // Remain on dashboard
+      window.location.href = '/dashboard';
+    } catch (err) {
+      console.error('Error skipping baseline test:', err);
     } finally {
       setLoading(false);
     }
-  };
+};
 
-  const handleYes = () => {
+  const handleYes = async() => {
+    //just go to the test, do not set baseLineTest to true yet.
     window.location.href = '/baseline';
   };
 
@@ -34,7 +38,7 @@ export default function BaselineTestPopup({ onClose }) {
           Take the Baseline Test?
         </h2>
         <p className="mt-2 text-gray-600 dark:text-gray-300">
-          This will help us assess your currrent skill level.
+          This will help us assess your current skill level.
         </p>
 
         <div className="mt-6 flex gap-4">

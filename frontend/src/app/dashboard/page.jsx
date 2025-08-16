@@ -3,12 +3,18 @@ import { fetchAllUsers } from '@/services/api';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useSession } from 'next-auth/react';
 import LeaderboardTable from '../ui/leaderboard-table';
-
+import useAchievementChecker from '@/hooks/useAchievementChecker';
 export default function Page() {
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const { data: session, status, update: updateSession } = useSession();
+
+  // ACHIEVEMENT CHECKING
+  useAchievementChecker({
+    checkOnMount: true,
+    debug: false // Set to true if you want to see achievement logs
+  });
 
   // Memoize the sorting function to avoid recreating it on every render
   const sortUsers = useCallback((userData) => {

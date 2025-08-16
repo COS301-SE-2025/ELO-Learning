@@ -10,10 +10,17 @@ import Achievements from '../ui/profile/achievements';
 import MatchStats from '../ui/profile/match-stats';
 import UserInfo from '../ui/profile/user-info';
 import UsernameBlock from '../ui/profile/username-block';
+import useAchievementChecker from '@/hooks/useAchievementChecker';
 
 export default function Page() {
   const { data: session, status } = useSession();
   const { avatar } = useAvatar();
+
+  // ACHIEVEMENT CHECKING
+  useAchievementChecker({
+    checkOnMount: true,
+    debug: false // Set to true if you want to see achievement logs
+  });
 
   if (status === 'loading') return <div>Loading...</div>;
   if (status === 'unauthenticated')

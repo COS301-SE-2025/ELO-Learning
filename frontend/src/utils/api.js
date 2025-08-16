@@ -1,7 +1,5 @@
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL;
 
-// Replace your current getAuthToken function with this:
-
 import { getSession } from 'next-auth/react';
 
 // Fixed Helper function to get auth token (client-side only)
@@ -40,15 +38,75 @@ async function getAuthToken() {
   }
 
   console.log('🔐 No token found');
-  return null; // Don't return placeholder-token
+  return null;
 }
 
-// Update your fetchUserAchievements function to be async and use await:
+// Helper function to handle API responses and errors
+async function handleApiResponse(response, endpoint) {
+  // Check if response is ok first
+  if (!response.ok) {
+    // Try to get error message from response
+    const contentType = response.headers.get('content-type');
+
+    if (contentType && contentType.includes('application/json')) {
+      try {
+        const errorData = await response.json();
+        throw new Error(
+          errorData.error || `HTTP ${response.status}: ${response.statusText}`,
+        );
+      } catch (jsonError) {
+        // If JSON parsing fails, use status text
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      }
+    } else {
+      // Non-JSON error response (likely HTML error page)
+      const textResponse = await response.text();
+      console.error(
+        `❌ ${endpoint} returned non-JSON response:`,
+        textResponse.substring(0, 200),
+      );
+
+      if (response.status === 404) {
+        throw new Error(`Endpoint not found: ${endpoint}`);
+      } else if (response.status >= 500) {
+        throw new Error(
+          `Server error (${response.status}). Please try again later.`,
+        );
+      } else {
+        throw new Error(
+          `Request failed (${response.status}): ${response.statusText}`,
+        );
+      }
+    }
+  }
+
+  // Parse JSON response
+  const contentType = response.headers.get('content-type');
+  if (!contentType || !contentType.includes('application/json')) {
+    const textResponse = await response.text();
+    console.error(
+      `❌ Expected JSON but got ${contentType}:`,
+      textResponse.substring(0, 200),
+    );
+    throw new Error(
+      `Server returned unexpected content type: ${contentType || 'unknown'}`,
+    );
+  }
+
+  try {
+    return await response.json();
+  } catch (parseError) {
+    console.error('❌ Failed to parse JSON response:', parseError);
+    throw new Error('Invalid JSON response from server');
+  }
+}
+
+// Update your fetchUserAchievements function
 export async function fetchUserAchievements(userId) {
   try {
     console.log('🎯 Fetching achievements for user:', userId);
 
-    const token = await getAuthToken(); // Make this async call
+    const token = await getAuthToken();
 
     if (!token) {
       console.log('🔐 No authentication token found');
@@ -59,26 +117,22 @@ export async function fetchUserAchievements(userId) {
 
     console.log('✅ Found authentication token, fetching achievements...');
 
-    const response = await fetch(
-      `${API_BASE_URL}/users/${userId}/achievements`,
-      {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
+    const endpoint = `${API_BASE_URL}/users/${userId}/achievements`;
+    const response = await fetch(endpoint, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
       },
-    );
+    });
 
-    if (!response.ok) {
-      if (response.status === 401) {
-        console.log('🔑 Authentication failed - token might be expired');
-        return { achievements: [], total: 0 };
-      }
-      throw new Error(`HTTP error! status: ${response.status}`);
+    if (response.status === 401) {
+      console.log('🔑 Authentication failed - token might be expired');
+      return { achievements: [], total: 0 };
     }
 
-    const data = await response.json();
+    const data = await handleApiResponse(response, endpoint);
+
     console.log(
       '✅ Successfully fetched achievements:',
       data.total || 0,
@@ -96,7 +150,7 @@ export async function fetchUserAchievements(userId) {
   }
 }
 
-// Get questions by specific type
+// Get questions by specific type - FIXED
 export async function getQuestionsByType(questionType, limit = 10) {
   try {
     const headers = {
@@ -105,31 +159,23 @@ export async function getQuestionsByType(questionType, limit = 10) {
 
     // Only add Authorization header on client side
     if (typeof window !== 'undefined') {
-      const token = getAuthToken();
+      const token = await getAuthToken(); // Make this async
       if (token) {
         headers['Authorization'] = `Bearer ${token}`;
       }
     }
 
-    const response = await fetch(
-      `${API_BASE_URL}/questions/type/${encodeURIComponent(
-        questionType,
-      )}?limit=${limit}`,
-      {
-        method: 'GET',
-        headers,
-      },
-    );
+    const endpoint = `${API_BASE_URL}/questions/type/${encodeURIComponent(
+      questionType,
+    )}?limit=${limit}`;
+    console.log('🎯 Fetching questions from:', endpoint);
 
-    const data = await response.json();
+    const response = await fetch(endpoint, {
+      method: 'GET',
+      headers,
+    });
 
-    if (!response.ok) {
-      return {
-        success: false,
-        error: data.error || 'Failed to fetch questions',
-        details: data.details,
-      };
-    }
+    const data = await handleApiResponse(response, endpoint);
 
     return {
       success: true,
@@ -138,16 +184,16 @@ export async function getQuestionsByType(questionType, limit = 10) {
       count: data.count,
     };
   } catch (error) {
-    console.error('Error fetching questions by type:', error);
+    console.error('❌ Error fetching questions by type:', error);
     return {
       success: false,
-      error: 'Network error occurred',
-      details: error.message,
+      error: error.message,
+      details: 'Check console for more details',
     };
   }
 }
 
-// Get mixed question types for variety
+// Get mixed question types for variety - FIXED
 export async function getMixedQuestions(level = 1, count = 10) {
   try {
     const headers = {
@@ -155,29 +201,21 @@ export async function getMixedQuestions(level = 1, count = 10) {
     };
 
     if (typeof window !== 'undefined') {
-      const token = getAuthToken();
+      const token = await getAuthToken(); // Make this async
       if (token) {
         headers['Authorization'] = `Bearer ${token}`;
       }
     }
 
-    const response = await fetch(
-      `${API_BASE_URL}/questions/mixed?level=${level}&count=${count}`,
-      {
-        method: 'GET',
-        headers,
-      },
-    );
+    const endpoint = `${API_BASE_URL}/questions/mixed?level=${level}&count=${count}`;
+    console.log('🎯 Fetching mixed questions from:', endpoint);
 
-    const data = await response.json();
+    const response = await fetch(endpoint, {
+      method: 'GET',
+      headers,
+    });
 
-    if (!response.ok) {
-      return {
-        success: false,
-        error: data.error || 'Failed to fetch mixed questions',
-        details: data.details,
-      };
-    }
+    const data = await handleApiResponse(response, endpoint);
 
     return {
       success: true,
@@ -186,11 +224,11 @@ export async function getMixedQuestions(level = 1, count = 10) {
       count: data.count,
     };
   } catch (error) {
-    console.error('Error fetching mixed questions:', error);
+    console.error('❌ Error fetching mixed questions:', error);
     return {
       success: false,
-      error: 'Network error occurred',
-      details: error.message,
+      error: error.message,
+      details: 'Check console for more details',
     };
   }
 }
@@ -233,49 +271,22 @@ export async function submitQuestionAnswer({
       questionType,
     });
 
-    //  Use the endpoint that includes achievement checking
-    const response = await fetch(
-      `${API_BASE_URL}/question/${questionId}/submit`,
-      {
-        method: 'POST',
-        headers,
-        body: JSON.stringify({
-          studentAnswer: userAnswer,
-          userId,
-          questionType,
-          timeSpent,
-          gameMode,
-          isCorrect, // Include this for achievement logic
-        }),
-      },
-    );
+    const endpoint = `${API_BASE_URL}/question/${questionId}/submit`;
+    const response = await fetch(endpoint, {
+      method: 'POST',
+      headers,
+      body: JSON.stringify({
+        studentAnswer: userAnswer,
+        userId,
+        questionType,
+        timeSpent,
+        gameMode,
+        isCorrect,
+      }),
+    });
 
-    // Check if the response is JSON before parsing
-    const contentType = response.headers.get('content-type');
-    if (!contentType || !contentType.includes('application/json')) {
-      const text = await response.text();
-      console.error('❌ Non-JSON response received:', text.substring(0, 200));
-      return {
-        success: false,
-        error: 'Server returned non-JSON response',
-        details: `Expected JSON but got ${contentType}. Response: ${text.substring(
-          0,
-          100,
-        )}...`,
-      };
-    }
+    const data = await handleApiResponse(response, endpoint);
 
-    const data = await response.json();
-
-    if (!response.ok) {
-      return {
-        success: false,
-        error: data.error || 'Failed to submit answer',
-        details: data.details,
-      };
-    }
-
-    // Return the full data structure that includes achievements
     console.log('🎯 Full API response data:', data);
 
     return {
@@ -286,39 +297,40 @@ export async function submitQuestionAnswer({
         xpAwarded: data.xpAwarded,
         updatedUser: data.updatedUser,
         unlockedAchievements: data.unlockedAchievements || [],
-        ...data, // Include any other response data
+        ...data,
       },
     };
   } catch (error) {
-    console.error('Error submitting answer:', error);
+    console.error('❌ Error submitting answer:', error);
     return {
       success: false,
-      error: 'Network error occurred',
-      details: error.message,
+      error: error.message,
+      details: 'Check console for more details',
     };
   }
 }
-// Keep all your existing functions but add the server-side check
+
+// Get all questions - IMPROVED
 export const getAllQuestions = async () => {
   try {
-    const response = await fetch(`${API_BASE_URL}/questions`, {
+    const endpoint = `${API_BASE_URL}/questions`;
+    console.log('🎯 Fetching all questions from:', endpoint);
+
+    const response = await fetch(endpoint, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
       },
     });
 
-    const data = await response.json();
-
-    if (!response.ok) {
-      throw new Error(data.error || 'Failed to fetch questions');
-    }
+    const data = await handleApiResponse(response, endpoint);
 
     return {
       success: true,
       data: data.questions,
     };
   } catch (error) {
+    console.error('❌ Error fetching all questions:', error);
     return {
       success: false,
       error: error.message,
@@ -326,14 +338,16 @@ export const getAllQuestions = async () => {
   }
 };
 
-// Your existing functions remain the same...
+// Practice question helper
 export const practiceQuestion = async () => {
   return await getMixedQuestions(1, 5);
 };
 
+// Validate math expression - IMPROVED
 export const validateMathExpression = async (expression) => {
   try {
-    const response = await fetch(`${API_BASE_URL}/validate-expression`, {
+    const endpoint = `${API_BASE_URL}/validate-expression`;
+    const response = await fetch(endpoint, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -343,17 +357,14 @@ export const validateMathExpression = async (expression) => {
       }),
     });
 
-    const data = await response.json();
-
-    if (!response.ok) {
-      throw new Error(data.error || 'Failed to validate expression');
-    }
+    const data = await handleApiResponse(response, endpoint);
 
     return {
       success: true,
       data,
     };
   } catch (error) {
+    console.error('❌ Error validating math expression:', error);
     return {
       success: false,
       error: error.message,
@@ -361,9 +372,11 @@ export const validateMathExpression = async (expression) => {
   }
 };
 
+// Quick validate math - IMPROVED
 export const quickValidateMath = async (studentAnswer, correctAnswer) => {
   try {
-    const response = await fetch(`${API_BASE_URL}/quick-validate`, {
+    const endpoint = `${API_BASE_URL}/quick-validate`;
+    const response = await fetch(endpoint, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -374,17 +387,14 @@ export const quickValidateMath = async (studentAnswer, correctAnswer) => {
       }),
     });
 
-    const data = await response.json();
-
-    if (!response.ok) {
-      throw new Error(data.error || 'Failed to validate answer');
-    }
+    const data = await handleApiResponse(response, endpoint);
 
     return {
       success: true,
       data,
     };
   } catch (error) {
+    console.error('❌ Error validating answer:', error);
     return {
       success: false,
       error: error.message,

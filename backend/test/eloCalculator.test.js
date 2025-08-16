@@ -1,7 +1,7 @@
 import {
   calculateExpectedRating,
   updateEloRating,
-  updateSinglePlayerElo,
+  updateSinglePlayerEloPair,
 } from '../src/utils/eloCalculator';
 
 describe('ELO Rating Functions', () => {
@@ -19,11 +19,11 @@ describe('ELO Rating Functions', () => {
     });
 
     test('returns close to 1 when playerRating is much higher', () => {
-      expect(calculateExpectedRating(20, 0)).toBeCloseTo(1, 1);
+      expect(calculateExpectedRating(2000, 100)).toBeCloseTo(1, 1);
     });
 
     test('returns close to 0 when playerRating is much lower', () => {
-      expect(calculateExpectedRating(0, 20)).toBeCloseTo(0, 1);
+      expect(calculateExpectedRating(100, 2000)).toBeCloseTo(0, 1);
     });
 
     test('handles negative ratings', () => {
@@ -76,51 +76,53 @@ describe('ELO Rating Functions', () => {
     });
   });
 
-  describe('updateSinglePlayerElo', () => {
+  describe('updateSinglePlayerEloPair', () => {
     test('handles correct answer (win)', () => {
-      const newElo = updateSinglePlayerElo({
-        playerRating: 5,
-        questionRating: 4,
+      const result = updateSinglePlayerEloPair({
+        playerRating: 1500,
+        questionRating: 1000,
         isCorrect: true,
       });
-      expect(newElo).toBeGreaterThan(5);
+      expect(result.newPlayerElo).toBeGreaterThan(1500);
     });
 
     test('handles incorrect answer (loss)', () => {
-      const newElo = updateSinglePlayerElo({
-        playerRating: 5,
-        questionRating: 6,
+      const result = updateSinglePlayerEloPair({
+        playerRating: 1500,
+        questionRating: 1600,
         isCorrect: false,
       });
-      expect(newElo).toBeLessThan(5);
+      expect(result.newPlayerElo).toBeLessThan(1500);
     });
 
     test('handles edge case where ELO is already 0', () => {
-      const newElo = updateSinglePlayerElo({
+      const result = updateSinglePlayerEloPair({
         playerRating: 0,
         questionRating: 5,
         isCorrect: false,
       });
-      expect(newElo).toBeGreaterThanOrEqual(0);
+      expect(result.newPlayerElo).toBeGreaterThanOrEqual(0);
     });
 
     test('handles floating-point precision', () => {
-      const newElo = updateSinglePlayerElo({
+      const result = updateSinglePlayerEloPair({
         playerRating: 5.123456,
         questionRating: 4.987654,
         isCorrect: true,
       });
-      expect(typeof newElo).toBe('number');
-      expect(newElo).toBeCloseTo(parseFloat(newElo.toFixed(2)));
+      expect(typeof result.newPlayerElo).toBe('number');
+      expect(result.newPlayerElo).toBeCloseTo(
+        parseFloat(result.newPlayerElo.toFixed(2)),
+      );
     });
 
     test('does not produce NaN', () => {
-      const newElo = updateSinglePlayerElo({
+      const result = updateSinglePlayerEloPair({
         playerRating: 5,
         questionRating: 4,
         isCorrect: true,
       });
-      expect(isNaN(newElo)).toBe(false);
+      expect(isNaN(result.newPlayerElo)).toBe(false);
     });
   });
 });

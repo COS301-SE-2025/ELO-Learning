@@ -3,7 +3,7 @@ const DEFAULT_K = 40;
 const QUESTION_K = 24;
 const MAX_RATING = Infinity;
 const scalingFactor = 1.0;
-const totalNumberOfQuestions = 5;
+const totalNumberOfQuestions = 2;
 
 export function calculateExpectedRating(
   ratingA,

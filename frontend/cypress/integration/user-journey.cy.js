@@ -54,8 +54,8 @@ describe('User Journey', () => {
           xp: 0,
           currentLevel: 1,
           joinDate: '2025-08-14T00:00:00.000Z',
-          rank: 'iron',
-          elo_rating: 1200,
+          rank: 'Iron',
+          elo_rating: 100,
           avatar: {
             eyes: 'Eye 1',
             color: '#fffacd', // Light color for avatar
@@ -82,8 +82,8 @@ describe('User Journey', () => {
           xp: 0,
           currentLevel: 1,
           joinDate: '2025-08-14T00:00:00.000Z',
-          rank: 'iron',
-          elo_rating: 1200,
+          rank: 'Iron',
+          elo_rating: 100,
           avatar: {
             eyes: 'Eye 1',
             color: '#fffacd', // Light color for avatar
@@ -173,8 +173,8 @@ describe('User Journey', () => {
           surname: 'User',
           xp: 0,
           currentLevel: 1,
-          rank: 'iron',
-          elo_rating: 1200,
+          rank: 'Iron',
+          elo_rating: 100,
           avatar: {
             eyes: 'Eye 1',
             color: '#fffacd', // Light color for avatar

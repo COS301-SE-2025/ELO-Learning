@@ -109,7 +109,7 @@ export default function Page() {
         </form>
         <div>
           <Link href="/login-landing/forgot-password">
-            <p className="text-center py-3 text-[#ff6e99] hover:text-[#ffffff] hover:font-bold hover:scale-1.1% w-[90vw] md:w-[500px] mx-auto">
+            <p className="text-center font-bold py-3 text-[#ff6e99] hover:text-[#ffffff] hover:font-bold hover:scale-1.1% w-[90vw] md:w-[500px] mx-auto">
               Forgot your password?
             </p>
           </Link>

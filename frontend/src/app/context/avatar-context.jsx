@@ -31,6 +31,14 @@ export function AvatarProvider({ children }) {
     }
   }, [session]);
 
+  useEffect(() => {
+    console.log('Session changed:', session);
+    if (session?.user?.avatar) {
+      console.log('Loading avatar from session:', session.user.avatar);
+      setAvatar(session.user.avatar);
+    }
+  }, []);
+
   // Save avatar to localStorage whenever it changes
   const updateAvatar = async (userID, newAvatar) => {
     setAvatar(newAvatar);

@@ -1,4 +1,4 @@
-import { create, all } from 'mathjs';
+import { all, create } from 'mathjs';
 
 // Configure math.js for backend validation with advanced features
 const math = create(all, {
@@ -398,6 +398,16 @@ class BackendMathValidator {
 
       // Check for empty or whitespace-only input
       if (!normalized.trim()) return false;
+
+      // Reject single parentheses or incomplete expressions
+      if (normalized === '(' || normalized === ')' || normalized === '()') {
+        return false;
+      }
+
+      // Reject expressions that are only operators or punctuation
+      if (/^[+\-*/^()=,\s\[\]{}]+$/.test(normalized)) {
+        return false;
+      }
 
       // Check for obviously invalid patterns
       if (/[+\-*/^]{2,}/.test(normalized.replace(/\*\*/g, '^'))) {

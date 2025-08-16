@@ -336,7 +336,7 @@ export default function MathInputTemplate({
   };
 
   return (
-    <div className="w-full space-y-6">
+    <div className="w-full space-y-6 mb-30">
       {/* Enhanced Input Field */}
       <div className="relative">
         <textarea
@@ -346,8 +346,8 @@ export default function MathInputTemplate({
           onSelect={handleCursorPosition}
           onKeyDown={handleKeyDown}
           placeholder="Write your answer"
-          style={{ border: '1px solid' }} // Force black text
-          className={`math-input w-full p-4 text-lg border rounded-lg resize-none min-h-[80px] font-mono ${
+          style={{ border: '1px solid #696969' }} // Force black text
+          className={`math-input w-full p-4 text-sm border rounded-lg resize-none min-h-[80px] ${
             !localIsValidExpression
               ? 'border-red-500 focus:border-red-600'
               : isChecking
@@ -486,7 +486,7 @@ export default function MathInputTemplate({
 
       {/* Live LaTeX Preview */}
       {inputValue.trim() && localIsValidExpression && (
-        <div className="p-4 border rounded-lg">
+        <div className="p-4 border border-[#696969] rounded-lg">
           <div className="text-sm mb-2 font-medium">Preview:</div>
           <div className="text-xl">
             <InlineMath math={inputValue} />
@@ -496,7 +496,7 @@ export default function MathInputTemplate({
 
       {/* Helper Text */}
       <div
-        className="text-xs border p-3 rounded-lg cursor-pointer select-none"
+        className="text-xs border border-[#696969] p-3 rounded-lg cursor-pointer select-none"
         onClick={() => setShowHelper((prev) => !prev)}
       >
         <div className="flex items-center justify-between">

@@ -8,13 +8,21 @@ export default function AchievementNotificationManager() {
   const [isReady, setIsReady] = useState(false);
 
   const showAchievement = useCallback((achievement) => {
-    const id = achievement?.id || Date.now() + Math.random();
-    const newNotification = { ...achievement, id, show: true };
+    // Create truly unique IDs
+    const uniqueId = `achievement-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+    const newNotification = { 
+      ...achievement, 
+      id: uniqueId, // Use the unique ID instead of achievement.id
+      show: true,
+      timestamp: Date.now() // Add timestamp for additional uniqueness
+    };
 
+    console.log('🏆 Adding notification with unique ID:', uniqueId);
     setNotifications((prev) => [...prev, newNotification]);
   }, []);
 
   const hideAchievement = useCallback((id) => {
+    console.log('🏆 Hiding notification with ID:', id);
     setNotifications((prev) =>
       prev.filter((notification) => notification.id !== id),
     );
@@ -23,9 +31,12 @@ export default function AchievementNotificationManager() {
   const showMultipleAchievements = useCallback(
     (achievements) => {
       if (!achievements || achievements.length === 0) {
+        console.log('🏆 No achievements to show');
         return;
       }
 
+      console.log(`🏆 Showing ${achievements.length} achievements with staggered timing`);
+      
       // Show achievements one by one with staggered timing
       achievements.forEach((achievement, index) => {
         setTimeout(() => {
@@ -41,17 +52,19 @@ export default function AchievementNotificationManager() {
     if (typeof window !== 'undefined') {
       window.showAchievement = showAchievement;
       window.showMultipleAchievements = showMultipleAchievements;
-      
+
       setIsReady(true);
-      
+
       // Dispatch ready event
       const dispatchReady = () => {
         window.dispatchEvent(new CustomEvent('achievementSystemReady'));
       };
-      
+
       dispatchReady();
       setTimeout(dispatchReady, 100);
       setTimeout(dispatchReady, 500);
+
+      console.log('🏆 Achievement notification system ready');
     }
   }, [showAchievement, showMultipleAchievements]);
 
@@ -61,6 +74,7 @@ export default function AchievementNotificationManager() {
       if (typeof window !== 'undefined') {
         delete window.showAchievement;
         delete window.showMultipleAchievements;
+        console.log('🏆 Achievement notification system cleaned up');
       }
     };
   }, []);
@@ -69,7 +83,7 @@ export default function AchievementNotificationManager() {
     <div className="achievement-notifications" role="region" aria-label="Achievement notifications">
       {notifications.map((notification, index) => (
         <div
-          key={notification.id}
+          key={notification.id} // Now using truly unique IDs
           style={{
             position: 'fixed',
             top: `${20 + index * 120}px`,

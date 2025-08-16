@@ -172,7 +172,8 @@ router.post('/register', async (req, res) => {
     bodyShape: 'Circle',
     background: 'solid-pink',
   };
-  const eloRating = 1000;
+  const eloRating = 100;
+  const defaultRank = 'Iron';
 
   const { data, error } = await supabase
     .from('Users')
@@ -188,6 +189,7 @@ router.post('/register', async (req, res) => {
         xp: safeXP,
         avatar: DEFAULT_AVATAR,
         elo_rating: eloRating,
+        rank: defaultRank,
       },
     ])
     .select()

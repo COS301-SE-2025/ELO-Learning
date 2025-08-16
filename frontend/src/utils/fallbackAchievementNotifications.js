@@ -18,7 +18,7 @@ export function createSimpleAchievementNotification(achievement) {
     font-family: 'Inter', sans-serif;
     animation: slideIn 0.5s ease-out;
   `;
-  
+
   notification.innerHTML = `
     <div style="font-size: 14px; font-weight: bold; margin-bottom: 5px;">
       🏆 Achievement Unlocked!
@@ -30,7 +30,7 @@ export function createSimpleAchievementNotification(achievement) {
       ${achievement.description || 'Congratulations on your achievement!'}
     </div>
   `;
-  
+
   // Add animation styles
   const style = document.createElement('style');
   style.textContent = `
@@ -55,14 +55,14 @@ export function createSimpleAchievementNotification(achievement) {
       }
     }
   `;
-  
+
   if (!document.querySelector('#achievement-notification-styles')) {
     style.id = 'achievement-notification-styles';
     document.head.appendChild(style);
   }
-  
+
   document.body.appendChild(notification);
-  
+
   // Auto remove after 5 seconds
   setTimeout(() => {
     notification.style.animation = 'slideOut 0.5s ease-in';
@@ -72,7 +72,7 @@ export function createSimpleAchievementNotification(achievement) {
       }
     }, 500);
   }, 5000);
-  
+
   // Click to dismiss
   notification.addEventListener('click', () => {
     notification.style.animation = 'slideOut 0.3s ease-in';
@@ -82,28 +82,34 @@ export function createSimpleAchievementNotification(achievement) {
       }
     }, 300);
   });
-  
+
   return notification;
 }
 
 // Enhanced achievement notification utility with fallback
 export async function showAchievementWithFallback(achievements) {
   console.log('🔧 Attempting to show achievements with fallback system...');
-  
+
   if (!achievements || achievements.length === 0) {
     console.log('🤷 No achievements to show');
     return;
   }
-  
+
   // Try the main achievement system first
   try {
-    if (window.showMultipleAchievements && typeof window.showMultipleAchievements === 'function') {
+    if (
+      window.showMultipleAchievements &&
+      typeof window.showMultipleAchievements === 'function'
+    ) {
       console.log('✅ Using main achievement notification system');
       window.showMultipleAchievements(achievements);
       return;
     }
-    
-    if (window.showAchievement && typeof window.showAchievement === 'function') {
+
+    if (
+      window.showAchievement &&
+      typeof window.showAchievement === 'function'
+    ) {
       console.log('✅ Using single achievement notification system');
       achievements.forEach((achievement, index) => {
         setTimeout(() => {
@@ -115,7 +121,7 @@ export async function showAchievementWithFallback(achievements) {
   } catch (error) {
     console.error('❌ Main achievement system failed:', error);
   }
-  
+
   // Fallback to simple notifications
   console.log('🔄 Falling back to simple notification system');
   achievements.forEach((achievement, index) => {

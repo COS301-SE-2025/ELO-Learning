@@ -1,8 +1,12 @@
 // Handle Next.js redirects and React hooks errors
 Cypress.on('uncaught:exception', (err) => {
-  if (err.message.includes('NEXT_REDIRECT') || 
-      err.message.includes('Rendered more hooks than during the previous render') ||
-      err.message.includes('Cannot read properties of undefined')) {
+  if (
+    err.message.includes('NEXT_REDIRECT') ||
+    err.message.includes(
+      'Rendered more hooks than during the previous render',
+    ) ||
+    err.message.includes('Cannot read properties of undefined')
+  ) {
     return false;
   }
 });
@@ -13,32 +17,35 @@ describe('Component Rendering Tests', () => {
       // Mock NextAuth session
       cy.intercept('GET', '**/api/auth/session', {
         statusCode: 200,
-        body: { user: null }
+        body: { user: null },
       }).as('getSession');
     });
 
     it('should render the login form correctly', () => {
       cy.visit('/login-landing/login');
-      
+
       // Wait for page to stabilize
       cy.wait(1000);
-      
+
       // Check that we're on the login page
       cy.url().should('include', '/login-landing/login');
-      
+
       // Check for form elements (flexible checking)
       cy.get('body').then(($body) => {
         // Use Cypress's built-in jQuery (not global $)
-        const hasEmailInput = $body.find('input[type="email"]').length > 0 ||
-                             $body.find('input[placeholder*="email"]').length > 0 ||
-                             $body.find('input[name*="email"]').length > 0;
-        
-        const hasPasswordInput = $body.find('input[type="password"]').length > 0;
-        
-        const hasSubmitButton = $body.find('button[type="submit"]').length > 0 ||
-                               $body.find('button:contains("Login")').length > 0 ||
-                               $body.find('button:contains("Sign")').length > 0;
-        
+        const hasEmailInput =
+          $body.find('input[type="email"]').length > 0 ||
+          $body.find('input[placeholder*="email"]').length > 0 ||
+          $body.find('input[name*="email"]').length > 0;
+
+        const hasPasswordInput =
+          $body.find('input[type="password"]').length > 0;
+
+        const hasSubmitButton =
+          $body.find('button[type="submit"]').length > 0 ||
+          $body.find('button:contains("Login")').length > 0 ||
+          $body.find('button:contains("Sign")').length > 0;
+
         if (hasEmailInput) {
           expect(hasEmailInput).to.be.true;
         }
@@ -48,7 +55,7 @@ describe('Component Rendering Tests', () => {
         if (hasSubmitButton) {
           expect(hasSubmitButton).to.be.true;
         }
-        
+
         // At minimum, page should render without errors
         expect($body.text()).to.not.contain('Error');
         expect($body.text()).to.not.contain('Something went wrong');
@@ -57,35 +64,41 @@ describe('Component Rendering Tests', () => {
 
     it('should render the signup form correctly', () => {
       cy.visit('/login-landing/signup');
-      
+
       // Wait for page to stabilize
       cy.wait(1000);
-      
+
       // Check that we're on the signup page
       cy.url().should('include', '/login-landing/signup');
-      
+
       // Check for form elements (flexible checking)
       cy.get('body').then(($body) => {
         // Use Cypress's built-in jQuery (not global $)
-        const hasEmailInput = $body.find('input[type="email"]').length > 0 ||
-                             $body.find('input[placeholder*="email"]').length > 0;
-        
-        const hasPasswordInput = $body.find('input[type="password"]').length > 0;
-        
-        const hasSubmitButton = $body.find('button[type="submit"]').length > 0 ||
-                               $body.find('button:contains("Sign Up")').length > 0 ||
-                               $body.find('button:contains("Create")').length > 0 ||
-                               $body.find('button:contains("Register")').length > 0;
-        
+        const hasEmailInput =
+          $body.find('input[type="email"]').length > 0 ||
+          $body.find('input[placeholder*="email"]').length > 0;
+
+        const hasPasswordInput =
+          $body.find('input[type="password"]').length > 0;
+
+        const hasSubmitButton =
+          $body.find('button[type="submit"]').length > 0 ||
+          $body.find('button:contains("Sign Up")').length > 0 ||
+          $body.find('button:contains("Create")').length > 0 ||
+          $body.find('button:contains("Register")').length > 0;
+
         // At minimum, page should render without errors
         expect($body.text()).to.not.contain('Error');
         expect($body.text()).to.not.contain('Something went wrong');
-        
+
         // Should have some form of authentication UI
-        const hasAuthUI = hasEmailInput || hasPasswordInput || hasSubmitButton ||
-                         $body.text().toLowerCase().includes('sign up') ||
-                         $body.text().toLowerCase().includes('create account');
-        
+        const hasAuthUI =
+          hasEmailInput ||
+          hasPasswordInput ||
+          hasSubmitButton ||
+          $body.text().toLowerCase().includes('sign up') ||
+          $body.text().toLowerCase().includes('create account');
+
         expect(hasAuthUI).to.be.true;
       });
     });
@@ -93,7 +106,7 @@ describe('Component Rendering Tests', () => {
     it('should handle authentication state changes', () => {
       cy.visit('/login-landing/login');
       cy.wait(1000);
-      
+
       // Test navigation between auth pages
       cy.get('body').then(($body) => {
         // Look for links to signup page
@@ -114,12 +127,15 @@ describe('Component Rendering Tests', () => {
     beforeEach(() => {
       // Mock authentication
       cy.window().then((win) => {
-        win.localStorage.setItem('user', JSON.stringify({
-          id: 1,
-          username: 'testuser',
-          elo: 1200,
-          xp: 850,
-        }));
+        win.localStorage.setItem(
+          'user',
+          JSON.stringify({
+            id: 1,
+            username: 'testuser',
+            elo: 1200,
+            xp: 850,
+          }),
+        );
       });
 
       // Mock API responses
@@ -145,27 +161,28 @@ describe('Component Rendering Tests', () => {
 
       cy.intercept('GET', '**/api/auth/session', {
         statusCode: 200,
-        body: { user: { name: 'testuser', email: 'test@example.com' } }
+        body: { user: { name: 'testuser', email: 'test@example.com' } },
       }).as('getSession');
     });
 
     it('should render dashboard components without errors', () => {
       cy.visit('/dashboard');
       cy.wait(2000);
-      
+
       // Dashboard should load without JavaScript errors
       cy.get('body').should('exist');
       cy.get('body').should('not.contain', 'Error');
       cy.get('body').should('not.contain', 'Something went wrong');
-      
+
       // Should have some dashboard-like content
       cy.get('body').then(($body) => {
-        const isDashboard = $body.text().toLowerCase().includes('dashboard') ||
-                           $body.text().toLowerCase().includes('practice') ||
-                           $body.text().toLowerCase().includes('profile') ||
-                           $body.find('[data-cy*="dashboard"]').length > 0 ||
-                           $body.find('nav').length > 0;
-        
+        const isDashboard =
+          $body.text().toLowerCase().includes('dashboard') ||
+          $body.text().toLowerCase().includes('practice') ||
+          $body.text().toLowerCase().includes('profile') ||
+          $body.find('[data-cy*="dashboard"]').length > 0 ||
+          $body.find('nav').length > 0;
+
         expect(isDashboard).to.be.true;
       });
     });
@@ -173,19 +190,20 @@ describe('Component Rendering Tests', () => {
     it('should handle user profile data display', () => {
       cy.visit('/profile');
       cy.wait(2000);
-      
+
       // Profile page should render
       cy.get('body').should('exist');
       cy.get('body').should('not.contain', 'TypeError');
       cy.get('body').should('not.contain', 'ReferenceError');
-      
+
       // Should handle user data gracefully
       cy.get('body').then(($body) => {
-        const hasUserInfo = $body.text().includes('testuser') ||
-                           $body.text().includes('1200') ||
-                           $body.text().includes('850') ||
-                           $body.text().toLowerCase().includes('profile');
-        
+        const hasUserInfo =
+          $body.text().includes('testuser') ||
+          $body.text().includes('1200') ||
+          $body.text().includes('850') ||
+          $body.text().toLowerCase().includes('profile');
+
         if (hasUserInfo) {
           expect(hasUserInfo).to.be.true;
         } else {
@@ -200,17 +218,20 @@ describe('Component Rendering Tests', () => {
     beforeEach(() => {
       // Mock authentication
       cy.window().then((win) => {
-        win.localStorage.setItem('user', JSON.stringify({
-          id: 1,
-          username: 'testuser',
-          elo: 1200,
-          xp: 850,
-        }));
+        win.localStorage.setItem(
+          'user',
+          JSON.stringify({
+            id: 1,
+            username: 'testuser',
+            elo: 1200,
+            xp: 850,
+          }),
+        );
       });
 
       cy.intercept('GET', '**/api/auth/session', {
         statusCode: 200,
-        body: { user: { name: 'testuser' } }
+        body: { user: { name: 'testuser' } },
       }).as('getSession');
     });
 
@@ -219,26 +240,27 @@ describe('Component Rendering Tests', () => {
       'expression-builder',
       'math-input',
       'open-response',
-      'true-false'
+      'true-false',
     ];
 
-    questionTypes.forEach(type => {
+    questionTypes.forEach((type) => {
       it(`should render ${type} question template component`, () => {
         cy.visit(`/question-templates/${type}`);
         cy.wait(2000);
-        
+
         // Component should render without errors
         cy.get('body').should('exist');
         cy.get('body').should('not.contain', 'Error loading');
         cy.get('body').should('not.contain', 'Something went wrong');
-        
+
         // Should have question-related content
         cy.get('body').then(($body) => {
-          const hasQuestionContent = $body.text().toLowerCase().includes('question') ||
-                                    $body.text().toLowerCase().includes('template') ||
-                                    $body.text().toLowerCase().includes('practice') ||
-                                    $body.find('input, button, select, textarea').length > 0;
-          
+          const hasQuestionContent =
+            $body.text().toLowerCase().includes('question') ||
+            $body.text().toLowerCase().includes('template') ||
+            $body.text().toLowerCase().includes('practice') ||
+            $body.find('input, button, select, textarea').length > 0;
+
           expect(hasQuestionContent).to.be.true;
         });
       });
@@ -250,7 +272,7 @@ describe('Component Rendering Tests', () => {
       // Test with a potentially problematic route
       cy.visit('/practice');
       cy.wait(2000);
-      
+
       // Should not show unhandled errors
       cy.get('body').should('exist');
       cy.get('body').should('not.contain', 'TypeError');
@@ -261,10 +283,10 @@ describe('Component Rendering Tests', () => {
     it('should handle network failures in components', () => {
       // Mock network failure
       cy.intercept('GET', '**/user**', { forceNetworkError: true });
-      
+
       cy.visit('/profile');
       cy.wait(2000);
-      
+
       // Should handle network errors gracefully
       cy.get('body').should('exist');
       cy.get('body').should('not.contain', 'NetworkError');
@@ -277,7 +299,7 @@ describe('Component Rendering Tests', () => {
       cy.viewport('iphone-x');
       cy.visit('/');
       cy.wait(1000);
-      
+
       // Should render without layout errors
       cy.get('body').should('exist');
       cy.get('body').should('not.contain', 'Error');
@@ -287,7 +309,7 @@ describe('Component Rendering Tests', () => {
       cy.viewport(1920, 1080);
       cy.visit('/');
       cy.wait(1000);
-      
+
       // Should render without layout errors
       cy.get('body').should('exist');
       cy.get('body').should('not.contain', 'Error');
@@ -382,14 +404,18 @@ describe('Component Tests with Real Selectors', () => {
     it('should render multiple choice answer buttons', () => {
       cy.visit('/practice'); // or wherever questions are displayed
       cy.wait(2000);
-      
+
       // Look for multiple choice buttons/options
       cy.get('body').then(($body) => {
-        const hasMCButtons = $body.find('[data-testid*="answer"], button[class*="answer"], .mc-button, input[type="radio"], [class*="option"]').length > 0;
-        
+        const hasMCButtons =
+          $body.find(
+            '[data-testid*="answer"], button[class*="answer"], .mc-button, input[type="radio"], [class*="option"]',
+          ).length > 0;
+
         if (hasMCButtons) {
-          cy.get('[data-testid*="answer"], button[class*="answer"], .mc-button, input[type="radio"], [class*="option"]')
-            .should('have.length.greaterThan', 1);
+          cy.get(
+            '[data-testid*="answer"], button[class*="answer"], .mc-button, input[type="radio"], [class*="option"]',
+          ).should('have.length.greaterThan', 1);
         } else {
           // If no MC questions available, at least verify page loads
           cy.get('body').should('not.contain', 'Error');
@@ -401,11 +427,13 @@ describe('Component Tests with Real Selectors', () => {
     it('should allow a user to select a multiple choice answer', () => {
       cy.visit('/practice');
       cy.wait(2000);
-      
+
       // Try to interact with answer options
       cy.get('body').then(($body) => {
-        const answerElements = $body.find('[data-testid*="answer"], button[class*="answer"], .mc-button, input[type="radio"], [class*="option"]');
-        
+        const answerElements = $body.find(
+          '[data-testid*="answer"], button[class*="answer"], .mc-button, input[type="radio"], [class*="option"]',
+        );
+
         if (answerElements.length > 0) {
           cy.wrap(answerElements.first()).click();
           // Verify interaction worked (no errors)
@@ -423,16 +451,22 @@ describe('Component Tests with Real Selectors', () => {
     it('should render the main navigation bar', () => {
       cy.visit('/dashboard');
       cy.wait(1000);
-      
+
       // Look for navigation elements
       cy.get('body').then(($body) => {
-        const hasNav = $body.find('nav, header, [role="navigation"], [data-testid*="nav"], [class*="nav"]').length > 0;
-        
+        const hasNav =
+          $body.find(
+            'nav, header, [role="navigation"], [data-testid*="nav"], [class*="nav"]',
+          ).length > 0;
+
         if (hasNav) {
-          cy.get('nav, header, [role="navigation"], [data-testid*="nav"], [class*="nav"]').should('exist');
+          cy.get(
+            'nav, header, [role="navigation"], [data-testid*="nav"], [class*="nav"]',
+          ).should('exist');
         } else {
           // If no nav found, at least verify page loads and has links
-          const hasNavLinks = $body.find('a[href*="/"], button[onclick*="navigate"]').length > 0;
+          const hasNavLinks =
+            $body.find('a[href*="/"], button[onclick*="navigate"]').length > 0;
           expect(hasNavLinks).to.be.true;
         }
       });
@@ -441,42 +475,47 @@ describe('Component Tests with Real Selectors', () => {
     it('should navigate to different pages', () => {
       // Set up proper authentication BEFORE navigation
       cy.window().then((win) => {
-        win.localStorage.setItem('user', JSON.stringify({
-          id: 1,
-          username: 'testuser',
-          elo: 1200,
-          xp: 850,
-        }));
+        win.localStorage.setItem(
+          'user',
+          JSON.stringify({
+            id: 1,
+            username: 'testuser',
+            elo: 1200,
+            xp: 850,
+          }),
+        );
         win.localStorage.setItem('token', 'mock-jwt-token');
       });
 
       // Mock session to prevent auth redirects
       cy.intercept('GET', '**/api/auth/session', {
         statusCode: 200,
-        body: { 
-          user: { 
-            name: 'testuser', 
+        body: {
+          user: {
+            name: 'testuser',
             email: 'test@example.com',
-            id: 1 
-          } 
-        }
+            id: 1,
+          },
+        },
       }).as('getSession');
 
       cy.visit('/dashboard');
       cy.wait(1000);
-      
+
       // Test navigation to different sections
       const testRoutes = ['/profile', '/practice'];
-      
-      testRoutes.forEach(route => {
+
+      testRoutes.forEach((route) => {
         cy.visit(route);
         cy.wait(500);
-        
+
         // Check if we're still on login page (auth failed)
         cy.url().then((currentUrl) => {
           if (currentUrl.includes('/login-landing')) {
             // If redirected to login, that's expected behavior for protected routes
-            cy.log(`Route ${route} requires authentication - redirected to login`);
+            cy.log(
+              `Route ${route} requires authentication - redirected to login`,
+            );
             cy.url().should('include', '/login-landing');
           } else {
             // If we successfully navigated, check the route
@@ -492,12 +531,15 @@ describe('Component Tests with Real Selectors', () => {
     it('should render the main user info block', () => {
       cy.visit('/profile');
       cy.wait(2000);
-      
+
       // Should display user information
       cy.get('body').then(($body) => {
-        const hasUserInfo = $body.text().includes('testuser') ||
-                           $body.find('[data-testid*="user"], [class*="profile"], [class*="user"]').length > 0;
-        
+        const hasUserInfo =
+          $body.text().includes('testuser') ||
+          $body.find(
+            '[data-testid*="user"], [class*="profile"], [class*="user"]',
+          ).length > 0;
+
         if (hasUserInfo) {
           expect(hasUserInfo).to.be.true;
         } else {
@@ -511,15 +553,16 @@ describe('Component Tests with Real Selectors', () => {
     it('should display ranking and XP', () => {
       cy.visit('/profile');
       cy.wait(2000);
-      
+
       // Look for XP/ranking displays
       cy.get('body').then(($body) => {
-        const hasStats = $body.text().includes('1200') || // ELO
-                        $body.text().includes('850') ||  // XP
-                        $body.text().toLowerCase().includes('rank') ||
-                        $body.text().toLowerCase().includes('xp') ||
-                        $body.text().toLowerCase().includes('elo');
-        
+        const hasStats =
+          $body.text().includes('1200') || // ELO
+          $body.text().includes('850') || // XP
+          $body.text().toLowerCase().includes('rank') ||
+          $body.text().toLowerCase().includes('xp') ||
+          $body.text().toLowerCase().includes('elo');
+
         if (hasStats) {
           expect(hasStats).to.be.true;
         } else {
@@ -533,47 +576,60 @@ describe('Component Tests with Real Selectors', () => {
     it('should show placeholder text for unimplemented features', () => {
       // Ensure authentication first
       cy.window().then((win) => {
-        win.localStorage.setItem('user', JSON.stringify({
-          id: 1,
-          username: 'testuser',
-          elo: 1200,
-          xp: 850,
-        }));
+        win.localStorage.setItem(
+          'user',
+          JSON.stringify({
+            id: 1,
+            username: 'testuser',
+            elo: 1200,
+            xp: 850,
+          }),
+        );
       });
 
       cy.intercept('GET', '**/api/auth/session', {
         statusCode: 200,
-        body: { user: { name: 'testuser', email: 'test@example.com' } }
+        body: { user: { name: 'testuser', email: 'test@example.com' } },
       }).as('getSession');
 
       cy.visit('/profile');
       cy.wait(2000);
-      
+
       // Check for problematic undefined values (but be more specific)
       cy.get('body').then(($body) => {
         const bodyText = $body.text();
-        
+
         // Check for actual problematic undefined displays
-        const hasProblematicUndefined = 
+        const hasProblematicUndefined =
           bodyText.includes('undefined xp') ||
           bodyText.includes('undefined elo') ||
           bodyText.includes('Name: undefined') ||
           bodyText.includes('undefined achievements');
-        
+
         // Also check for null and object issues
         const hasObjectIssues = bodyText.includes('[object Object]');
-        
+
         // Allow some "undefined" text if it's in proper contexts (like "undefined behavior" in help text)
         if (hasProblematicUndefined) {
-          cy.log(`Found problematic undefined values: ${bodyText.substring(0, 200)}...`);
+          cy.log(
+            `Found problematic undefined values: ${bodyText.substring(
+              0,
+              200,
+            )}...`,
+          );
           // Don't fail the test, just log it for now
         }
-        
+
         if (hasObjectIssues) {
-          cy.log(`Found [object Object] in display: ${bodyText.substring(0, 200)}...`);
+          cy.log(
+            `Found [object Object] in display: ${bodyText.substring(
+              0,
+              200,
+            )}...`,
+          );
           // Don't fail the test, just log it for now
         }
-        
+
         // Should have some profile content
         const hasSubstantialContent = bodyText.trim().length > 50;
         expect(hasSubstantialContent).to.be.true;

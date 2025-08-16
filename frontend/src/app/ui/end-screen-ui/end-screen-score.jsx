@@ -3,11 +3,11 @@ import { useEffect, useState } from 'react';
 
 export default function Score() {
   const [percentage, setPercentage] = useState(0);
-  
+
   useEffect(() => {
     try {
       const questionsData = localStorage.getItem('questionsObj');
-      
+
       // Add null safety checks
       if (!questionsData) {
         console.log('No questions data found in localStorage');
@@ -16,7 +16,7 @@ export default function Score() {
       }
 
       const questions = JSON.parse(questionsData);
-      
+
       // Ensure questions is an array
       if (!Array.isArray(questions)) {
         console.log('Questions data is not an array:', questions);
@@ -30,12 +30,12 @@ export default function Score() {
       );
 
       // Calculate percentage
-      const calculatedPercentage = questions.length > 0 
-        ? (correctAnswers.length / questions.length) * 100 
-        : 0;
-        
+      const calculatedPercentage =
+        questions.length > 0
+          ? (correctAnswers.length / questions.length) * 100
+          : 0;
+
       setPercentage(calculatedPercentage);
-      
     } catch (error) {
       console.error('Error parsing questions from localStorage:', error);
       setPercentage(0);

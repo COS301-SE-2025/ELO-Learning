@@ -2,7 +2,6 @@
 
 'use client';
 
-
 import MathInputTemplate from '@/app/ui/math-keyboard/math-input-template';
 import ProgressBar from '@/app/ui/progress-bar';
 import { showAchievementNotificationsWhenReady } from '@/utils/achievementNotifications';
@@ -22,7 +21,7 @@ import OpenResponseTemplate from '@/app/ui/question-types/open-response';
 import TrueFalseTemplate from '@/app/ui/question-types/true-false';
 
 export default function UniversalQuestionWrapper({ questions, numLives = 5 }) {
-  const { data: session } = useSession(); 
+  const { data: session } = useSession();
   const allQuestions = questions || [];
   const totalSteps = allQuestions.length;
 
@@ -141,13 +140,13 @@ export default function UniversalQuestionWrapper({ questions, numLives = 5 }) {
       // Get authenticated user ID with fallback to session
       const user = JSON.parse(localStorage.getItem('user') || '{}');
       let userId = user.id;
-      
+
       // Fallback to NextAuth session if no localStorage user
       if (!userId && session?.user?.id) {
         userId = session.user.id;
         console.log('🔍 Using userId from NextAuth session:', userId);
       }
-      
+
       if (!userId) {
         console.error('❌ No authenticated user found');
         setFeedbackMessage('Please log in to continue');
@@ -171,10 +170,21 @@ export default function UniversalQuestionWrapper({ questions, numLives = 5 }) {
         setFeedbackMessage(result.data.message);
         setShowFeedback(true);
 
-        console.log('🔍 REAL GAME DEBUG - Checking for achievements in result.data...');
-        console.log('🔍 REAL GAME DEBUG - unlockedAchievements exists:', !!result.data.unlockedAchievements);
-        console.log('🔍 REAL GAME DEBUG - unlockedAchievements type:', typeof result.data.unlockedAchievements);
-        console.log('🔍 REAL GAME DEBUG - unlockedAchievements value:', result.data.unlockedAchievements);
+        console.log(
+          '🔍 REAL GAME DEBUG - Checking for achievements in result.data...',
+        );
+        console.log(
+          '🔍 REAL GAME DEBUG - unlockedAchievements exists:',
+          !!result.data.unlockedAchievements,
+        );
+        console.log(
+          '🔍 REAL GAME DEBUG - unlockedAchievements type:',
+          typeof result.data.unlockedAchievements,
+        );
+        console.log(
+          '🔍 REAL GAME DEBUG - unlockedAchievements value:',
+          result.data.unlockedAchievements,
+        );
 
         // 🎉 Handle achievement unlocks!
         if (
@@ -188,17 +198,23 @@ export default function UniversalQuestionWrapper({ questions, numLives = 5 }) {
 
           // Try the main achievement system first, then fallback
           Promise.race([
-            showAchievementNotificationsWhenReady(result.data.unlockedAchievements),
-            new Promise((_, reject) => setTimeout(() => reject(new Error('Timeout')), 3000))
+            showAchievementNotificationsWhenReady(
+              result.data.unlockedAchievements,
+            ),
+            new Promise((_, reject) =>
+              setTimeout(() => reject(new Error('Timeout')), 3000),
+            ),
           ])
-          .then(() => {
-            console.log('✅ Achievement notifications displayed successfully');
-          })
-          .catch(error => {
-            console.error('❌ Main achievement system failed:', error);
-            console.log('🔄 Using fallback notification system...');
-            showAchievementWithFallback(result.data.unlockedAchievements);
-          });
+            .then(() => {
+              console.log(
+                '✅ Achievement notifications displayed successfully',
+              );
+            })
+            .catch((error) => {
+              console.error('❌ Main achievement system failed:', error);
+              console.log('🔄 Using fallback notification system...');
+              showAchievementWithFallback(result.data.unlockedAchievements);
+            });
         } else {
           console.log('🤷 No achievements unlocked this time');
         }

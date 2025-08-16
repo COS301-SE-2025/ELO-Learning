@@ -4,7 +4,10 @@ export default function MultipleChoiceTemplate({
   setIsSelectedAnswerCorrect,
 }) {
   return (
-    <div className="flex flex-col gap-10 md:gap-2 items-center" data-cy="answer-options-container">
+    <div
+      className="flex flex-col gap-10 md:gap-2 items-center"
+      data-cy="answer-options-container"
+    >
       {answers &&
         answers.map((answer, idx) => (
           <button

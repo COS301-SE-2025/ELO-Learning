@@ -45,7 +45,7 @@ function EndScreen() {
           console.error('User cookie not found and no session available');
           console.log('Available cookies:', document.cookie);
           console.log('Session data:', session);
-          
+
           // Don't redirect immediately, just show error
           setIsLoading(false);
           return;

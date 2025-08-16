@@ -88,17 +88,20 @@ describe('User Profile & Gamification', () => {
               id: 1,
               name: 'First Steps',
               description: 'Answer your first question correctly',
-              AchievementCategories: { name: 'Gameplay' }
-            }
-          }
-        ]
+              AchievementCategories: { name: 'Gameplay' },
+            },
+          },
+        ],
       }).as('fetchUserAchievements');
 
       cy.visit('/profile');
-      
+
       // Wait for page to load instead of specific API call (consistent with main tests)
       cy.get('body').then(($body) => {
-        if ($body.text().includes('Please sign in') || $body.text().includes('Loading')) {
+        if (
+          $body.text().includes('Please sign in') ||
+          $body.text().includes('Loading')
+        ) {
           // Authentication test scenario - check sign in prompt
           cy.contains('sign in', { matchCase: false }).should('be.visible');
         } else {
@@ -110,13 +113,16 @@ describe('User Profile & Gamification', () => {
 
     it('should show achievement progress indicators', () => {
       cy.visit('/profile');
-      
+
       // Wait for page load
       cy.wait(3000);
-      
+
       // Check if we can see any profile content (consistent with main tests)
       cy.get('body').then(($body) => {
-        if ($body.text().includes('Please sign in') || $body.text().includes('Loading')) {
+        if (
+          $body.text().includes('Please sign in') ||
+          $body.text().includes('Loading')
+        ) {
           // Authentication test scenario
           cy.contains('sign in', { matchCase: false }).should('be.visible');
         } else {

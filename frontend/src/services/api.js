@@ -68,17 +68,35 @@ function getMockData(url) {
       },
     ];
   }
-    if (url.includes('/achievement-categories')) {
-    return { categories: [
-      { id: 1, name: 'Progress', description: 'General progress achievements' },
-      { id: 2, name: 'Speed', description: 'Speed-based achievements' }
-    ]};
+  if (url.includes('/achievement-categories')) {
+    return {
+      categories: [
+        {
+          id: 1,
+          name: 'Progress',
+          description: 'General progress achievements',
+        },
+        { id: 2, name: 'Speed', description: 'Speed-based achievements' },
+      ],
+    };
   }
   if (url.includes('/achievements')) {
-    return { achievements: [
-      { id: 1, name: 'First Question', description: 'Answer your first question', category_id: 1 },
-      { id: 2, name: 'Speed Demon', description: 'Answer 5 questions in under 10 seconds each', category_id: 2 }
-    ]};
+    return {
+      achievements: [
+        {
+          id: 1,
+          name: 'First Question',
+          description: 'Answer your first question',
+          category_id: 1,
+        },
+        {
+          id: 2,
+          name: 'Speed Demon',
+          description: 'Answer 5 questions in under 10 seconds each',
+          category_id: 2,
+        },
+      ],
+    };
   }
   if (url.includes('/users/') && url.includes('/achievements')) {
     return { achievements: [] };
@@ -90,11 +108,11 @@ function getMockData(url) {
         isCorrect: true,
         message: 'Test submission successful',
         xpAwarded: 10,
-        unlockedAchievements: []
-      }
+        unlockedAchievements: [],
+      },
     };
   }
-  
+
   return null;
 }
 
@@ -154,7 +172,7 @@ axiosInstance.interceptors.request.use(async (config) => {
         console.log('🔐 Token retrieved from NextAuth session:', {
           tokenPreview: token.substring(0, 20) + '...',
           userId: session.user?.id,
-          source: 'nextauth-session'
+          source: 'nextauth-session',
         });
       } else {
         // 🔄 FALLBACK: Check localStorage (for existing tokens)
@@ -187,9 +205,11 @@ axiosInstance.interceptors.request.use(async (config) => {
             if (sessionData) {
               const user = JSON.parse(sessionData);
               console.log('🔐 User data found:', user);
-              
+
               // If we have user data but no token, this suggests the token was cleared
-              console.warn('🔐 User data exists but no token found - token may have been cleared');
+              console.warn(
+                '🔐 User data exists but no token found - token may have been cleared',
+              );
             }
           } catch (e) {
             console.warn('🔐 Could not parse user data:', e);
@@ -205,10 +225,12 @@ axiosInstance.interceptors.request.use(async (config) => {
       console.log('🔐 Token attached to request');
     } else {
       console.warn('🔐 No token found for request to:', config.url);
-      
+
       // 🔧 SPECIAL HANDLING: For achievement requests from new users
       if (config.url?.includes('/achievements')) {
-        console.log('🎯 Achievement request without token - this is normal for new users');
+        console.log(
+          '🎯 Achievement request without token - this is normal for new users',
+        );
       }
     }
   }
@@ -560,16 +582,16 @@ export async function submitMultiplayerResult(data) {
 }
 
 export async function sendPasswordResetEmail(email) {
-  const res = await axiosInstance.post('/forgot-password', { email })
-  return res.data
+  const res = await axiosInstance.post('/forgot-password', { email });
+  return res.data;
 }
 
 export async function resetPassword(token, newPassword) {
   const res = await axiosInstance.post('/reset-password', {
     token,
     newPassword,
-  })
-  return res.data
+  });
+  return res.data;
 }
 
 export async function changePassword(userId, currentPassword, newPassword) {
@@ -582,8 +604,8 @@ export async function changePassword(userId, currentPassword, newPassword) {
 }
 
 export async function verifyResetToken(token) {
-  const res = await axiosInstance.get(`/verify-reset-token/${token}`)
-  return res.data
+  const res = await axiosInstance.get(`/verify-reset-token/${token}`);
+  return res.data;
 }
 
 export async function updateUserAvatar(userId, avatar) {
@@ -594,12 +616,15 @@ export async function updateUserAvatar(userId, avatar) {
 export async function fetchAchievementCategories() {
   try {
     if (process.env.NODE_ENV !== 'test') {
-      const cached = performanceCache.get('achievement_categories', CACHE_DURATIONS.LONG);
+      const cached = performanceCache.get(
+        'achievement_categories',
+        CACHE_DURATIONS.LONG,
+      );
       if (cached) return cached;
     }
 
     const res = await axiosInstance.get('/achievement-categories');
-    
+
     if (process.env.NODE_ENV !== 'test') {
       performanceCache.set('achievement_categories', res.data.categories);
     }
@@ -609,8 +634,12 @@ export async function fetchAchievementCategories() {
     console.error('❌ Failed to fetch achievement categories:', error);
     if (process.env.NODE_ENV === 'test') {
       return [
-        { id: 1, name: 'Progress', description: 'General progress achievements' },
-        { id: 2, name: 'Speed', description: 'Speed-based achievements' }
+        {
+          id: 1,
+          name: 'Progress',
+          description: 'General progress achievements',
+        },
+        { id: 2, name: 'Speed', description: 'Speed-based achievements' },
       ];
     }
     throw error;
@@ -619,8 +648,10 @@ export async function fetchAchievementCategories() {
 
 export async function fetchAllAchievements(categoryId = null) {
   try {
-    const cacheKey = categoryId ? `achievements_${categoryId}` : 'all_achievements';
-    
+    const cacheKey = categoryId
+      ? `achievements_${categoryId}`
+      : 'all_achievements';
+
     if (process.env.NODE_ENV !== 'test') {
       const cached = performanceCache.get(cacheKey, CACHE_DURATIONS.LONG);
       if (cached) return cached;
@@ -628,7 +659,7 @@ export async function fetchAllAchievements(categoryId = null) {
 
     const params = categoryId ? { category_id: categoryId } : {};
     const res = await axiosInstance.get('/achievements', { params });
-    
+
     if (process.env.NODE_ENV !== 'test') {
       performanceCache.set(cacheKey, res.data.achievements);
     }
@@ -638,8 +669,18 @@ export async function fetchAllAchievements(categoryId = null) {
     console.error('❌ Failed to fetch achievements:', error);
     if (process.env.NODE_ENV === 'test') {
       return [
-        { id: 1, name: 'First Question', description: 'Answer your first question', category_id: 1 },
-        { id: 2, name: 'Speed Demon', description: 'Answer 5 questions in under 10 seconds each', category_id: 2 }
+        {
+          id: 1,
+          name: 'First Question',
+          description: 'Answer your first question',
+          category_id: 1,
+        },
+        {
+          id: 2,
+          name: 'Speed Demon',
+          description: 'Answer 5 questions in under 10 seconds each',
+          category_id: 2,
+        },
       ];
     }
     throw error;
@@ -649,7 +690,7 @@ export async function fetchAllAchievements(categoryId = null) {
 export async function fetchUserAchievements(userId) {
   try {
     console.log('🎯 Fetching achievements for user:', userId);
-    
+
     // 🔧 PRE-CHECK: Verify we have some authentication
     const hasToken = !!(
       localStorage.getItem('token') ||
@@ -657,49 +698,54 @@ export async function fetchUserAchievements(userId) {
       localStorage.getItem('authToken') ||
       localStorage.getItem('backendToken')
     );
-    
+
     if (!hasToken) {
       console.log('🔐 No authentication token found');
       console.log('🎯 This is normal for newly registered users');
       console.log('🎯 Returning empty achievements array');
       return []; // ✅ Always return array
     }
-    
+
     const res = await axiosInstance.get(`/users/${userId}/achievements`);
     console.log('✅ Successfully fetched user achievements:', res.data);
-    
+
     // 🔧 ROBUST RESPONSE HANDLING: Always return an array
     let achievementsArray = [];
-    
+
     if (res.data) {
       if (Array.isArray(res.data)) {
         achievementsArray = res.data;
       } else if (Array.isArray(res.data.achievements)) {
         achievementsArray = res.data.achievements;
-      } else if (res.data.achievements === null || res.data.achievements === undefined) {
+      } else if (
+        res.data.achievements === null ||
+        res.data.achievements === undefined
+      ) {
         achievementsArray = [];
       } else {
         console.warn('🎯 Unexpected achievements data format:', res.data);
         achievementsArray = [];
       }
     }
-    
+
     console.log('✅ Returning achievements array:', achievementsArray);
     return achievementsArray;
   } catch (error) {
     console.error('❌ Failed to fetch user achievements:', error);
-    
+
     // Handle specific error cases
     if (error.response?.status === 401) {
       console.warn('🔐 Authentication failed (401) - normal for new users');
       return []; // ✅ Always return array
     }
-    
+
     if (error.response?.status === 404) {
-      console.warn('🎯 User achievements not found (404) - normal for new users');
+      console.warn(
+        '🎯 User achievements not found (404) - normal for new users',
+      );
       return []; // ✅ Always return array
     }
-    
+
     // For other errors, still return empty array to prevent UI breaking
     console.warn('🎯 Returning empty achievements to prevent UI errors');
     return []; // ✅ Always return array
@@ -708,46 +754,78 @@ export async function fetchUserAchievements(userId) {
 
 export async function fetchUserAchievementsWithStatus(userId) {
   try {
-    console.log('🔍 Fetching user achievements with status for userId:', userId);
+    console.log(
+      '🔍 Fetching user achievements with status for userId:',
+      userId,
+    );
     const res = await axiosInstance.get(`/users/${userId}/achievements/all`);
     console.log('✅ Successfully fetched user achievements');
     return res.data.achievements;
   } catch (error) {
     console.error('❌ Error fetching user achievements:', error);
-    
+
     // Check if it's a network error
-    if (error.code === 'ERR_NETWORK' || error.message.includes('Network Error')) {
+    if (
+      error.code === 'ERR_NETWORK' ||
+      error.message.includes('Network Error')
+    ) {
       console.error('🌐 Network error - backend may be down');
-      throw new Error('Unable to connect to achievement server. Please check if the backend is running.');
+      throw new Error(
+        'Unable to connect to achievement server. Please check if the backend is running.',
+      );
     }
-    
+
     // Check if it's a response error
     if (error.response) {
-      console.error('📊 Response error:', error.response.status, error.response.data);
-      throw new Error(`Server error: ${error.response.status} - ${error.response.data?.error || 'Unknown error'}`);
+      console.error(
+        '📊 Response error:',
+        error.response.status,
+        error.response.data,
+      );
+      throw new Error(
+        `Server error: ${error.response.status} - ${
+          error.response.data?.error || 'Unknown error'
+        }`,
+      );
     }
-    
+
     // Test mode fallback
     if (process.env.NODE_ENV === 'test') {
       return [
-        { id: 1, name: 'First Question', unlocked: true, current_progress: 1, progress_percentage: 100 },
-        { id: 2, name: 'Speed Demon', unlocked: false, current_progress: 2, progress_percentage: 40 }
+        {
+          id: 1,
+          name: 'First Question',
+          unlocked: true,
+          current_progress: 1,
+          progress_percentage: 100,
+        },
+        {
+          id: 2,
+          name: 'Speed Demon',
+          unlocked: false,
+          current_progress: 2,
+          progress_percentage: 40,
+        },
       ];
     }
-    
+
     // Re-throw the original error
     throw error;
   }
 }
 
-export async function updateAchievementProgress(userId, achievementId, increment = 1) {
+export async function updateAchievementProgress(
+  userId,
+  achievementId,
+  increment = 1,
+) {
   try {
     const res = await axiosInstance.post(
       `/users/${userId}/achievements/progress`,
       {
         achievement_id: achievementId,
         increment_by: increment,
-      }
+      },
     );
     return res.data;
   } catch (error) {
@@ -755,7 +833,7 @@ export async function updateAchievementProgress(userId, achievementId, increment
     if (process.env.NODE_ENV === 'test') {
       return {
         progress: { current_value: increment },
-        achievement_unlocked: increment >= 10 // Mock unlock at 10
+        achievement_unlocked: increment >= 10, // Mock unlock at 10
       };
     }
     throw error;
@@ -770,7 +848,7 @@ export async function submitQuestionAnswer({
   isCorrect,
   timeSpent,
   gameMode,
-  questionType
+  questionType,
 }) {
   try {
     const res = await axiosInstance.post(`/question/${questionId}/submit`, {
@@ -778,9 +856,9 @@ export async function submitQuestionAnswer({
       studentAnswer: userAnswer,
       questionType,
       timeSpent,
-      gameMode
+      gameMode,
     });
-    
+
     return res.data;
   } catch (error) {
     console.error('❌ Failed to submit question answer:', error);
@@ -791,10 +869,16 @@ export async function submitQuestionAnswer({
           isCorrect: userAnswer === '4', // Mock correct answer
           message: 'Test submission successful',
           xpAwarded: isCorrect ? 10 : 0,
-          unlockedAchievements: isCorrect ? [
-            { id: 1, name: 'First Question', description: 'Answer your first question' }
-          ] : []
-        }
+          unlockedAchievements: isCorrect
+            ? [
+                {
+                  id: 1,
+                  name: 'First Question',
+                  description: 'Answer your first question',
+                },
+              ]
+            : [],
+        },
       };
     }
     throw error;

@@ -28,17 +28,26 @@ export default (io, socket) => {
     // 🎯 NEW: Track queue join for achievements
     if (mergedUserData?.id) {
       try {
-        console.log(`🎯 QUEUE ACHIEVEMENT: Checking queue achievements for user ${mergedUserData.id}`);
-        const { checkQueueAchievements } = await import('./achievementRoutes.js');
-        const queueAchievements = await checkQueueAchievements(mergedUserData.id);
-        
+        console.log(
+          `🎯 QUEUE ACHIEVEMENT: Checking queue achievements for user ${mergedUserData.id}`,
+        );
+        const { checkQueueAchievements } = await import(
+          './achievementRoutes.js'
+        );
+        const queueAchievements = await checkQueueAchievements(
+          mergedUserData.id,
+        );
+
         if (queueAchievements.length > 0) {
-          console.log(`🏆 Queue achievements unlocked:`, queueAchievements.map(a => a.name));
-          
+          console.log(
+            `🏆 Queue achievements unlocked:`,
+            queueAchievements.map((a) => a.name),
+          );
+
           // Emit queue achievements to the user
           socket.emit('achievementsUnlocked', {
             achievements: queueAchievements,
-            source: 'queue_join'
+            source: 'queue_join',
           });
         }
       } catch (error) {

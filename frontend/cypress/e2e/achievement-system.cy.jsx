@@ -29,7 +29,7 @@ describe('Achievement System E2E', () => {
             description: 'Answer your first question correctly',
             unlocked: true,
             progress: 1,
-            AchievementCategories: { name: 'Gameplay' }
+            AchievementCategories: { name: 'Gameplay' },
           },
           {
             id: 2,
@@ -37,10 +37,10 @@ describe('Achievement System E2E', () => {
             description: 'Answer 10 questions correctly',
             unlocked: false,
             progress: 7,
-            AchievementCategories: { name: 'Gameplay' }
-          }
-        ]
-      }
+            AchievementCategories: { name: 'Gameplay' },
+          },
+        ],
+      },
     }).as('getUserAchievements');
 
     // Also intercept the fetchUserAchievements service call
@@ -53,10 +53,10 @@ describe('Achievement System E2E', () => {
             id: 1,
             name: 'First Steps',
             description: 'Answer your first question correctly',
-            AchievementCategories: { name: 'Gameplay' }
-          }
-        }
-      ]
+            AchievementCategories: { name: 'Gameplay' },
+          },
+        },
+      ],
     }).as('fetchUserAchievements');
 
     cy.intercept('POST', '/api/achievements/progress', {
@@ -69,23 +69,25 @@ describe('Achievement System E2E', () => {
             id: 3,
             name: 'Quick Learner',
             description: 'Answer questions rapidly',
-            AchievementCategories: { name: 'Speed' }
-          }
-        ]
-      }
+            AchievementCategories: { name: 'Speed' },
+          },
+        ],
+      },
     }).as('updateAchievementProgress');
 
     // Update the question submission intercept to match actual endpoints
     cy.intercept('POST', '**/question/*/submit', (req) => {
       // Simulate achievement unlock on correct answer
-      const achievements = req.body.isCorrect ? [
-        {
-          id: 4,
-          name: 'Problem Solver',
-          description: 'Solve mathematical problems',
-          AchievementCategories: { name: 'Problem Solving' }
-        }
-      ] : [];
+      const achievements = req.body.isCorrect
+        ? [
+            {
+              id: 4,
+              name: 'Problem Solver',
+              description: 'Solve mathematical problems',
+              AchievementCategories: { name: 'Problem Solving' },
+            },
+          ]
+        : [];
 
       return {
         statusCode: 200,
@@ -93,14 +95,17 @@ describe('Achievement System E2E', () => {
           success: true,
           isCorrect: req.body.isCorrect || false,
           xpAwarded: req.body.isCorrect ? 10 : 0,
-          achievements
-        }
+          achievements,
+        },
       };
     }).as('submitQuestion');
 
     // Handle uncaught exceptions from Next.js
     Cypress.on('uncaught:exception', (err) => {
-      if (err.message.includes('NEXT_REDIRECT') || err.message.includes('NotFoundError')) {
+      if (
+        err.message.includes('NEXT_REDIRECT') ||
+        err.message.includes('NotFoundError')
+      ) {
         return false;
       }
     });
@@ -114,16 +119,21 @@ describe('Achievement System E2E', () => {
           resolve();
         } else {
           const checkReady = () => {
-            if (win.showAchievement && typeof win.showAchievement === 'function') {
+            if (
+              win.showAchievement &&
+              typeof win.showAchievement === 'function'
+            ) {
               resolve();
             } else {
               setTimeout(checkReady, 100);
             }
           };
-          
+
           // Listen for the ready event
-          win.addEventListener('achievementSystemReady', resolve, { once: true });
-          
+          win.addEventListener('achievementSystemReady', resolve, {
+            once: true,
+          });
+
           // Also poll in case we missed the event
           checkReady();
         }
@@ -135,47 +145,49 @@ describe('Achievement System E2E', () => {
     it('displays achievement notification on question success', () => {
       // Visit a page with the achievement system
       cy.visit('/dashboard');
-      
+
       // Wait for achievement system to be ready
       waitForAchievementSystem();
-      
+
       // Simulate achieving something that triggers a notification
       cy.window().then((win) => {
         const testAchievement = {
           id: 1,
           name: 'E2E Test Achievement',
           description: 'Successfully completed E2E test scenario',
-          AchievementCategories: { name: 'Testing' }
+          AchievementCategories: { name: 'Testing' },
         };
-        
+
         win.showAchievement(testAchievement);
       });
 
       // Verify notification appears
       cy.contains('🎉 Achievement Unlocked!').should('be.visible');
       cy.contains('E2E Test Achievement').should('be.visible');
-      cy.contains('Successfully completed E2E test scenario').should('be.visible');
+      cy.contains('Successfully completed E2E test scenario').should(
+        'be.visible',
+      );
       cy.contains('Testing').should('be.visible');
     });
 
     it('displays multiple achievements in sequence', () => {
       cy.visit('/dashboard');
-      
+
       waitForAchievementSystem();
-      
+
       const achievements = [
         {
           id: 1,
           name: 'First Achievement',
           description: 'First in sequence',
-          AchievementCategories: { name: 'Sequence' }
+          AchievementCategories: { name: 'Sequence' },
         },
         {
           id: 2,
           name: 'Second Achievement',
           description: 'Second in sequence',
-          AchievementCategories: { name: 'Sequence' }
-        }
+          AchievementCategories: { name: 'Sequence' },
+        },
       ];
 
       cy.window().then((win) => {
@@ -184,66 +196,68 @@ describe('Achievement System E2E', () => {
 
       // First achievement should appear immediately
       cy.contains('First Achievement').should('be.visible');
-      
+
       // Second achievement should appear after delay
       cy.contains('Second Achievement', { timeout: 3000 }).should('be.visible');
     });
 
     it('auto-dismisses notifications after timeout', () => {
       cy.visit('/dashboard');
-      
+
       waitForAchievementSystem();
-      
+
       cy.window().then((win) => {
         const tempAchievement = {
           id: 999,
           name: 'Temporary Achievement',
           description: 'Should disappear automatically',
-          AchievementCategories: { name: 'Temporary' }
+          AchievementCategories: { name: 'Temporary' },
         };
-        
+
         win.showAchievement(tempAchievement);
       });
 
       // Should appear first
       cy.contains('Temporary Achievement').should('be.visible');
-      
+
       // Should disappear after auto-dismiss timeout
-      cy.contains('Temporary Achievement', { timeout: 6000 }).should('not.exist');
+      cy.contains('Temporary Achievement', { timeout: 6000 }).should(
+        'not.exist',
+      );
     });
   });
 
   describe('Practice Mode Achievement Integration', () => {
     it('triggers achievements during practice session', () => {
       cy.visit('/question-templates/multiple-choice');
-      
+
       // Wait for question to load
       cy.get('[data-cy="question"]', { timeout: 10000 }).should('be.visible');
-      
+
       // Answer question correctly
       cy.get('[data-cy="answer-option"]').first().click();
       cy.get('[data-cy="submit-answer"]').click();
-      
+
       // Just wait for any submission to complete (not specific API)
       cy.wait(2000);
-      
+
       // Check if the question progressed (meaning submission worked)
       cy.get('[data-cy="question"]').should('be.visible');
     });
 
     it('accumulates progress toward achievements', () => {
       cy.visit('/question-templates/multiple-choice');
-      
+
       // Answer multiple questions to build progress
       for (let i = 0; i < 3; i++) {
         cy.get('[data-cy="question"]', { timeout: 10000 }).should('be.visible');
         cy.get('[data-cy="answer-option"]').first().click();
         cy.get('[data-cy="submit-answer"]').click();
-        
+
         // Wait a moment for the next question to load automatically
         cy.wait(1000);
       }
-      
+
       // Instead of checking for spy calls, verify that the questions were answered
       // This is more realistic since we can see the UI interaction worked
       cy.get('[data-cy="question"]').should('be.visible');
@@ -253,14 +267,14 @@ describe('Achievement System E2E', () => {
   describe('Achievement Categories and Types', () => {
     it('displays different achievement categories correctly', () => {
       cy.visit('/dashboard');
-      
+
       waitForAchievementSystem();
-      
+
       const categories = [
         { name: 'Gameplay', color: '#B794F6' },
         { name: 'ELO Rating', color: '#63B3ED' },
         { name: 'Streak', color: '#68D391' },
-        { name: 'Problem Solving', color: '#A0AEC0' }
+        { name: 'Problem Solving', color: '#A0AEC0' },
       ];
 
       categories.forEach(({ name, color }, index) => {
@@ -269,15 +283,15 @@ describe('Achievement System E2E', () => {
             id: index + 100,
             name: `${name} Achievement`,
             description: `Achievement for ${name} category`,
-            AchievementCategories: { name }
+            AchievementCategories: { name },
           };
-          
+
           win.showAchievement(categoryAchievement);
         });
 
         // Verify category appears with correct styling
         cy.contains(name).should('be.visible');
-        
+
         // Clear notification for next test
         cy.wait(6000);
       });
@@ -285,18 +299,18 @@ describe('Achievement System E2E', () => {
 
     it('handles streak achievements during gameplay', () => {
       cy.visit('/question-templates/multiple-choice');
-      
+
       waitForAchievementSystem();
-      
+
       // Simulate streak scenario
       cy.window().then((win) => {
         const streakAchievement = {
           id: 201,
           name: 'On Fire',
           description: 'Answer 5 questions correctly in a row',
-          AchievementCategories: { name: 'Streak' }
+          AchievementCategories: { name: 'Streak' },
         };
-        
+
         win.showAchievement(streakAchievement);
       });
 
@@ -307,17 +321,17 @@ describe('Achievement System E2E', () => {
 
     it('handles ELO rating achievements', () => {
       cy.visit('/dashboard');
-      
+
       waitForAchievementSystem();
-      
+
       cy.window().then((win) => {
         const eloAchievement = {
           id: 202,
           name: 'Rising Star',
           description: 'Reach 1300 ELO rating',
-          AchievementCategories: { name: 'ELO Rating' }
+          AchievementCategories: { name: 'ELO Rating' },
         };
-        
+
         win.showAchievement(eloAchievement);
       });
 
@@ -330,10 +344,13 @@ describe('Achievement System E2E', () => {
   describe('User Profile Achievement Display', () => {
     it('displays user achievements in profile', () => {
       cy.visit('/profile');
-      
+
       // Wait for page to load and check if it's the sign-in prompt or actual profile
       cy.get('body').then(($body) => {
-        if ($body.text().includes('Please sign in') || $body.text().includes('Loading')) {
+        if (
+          $body.text().includes('Please sign in') ||
+          $body.text().includes('Loading')
+        ) {
           // If authentication failed, just check that we can still see some content
           cy.contains('sign in', { matchCase: false }).should('be.visible');
         } else {
@@ -345,13 +362,16 @@ describe('Achievement System E2E', () => {
 
     it('shows achievement progress indicators', () => {
       cy.visit('/profile');
-      
+
       // Wait for page to load
       cy.wait(3000);
-      
+
       // Check if we can see any profile content or sign-in message
       cy.get('body').then(($body) => {
-        if ($body.text().includes('Please sign in') || $body.text().includes('Loading')) {
+        if (
+          $body.text().includes('Please sign in') ||
+          $body.text().includes('Loading')
+        ) {
           // Authentication test scenario - check sign in prompt
           cy.contains('sign in', { matchCase: false }).should('be.visible');
         } else {
@@ -370,9 +390,9 @@ describe('Achievement System E2E', () => {
   describe('Real-time Achievement Notifications', () => {
     it('shows achievements immediately after earning', () => {
       cy.visit('/question-templates/multiple-choice');
-      
+
       waitForAchievementSystem();
-      
+
       // Simulate real-time achievement earning
       cy.window().then((win) => {
         // Simulate the exact flow that happens in real gameplay
@@ -381,9 +401,9 @@ describe('Achievement System E2E', () => {
             id: 301,
             name: 'Lightning Fast',
             description: 'Answer a question in under 5 seconds',
-            AchievementCategories: { name: 'Speed' }
+            AchievementCategories: { name: 'Speed' },
           };
-          
+
           win.showAchievement(realtimeAchievement);
         }, 1000);
       });
@@ -394,15 +414,15 @@ describe('Achievement System E2E', () => {
 
     it('handles rapid achievement unlocks without UI conflicts', () => {
       cy.visit('/dashboard');
-      
+
       waitForAchievementSystem();
-      
+
       cy.window().then((win) => {
         // Simulate rapid achievement unlocks
         const rapidAchievements = [
           { id: 401, name: 'Speed 1', description: 'First rapid achievement' },
           { id: 402, name: 'Speed 2', description: 'Second rapid achievement' },
-          { id: 403, name: 'Speed 3', description: 'Third rapid achievement' }
+          { id: 403, name: 'Speed 3', description: 'Third rapid achievement' },
         ];
 
         rapidAchievements.forEach((achievement, index) => {
@@ -422,16 +442,16 @@ describe('Achievement System E2E', () => {
   describe('Error Handling and Edge Cases', () => {
     it('handles malformed achievement data gracefully', () => {
       cy.visit('/dashboard');
-      
+
       waitForAchievementSystem();
-      
+
       cy.window().then((win) => {
         // Test with incomplete achievement data
         const malformedAchievement = {
-          name: 'Incomplete Achievement'
+          name: 'Incomplete Achievement',
           // Missing other required fields
         };
-        
+
         // Should not crash the application
         expect(() => win.showAchievement(malformedAchievement)).to.not.throw();
       });
@@ -440,29 +460,29 @@ describe('Achievement System E2E', () => {
     it('handles network failures during achievement calls', () => {
       // Override to return network error
       cy.intercept('POST', '/api/achievements/progress', {
-        forceNetworkError: true
+        forceNetworkError: true,
       }).as('achievementNetworkError');
 
       cy.visit('/question-templates/multiple-choice');
-      
+
       // Try to trigger achievement progress
       cy.get('[data-cy="question"]', { timeout: 10000 }).should('be.visible');
       cy.get('[data-cy="answer-option"]').first().click();
       cy.get('[data-cy="submit-answer"]').click();
-      
+
       // Application should continue working despite network error
       cy.get('body').should('exist'); // Basic check that app didn't crash
     });
 
     it('handles achievement system unavailable scenario', () => {
       cy.visit('/dashboard');
-      
+
       // Remove achievement functions to simulate system unavailable
       cy.window().then((win) => {
         delete win.showAchievement;
         delete win.showMultipleAchievements;
       });
-      
+
       // Application should continue working
       cy.get('body').should('exist');
     });
@@ -471,9 +491,9 @@ describe('Achievement System E2E', () => {
   describe('Performance and Load Testing', () => {
     it('handles many simultaneous achievements', () => {
       cy.visit('/dashboard');
-      
+
       waitForAchievementSystem();
-      
+
       // Test that the achievement system can handle multiple calls without crashing
       cy.window().then((win) => {
         // Show a single test achievement first
@@ -481,49 +501,49 @@ describe('Achievement System E2E', () => {
           id: 500,
           name: 'Performance Test',
           description: 'Testing achievement system performance',
-          AchievementCategories: { name: 'Performance' }
+          AchievementCategories: { name: 'Performance' },
         };
-        
+
         win.showAchievement(testAchievement);
-        
+
         // Verify it was added to the achievement system
         cy.wait(500);
-        
+
         // Now test multiple achievements (but don't require all to be visible simultaneously)
         const moreAchievements = [
           { id: 501, name: 'Test 1', description: 'First test' },
-          { id: 502, name: 'Test 2', description: 'Second test' }
+          { id: 502, name: 'Test 2', description: 'Second test' },
         ];
-        
-        moreAchievements.forEach(achievement => {
+
+        moreAchievements.forEach((achievement) => {
           win.showAchievement(achievement);
         });
       });
 
       // Verify the system is still functional - achievement notification container exists
       cy.get('.achievement-notifications').should('exist');
-      
+
       // Page should remain responsive
       cy.get('body').should('be.visible');
-      
+
       // Verify we can still trigger new achievements (system didn't crash)
       cy.window().then((win) => {
         const finalTest = {
           id: 999,
           name: 'Final Test',
           description: 'System still works',
-          AchievementCategories: { name: 'Final' }
+          AchievementCategories: { name: 'Final' },
         };
-        
+
         expect(() => win.showAchievement(finalTest)).to.not.throw();
       });
     });
 
     it('maintains performance during extended session', () => {
       cy.visit('/dashboard');
-      
+
       waitForAchievementSystem();
-      
+
       // Simulate extended session with periodic achievements
       for (let i = 0; i < 5; i++) {
         cy.window().then((win) => {
@@ -531,15 +551,15 @@ describe('Achievement System E2E', () => {
             id: 600 + i,
             name: `Session Achievement ${i + 1}`,
             description: `Extended session test ${i + 1}`,
-            AchievementCategories: { name: 'Session' }
+            AchievementCategories: { name: 'Session' },
           };
-          
+
           win.showAchievement(sessionAchievement);
         });
-        
+
         cy.wait(1000); // Wait between achievements
       }
-      
+
       // System should still be responsive
       cy.get('body').should('be.visible');
     });
@@ -548,26 +568,26 @@ describe('Achievement System E2E', () => {
   describe('Cross-Page Achievement Persistence', () => {
     it('maintains achievement system across page navigation', () => {
       cy.visit('/dashboard');
-      
+
       waitForAchievementSystem();
-      
+
       // Navigate to different page
       cy.visit('/profile');
-      
+
       waitForAchievementSystem();
-      
+
       // Test functionality on new page
       cy.window().then((win) => {
         const navAchievement = {
           id: 701,
           name: 'Navigator',
           description: 'Successfully navigated between pages',
-          AchievementCategories: { name: 'Navigation' }
+          AchievementCategories: { name: 'Navigation' },
         };
-        
+
         win.showAchievement(navAchievement);
       });
-      
+
       cy.contains('Navigator').should('be.visible');
     });
   });

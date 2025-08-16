@@ -4,16 +4,22 @@
 const checkPerfectSession = async (questionsObj, userId) => {
   // Only check if we have exactly 10 questions (or whatever defines a "session")
   if (questionsObj.length >= 10) {
-    const correctAnswers = questionsObj.filter(q => q.isCorrect === true);
-    
+    const correctAnswers = questionsObj.filter((q) => q.isCorrect === true);
+
     if (correctAnswers.length === questionsObj.length) {
       console.log('🎯 Perfect session detected! All questions correct.');
-      
+
       // Trigger Perfect Session achievement
       try {
-        const { triggerAchievementProgress } = await import('../achievementRoutes.js');
-        const result = await triggerAchievementProgress(userId, 'Perfect Sessions', 1);
-        
+        const { triggerAchievementProgress } = await import(
+          '../achievementRoutes.js'
+        );
+        const result = await triggerAchievementProgress(
+          userId,
+          'Perfect Sessions',
+          1,
+        );
+
         if (result.unlockedAchievements.length > 0) {
           console.log('🏆 Perfect Session achievement unlocked!');
           // Show notification
@@ -31,12 +37,12 @@ const checkPerfectSession = async (questionsObj, userId) => {
 // Usage in questions-tracker.jsx handleQuizComplete():
 const handleQuizComplete = async () => {
   const questionsObj = JSON.parse(localStorage.getItem('questionsObj') || '[]');
-  
+
   // Check for perfect session achievement
   if (session?.user?.id) {
     await checkPerfectSession(questionsObj, session.user.id);
   }
-  
+
   // Then navigate to end screen
   setTimeout(() => {
     router.push(`/end-screen?mode=${mode}`);

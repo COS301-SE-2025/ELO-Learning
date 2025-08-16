@@ -19,7 +19,7 @@ export default function Page() {
   // ACHIEVEMENT CHECKING
   useAchievementChecker({
     checkOnMount: true,
-    debug: false // Set to true if you want to see achievement logs
+    debug: false, // Set to true if you want to see achievement logs
   });
 
   if (status === 'loading') return <div>Loading...</div>;
@@ -66,7 +66,7 @@ export default function Page() {
           </Link>
         </div>
       </div>
-      
+
       {/* Content section - scrollable */}
       <div className="flex-1 flex flex-col">
         <UsernameBlock
@@ -83,8 +83,10 @@ export default function Page() {
               : 'N/A'
           }
         />
-        
-        <div className="flex flex-col space-y-4 pb-24"> {/* Increased from pb-8 to pb-24 */}
+
+        <div className="flex flex-col space-y-4 pb-24">
+          {' '}
+          {/* Increased from pb-8 to pb-24 */}
           <UserInfo ranking="1st" xp={user.xp || 0} />
           <MatchStats />
           <Achievements />

@@ -9,12 +9,14 @@ export default function AchievementNotificationManager() {
 
   const showAchievement = useCallback((achievement) => {
     // Create truly unique IDs
-    const uniqueId = `achievement-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-    const newNotification = { 
-      ...achievement, 
+    const uniqueId = `achievement-${Date.now()}-${Math.random()
+      .toString(36)
+      .substr(2, 9)}`;
+    const newNotification = {
+      ...achievement,
       id: uniqueId, // Use the unique ID instead of achievement.id
       show: true,
-      timestamp: Date.now() // Add timestamp for additional uniqueness
+      timestamp: Date.now(), // Add timestamp for additional uniqueness
     };
 
     console.log('🏆 Adding notification with unique ID:', uniqueId);
@@ -35,8 +37,10 @@ export default function AchievementNotificationManager() {
         return;
       }
 
-      console.log(`🏆 Showing ${achievements.length} achievements with staggered timing`);
-      
+      console.log(
+        `🏆 Showing ${achievements.length} achievements with staggered timing`,
+      );
+
       // Show achievements one by one with staggered timing
       achievements.forEach((achievement, index) => {
         setTimeout(() => {
@@ -80,7 +84,11 @@ export default function AchievementNotificationManager() {
   }, []);
 
   return (
-    <div className="achievement-notifications" role="region" aria-label="Achievement notifications">
+    <div
+      className="achievement-notifications"
+      role="region"
+      aria-label="Achievement notifications"
+    >
       {notifications.map((notification, index) => (
         <div
           key={notification.id} // Now using truly unique IDs

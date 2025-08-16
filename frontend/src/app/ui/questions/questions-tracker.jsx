@@ -59,10 +59,10 @@ export default function QuestionsTracker({
       window.removeEventListener('lifeLost', handleMatchLifeLost);
     };
   }, []);
-  
+
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [questionStartTime, setQuestionStartTime] = useState(Date.now());
-  
+
   // 🏆 Achievement tracking
   const [questionAttempts, setQuestionAttempts] = useState({});
 
@@ -120,16 +120,18 @@ export default function QuestionsTracker({
   // 🏆 Achievement Functions
   const checkPerfectSessionAchievement = async () => {
     if (!session?.user?.id) return;
-    
+
     try {
-      const questionsObj = JSON.parse(localStorage.getItem('questionsObj') || '[]');
-      
+      const questionsObj = JSON.parse(
+        localStorage.getItem('questionsObj') || '[]',
+      );
+
       if (questionsObj.length < 10) return;
 
       // Check for 10 consecutive correct answers
       let consecutiveCorrect = 0;
       let maxConsecutive = 0;
-      
+
       for (const questionObj of questionsObj) {
         if (questionObj.isCorrect) {
           consecutiveCorrect++;
@@ -150,16 +152,22 @@ export default function QuestionsTracker({
             context: {
               consecutiveCorrect: maxConsecutive,
               totalQuestions: questionsObj.length,
-              mode: mode
-            }
+              mode: mode,
+            },
           }),
         });
 
         if (response.ok) {
           const result = await response.json();
           if (result.unlockedAchievements?.length > 0) {
-            showAchievementNotificationsWhenReady(result.unlockedAchievements)
-              .catch(error => console.error('Failed to show Perfect Session achievement:', error));
+            showAchievementNotificationsWhenReady(
+              result.unlockedAchievements,
+            ).catch((error) =>
+              console.error(
+                'Failed to show Perfect Session achievement:',
+                error,
+              ),
+            );
           }
         }
       }
@@ -172,38 +180,49 @@ export default function QuestionsTracker({
     if (!session?.user?.id) return;
 
     try {
-      const questionsObj = JSON.parse(localStorage.getItem('questionsObj') || '[]');
-      
+      const questionsObj = JSON.parse(
+        localStorage.getItem('questionsObj') || '[]',
+      );
+
       if (questionsObj.length < 5) return;
 
-      const correctAnswers = questionsObj.filter(q => q.isCorrect === true);
-      
+      const correctAnswers = questionsObj.filter((q) => q.isCorrect === true);
+
       if (correctAnswers.length < 5) return;
 
-      const totalTime = correctAnswers.reduce((sum, q) => sum + (q.timeElapsed || 30), 0);
+      const totalTime = correctAnswers.reduce(
+        (sum, q) => sum + (q.timeElapsed || 30),
+        0,
+      );
       const averageTime = totalTime / correctAnswers.length;
       const correctCount = correctAnswers.length;
 
       if (averageTime <= 15) {
-        const response = await fetch(`/api/achievements/users/${session.user.id}/achievements/speed-solver`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            averageTime,
-            correctCount,
-            sessionData: {
-              totalQuestions: questionsObj.length,
-              mode: mode,
-              correctAnswers: correctAnswers.length
-            }
-          }),
-        });
+        const response = await fetch(
+          `/api/achievements/users/${session.user.id}/achievements/speed-solver`,
+          {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              averageTime,
+              correctCount,
+              sessionData: {
+                totalQuestions: questionsObj.length,
+                mode: mode,
+                correctAnswers: correctAnswers.length,
+              },
+            }),
+          },
+        );
 
         if (response.ok) {
           const result = await response.json();
           if (result.unlockedAchievements?.length > 0) {
-            showAchievementNotificationsWhenReady(result.unlockedAchievements)
-              .catch(error => console.error('Failed to show Speed Solver achievement:', error));
+            showAchievementNotificationsWhenReady(
+              result.unlockedAchievements,
+            ).catch((error) =>
+              console.error('Failed to show Speed Solver achievement:', error),
+            );
           }
         }
       }
@@ -212,21 +231,31 @@ export default function QuestionsTracker({
     }
   };
 
-  const checkNeverGiveUpAchievement = async (questionId, isCorrect, attemptNumber) => {
+  const checkNeverGiveUpAchievement = async (
+    questionId,
+    isCorrect,
+    attemptNumber,
+  ) => {
     if (!session?.user?.id) return;
 
     try {
-      const response = await fetch(`/api/achievements/users/${session.user.id}/achievements/never-give-up`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ questionId, isCorrect, attemptNumber }),
-      });
+      const response = await fetch(
+        `/api/achievements/users/${session.user.id}/achievements/never-give-up`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ questionId, isCorrect, attemptNumber }),
+        },
+      );
 
       if (response.ok) {
         const data = await response.json();
         if (data.unlockedAchievements?.length > 0) {
-          showAchievementNotificationsWhenReady(data.unlockedAchievements)
-            .catch(error => console.error('Failed to show Never Give Up achievement:', error));
+          showAchievementNotificationsWhenReady(
+            data.unlockedAchievements,
+          ).catch((error) =>
+            console.error('Failed to show Never Give Up achievement:', error),
+          );
         }
       }
     } catch (error) {
@@ -280,7 +309,11 @@ export default function QuestionsTracker({
       correctAnswerObj = currAnswers.find((ans) => ans.isCorrect === true);
     }
 
-    const correctAnswerText = correctAnswerObj?.answer_text || correctAnswerObj?.answerText || matchedAnswer || 'No correct answer found';
+    const correctAnswerText =
+      correctAnswerObj?.answer_text ||
+      correctAnswerObj?.answerText ||
+      matchedAnswer ||
+      'No correct answer found';
 
     console.log('💾 Storing question with validation:', {
       studentAnswer: answer,
@@ -325,8 +358,11 @@ export default function QuestionsTracker({
 
     try {
       // Get fresh validation result before handling lives
-      const correctAnswerObj = currAnswers.find((ans) => ans.isCorrect === true);
-      const correctAnswerText = correctAnswerObj?.answer_text || correctAnswerObj;
+      const correctAnswerObj = currAnswers.find(
+        (ans) => ans.isCorrect === true,
+      );
+      const correctAnswerText =
+        correctAnswerObj?.answer_text || correctAnswerObj;
 
       const freshValidationResult = await validateAnswerEnhanced(
         answer,
@@ -346,10 +382,10 @@ export default function QuestionsTracker({
       if (questionId && session?.user?.id) {
         const currentAttempts = questionAttempts[questionId] || 0;
         const newAttemptCount = currentAttempts + 1;
-        
-        setQuestionAttempts(prev => ({
+
+        setQuestionAttempts((prev) => ({
           ...prev,
-          [questionId]: newAttemptCount
+          [questionId]: newAttemptCount,
         }));
 
         // Check Never Give Up achievement if correct after multiple attempts
@@ -365,9 +401,9 @@ export default function QuestionsTracker({
           questionId: currQuestion?.Q_id || currQuestion?.id,
           isCorrect: freshValidationResult,
           timeSpent: Math.round((Date.now() - questionStartTime) / 1000),
-          gameMode: mode
+          gameMode: mode,
         });
-        
+
         submitQuestionAnswer({
           userId: session.user.id,
           questionId: currQuestion?.Q_id || currQuestion?.id,
@@ -376,25 +412,35 @@ export default function QuestionsTracker({
           timeSpent: Math.round((Date.now() - questionStartTime) / 1000),
           gameMode: mode || 'practice',
           questionType: currQuestion?.type,
-        }).then(result => {
-          console.log('🎯 API RESPONSE:', result);
-          
-          // Handle achievement unlocks from API response
-          if (result.success && result.data.unlockedAchievements?.length > 0) {
-            console.log('🏆 ACHIEVEMENTS UNLOCKED:', result.data.unlockedAchievements);
-            
-            // Use the proper notification system
-            showAchievementNotificationsWhenReady(result.data.unlockedAchievements)
-              .then(() => console.log('✅ Notifications shown successfully'))
-              .catch(error => {
-                console.error('❌ Failed to show achievements:', error);
-              });
-          } else {
-            console.log('🤷 No achievements unlocked this time');
-          }
-        }).catch(error => {
-          console.error('API submission failed (non-critical):', error);
-        });
+        })
+          .then((result) => {
+            console.log('🎯 API RESPONSE:', result);
+
+            // Handle achievement unlocks from API response
+            if (
+              result.success &&
+              result.data.unlockedAchievements?.length > 0
+            ) {
+              console.log(
+                '🏆 ACHIEVEMENTS UNLOCKED:',
+                result.data.unlockedAchievements,
+              );
+
+              // Use the proper notification system
+              showAchievementNotificationsWhenReady(
+                result.data.unlockedAchievements,
+              )
+                .then(() => console.log('✅ Notifications shown successfully'))
+                .catch((error) => {
+                  console.error('❌ Failed to show achievements:', error);
+                });
+            } else {
+              console.log('🤷 No achievements unlocked this time');
+            }
+          })
+          .catch((error) => {
+            console.error('API submission failed (non-critical):', error);
+          });
       }
 
       await setLocalStorage();
@@ -420,13 +466,12 @@ export default function QuestionsTracker({
       const nextQuestion = allQuestions[currentStep] || null;
       setCurrQuestion(nextQuestion);
       setCurrAnswers(nextQuestion?.answers || []);
-
     } catch (error) {
       console.error('Error in submitAnswer:', error);
       // Fallback to original flow if anything fails
       await setLocalStorage();
       const gameOver = handleLives(false);
-      
+
       if (!gameOver) {
         setCurrentStep((prev) => prev + 1);
         setIsDisabled(true);
@@ -452,7 +497,7 @@ export default function QuestionsTracker({
     // Check achievements before calling original callback
     await checkPerfectSessionAchievement();
     await checkSpeedSolverAchievement();
-    
+
     // Call the original submitCallback
     if (submitCallback && typeof submitCallback === 'function') {
       submitCallback();

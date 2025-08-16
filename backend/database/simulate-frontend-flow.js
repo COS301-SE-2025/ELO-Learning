@@ -7,51 +7,70 @@ async function simulateFrontendAchievementFlow() {
   console.log('🎮 Simulating Frontend Achievement Flow...\n');
 
   // Get a test user and question
-  const { data: testUser } = await supabase
-    .from('Users')
-    .select('id')
-    .limit(1);
-  
+  const { data: testUser } = await supabase.from('Users').select('id').limit(1);
+
   const { data: testQuestion } = await supabase
     .from('Questions')
     .select('Q_id, type, topic')
     .limit(1);
 
-  if (!testUser || !testQuestion || testUser.length === 0 || testQuestion.length === 0) {
+  if (
+    !testUser ||
+    !testQuestion ||
+    testUser.length === 0 ||
+    testQuestion.length === 0
+  ) {
     console.log('❌ No test user or question found');
     return;
   }
 
   const userId = testUser[0].id;
   const questionId = testQuestion[0].Q_id;
-  
-  console.log('🎭 Test Setup:', { userId, questionId, questionType: testQuestion[0].type });
+
+  console.log('🎭 Test Setup:', {
+    userId,
+    questionId,
+    questionType: testQuestion[0].type,
+  });
 
   // Test 1: Submit a question answer (this should trigger achievements)
   console.log('\n📝 Test 1: Question Submission with Achievement Triggers');
   try {
-    const response = await fetch(`${API_BASE_URL}/question/${questionId}/submit`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        studentAnswer: '42', // Dummy answer
-        userId: userId,
-        questionType: testQuestion[0].type,
-        timeSpent: 5,
-        gameMode: 'practice'
-      })
-    });
+    const response = await fetch(
+      `${API_BASE_URL}/question/${questionId}/submit`,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          studentAnswer: '42', // Dummy answer
+          userId: userId,
+          questionType: testQuestion[0].type,
+          timeSpent: 5,
+          gameMode: 'practice',
+        }),
+      },
+    );
 
     if (response.ok) {
       const data = await response.json();
       console.log('✅ Question submission successful');
       console.log('🎯 Is Correct:', data.data.isCorrect);
-      console.log('🏆 Unlocked Achievements:', data.data.unlockedAchievements?.length || 0);
-      
-      if (data.data.unlockedAchievements && data.data.unlockedAchievements.length > 0) {
+      console.log(
+        '🏆 Unlocked Achievements:',
+        data.data.unlockedAchievements?.length || 0,
+      );
+
+      if (
+        data.data.unlockedAchievements &&
+        data.data.unlockedAchievements.length > 0
+      ) {
         console.log('🎉 Achievement Details:');
         data.data.unlockedAchievements.forEach((ach, index) => {
-          console.log(`  ${index + 1}. ${ach.name || ach.achievement_name} - ${ach.description}`);
+          console.log(
+            `  ${index + 1}. ${ach.name || ach.achievement_name} - ${
+              ach.description
+            }`,
+          );
         });
       }
     } else {
@@ -65,21 +84,28 @@ async function simulateFrontendAchievementFlow() {
   // Test 2: Perfect Session Achievement
   console.log('\n🎯 Test 2: Perfect Session Achievement');
   try {
-    const response = await fetch(`${API_BASE_URL}/users/${userId}/achievements/perfect-session`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        consecutiveCorrect: 10,
-        totalQuestions: 15,
-        mode: 'practice'
-      })
-    });
+    const response = await fetch(
+      `${API_BASE_URL}/users/${userId}/achievements/perfect-session`,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          consecutiveCorrect: 10,
+          totalQuestions: 15,
+          mode: 'practice',
+        }),
+      },
+    );
 
     if (response.ok) {
       const data = await response.json();
       console.log('✅ Perfect Session endpoint works');
       console.log('📄 Message:', data.message);
-      console.log('🏆 Unlocked:', data.unlockedAchievements?.length || 0, 'achievements');
+      console.log(
+        '🏆 Unlocked:',
+        data.unlockedAchievements?.length || 0,
+        'achievements',
+      );
     } else {
       const errorData = await response.json();
       console.log('❌ Perfect Session failed:', response.status, errorData);
@@ -91,24 +117,31 @@ async function simulateFrontendAchievementFlow() {
   // Test 3: Speed Solver Achievement
   console.log('\n⚡ Test 3: Speed Solver Achievement');
   try {
-    const response = await fetch(`${API_BASE_URL}/users/${userId}/achievements/speed-solver`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        averageTime: 8,
-        correctCount: 5,
-        sessionData: {
-          totalQuestions: 10,
-          mode: 'practice'
-        }
-      })
-    });
+    const response = await fetch(
+      `${API_BASE_URL}/users/${userId}/achievements/speed-solver`,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          averageTime: 8,
+          correctCount: 5,
+          sessionData: {
+            totalQuestions: 10,
+            mode: 'practice',
+          },
+        }),
+      },
+    );
 
     if (response.ok) {
       const data = await response.json();
       console.log('✅ Speed Solver endpoint works');
       console.log('📄 Message:', data.message);
-      console.log('🏆 Unlocked:', data.unlockedAchievements?.length || 0, 'achievements');
+      console.log(
+        '🏆 Unlocked:',
+        data.unlockedAchievements?.length || 0,
+        'achievements',
+      );
     } else {
       const errorData = await response.json();
       console.log('❌ Speed Solver failed:', response.status, errorData);
@@ -120,21 +153,28 @@ async function simulateFrontendAchievementFlow() {
   // Test 4: Never Give Up Achievement
   console.log('\n💪 Test 4: Never Give Up Achievement');
   try {
-    const response = await fetch(`${API_BASE_URL}/users/${userId}/achievements/never-give-up`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        questionId: questionId,
-        isCorrect: true,
-        attemptNumber: 5
-      })
-    });
+    const response = await fetch(
+      `${API_BASE_URL}/users/${userId}/achievements/never-give-up`,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          questionId: questionId,
+          isCorrect: true,
+          attemptNumber: 5,
+        }),
+      },
+    );
 
     if (response.ok) {
       const data = await response.json();
       console.log('✅ Never Give Up endpoint works');
       console.log('📄 Message:', data.message);
-      console.log('🏆 Unlocked:', data.unlockedAchievements?.length || 0, 'achievements');
+      console.log(
+        '🏆 Unlocked:',
+        data.unlockedAchievements?.length || 0,
+        'achievements',
+      );
     } else {
       const errorData = await response.json();
       console.log('❌ Never Give Up failed:', response.status, errorData);
@@ -147,30 +187,42 @@ async function simulateFrontendAchievementFlow() {
   console.log('\n🌐 Test 5: Frontend API Route');
   try {
     // This simulates your frontend calling /api/achievements/trigger
-    const frontendAPIResponse = await fetch('http://localhost:3001/api/achievements/trigger', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        userId: userId,
-        achievementType: 'Perfect Session',
-        context: {
-          consecutiveCorrect: 10,
-          totalQuestions: 15,
-          mode: 'practice'
-        }
-      })
-    });
+    const frontendAPIResponse = await fetch(
+      'http://localhost:3001/api/achievements/trigger',
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          userId: userId,
+          achievementType: 'Perfect Session',
+          context: {
+            consecutiveCorrect: 10,
+            totalQuestions: 15,
+            mode: 'practice',
+          },
+        }),
+      },
+    );
 
     if (frontendAPIResponse.ok) {
       const data = await frontendAPIResponse.json();
       console.log('✅ Frontend API route works');
       console.log('📄 Message:', data.message);
-      console.log('🏆 Unlocked:', data.unlockedAchievements?.length || 0, 'achievements');
+      console.log(
+        '🏆 Unlocked:',
+        data.unlockedAchievements?.length || 0,
+        'achievements',
+      );
     } else {
-      console.log('❌ Frontend API route failed (expected if frontend not running):', frontendAPIResponse.status);
+      console.log(
+        '❌ Frontend API route failed (expected if frontend not running):',
+        frontendAPIResponse.status,
+      );
     }
   } catch (error) {
-    console.log('❌ Frontend API route not accessible (expected if frontend not running)');
+    console.log(
+      '❌ Frontend API route not accessible (expected if frontend not running)',
+    );
   }
 
   // Test 6: Check what achievements the user actually has
@@ -178,22 +230,32 @@ async function simulateFrontendAchievementFlow() {
   try {
     const { data: userAchievements, error } = await supabase
       .from('UserAchievements')
-      .select(`
+      .select(
+        `
         unlocked_at,
         Achievements (
           id, name, description, condition_type, condition_value
         )
-      `)
+      `,
+      )
       .eq('user_id', userId)
       .order('unlocked_at', { ascending: false })
       .limit(10);
 
     if (!error) {
-      console.log('✅ User has', userAchievements?.length || 0, 'total achievements');
+      console.log(
+        '✅ User has',
+        userAchievements?.length || 0,
+        'total achievements',
+      );
       if (userAchievements && userAchievements.length > 0) {
         console.log('🏆 Recent achievements:');
         userAchievements.slice(0, 3).forEach((ua, index) => {
-          console.log(`  ${index + 1}. ${ua.Achievements.name} - unlocked at ${ua.unlocked_at}`);
+          console.log(
+            `  ${index + 1}. ${ua.Achievements.name} - unlocked at ${
+              ua.unlocked_at
+            }`,
+          );
         });
       }
     } else {
@@ -206,7 +268,9 @@ async function simulateFrontendAchievementFlow() {
   console.log('\n🎯 Frontend Flow Simulation Complete!');
   console.log('\n📋 Summary:');
   console.log('1. Question submission should trigger basic achievements');
-  console.log('2. Perfect Session, Speed Solver, Never Give Up endpoints available');
+  console.log(
+    '2. Perfect Session, Speed Solver, Never Give Up endpoints available',
+  );
   console.log('3. Frontend API routes proxy to backend');
   console.log('4. Check browser console and network tab for frontend issues');
 }

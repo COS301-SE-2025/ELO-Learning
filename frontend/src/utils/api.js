@@ -10,7 +10,7 @@ async function getAuthToken() {
   if (typeof window === 'undefined') {
     return null; // Return null on server side
   }
-  
+
   let token = null;
 
   try {
@@ -47,9 +47,9 @@ async function getAuthToken() {
 export async function fetchUserAchievements(userId) {
   try {
     console.log('🎯 Fetching achievements for user:', userId);
-    
+
     const token = await getAuthToken(); // Make this async call
-    
+
     if (!token) {
       console.log('🔐 No authentication token found');
       console.log('🎯 This is normal for newly registered users');
@@ -59,13 +59,16 @@ export async function fetchUserAchievements(userId) {
 
     console.log('✅ Found authentication token, fetching achievements...');
 
-    const response = await fetch(`${API_BASE_URL}/users/${userId}/achievements`, {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}`,
+    const response = await fetch(
+      `${API_BASE_URL}/users/${userId}/achievements`,
+      {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
       },
-    });
+    );
 
     if (!response.ok) {
       if (response.status === 401) {
@@ -76,14 +79,17 @@ export async function fetchUserAchievements(userId) {
     }
 
     const data = await response.json();
-    console.log('✅ Successfully fetched achievements:', data.total || 0, 'achievements');
-    
+    console.log(
+      '✅ Successfully fetched achievements:',
+      data.total || 0,
+      'achievements',
+    );
+
     return {
       achievements: data.achievements || [],
       total: data.total || 0,
-      message: data.message
+      message: data.message,
     };
-
   } catch (error) {
     console.error('❌ Error fetching user achievements:', error);
     return { achievements: [], total: 0 };
@@ -205,7 +211,7 @@ export async function submitQuestionAnswer({
       return {
         success: false,
         error: 'Question ID is required',
-        details: 'Cannot submit answer without a valid question ID'
+        details: 'Cannot submit answer without a valid question ID',
       };
     }
 
@@ -224,7 +230,7 @@ export async function submitQuestionAnswer({
       questionId,
       userId,
       gameMode,
-      questionType
+      questionType,
     });
 
     //  Use the endpoint that includes achievement checking
@@ -252,7 +258,10 @@ export async function submitQuestionAnswer({
       return {
         success: false,
         error: 'Server returned non-JSON response',
-        details: `Expected JSON but got ${contentType}. Response: ${text.substring(0, 100)}...`
+        details: `Expected JSON but got ${contentType}. Response: ${text.substring(
+          0,
+          100,
+        )}...`,
       };
     }
 
@@ -268,7 +277,7 @@ export async function submitQuestionAnswer({
 
     // Return the full data structure that includes achievements
     console.log('🎯 Full API response data:', data);
-    
+
     return {
       success: true,
       data: {
@@ -277,7 +286,7 @@ export async function submitQuestionAnswer({
         xpAwarded: data.xpAwarded,
         updatedUser: data.updatedUser,
         unlockedAchievements: data.unlockedAchievements || [],
-        ...data // Include any other response data
+        ...data, // Include any other response data
       },
     };
   } catch (error) {

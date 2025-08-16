@@ -65,7 +65,7 @@ export default function RootLayout({ children }) {
           <Providers>
             <PWALifecycle />
             {children}
-            
+
             {/* Achievement notifications - appears above all content */}
             <AchievementNotificationManager />
           </Providers>

@@ -13,7 +13,7 @@ export default function Page() {
   // ACHIEVEMENT CHECKING
   useAchievementChecker({
     checkOnMount: true,
-    debug: false // Set to true if you want to see achievement logs
+    debug: false, // Set to true if you want to see achievement logs
   });
 
   // Memoize the sorting function to avoid recreating it on every render
@@ -25,34 +25,51 @@ export default function Page() {
   }, []);
 
   // Function to update session with fresh leaderboard data
-  const updateSessionWithLeaderboardData = useCallback(async (leaderboardUsers) => {
-    if (!session?.user?.id || !leaderboardUsers.length) return;
+  const updateSessionWithLeaderboardData = useCallback(
+    async (leaderboardUsers) => {
+      if (!session?.user?.id || !leaderboardUsers.length) return;
 
-    // Find current user in leaderboard data
-    const currentUserInLeaderboard = leaderboardUsers.find(
-      user => user.id === session.user.id
-    );
+      // Find current user in leaderboard data
+      const currentUserInLeaderboard = leaderboardUsers.find(
+        (user) => user.id === session.user.id,
+      );
 
-    if (currentUserInLeaderboard && currentUserInLeaderboard.xp !== session.user.xp) {
-      console.log('🔄 Updating session with fresh leaderboard data...');
-      console.log('Session XP:', session.user.xp, '→ Leaderboard XP:', currentUserInLeaderboard.xp);
-      
-      try {
-        await updateSession({
-          ...session,
-          user: {
-            ...session.user,
-            xp: currentUserInLeaderboard.xp,
-            currentLevel: currentUserInLeaderboard.currentLevel || session.user.currentLevel,
-            username: currentUserInLeaderboard.username || session.user.username,
-          },
-        });
-        console.log('✅ Session updated with fresh XP:', currentUserInLeaderboard.xp);
-      } catch (error) {
-        console.error('❌ Failed to update session:', error);
+      if (
+        currentUserInLeaderboard &&
+        currentUserInLeaderboard.xp !== session.user.xp
+      ) {
+        console.log('🔄 Updating session with fresh leaderboard data...');
+        console.log(
+          'Session XP:',
+          session.user.xp,
+          '→ Leaderboard XP:',
+          currentUserInLeaderboard.xp,
+        );
+
+        try {
+          await updateSession({
+            ...session,
+            user: {
+              ...session.user,
+              xp: currentUserInLeaderboard.xp,
+              currentLevel:
+                currentUserInLeaderboard.currentLevel ||
+                session.user.currentLevel,
+              username:
+                currentUserInLeaderboard.username || session.user.username,
+            },
+          });
+          console.log(
+            '✅ Session updated with fresh XP:',
+            currentUserInLeaderboard.xp,
+          );
+        } catch (error) {
+          console.error('❌ Failed to update session:', error);
+        }
       }
-    }
-  }, [session, updateSession]);
+    },
+    [session, updateSession],
+  );
 
   useEffect(() => {
     let mounted = true;
@@ -71,7 +88,7 @@ export default function Page() {
             const sortedData = sortUsers([...data]); // Clone array before sorting
             setUsers(sortedData);
             setLoading(false);
-            
+
             // Update session with fresh leaderboard data
             await updateSessionWithLeaderboardData(data);
           }

@@ -16,7 +16,7 @@ export default function Page() {
   // ACHIEVEMENT CHECKING
   useAchievementChecker({
     checkOnMount: true,
-    debug: false // Set to true if you want to see achievement logs
+    debug: false, // Set to true if you want to see achievement logs
   });
 
   // Update connection color based on socket status

@@ -1,5 +1,5 @@
 'use client';
-import { fetchUserAchievementsWithStatus } from '@/services/api'; 
+import { fetchUserAchievementsWithStatus } from '@/services/api';
 import { useSession } from 'next-auth/react';
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
@@ -20,10 +20,10 @@ export default function Achievements() {
       fetchUserAchievementsWithStatus(session.user.id)
         .then((data) => {
           console.log('✅ Raw achievements data received:', data, typeof data);
-          
+
           //  ROBUST DATA HANDLING: Always ensure we have an array
           let achievementsArray = [];
-          
+
           if (Array.isArray(data)) {
             achievementsArray = data;
           } else if (data && Array.isArray(data.achievements)) {
@@ -37,7 +37,7 @@ export default function Achievements() {
             console.warn('⚠️ No valid achievements data received:', data);
             achievementsArray = [];
           }
-          
+
           console.log('✅ Setting achievements array:', achievementsArray);
           setAchievements(achievementsArray);
           setLoading(false);
@@ -68,7 +68,9 @@ export default function Achievements() {
   console.log('✅ Safe achievements for rendering:', safeAchievements);
 
   //  FILTER FOR UNLOCKED ACHIEVEMENTS ONLY
-  const unlockedAchievements = safeAchievements.filter(achievement => achievement.unlocked === true);
+  const unlockedAchievements = safeAchievements.filter(
+    (achievement) => achievement.unlocked === true,
+  );
   console.log('🏆 Unlocked achievements only:', unlockedAchievements);
 
   const displayAchievements = unlockedAchievements.slice(0, 3); // ✅ Show only unlocked
@@ -77,7 +79,10 @@ export default function Achievements() {
   return (
     <div className="m-4" data-cy="achievements-section">
       <div className="flex items-center justify-between mb-3">
-        <h3 className="text-xl uppercase font-bold" data-cy="achievements-title">
+        <h3
+          className="text-xl uppercase font-bold"
+          data-cy="achievements-title"
+        >
           Achievements
         </h3>
         <Link
@@ -89,9 +94,12 @@ export default function Achievements() {
           VIEW ALL
         </Link>
       </div>
-      
+
       {unlockedAchievements.length === 0 ? (
-        <div className="bg-gray-800 rounded-lg p-4 border border-gray-700" data-cy="no-achievements">
+        <div
+          className="bg-gray-800 rounded-lg p-4 border border-gray-700"
+          data-cy="no-achievements"
+        >
           <div className="flex justify-center items-center py-8">
             <div className="text-center">
               <div className="w-16 h-16 mx-auto mb-2 opacity-50">
@@ -112,8 +120,14 @@ export default function Achievements() {
           </div>
         </div>
       ) : (
-        <div className="bg-gray-800 rounded-lg p-4 border border-gray-700" data-cy="achievements-list">
-          <div className="flex gap-4 justify-center" data-cy="achievement-progress">
+        <div
+          className="bg-gray-800 rounded-lg p-4 border border-gray-700"
+          data-cy="achievements-list"
+        >
+          <div
+            className="flex gap-4 justify-center"
+            data-cy="achievement-progress"
+          >
             {displayAchievements.map((achievement, index) => (
               <AchievementBadge
                 key={achievement.id || index} // ✅ Use achievement.id instead of achievement_id
@@ -124,7 +138,11 @@ export default function Achievements() {
               />
             ))}
             {hasMoreAchievements && (
-              <Link href="/achievements" className="flex items-center" data-cy="more-achievements">
+              <Link
+                href="/achievements"
+                className="flex items-center"
+                data-cy="more-achievements"
+              >
                 <div className="w-16 h-20 flex items-center justify-center border-2 border-dashed border-gray-500 rounded-lg">
                   <span className="text-gray-400 text-xs">
                     +{unlockedAchievements.length - 3}

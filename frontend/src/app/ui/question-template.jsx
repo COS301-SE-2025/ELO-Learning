@@ -76,7 +76,10 @@ export default function QuestionTemplate({ question, calculation }) {
 
   return (
     <div data-cy="question-container">
-      <div className="text-center text-xl font-bold my-15 mx-10 md:m-10" data-cy="question">
+      <div
+        className="text-center text-xl font-bold my-15 mx-10 md:m-10"
+        data-cy="question"
+      >
         {formattedQuestion.map((part, index) => {
           if (part.type === 'math') {
             return <InlineMath key={index} math={part.content} />;

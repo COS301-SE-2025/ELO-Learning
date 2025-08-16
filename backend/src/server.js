@@ -7,16 +7,16 @@ import { createServer } from 'http';
 import { Server } from 'socket.io';
 
 //Change this import to ES6
-import achievementRoutes from './achievementRoutes.js'
-import answerRoutes from './answerRoutes.js'
-import multiPlayerRoutes from './multiPlayerRoute.js'
-import oauthRoutes from './oauthRoutes.js'
-import practiceRoutes from './practiceRoutes.js'
-import questionRoutes from './questionRoutes.js'
-import singlePlayerRoutes from './singlePlayerRoutes.js'
-import socketsHandlers from './sockets.js'
-import userRoutes from './userRoutes.js'
-import validateRoutes from './validateRoutes.js'
+import achievementRoutes from './achievementRoutes.js';
+import answerRoutes from './answerRoutes.js';
+import multiPlayerRoutes from './multiPlayerRoute.js';
+import oauthRoutes from './oauthRoutes.js';
+import practiceRoutes from './practiceRoutes.js';
+import questionRoutes from './questionRoutes.js';
+import singlePlayerRoutes from './singlePlayerRoutes.js';
+import socketsHandlers from './sockets.js';
+import userRoutes from './userRoutes.js';
+import validateRoutes from './validateRoutes.js';
 
 // Load environment variables
 dotenv.config();

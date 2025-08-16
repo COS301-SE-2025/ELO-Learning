@@ -11,7 +11,7 @@ export const mockAchievements = {
     description: 'Answer your first question correctly',
     condition_type: 'Questions Answered',
     condition_value: 1,
-    AchievementCategories: { name: 'Gameplay' }
+    AchievementCategories: { name: 'Gameplay' },
   },
 
   questioner: {
@@ -20,7 +20,7 @@ export const mockAchievements = {
     description: 'Answer 10 questions correctly',
     condition_type: 'Questions Answered',
     condition_value: 10,
-    AchievementCategories: { name: 'Gameplay' }
+    AchievementCategories: { name: 'Gameplay' },
   },
 
   scholar: {
@@ -29,7 +29,7 @@ export const mockAchievements = {
     description: 'Answer 100 questions correctly',
     condition_type: 'Questions Answered',
     condition_value: 100,
-    AchievementCategories: { name: 'Gameplay' }
+    AchievementCategories: { name: 'Gameplay' },
   },
 
   // Streak achievements
@@ -39,7 +39,7 @@ export const mockAchievements = {
     description: 'Get 5 questions right in a row',
     condition_type: 'Streak',
     condition_value: 5,
-    AchievementCategories: { name: 'Streak' }
+    AchievementCategories: { name: 'Streak' },
   },
 
   unstoppable: {
@@ -48,7 +48,7 @@ export const mockAchievements = {
     description: 'Get 10 questions right in a row',
     condition_type: 'Streak',
     condition_value: 10,
-    AchievementCategories: { name: 'Streak' }
+    AchievementCategories: { name: 'Streak' },
   },
 
   // ELO Rating achievements
@@ -58,7 +58,7 @@ export const mockAchievements = {
     description: 'Reach 1300 ELO rating',
     condition_type: 'ELO Rating',
     condition_value: 1300,
-    AchievementCategories: { name: 'ELO Rating' }
+    AchievementCategories: { name: 'ELO Rating' },
   },
 
   expert: {
@@ -67,7 +67,7 @@ export const mockAchievements = {
     description: 'Reach 1500 ELO rating',
     condition_type: 'ELO Rating',
     condition_value: 1500,
-    AchievementCategories: { name: 'ELO Rating' }
+    AchievementCategories: { name: 'ELO Rating' },
   },
 
   grandmaster: {
@@ -76,7 +76,7 @@ export const mockAchievements = {
     description: 'Reach 1800 ELO rating',
     condition_type: 'ELO Rating',
     condition_value: 1800,
-    AchievementCategories: { name: 'ELO Rating' }
+    AchievementCategories: { name: 'ELO Rating' },
   },
 
   // Problem Solving achievements
@@ -86,7 +86,7 @@ export const mockAchievements = {
     description: 'Solve complex mathematical problems',
     condition_type: 'Problem Solving',
     condition_value: 50,
-    AchievementCategories: { name: 'Problem Solving' }
+    AchievementCategories: { name: 'Problem Solving' },
   },
 
   mathWizard: {
@@ -95,7 +95,7 @@ export const mockAchievements = {
     description: 'Master advanced mathematical concepts',
     condition_type: 'Problem Solving',
     condition_value: 200,
-    AchievementCategories: { name: 'Problem Solving' }
+    AchievementCategories: { name: 'Problem Solving' },
   },
 
   // Practice achievements
@@ -105,7 +105,7 @@ export const mockAchievements = {
     description: 'Complete 5 practice sessions',
     condition_type: 'Practice Questions',
     condition_value: 5,
-    AchievementCategories: { name: 'Practice' }
+    AchievementCategories: { name: 'Practice' },
   },
 
   practiceVeteran: {
@@ -114,7 +114,7 @@ export const mockAchievements = {
     description: 'Complete 50 practice sessions',
     condition_type: 'Practice Questions',
     condition_value: 50,
-    AchievementCategories: { name: 'Practice' }
+    AchievementCategories: { name: 'Practice' },
   },
 
   // Badge Collection achievements
@@ -124,7 +124,7 @@ export const mockAchievements = {
     description: 'Unlock 5 different achievements',
     condition_type: 'Badges Collected',
     condition_value: 5,
-    AchievementCategories: { name: 'Badge Collection' }
+    AchievementCategories: { name: 'Badge Collection' },
   },
 
   achievementHunter: {
@@ -133,7 +133,7 @@ export const mockAchievements = {
     description: 'Unlock 15 different achievements',
     condition_type: 'Badges Collected',
     condition_value: 15,
-    AchievementCategories: { name: 'Badge Collection' }
+    AchievementCategories: { name: 'Badge Collection' },
   },
 
   // Speed achievements
@@ -143,7 +143,7 @@ export const mockAchievements = {
     description: 'Answer a question in under 10 seconds',
     condition_type: 'Speed',
     condition_value: 10,
-    AchievementCategories: { name: 'Speed' }
+    AchievementCategories: { name: 'Speed' },
   },
 
   lightningFast: {
@@ -152,29 +152,29 @@ export const mockAchievements = {
     description: 'Answer 10 questions under 5 seconds each',
     condition_type: 'Speed',
     condition_value: 5,
-    AchievementCategories: { name: 'Speed' }
-  }
-}
+    AchievementCategories: { name: 'Speed' },
+  },
+};
 
 export const mockUserAchievements = [
   {
     ...mockAchievements.firstSteps,
     unlocked: true,
     unlocked_at: '2024-01-15T10:30:00Z',
-    progress: 1
+    progress: 1,
   },
   {
     ...mockAchievements.questioner,
     unlocked: false,
-    progress: 7
+    progress: 7,
   },
   {
     ...mockAchievements.onFire,
     unlocked: true,
     unlocked_at: '2024-01-16T14:20:00Z',
-    progress: 5
-  }
-]
+    progress: 5,
+  },
+];
 
 export const mockUsers = {
   testUser: {
@@ -183,7 +183,7 @@ export const mockUsers = {
     email: 'test@example.com',
     elo: 1250,
     xp: 850,
-    created_at: '2024-01-01T00:00:00Z'
+    created_at: '2024-01-01T00:00:00Z',
   },
 
   beginnerUser: {
@@ -192,7 +192,7 @@ export const mockUsers = {
     email: 'beginner@example.com',
     elo: 1000,
     xp: 100,
-    created_at: '2024-02-01T00:00:00Z'
+    created_at: '2024-02-01T00:00:00Z',
   },
 
   expertUser: {
@@ -201,9 +201,9 @@ export const mockUsers = {
     email: 'expert@example.com',
     elo: 1600,
     xp: 5000,
-    created_at: '2023-12-01T00:00:00Z'
-  }
-}
+    created_at: '2023-12-01T00:00:00Z',
+  },
+};
 
 export const mockQuestions = {
   basicMath: {
@@ -213,10 +213,10 @@ export const mockQuestions = {
       { answer_text: '4', isCorrect: true },
       { answer_text: '3', isCorrect: false },
       { answer_text: '5', isCorrect: false },
-      { answer_text: '6', isCorrect: false }
+      { answer_text: '6', isCorrect: false },
     ],
     difficulty: 'easy',
-    topic: 'arithmetic'
+    topic: 'arithmetic',
   },
 
   algebra: {
@@ -226,10 +226,10 @@ export const mockQuestions = {
       { answer_text: '4', isCorrect: true },
       { answer_text: '3', isCorrect: false },
       { answer_text: '5', isCorrect: false },
-      { answer_text: '6', isCorrect: false }
+      { answer_text: '6', isCorrect: false },
     ],
     difficulty: 'medium',
-    topic: 'algebra'
+    topic: 'algebra',
   },
 
   factoring: {
@@ -239,12 +239,12 @@ export const mockQuestions = {
       { answer_text: '(x+3)(x-3)', isCorrect: true },
       { answer_text: '(x-3)(x-3)', isCorrect: false },
       { answer_text: 'x(x-9)', isCorrect: false },
-      { answer_text: '(x+9)(x-1)', isCorrect: false }
+      { answer_text: '(x+9)(x-1)', isCorrect: false },
     ],
     difficulty: 'hard',
-    topic: 'algebra'
-  }
-}
+    topic: 'algebra',
+  },
+};
 
 export const mockGameSessions = {
   practiceSession: {
@@ -256,7 +256,7 @@ export const mockGameSessions = {
     score: 80,
     xpEarned: 40,
     timeSpent: 300, // 5 minutes
-    completed: true
+    completed: true,
   },
 
   competitiveSession: {
@@ -269,16 +269,16 @@ export const mockGameSessions = {
     xpEarned: 80,
     eloChange: 25,
     timeSpent: 600, // 10 minutes
-    completed: true
-  }
-}
+    completed: true,
+  },
+};
 
 // API Response templates
 export const mockApiResponses = {
   achievementProgress: {
     success: true,
     message: 'Achievement progress updated',
-    unlockedAchievements: [mockAchievements.firstSteps]
+    unlockedAchievements: [mockAchievements.firstSteps],
   },
 
   achievementProgressMultiple: {
@@ -286,13 +286,13 @@ export const mockApiResponses = {
     message: 'Achievement progress updated',
     unlockedAchievements: [
       mockAchievements.firstSteps,
-      mockAchievements.onFire
-    ]
+      mockAchievements.onFire,
+    ],
   },
 
   userAchievements: {
     success: true,
-    data: mockUserAchievements
+    data: mockUserAchievements,
   },
 
   questionSubmission: {
@@ -300,14 +300,14 @@ export const mockApiResponses = {
     isCorrect: true,
     xpAwarded: 10,
     eloChange: 5,
-    achievements: [mockAchievements.questioner]
+    achievements: [mockAchievements.questioner],
   },
 
   error: {
     success: false,
-    error: 'Internal server error'
-  }
-}
+    error: 'Internal server error',
+  },
+};
 
 // Helper functions for creating test data
 export const createMockAchievement = (overrides = {}) => ({
@@ -317,8 +317,8 @@ export const createMockAchievement = (overrides = {}) => ({
   condition_type: 'Questions Answered',
   condition_value: 10,
   AchievementCategories: { name: 'Gameplay' },
-  ...overrides
-})
+  ...overrides,
+});
 
 export const createMockUser = (overrides = {}) => ({
   id: Math.floor(Math.random() * 1000),
@@ -327,8 +327,8 @@ export const createMockUser = (overrides = {}) => ({
   elo: 1200,
   xp: 500,
   created_at: new Date().toISOString(),
-  ...overrides
-})
+  ...overrides,
+});
 
 export const createMockQuestion = (overrides = {}) => ({
   Q_id: Math.floor(Math.random() * 1000),
@@ -337,12 +337,12 @@ export const createMockQuestion = (overrides = {}) => ({
     { answer_text: '4', isCorrect: true },
     { answer_text: '3', isCorrect: false },
     { answer_text: '5', isCorrect: false },
-    { answer_text: '6', isCorrect: false }
+    { answer_text: '6', isCorrect: false },
   ],
   difficulty: 'easy',
   topic: 'arithmetic',
-  ...overrides
-})
+  ...overrides,
+});
 
 export const createMockGameSession = (overrides = {}) => ({
   id: Math.floor(Math.random() * 1000),
@@ -355,14 +355,16 @@ export const createMockGameSession = (overrides = {}) => ({
   timeSpent: 300,
   completed: true,
   created_at: new Date().toISOString(),
-  ...overrides
-})
+  ...overrides,
+});
 
 // Scenario builders for complex test cases
-export const buildAchievementUnlockScenario = (achievementType = 'Gameplay') => {
+export const buildAchievementUnlockScenario = (
+  achievementType = 'Gameplay',
+) => {
   const baseAchievement = createMockAchievement({
-    AchievementCategories: { name: achievementType }
-  })
+    AchievementCategories: { name: achievementType },
+  });
 
   return {
     achievement: baseAchievement,
@@ -370,40 +372,40 @@ export const buildAchievementUnlockScenario = (achievementType = 'Gameplay') => 
     triggerAction: 'answer_question',
     expectedNotification: {
       show: true,
-      achievement: baseAchievement
-    }
-  }
-}
+      achievement: baseAchievement,
+    },
+  };
+};
 
 export const buildMultipleAchievementScenario = (count = 3) => {
-  const achievements = Array.from({ length: count }, (_, i) => 
+  const achievements = Array.from({ length: count }, (_, i) =>
     createMockAchievement({
       id: i + 1,
       name: `Achievement ${i + 1}`,
-      description: `Description for achievement ${i + 1}`
-    })
-  )
+      description: `Description for achievement ${i + 1}`,
+    }),
+  );
 
   return {
     achievements,
     user: createMockUser(),
-    expectedNotifications: achievements.map(achievement => ({
+    expectedNotifications: achievements.map((achievement) => ({
       show: true,
-      achievement
-    }))
-  }
-}
+      achievement,
+    })),
+  };
+};
 
 export const buildProgressScenario = (currentProgress, targetValue) => {
   const achievement = createMockAchievement({
-    condition_value: targetValue
-  })
+    condition_value: targetValue,
+  });
 
   return {
     achievement,
     currentProgress,
     targetValue,
     isUnlocked: currentProgress >= targetValue,
-    progressPercentage: Math.min((currentProgress / targetValue) * 100, 100)
-  }
-}
+    progressPercentage: Math.min((currentProgress / targetValue) * 100, 100),
+  };
+};

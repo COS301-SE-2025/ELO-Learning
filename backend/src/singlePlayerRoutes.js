@@ -149,7 +149,9 @@ router.post('/singleplayer', async (req, res) => {
     let unlockedAchievements = [];
 
     try {
-      console.log(`🎯 ACHIEVEMENT DEBUG: Starting achievement check for user ${user_id}, isCorrect: ${isCorrect}`);
+      console.log(
+        `🎯 ACHIEVEMENT DEBUG: Starting achievement check for user ${user_id}, isCorrect: ${isCorrect}`,
+      );
 
       // Check question-based achievements (existing)
       console.log('🔍 Calling checkQuestionAchievements...');
@@ -157,7 +159,10 @@ router.post('/singleplayer', async (req, res) => {
         user_id,
         isCorrect,
       );
-      console.log('✅ checkQuestionAchievements completed:', questionAchievements);
+      console.log(
+        '✅ checkQuestionAchievements completed:',
+        questionAchievements,
+      );
       unlockedAchievements.push(...questionAchievements);
 
       // 🆕 Check ELO-based achievements (NEW!)
@@ -168,14 +173,25 @@ router.post('/singleplayer', async (req, res) => {
 
       // 🆕 Check fast solve achievements (NEW!)
       console.log('🔍 Calling checkFastSolveAchievements...');
-      const fastSolveAchievements = await checkFastSolveAchievements(user_id, timeSpent, isCorrect);
-      console.log('✅ checkFastSolveAchievements completed:', fastSolveAchievements);
+      const fastSolveAchievements = await checkFastSolveAchievements(
+        user_id,
+        timeSpent,
+        isCorrect,
+      );
+      console.log(
+        '✅ checkFastSolveAchievements completed:',
+        fastSolveAchievements,
+      );
       unlockedAchievements.push(...fastSolveAchievements);
 
       // 🆕 Check leaderboard position achievements (NEW!)
       console.log('🔍 Calling checkLeaderboardAchievements...');
-      const leaderboardAchievements = await checkLeaderboardAchievements(user_id);
-      console.log('✅ checkLeaderboardAchievements completed:', leaderboardAchievements);
+      const leaderboardAchievements =
+        await checkLeaderboardAchievements(user_id);
+      console.log(
+        '✅ checkLeaderboardAchievements completed:',
+        leaderboardAchievements,
+      );
       unlockedAchievements.push(...leaderboardAchievements);
 
       // NOTE: Single player mode should NOT trigger match achievements

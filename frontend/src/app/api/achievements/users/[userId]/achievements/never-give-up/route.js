@@ -10,24 +10,36 @@ export async function POST(request, { params }) {
 
     console.log('💪 Frontend API - Never Give Up request:', {
       userId,
-      body
+      body,
     });
 
     // Proxy the request to the backend
-    const response = await fetch(`${API_BASE_URL}/users/${userId}/achievements/never-give-up`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
+    const response = await fetch(
+      `${API_BASE_URL}/users/${userId}/achievements/never-give-up`,
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(body),
       },
-      body: JSON.stringify(body),
-    });
+    );
 
     if (!response.ok) {
-      const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
-      console.error('💪 Backend Never Give Up API error:', response.status, errorData);
+      const errorData = await response
+        .json()
+        .catch(() => ({ error: 'Unknown error' }));
+      console.error(
+        '💪 Backend Never Give Up API error:',
+        response.status,
+        errorData,
+      );
       return NextResponse.json(
-        { error: errorData.error || 'Failed to trigger Never Give Up achievement' },
-        { status: response.status }
+        {
+          error:
+            errorData.error || 'Failed to trigger Never Give Up achievement',
+        },
+        { status: response.status },
       );
     }
 
@@ -35,12 +47,11 @@ export async function POST(request, { params }) {
     console.log('💪 Never Give Up achievement result:', result);
 
     return NextResponse.json(result);
-
   } catch (error) {
     console.error('💪 Never Give Up achievement error:', error);
     return NextResponse.json(
       { error: 'Failed to process Never Give Up achievement' },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

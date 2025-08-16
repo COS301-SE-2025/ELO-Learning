@@ -12,7 +12,7 @@ export async function POST(request) {
       userId,
       gameMode,
       isCorrect,
-      questionId
+      questionId,
     });
 
     // Only proceed for practice mode correct answers
@@ -20,7 +20,7 @@ export async function POST(request) {
       return NextResponse.json({
         success: false,
         message: 'Manual practice trigger only for correct practice answers',
-        unlockedAchievements: []
+        unlockedAchievements: [],
       });
     }
 
@@ -35,18 +35,18 @@ export async function POST(request) {
           userId,
           achievementType: 'Questions Answered',
           increment: 1,
-          gameMode: 'practice'
+          gameMode: 'practice',
         }),
       });
 
       if (response.ok) {
         const result = await response.json();
         console.log('🎯 Manual practice achievement result:', result);
-        
+
         return NextResponse.json({
           success: true,
           message: 'Practice achievements triggered manually',
-          unlockedAchievements: result.unlockedAchievements || []
+          unlockedAchievements: result.unlockedAchievements || [],
         });
       } else {
         console.error('🎯 Backend manual trigger failed:', response.status);
@@ -64,20 +64,19 @@ export async function POST(request) {
       condition_value: 1,
       AchievementCategories: { name: 'Practice' },
       badge_icon_url: null,
-      unlocked_at: new Date().toISOString()
+      unlocked_at: new Date().toISOString(),
     };
 
     return NextResponse.json({
       success: true,
       message: 'Practice tracked (fallback mode)',
-      unlockedAchievements: [fallbackAchievement]
+      unlockedAchievements: [fallbackAchievement],
     });
-
   } catch (error) {
     console.error('🎯 Manual practice achievement error:', error);
     return NextResponse.json(
       { error: 'Failed to process manual practice achievement' },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

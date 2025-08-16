@@ -1,27 +1,27 @@
-import '@testing-library/jest-dom'
+import '@testing-library/jest-dom';
 
 // Polyfills for Node.js environment
-import { TextDecoder, TextEncoder } from 'util'
+import { TextDecoder, TextEncoder } from 'util';
 
 // Only set if not already defined
 if (typeof global.TextEncoder === 'undefined') {
-  global.TextEncoder = TextEncoder
+  global.TextEncoder = TextEncoder;
 }
 
 if (typeof global.TextDecoder === 'undefined') {
-  global.TextDecoder = TextDecoder
+  global.TextDecoder = TextDecoder;
 }
 
 // Add BroadcastChannel polyfill for MSW
 global.BroadcastChannel = class BroadcastChannel {
   constructor(name) {
-    this.name = name
+    this.name = name;
   }
   postMessage() {}
   close() {}
   addEventListener() {}
   removeEventListener() {}
-}
+};
 
 // Mock fetch for Node environment
 global.fetch = jest.fn(() =>
@@ -32,49 +32,49 @@ global.fetch = jest.fn(() =>
     text: () => Promise.resolve(''),
     blob: () => Promise.resolve(new Blob()),
     arrayBuffer: () => Promise.resolve(new ArrayBuffer(0)),
-  })
-)
+  }),
+);
 
 // Mock Request and Response for MSW
 global.Request = class MockRequest {
   constructor(url, options = {}) {
-    this.url = url
-    this.method = options.method || 'GET'
-    this.headers = new Map(Object.entries(options.headers || {}))
-    this.body = options.body
+    this.url = url;
+    this.method = options.method || 'GET';
+    this.headers = new Map(Object.entries(options.headers || {}));
+    this.body = options.body;
   }
-}
+};
 
 global.Response = class MockResponse {
   constructor(body, options = {}) {
-    this.body = body
-    this.status = options.status || 200
-    this.statusText = options.statusText || 'OK'
-    this.headers = new Map(Object.entries(options.headers || {}))
-    this.ok = this.status >= 200 && this.status < 300
+    this.body = body;
+    this.status = options.status || 200;
+    this.statusText = options.statusText || 'OK';
+    this.headers = new Map(Object.entries(options.headers || {}));
+    this.ok = this.status >= 200 && this.status < 300;
   }
-  
+
   json() {
-    return Promise.resolve(JSON.parse(this.body))
+    return Promise.resolve(JSON.parse(this.body));
   }
-  
+
   text() {
-    return Promise.resolve(this.body)
+    return Promise.resolve(this.body);
   }
-}
+};
 
 global.Headers = class MockHeaders extends Map {
   constructor(init) {
-    super()
+    super();
     if (init) {
       if (typeof init === 'object') {
         for (const [key, value] of Object.entries(init)) {
-          this.set(key, value)
+          this.set(key, value);
         }
       }
     }
   }
-}
+};
 
 // Mock Next.js router
 jest.mock('next/router', () => ({
@@ -95,9 +95,9 @@ jest.mock('next/router', () => ({
         off: jest.fn(),
         emit: jest.fn(),
       },
-    }
+    };
   },
-}))
+}));
 
 // Mock Next.js navigation
 jest.mock('next/navigation', () => ({
@@ -109,20 +109,20 @@ jest.mock('next/navigation', () => ({
       back: jest.fn(),
       forward: jest.fn(),
       refresh: jest.fn(),
-    }
+    };
   },
   useSearchParams() {
-    return new URLSearchParams()
+    return new URLSearchParams();
   },
   usePathname() {
-    return '/'
+    return '/';
   },
-}))
+}));
 
 // Mock window object and globals
 Object.defineProperty(window, 'matchMedia', {
   writable: true,
-  value: jest.fn().mockImplementation(query => ({
+  value: jest.fn().mockImplementation((query) => ({
     matches: false,
     media: query,
     onchange: null,
@@ -132,7 +132,7 @@ Object.defineProperty(window, 'matchMedia', {
     removeEventListener: jest.fn(),
     dispatchEvent: jest.fn(),
   })),
-})
+});
 
 // Mock window global methods for achievement system
 Object.defineProperty(global, 'window', {
@@ -149,10 +149,10 @@ Object.defineProperty(global, 'window', {
     },
   },
   writable: true,
-})
+});
 
 // Ensure window is available globally
-global.window = global.window
+global.window = global.window;
 
 // Mock localStorage
 const localStorageMock = {
@@ -160,8 +160,8 @@ const localStorageMock = {
   setItem: jest.fn(),
   removeItem: jest.fn(),
   clear: jest.fn(),
-}
-global.localStorage = localStorageMock
+};
+global.localStorage = localStorageMock;
 
 // Mock sessionStorage
 const sessionStorageMock = {
@@ -169,8 +169,8 @@ const sessionStorageMock = {
   setItem: jest.fn(),
   removeItem: jest.fn(),
   clear: jest.fn(),
-}
-global.sessionStorage = sessionStorageMock
+};
+global.sessionStorage = sessionStorageMock;
 
 // Mock IntersectionObserver
 global.IntersectionObserver = class IntersectionObserver {
@@ -178,7 +178,7 @@ global.IntersectionObserver = class IntersectionObserver {
   disconnect() {}
   observe() {}
   unobserve() {}
-}
+};
 
 // Mock ResizeObserver
 global.ResizeObserver = class ResizeObserver {
@@ -186,23 +186,23 @@ global.ResizeObserver = class ResizeObserver {
   disconnect() {}
   observe() {}
   unobserve() {}
-}
+};
 
 // Mock WebSocket for testing socket connections
 global.WebSocket = class WebSocket {
   constructor(url) {
-    this.url = url
-    this.readyState = WebSocket.CONNECTING
+    this.url = url;
+    this.readyState = WebSocket.CONNECTING;
   }
-  
-  static CONNECTING = 0
-  static OPEN = 1
-  static CLOSING = 2
-  static CLOSED = 3
-  
+
+  static CONNECTING = 0;
+  static OPEN = 1;
+  static CLOSING = 2;
+  static CLOSED = 3;
+
   send() {}
   close() {}
-}
+};
 
 // Global test utilities
 global.testUtils = {
@@ -213,17 +213,17 @@ global.testUtils = {
     condition_type: 'Questions Answered',
     condition_value: 10,
     AchievementCategories: { name: 'Gameplay' },
-    ...overrides
+    ...overrides,
   }),
-  
+
   createMockUser: (overrides = {}) => ({
     id: 1,
     username: 'testuser',
     elo: 1200,
     xp: 500,
-    ...overrides
+    ...overrides,
   }),
-  
+
   createMockQuestion: (overrides = {}) => ({
     Q_id: 1,
     questionText: 'What is 2 + 2?',
@@ -231,12 +231,12 @@ global.testUtils = {
       { answer_text: '4', isCorrect: true },
       { answer_text: '3', isCorrect: false },
     ],
-    ...overrides
-  })
-}
+    ...overrides,
+  }),
+};
 
 // Suppress console.log in tests unless NODE_ENV is test-debug
 if (process.env.NODE_ENV === 'test' && !process.env.DEBUG) {
-  console.log = jest.fn()
-  console.warn = jest.fn()
+  console.log = jest.fn();
+  console.warn = jest.fn();
 }

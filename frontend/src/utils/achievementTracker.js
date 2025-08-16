@@ -10,7 +10,7 @@ class AchievementTracker {
   // Load previously notified achievements from localStorage
   loadFromStorage() {
     if (typeof window === 'undefined') return;
-    
+
     try {
       const stored = localStorage.getItem('notified-achievements');
       if (stored) {
@@ -27,10 +27,13 @@ class AchievementTracker {
   // Save notified achievements to localStorage
   saveToStorage() {
     if (typeof window === 'undefined') return;
-    
+
     try {
       const achievementIds = Array.from(this.notifiedAchievements);
-      localStorage.setItem('notified-achievements', JSON.stringify(achievementIds));
+      localStorage.setItem(
+        'notified-achievements',
+        JSON.stringify(achievementIds),
+      );
       console.log('🏆 Saved notified achievements:', achievementIds.length);
     } catch (error) {
       console.error('🏆 Error saving notified achievements:', error);
@@ -51,7 +54,7 @@ class AchievementTracker {
 
   // Mark multiple achievements as notified
   markMultipleAsNotified(achievementIds) {
-    achievementIds.forEach(id => this.notifiedAchievements.add(id));
+    achievementIds.forEach((id) => this.notifiedAchievements.add(id));
     this.saveToStorage();
     console.log('🏆 Marked multiple achievements as notified:', achievementIds);
   }
@@ -60,8 +63,10 @@ class AchievementTracker {
   getNewUnlockedAchievements(allAchievements) {
     if (!Array.isArray(allAchievements)) return [];
 
-    const unlockedAchievements = allAchievements.filter(ach => ach.unlocked === true);
-    const newUnlockedAchievements = unlockedAchievements.filter(ach => {
+    const unlockedAchievements = allAchievements.filter(
+      (ach) => ach.unlocked === true,
+    );
+    const newUnlockedAchievements = unlockedAchievements.filter((ach) => {
       const achievementId = ach.id || ach.achievement_id;
       return !this.hasBeenNotified(achievementId);
     });
@@ -70,7 +75,7 @@ class AchievementTracker {
       total: allAchievements.length,
       unlocked: unlockedAchievements.length,
       newUnlocked: newUnlockedAchievements.length,
-      previouslyNotified: this.notifiedAchievements.size
+      previouslyNotified: this.notifiedAchievements.size,
     });
 
     return newUnlockedAchievements;

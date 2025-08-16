@@ -82,13 +82,13 @@ export default function MathKeyboardWrapper({ questions }) {
       // Get authenticated user ID with session fallback
       const user = JSON.parse(localStorage.getItem('user') || '{}');
       let userId = user.id;
-      
+
       // Fallback to NextAuth session if no localStorage user
       if (!userId && session?.user?.id) {
         userId = session.user.id;
         console.log('🔍 Using userId from NextAuth session:', userId);
       }
-      
+
       if (!userId) {
         console.error('❌ No authenticated user found');
         setFeedbackMessage('Please log in to continue');
@@ -117,9 +117,17 @@ export default function MathKeyboardWrapper({ questions }) {
           );
 
           // Use centralized achievement notification utility
-          showAchievementNotificationsWhenReady(result.data.unlockedAchievements)
-            .then(() => console.log('✅ Achievement notifications triggered successfully'))
-            .catch(error => console.error('❌ Failed to show achievements:', error));
+          showAchievementNotificationsWhenReady(
+            result.data.unlockedAchievements,
+          )
+            .then(() =>
+              console.log(
+                '✅ Achievement notifications triggered successfully',
+              ),
+            )
+            .catch((error) =>
+              console.error('❌ Failed to show achievements:', error),
+            );
         } else {
           console.log('ℹ️  No achievements unlocked for this question');
         }

@@ -49,7 +49,8 @@ router.get('/users/:id/achievements', verifyToken, async (req, res) => {
   // Use the proper junction table approach
   const { data, error } = await supabase
     .from('UserAchievements')
-    .select(`
+    .select(
+      `
       unlocked_at,
       Achievements (
         id,
@@ -62,7 +63,8 @@ router.get('/users/:id/achievements', verifyToken, async (req, res) => {
           name
         )
       )
-    `)
+    `,
+    )
     .eq('user_id', id)
     .order('unlocked_at', { ascending: false });
 
@@ -72,7 +74,7 @@ router.get('/users/:id/achievements', verifyToken, async (req, res) => {
   }
 
   // Format the response to match expected structure
-  const formattedAchievements = (data || []).map(ua => ({
+  const formattedAchievements = (data || []).map((ua) => ({
     id: ua.Achievements.id,
     name: ua.Achievements.name,
     description: ua.Achievements.description,
@@ -80,13 +82,13 @@ router.get('/users/:id/achievements', verifyToken, async (req, res) => {
     condition_value: ua.Achievements.condition_value,
     icon_path: ua.Achievements.icon_path,
     category: ua.Achievements.AchievementCategories?.name || 'General',
-    unlocked_at: ua.unlocked_at
+    unlocked_at: ua.unlocked_at,
   }));
 
   if (formattedAchievements.length === 0) {
-    return res.status(200).json({ 
+    return res.status(200).json({
       achievements: [],
-      message: "User has no achievements yet" 
+      message: 'User has no achievements yet',
     });
   }
 

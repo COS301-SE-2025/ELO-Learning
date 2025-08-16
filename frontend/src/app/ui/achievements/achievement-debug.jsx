@@ -19,8 +19,8 @@ export default function AchievementDebug() {
         },
         sessionStatus: session?.user ? 'authenticated' : 'not authenticated',
         userId: session?.user?.id || 'no user ID',
-        availableWindowKeys: Object.keys(window).filter(key => 
-          key.toLowerCase().includes('achievement')
+        availableWindowKeys: Object.keys(window).filter((key) =>
+          key.toLowerCase().includes('achievement'),
         ),
       };
       setDebugInfo(info);
@@ -74,25 +74,30 @@ export default function AchievementDebug() {
           ✕
         </button>
       </div>
-      
+
       <div className="text-xs space-y-2">
         <div>
           <strong>System Status:</strong>
           <div className="ml-2">
-            <div>showAchievement: {debugInfo.windowFunctions?.showAchievement}</div>
-            <div>showMultipleAchievements: {debugInfo.windowFunctions?.showMultipleAchievements}</div>
+            <div>
+              showAchievement: {debugInfo.windowFunctions?.showAchievement}
+            </div>
+            <div>
+              showMultipleAchievements:{' '}
+              {debugInfo.windowFunctions?.showMultipleAchievements}
+            </div>
             <div>Session: {debugInfo.sessionStatus}</div>
             <div>User ID: {debugInfo.userId}</div>
           </div>
         </div>
-        
+
         <button
           onClick={testNotification}
           className="w-full bg-green-600 hover:bg-green-700 px-2 py-1 rounded text-xs"
         >
           Test Notification
         </button>
-        
+
         <div className="text-gray-400">
           Last check: {debugInfo.timestamp?.slice(11, 19)}
         </div>

@@ -25,7 +25,7 @@ export default function AchievementsPage() {
       fetchUserAchievementsWithStatus(session.user.id)
         .then((data) => {
           console.log('✅ Raw achievements data received:', data, typeof data);
-          
+
           // Group achievements by category
           const grouped = data.reduce((acc, achievement) => {
             const category = achievement.AchievementCategories?.name || 'Other';
@@ -33,28 +33,41 @@ export default function AchievementsPage() {
             acc[category].push(achievement);
             return acc;
           }, {});
-          
+
           console.log('✅ Setting achievements array:', grouped);
           setAchievements(grouped);
 
           // Only show notifications for NEW unlocked achievements
           const allAchievements = Object.values(grouped).flat();
-          const newUnlockedAchievements = achievementTracker.getNewUnlockedAchievements(allAchievements);
-          
-          console.log('🏆 New unlocked achievements only:', newUnlockedAchievements);
-          
+          const newUnlockedAchievements =
+            achievementTracker.getNewUnlockedAchievements(allAchievements);
+
+          console.log(
+            '🏆 New unlocked achievements only:',
+            newUnlockedAchievements,
+          );
+
           // SHOW NOTIFICATIONS only for NEW achievements
           if (newUnlockedAchievements.length > 0) {
             setTimeout(() => {
               showAchievementNotificationsWhenReady(newUnlockedAchievements)
                 .then(() => {
-                  console.log('✅ Achievement notifications shown successfully');
-                  
+                  console.log(
+                    '✅ Achievement notifications shown successfully',
+                  );
+
                   // MARK AS NOTIFIED so they don't show again
-                  const achievementIds = newUnlockedAchievements.map(ach => ach.id || ach.achievement_id);
+                  const achievementIds = newUnlockedAchievements.map(
+                    (ach) => ach.id || ach.achievement_id,
+                  );
                   achievementTracker.markMultipleAsNotified(achievementIds);
                 })
-                .catch(error => console.error('❌ Failed to show achievement notifications:', error));
+                .catch((error) =>
+                  console.error(
+                    '❌ Failed to show achievement notifications:',
+                    error,
+                  ),
+                );
             }, 1000);
           } else {
             console.log('🏆 No new achievements to notify about');

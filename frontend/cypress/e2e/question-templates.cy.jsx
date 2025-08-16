@@ -1,7 +1,9 @@
 // Handle Next.js redirects and React hooks errors
 Cypress.on('uncaught:exception', (err) => {
-  if (err.message.includes('NEXT_REDIRECT') || 
-      err.message.includes('Rendered more hooks than during the previous render')) {
+  if (
+    err.message.includes('NEXT_REDIRECT') ||
+    err.message.includes('Rendered more hooks than during the previous render')
+  ) {
     return false;
   }
 });
@@ -13,14 +15,14 @@ describe('Question Template Types Tests', () => {
       path: '/question-templates/input-questions',
       apiPath: 'Math%20Input',
       expectedElements: ['textarea', 'button'],
-      description: 'Advanced math expression input with virtual keyboard'
+      description: 'Advanced math expression input with virtual keyboard',
     },
     {
       name: 'Expression Builder',
       path: '/question-templates/expression-builder',
       apiPath: 'Expression%20Builder',
       expectedElements: ['button'],
-      description: 'Drag-and-drop mathematical expression building'
+      description: 'Drag-and-drop mathematical expression building',
     },
     {
       name: 'Multiple Choice',
@@ -28,37 +30,38 @@ describe('Question Template Types Tests', () => {
       apiPath: 'Multiple%20Choice',
       apiActualPath: 'questions', // Multiple choice uses different endpoint
       expectedElements: ['button'],
-      description: 'Standard multiple choice question format'
+      description: 'Standard multiple choice question format',
     },
     {
       name: 'Open Response',
       path: '/question-templates/open-response',
       apiPath: 'Open%20Response',
       expectedElements: ['textarea', 'button'],
-      description: 'Free-form text response questions'
+      description: 'Free-form text response questions',
     },
     {
       name: 'Match Question',
       path: '/question-templates/match-question',
       apiPath: 'Matching', // API uses 'Matching' not 'Match Question'
       expectedElements: ['button'],
-      description: 'Pairing/matching exercise questions'
+      description: 'Pairing/matching exercise questions',
     },
     {
       name: 'True/False',
       path: '/question-templates/true-false',
       apiPath: 'True%2FFalse',
       expectedElements: ['button'],
-      description: 'Binary choice true/false questions'
-    }
+      description: 'Binary choice true/false questions',
+    },
   ];
 
-  questionTypes.forEach(questionType => {
+  questionTypes.forEach((questionType) => {
     describe(`${questionType.name} Questions`, () => {
       beforeEach(() => {
         // Get the correct API path - some use different endpoints
-        const actualApiPath = questionType.apiActualPath || questionType.apiPath;
-        
+        const actualApiPath =
+          questionType.apiActualPath || questionType.apiPath;
+
         // Mock the API call for this question type with flexible endpoint matching
         cy.intercept('GET', `**/questions/type/${actualApiPath}*`, {
           statusCode: 200,
@@ -72,10 +75,18 @@ describe('Question Template Types Tests', () => {
                 type: questionType.name,
                 difficulty: 'Easy',
                 answers: [
-                  { answer_text: 'Sample Answer', answerText: 'Sample Answer', isCorrect: true },
-                  { answer_text: 'Wrong Answer', answerText: 'Wrong Answer', isCorrect: false }
+                  {
+                    answer_text: 'Sample Answer',
+                    answerText: 'Sample Answer',
+                    isCorrect: true,
+                  },
+                  {
+                    answer_text: 'Wrong Answer',
+                    answerText: 'Wrong Answer',
+                    isCorrect: false,
+                  },
                 ],
-                correctAnswer: 'Sample Answer'
+                correctAnswer: 'Sample Answer',
               },
             ],
           },
@@ -94,10 +105,18 @@ describe('Question Template Types Tests', () => {
                 type: questionType.name,
                 difficulty: 'Easy',
                 answers: [
-                  { answer_text: 'Sample Answer', answerText: 'Sample Answer', isCorrect: true },
-                  { answer_text: 'Wrong Answer', answerText: 'Wrong Answer', isCorrect: false }
+                  {
+                    answer_text: 'Sample Answer',
+                    answerText: 'Sample Answer',
+                    isCorrect: true,
+                  },
+                  {
+                    answer_text: 'Wrong Answer',
+                    answerText: 'Wrong Answer',
+                    isCorrect: false,
+                  },
                 ],
-                correctAnswer: 'Sample Answer'
+                correctAnswer: 'Sample Answer',
               },
             ],
           },
@@ -108,11 +127,11 @@ describe('Question Template Types Tests', () => {
           statusCode: 200,
           body: {
             success: true,
-            data: { 
-              isCorrect: true, 
+            data: {
+              isCorrect: true,
               xpAwarded: 10,
               message: 'Correct! Well done!',
-              newXP: 100 
+              newXP: 100,
             },
           },
         }).as('submitAnswer');
@@ -120,14 +139,14 @@ describe('Question Template Types Tests', () => {
 
       it(`should load ${questionType.name} question template page`, () => {
         cy.visit(questionType.path);
-        
+
         // Wait a bit for the page to load and make API calls
         cy.wait(2000);
-        
+
         // Should not show error message
         cy.get('body').should('not.contain', 'Error Loading Questions');
         cy.get('body').should('not.contain', 'No Questions Available');
-        
+
         // Should show some content indicating the page loaded
         cy.get('body').then(($body) => {
           const bodyText = $body.text();
@@ -135,13 +154,13 @@ describe('Question Template Types Tests', () => {
             `Sample ${questionType.name} question for testing`,
             'Loading',
             'question',
-            questionType.name
+            questionType.name,
           ];
-          
-          const hasExpectedContent = expectedTexts.some(text => 
-            bodyText.toLowerCase().includes(text.toLowerCase())
+
+          const hasExpectedContent = expectedTexts.some((text) =>
+            bodyText.toLowerCase().includes(text.toLowerCase()),
           );
-          
+
           expect(hasExpectedContent).to.be.true;
         });
       });
@@ -149,16 +168,19 @@ describe('Question Template Types Tests', () => {
       it(`should display basic page structure for ${questionType.name}`, () => {
         cy.visit(questionType.path);
         cy.wait(2000);
-        
+
         // Handle Math Input page differently due to React hooks issues
         if (questionType.name === 'Math Input') {
           // For Math Input, just verify the page loaded without crashing
           cy.get('body').should('exist');
           cy.get('body').should('not.be.empty');
-          
+
           // Check if components eventually render (be more lenient)
           cy.get('body').then(($body) => {
-            if ($body.find('button').length > 0 || $body.find('textarea').length > 0) {
+            if (
+              $body.find('button').length > 0 ||
+              $body.find('textarea').length > 0
+            ) {
               // If buttons/textarea exist, great!
               cy.log('Math Input components rendered successfully');
             } else {
@@ -176,10 +198,10 @@ describe('Question Template Types Tests', () => {
 
       it(`should handle page navigation for ${questionType.name}`, () => {
         cy.visit(questionType.path);
-        
+
         // Should be on the correct path
         cy.url().should('include', questionType.path);
-        
+
         // Page should load without crashing
         cy.get('body').should('exist');
       });
@@ -200,7 +222,7 @@ describe('Question Template Types Tests', () => {
               question_type: 'Math Input',
               difficulty: 'Medium',
               answers: [{ answer_text: '2*x', isCorrect: true }],
-              correctAnswer: '2*x'
+              correctAnswer: '2*x',
             },
           ],
         },
@@ -210,7 +232,11 @@ describe('Question Template Types Tests', () => {
         statusCode: 200,
         body: {
           success: true,
-          data: { isCorrect: true, xpAwarded: 15, message: 'Correct! Your mathematical expression is right!' },
+          data: {
+            isCorrect: true,
+            xpAwarded: 15,
+            message: 'Correct! Your mathematical expression is right!',
+          },
         },
       }).as('submitAnswer');
     });
@@ -218,7 +244,7 @@ describe('Question Template Types Tests', () => {
     it('should load math input page successfully', () => {
       cy.visit('/question-templates/input-questions');
       cy.wait(3000); // Give time for React components to render
-      
+
       // Should not crash and should show some content
       cy.get('body').should('exist');
       cy.get('body').should('not.contain', 'Error Loading Questions');
@@ -227,17 +253,17 @@ describe('Question Template Types Tests', () => {
     it('should display math input components', () => {
       cy.visit('/question-templates/input-questions');
       cy.wait(3000);
-      
+
       // Be more lenient with Math Input due to React hooks issues
       cy.get('body').should('exist');
       cy.get('body').should('not.be.empty');
-      
+
       // Try to find input components, but don't fail if React is still rendering
       cy.get('body').then(($body) => {
         const hasTextarea = $body.find('textarea').length > 0;
         const hasInput = $body.find('input').length > 0;
         const hasButtons = $body.find('button').length > 0;
-        
+
         if (hasTextarea || hasInput || hasButtons) {
           cy.log('Math Input components found successfully');
           expect(true).to.be.true; // Pass the test
@@ -257,16 +283,16 @@ describe('Question Template Types Tests', () => {
       const paths = [
         '/question-templates/multiple-choice',
         '/question-templates/expression-builder',
-        '/question-templates/open-response'
+        '/question-templates/open-response',
       ];
-      
-      paths.forEach(path => {
+
+      paths.forEach((path) => {
         cy.visit(path);
-        
+
         // Should reach the page without crashing
         cy.url().should('include', path);
         cy.get('body').should('exist');
-        
+
         // Should have some interactive content (be more flexible)
         cy.get('body').then(($body) => {
           if ($body.find('button').length > 0) {
@@ -277,7 +303,7 @@ describe('Question Template Types Tests', () => {
           }
         });
       });
-      
+
       // Handle Math Input separately due to React hooks issues
       cy.visit('/question-templates/input-questions');
       cy.url().should('include', '/question-templates/input-questions');
@@ -287,11 +313,11 @@ describe('Question Template Types Tests', () => {
 
     it('should maintain consistent page structure', () => {
       cy.visit('/question-templates/multiple-choice');
-      
+
       // Should have some basic page elements
       cy.get('body').should('exist');
       cy.get('button').should('exist');
-      
+
       // Should not crash
       cy.get('body').should('not.contain', 'Something went wrong');
     });

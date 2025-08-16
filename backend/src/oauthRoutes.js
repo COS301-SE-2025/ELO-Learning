@@ -33,7 +33,7 @@ router.post('/oauth/user', async (req, res) => {
         process.env.JWT_SECRET,
         { expiresIn: '1h' },
       );
-      
+
       return res.status(200).json({
         message: 'User found',
         token,

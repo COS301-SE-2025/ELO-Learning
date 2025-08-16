@@ -3,7 +3,7 @@ import { supabase } from '../database/supabaseClient.js';
 import { backendMathValidator } from './mathValidator.js';
 import { verifyToken } from './middleware/auth.js';
 
-const router = express.Router()
+const router = express.Router();
 
 const validateMatchQuestion = async (studentAnswer, questionId) => {
   try {
@@ -361,7 +361,7 @@ const validateOpenResponse = (studentAnswer, correctAnswer) => {
   // Method 2: Try numerical comparison for math problems
   const studentNum = parseFloat(studentStr.replace(/[^\d.-]/g, '')); // Remove non-numeric chars except decimal and minus
   const correctNum = parseFloat(correctStr.replace(/[^\d.-]/g, ''));
-  
+
   if (!isNaN(studentNum) && !isNaN(correctNum)) {
     const isCorrect = Math.abs(studentNum - correctNum) < 0.01; // Allow small floating point differences
     if (isCorrect) {
@@ -379,7 +379,7 @@ const validateOpenResponse = (studentAnswer, correctAnswer) => {
     return true;
   }
   return false;
-}
+};
 
 const validateExpressionBuilder = (studentAnswer, correctAnswer) => {
   try {
@@ -497,11 +497,11 @@ router.get('/questions/type/:type', async (req, res) => {
       );
 
       // Add placeholder fields for frontend compatibility (all null for now)
-      question.inputLabels = null
-      question.expressionTiles = null
-      question.fillInText = null
-      question.showMathHelper = false
-    })
+      question.inputLabels = null;
+      question.expressionTiles = null;
+      question.fillInText = null;
+      question.showMathHelper = false;
+    });
 
     // Filter out questions with no answers (for match questions this means incomplete data)
     const questionsWithAnswers = questions.filter(
@@ -962,7 +962,6 @@ router.get('/questions/random', async (req, res) => {
   }
 });
 
-
 router.post('/question/:id/submit', async (req, res) => {
   const { id } = req.params;
   const { studentAnswer, userId, questionType, timeSpent, gameMode } = req.body;
@@ -972,41 +971,43 @@ router.post('/question/:id/submit', async (req, res) => {
     if (!id) {
       return res.status(400).json({
         success: false,
-        error: 'Question ID is required'
+        error: 'Question ID is required',
       });
     }
 
     if (!userId) {
       return res.status(400).json({
         success: false,
-        error: 'User ID is required'
+        error: 'User ID is required',
       });
     }
 
     if (studentAnswer === undefined || studentAnswer === null) {
       return res.status(400).json({
         success: false,
-        error: 'Student answer is required'
+        error: 'Student answer is required',
       });
     }
 
     const { data: questionData, error: questionError } = await supabase
       .from('Questions')
-      .select(`
-        type, 
-        xpGain, 
-        questionText, 
-        topic, 
+      .select(
+        `
+        type,
+        xpGain,
+        questionText,
+        topic,
         topic_id,
         Topics!inner(name)
-      `)
+      `,
+      )
       .eq('Q_id', id)
       .single();
 
     if (questionError || !questionData) {
-      return res.status(404).json({ 
+      return res.status(404).json({
         success: false,
-        error: 'Question not found' 
+        error: 'Question not found',
       });
     }
 
@@ -1015,7 +1016,10 @@ router.post('/question/:id/submit', async (req, res) => {
     let isCorrect = false;
 
     // Handle match questions with enhanced validation
-    if (actualQuestionType === 'Match Question' || actualQuestionType === 'Matching') {
+    if (
+      actualQuestionType === 'Match Question' ||
+      actualQuestionType === 'Matching'
+    ) {
       isCorrect = await validateMatchQuestion(studentAnswer, id);
     } else {
       // Handle other question types with existing validation
@@ -1030,12 +1034,17 @@ router.post('/question/:id/submit', async (req, res) => {
         return res.status(404).json({
           success: false,
           error: 'Correct answer not found',
-          debug: { answerError, question_id: id }
+          debug: { answerError, question_id: id },
         });
       }
 
-      const correctAnswer = correctAnswerData.answer_text || correctAnswerData.answerText;
-      isCorrect = validateAnswerByType(actualQuestionType, studentAnswer, correctAnswer);
+      const correctAnswer =
+        correctAnswerData.answer_text || correctAnswerData.answerText;
+      isCorrect = validateAnswerByType(
+        actualQuestionType,
+        studentAnswer,
+        correctAnswer,
+      );
     }
 
     // Award XP if correct
@@ -1072,38 +1081,51 @@ router.post('/question/:id/submit', async (req, res) => {
     if (userId) {
       try {
         console.log('🎯 Starting achievement checks for user:', userId);
-        
+
         // Use dynamic import to avoid circular dependency issues
         const achievementModule = await import('./achievementRoutes.js');
-        const { 
-          checkQuestionAchievements, 
-          checkFastSolveAchievements, 
+        const {
+          checkQuestionAchievements,
+          checkFastSolveAchievements,
           checkLeaderboardAchievements,
           checkBadgeCollectorAchievement,
-          checkTopicMasteryAchievements
+          checkTopicMasteryAchievements,
         } = achievementModule;
 
         if (isCorrect) {
-          // Check question achievements  
+          // Check question achievements
           try {
-            console.log(`🎯 ACHIEVEMENT DEBUG - Checking question achievements for user ${userId}, gameMode: ${gameMode || 'practice'}`);
+            console.log(
+              `🎯 ACHIEVEMENT DEBUG - Checking question achievements for user ${userId}, gameMode: ${
+                gameMode || 'practice'
+              }`,
+            );
             const questionAchievements = await checkQuestionAchievements(
               userId,
               isCorrect,
-              gameMode || 'practice'
+              gameMode || 'practice',
             );
-            
-            console.log(`🎯 ACHIEVEMENT DEBUG - checkQuestionAchievements returned:`, {
-              type: typeof questionAchievements,
-              isArray: Array.isArray(questionAchievements),
-              length: questionAchievements?.length,
-              achievements: questionAchievements
-            });
-            
+
+            console.log(
+              `🎯 ACHIEVEMENT DEBUG - checkQuestionAchievements returned:`,
+              {
+                type: typeof questionAchievements,
+                isArray: Array.isArray(questionAchievements),
+                length: questionAchievements?.length,
+                achievements: questionAchievements,
+              },
+            );
+
             if (questionAchievements && questionAchievements.length > 0) {
               unlockedAchievements.push(...questionAchievements);
-              console.log('� Question achievements unlocked:', questionAchievements.length);
-              console.log('🏆 Achievement details:', questionAchievements.map(a => ({ name: a.name, id: a.id })));
+              console.log(
+                '� Question achievements unlocked:',
+                questionAchievements.length,
+              );
+              console.log(
+                '🏆 Achievement details:',
+                questionAchievements.map((a) => ({ name: a.name, id: a.id })),
+              );
             } else {
               console.log('🤷 No question achievements unlocked this time');
             }
@@ -1115,23 +1137,40 @@ router.post('/question/:id/submit', async (req, res) => {
           // Check Fast Solve achievements
           if (timeSpent && typeof timeSpent === 'number') {
             try {
-              const fastSolveAchievements = await checkFastSolveAchievements(userId, timeSpent, isCorrect);
+              const fastSolveAchievements = await checkFastSolveAchievements(
+                userId,
+                timeSpent,
+                isCorrect,
+              );
               if (fastSolveAchievements && fastSolveAchievements.length > 0) {
                 unlockedAchievements.push(...fastSolveAchievements);
-                console.log('🎯 Fast solve achievements unlocked:', fastSolveAchievements.length);
+                console.log(
+                  '🎯 Fast solve achievements unlocked:',
+                  fastSolveAchievements.length,
+                );
               }
             } catch (fastSolveError) {
-              console.error('Fast solve achievement error:', fastSolveError.message);
+              console.error(
+                'Fast solve achievement error:',
+                fastSolveError.message,
+              );
             }
           }
 
           // Check Topic Mastery Achievements
           if (topicName) {
             try {
-              const topicAchievements = await checkTopicMasteryAchievements(userId, topicName, isCorrect);
+              const topicAchievements = await checkTopicMasteryAchievements(
+                userId,
+                topicName,
+                isCorrect,
+              );
               if (topicAchievements && topicAchievements.length > 0) {
                 unlockedAchievements.push(...topicAchievements);
-                console.log('🎯 Topic achievements unlocked:', topicAchievements.length);
+                console.log(
+                  '🎯 Topic achievements unlocked:',
+                  topicAchievements.length,
+                );
               }
             } catch (topicError) {
               console.error('Topic achievement error:', topicError.message);
@@ -1142,26 +1181,43 @@ router.post('/question/:id/submit', async (req, res) => {
         // Check Badge Collector achievements when new achievements are unlocked
         if (unlockedAchievements.length > 0) {
           try {
-            const badgeCollectorAchievements = await checkBadgeCollectorAchievement(userId);
-            if (badgeCollectorAchievements && badgeCollectorAchievements.length > 0) {
+            const badgeCollectorAchievements =
+              await checkBadgeCollectorAchievement(userId);
+            if (
+              badgeCollectorAchievements &&
+              badgeCollectorAchievements.length > 0
+            ) {
               unlockedAchievements.push(...badgeCollectorAchievements);
-              console.log('🎯 Badge collector achievements unlocked:', badgeCollectorAchievements.length);
+              console.log(
+                '🎯 Badge collector achievements unlocked:',
+                badgeCollectorAchievements.length,
+              );
             }
           } catch (badgeError) {
-            console.error('Badge collector achievement error:', badgeError.message);
+            console.error(
+              'Badge collector achievement error:',
+              badgeError.message,
+            );
           }
         }
 
         // Check leaderboard achievements if user gained XP
         if (updatedUser && xpAwarded > 0) {
           try {
-            const leaderboardAchievements = await checkLeaderboardAchievements(userId);
+            const leaderboardAchievements =
+              await checkLeaderboardAchievements(userId);
             if (leaderboardAchievements && leaderboardAchievements.length > 0) {
               unlockedAchievements.push(...leaderboardAchievements);
-              console.log('🎯 Leaderboard achievements unlocked:', leaderboardAchievements.length);
+              console.log(
+                '🎯 Leaderboard achievements unlocked:',
+                leaderboardAchievements.length,
+              );
             }
           } catch (leaderboardError) {
-            console.error('Leaderboard achievement error:', leaderboardError.message);
+            console.error(
+              'Leaderboard achievement error:',
+              leaderboardError.message,
+            );
           }
         }
       } catch (achievementError) {
@@ -1191,7 +1247,6 @@ router.post('/question/:id/submit', async (req, res) => {
     };
 
     res.status(200).json(responseData);
-
   } catch (error) {
     console.error('Error submitting answer:', error);
     res.status(500).json({
@@ -1201,6 +1256,5 @@ router.post('/question/:id/submit', async (req, res) => {
     });
   }
 });
-
 
 export default router;

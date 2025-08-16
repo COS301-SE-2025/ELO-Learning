@@ -3,7 +3,8 @@
 const API_BASE_URL = 'http://localhost:3000';
 
 // You need to replace this with an actual token from your frontend
-const TEST_TOKEN = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjk2LCJpYXQiOjE3MzQ0MjU4MzUsImV4cCI6MTczNDQyOTQzNX0.test'; // Replace with real token
+const TEST_TOKEN =
+  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjk2LCJpYXQiOjE3MzQ0MjU4MzUsImV4cCI6MTczNDQyOTQzNX0.test'; // Replace with real token
 
 async function testWithAuth() {
   console.log('🧪 Testing Achievement System with Authentication...\n');
@@ -12,27 +13,38 @@ async function testWithAuth() {
 
   // Test authenticated endpoints
   console.log('🔐 Test: Authenticated Achievement Endpoints');
-  
+
   try {
     // Test get user achievements with auth
-    const response = await fetch(`${API_BASE_URL}/users/${testUserId}/achievements`, {
-      headers: {
-        'Authorization': `Bearer ${TEST_TOKEN}`
-      }
-    });
+    const response = await fetch(
+      `${API_BASE_URL}/users/${testUserId}/achievements`,
+      {
+        headers: {
+          Authorization: `Bearer ${TEST_TOKEN}`,
+        },
+      },
+    );
 
     console.log('📡 Response status:', response.status);
-    
+
     if (response.ok) {
       const data = await response.json();
       console.log('✅ Get user achievements with auth works');
-      console.log('🏆 User has', data.achievements?.length || 0, 'achievements');
+      console.log(
+        '🏆 User has',
+        data.achievements?.length || 0,
+        'achievements',
+      );
       if (data.achievements && data.achievements.length > 0) {
         console.log('📝 Sample achievement:', data.achievements[0].name);
       }
     } else {
       const errorData = await response.json();
-      console.log('❌ Get user achievements with auth failed:', response.status, errorData);
+      console.log(
+        '❌ Get user achievements with auth failed:',
+        response.status,
+        errorData,
+      );
     }
   } catch (error) {
     console.log('❌ Authenticated endpoint network error:', error.message);
@@ -42,26 +54,33 @@ async function testWithAuth() {
   try {
     const response = await fetch(`${API_BASE_URL}/achievements/trigger`, {
       method: 'POST',
-      headers: { 
+      headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${TEST_TOKEN}`
+        Authorization: `Bearer ${TEST_TOKEN}`,
       },
       body: JSON.stringify({
         userId: testUserId,
         achievementType: 'Questions Answered',
         increment: 1,
-        gameMode: 'practice'
-      })
+        gameMode: 'practice',
+      }),
     });
 
     if (response.ok) {
       const data = await response.json();
       console.log('✅ Trigger endpoint with auth works');
-      console.log('🚀 Triggered achievements:', data.unlockedAchievements?.length || 0);
+      console.log(
+        '🚀 Triggered achievements:',
+        data.unlockedAchievements?.length || 0,
+      );
       console.log('📄 Message:', data.message);
     } else {
       const errorData = await response.json();
-      console.log('❌ Trigger endpoint with auth failed:', response.status, errorData);
+      console.log(
+        '❌ Trigger endpoint with auth failed:',
+        response.status,
+        errorData,
+      );
     }
   } catch (error) {
     console.log('❌ Trigger endpoint network error:', error.message);
@@ -73,7 +92,7 @@ async function testWithAuth() {
 // Simple test without authentication to check basic connectivity
 async function testBasicConnectivity() {
   console.log('🔌 Basic Connectivity Test\n');
-  
+
   try {
     // Test question submission endpoint (this is what your frontend actually calls)
     const response = await fetch(`${API_BASE_URL}/question/1/submit`, {
@@ -84,12 +103,12 @@ async function testBasicConnectivity() {
         userId: 96,
         questionType: 'Math Input',
         timeSpent: 5,
-        gameMode: 'practice'
-      })
+        gameMode: 'practice',
+      }),
     });
 
     console.log('📡 Question submit status:', response.status);
-    
+
     if (response.ok) {
       const data = await response.json();
       console.log('✅ Question submit endpoint works');

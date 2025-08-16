@@ -543,3 +543,10 @@ textarea:focus-visible {
 .text-pink-custom {
   color: #ff6e99;
 }
+
+/* Fix for mobile navigation covering content */
+@media only screen and (max-width: 768px) {
+  .profile-content {
+    padding-bottom: 100px; /* Space for mobile nav */
+  }
+}

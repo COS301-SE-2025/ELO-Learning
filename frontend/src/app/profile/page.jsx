@@ -40,9 +40,10 @@ export default function Page() {
   };
 
   return (
-    <div className="h-full">
+    <div className="min-h-full flex flex-col">
+      {/* Header section - FIXED at top */}
       <div
-        className="flex items-center justify-between px-4"
+        className="sticky top-0 z-10 flex items-center justify-between px-4 py-4"
         style={getBackgroundStyle(avatar?.background)}
       >
         <div className="flex-1"></div>
@@ -58,7 +59,9 @@ export default function Page() {
           </Link>
         </div>
       </div>
-      <div>
+      
+      {/* Content section - scrollable */}
+      <div className="flex-1 flex flex-col">
         <UsernameBlock
           username={user.username}
           name={user.name}
@@ -73,11 +76,12 @@ export default function Page() {
               : 'N/A'
           }
         />
-      </div>
-      <div className="flex flex-col justify-between">
-        <UserInfo ranking="1st" xp={user.xp || 0} />
-        <MatchStats />
-        <Achievements />
+        
+        <div className="flex flex-col space-y-4 pb-24"> {/* Increased from pb-8 to pb-24 */}
+          <UserInfo ranking="1st" xp={user.xp || 0} />
+          <MatchStats />
+          <Achievements />
+        </div>
       </div>
     </div>
   );

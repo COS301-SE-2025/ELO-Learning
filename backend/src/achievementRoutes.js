@@ -362,6 +362,12 @@ export async function triggerAchievementProgress(
   conditionType,
   increment = 1,
 ) {
+  console.log(`🚀 ACHIEVEMENT DEBUG - triggerAchievementProgress called:`, {
+    userId,
+    conditionType,
+    increment
+  });
+  
   try {
     // Find all achievements that match this condition type
     // Only exclude ELO-specific types if they are being passed to this function
@@ -373,9 +379,20 @@ export async function triggerAchievementProgress(
     // Don't apply the exclusion filter - let each achievement type be processed
     const { data: achievements, error: achievementsError } = await query;
 
+    console.log(`🔍 ACHIEVEMENT DEBUG - Database query result:`, {
+      achievementsError: achievementsError?.message,
+      achievementsCount: achievements?.length || 0,
+      achievements: achievements?.map(a => ({ id: a.id, name: a.name, condition_value: a.condition_value }))
+    });
+
     if (achievementsError) {
-      console.error('Error fetching achievements:', achievementsError.message);
+      console.error('❌ Error fetching achievements:', achievementsError.message);
       return { success: false, unlockedAchievements: [] };
+    }
+
+    if (!achievements || achievements.length === 0) {
+      console.log(`🤷 ACHIEVEMENT DEBUG - No achievements found for condition type: ${conditionType}`);
+      return { success: true, unlockedAchievements: [] };
     }
 
     const unlockedAchievements = [];
@@ -482,19 +499,38 @@ export async function triggerAchievementProgress(
 
 // Specific helper functions for different game events
 export async function checkQuestionAchievements(userId, isCorrect, gameMode = null) {
+  console.log(`🎯 ACHIEVEMENT DEBUG - checkQuestionAchievements called with:`, {
+    userId,
+    isCorrect,
+    gameMode
+  });
+  
   const results = [];
 
   if (isCorrect) {
+    console.log(`🎯 ACHIEVEMENT DEBUG - Answer is correct, triggering "Questions Answered" progress...`);
     // Always trigger "Questions Answered" achievements for any correct answer
     const questionResult = await triggerAchievementProgress(
       userId,
       'Questions Answered',
       1,
     );
+    console.log(`🎯 ACHIEVEMENT DEBUG - triggerAchievementProgress returned:`, {
+      success: questionResult.success,
+      unlockedCount: questionResult.unlockedAchievements?.length || 0,
+      achievements: questionResult.unlockedAchievements?.map(a => a.name) || []
+    });
     results.push(questionResult);
+  } else {
+    console.log(`🎯 ACHIEVEMENT DEBUG - Answer is incorrect, skipping achievement checks`);
   }
 
-  return results.flatMap((r) => r.unlockedAchievements || []);
+  const flatResults = results.flatMap((r) => r.unlockedAchievements || []);
+  console.log(`🎯 ACHIEVEMENT DEBUG - Final checkQuestionAchievements result:`, {
+    flatResultsLength: flatResults.length,
+    achievements: flatResults.map(a => a.name)
+  });
+  return flatResults;
 }
 
 export async function checkMatchAchievements(userId) {
@@ -1340,6 +1376,34 @@ router.post('/achievements/trigger', async (req, res) => {
     res.status(500).json({
       success: false,
       error: 'Internal server error'
+    });
+  }
+});
+
+// Test endpoint for debugging achievements
+router.post('/test-achievement/:userId', async (req, res) => {
+  try {
+    const { userId } = req.params;
+    const { conditionType = 'Questions Answered', increment = 1 } = req.body;
+    
+    console.log(`🧪 TEST ENDPOINT - Manual achievement trigger for user ${userId}`);
+    
+    // Directly call the trigger function
+    const result = await triggerAchievementProgress(userId, conditionType, increment);
+    
+    console.log(`🧪 TEST RESULT:`, result);
+    
+    res.json({
+      success: true,
+      message: `Triggered ${conditionType} achievement for user ${userId}`,
+      result
+    });
+    
+  } catch (error) {
+    console.error('🧪 TEST ERROR:', error);
+    res.status(500).json({
+      success: false,
+      error: error.message
     });
   }
 });

@@ -901,18 +901,30 @@ router.post('/question/:id/submit', async (req, res) => {
         if (isCorrect) {
           // Check question achievements  
           try {
+            console.log(`🎯 ACHIEVEMENT DEBUG - Checking question achievements for user ${userId}, gameMode: ${gameMode || 'practice'}`);
             const questionAchievements = await checkQuestionAchievements(
               userId,
               isCorrect,
               gameMode || 'practice'
             );
             
+            console.log(`🎯 ACHIEVEMENT DEBUG - checkQuestionAchievements returned:`, {
+              type: typeof questionAchievements,
+              isArray: Array.isArray(questionAchievements),
+              length: questionAchievements?.length,
+              achievements: questionAchievements
+            });
+            
             if (questionAchievements && questionAchievements.length > 0) {
               unlockedAchievements.push(...questionAchievements);
-              console.log('🎯 Question achievements unlocked:', questionAchievements.length);
+              console.log('� Question achievements unlocked:', questionAchievements.length);
+              console.log('🏆 Achievement details:', questionAchievements.map(a => ({ name: a.name, id: a.id })));
+            } else {
+              console.log('🤷 No question achievements unlocked this time');
             }
           } catch (qError) {
-            console.error('Question achievement error:', qError.message);
+            console.error('❌ Question achievement error:', qError.message);
+            console.error('❌ Stack trace:', qError.stack);
           }
 
           // Check Fast Solve achievements

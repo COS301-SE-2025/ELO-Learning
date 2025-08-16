@@ -1,12 +1,14 @@
 'use client';
 import { fetchAllUsers } from '@/services/api';
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useSession } from 'next-auth/react';
 import LeaderboardTable from '../ui/leaderboard-table';
 
 export default function Page() {
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const { data: session, status, update: updateSession } = useSession();
 
   // Memoize the sorting function to avoid recreating it on every render
   const sortUsers = useCallback((userData) => {
@@ -15,6 +17,36 @@ export default function Page() {
       return a.username.localeCompare(b.username);
     });
   }, []);
+
+  // Function to update session with fresh leaderboard data
+  const updateSessionWithLeaderboardData = useCallback(async (leaderboardUsers) => {
+    if (!session?.user?.id || !leaderboardUsers.length) return;
+
+    // Find current user in leaderboard data
+    const currentUserInLeaderboard = leaderboardUsers.find(
+      user => user.id === session.user.id
+    );
+
+    if (currentUserInLeaderboard && currentUserInLeaderboard.xp !== session.user.xp) {
+      console.log('🔄 Updating session with fresh leaderboard data...');
+      console.log('Session XP:', session.user.xp, '→ Leaderboard XP:', currentUserInLeaderboard.xp);
+      
+      try {
+        await updateSession({
+          ...session,
+          user: {
+            ...session.user,
+            xp: currentUserInLeaderboard.xp,
+            currentLevel: currentUserInLeaderboard.currentLevel || session.user.currentLevel,
+            username: currentUserInLeaderboard.username || session.user.username,
+          },
+        });
+        console.log('✅ Session updated with fresh XP:', currentUserInLeaderboard.xp);
+      } catch (error) {
+        console.error('❌ Failed to update session:', error);
+      }
+    }
+  }, [session, updateSession]);
 
   useEffect(() => {
     let mounted = true;
@@ -28,11 +60,14 @@ export default function Page() {
         const data = await fetchAllUsers();
 
         // Use setTimeout to defer sorting and avoid blocking the UI
-        timeoutId = setTimeout(() => {
+        timeoutId = setTimeout(async () => {
           if (mounted) {
             const sortedData = sortUsers([...data]); // Clone array before sorting
             setUsers(sortedData);
             setLoading(false);
+            
+            // Update session with fresh leaderboard data
+            await updateSessionWithLeaderboardData(data);
           }
         }, 0);
       } catch (error) {
@@ -53,7 +88,24 @@ export default function Page() {
         clearTimeout(timeoutId);
       }
     };
-  }, [sortUsers]);
+  }, [sortUsers, updateSessionWithLeaderboardData]);
+
+  // Auto-refresh leaderboard every 2 minutes to get fresh data
+  useEffect(() => {
+    const interval = setInterval(async () => {
+      console.log('🔄 Auto-refreshing leaderboard data...');
+      try {
+        const data = await fetchAllUsers(true); // Force refresh
+        const sortedData = sortUsers([...data]);
+        setUsers(sortedData);
+        await updateSessionWithLeaderboardData(data);
+      } catch (error) {
+        console.error('Auto-refresh failed:', error);
+      }
+    }, 120000); // 2 minutes
+
+    return () => clearInterval(interval);
+  }, [sortUsers, updateSessionWithLeaderboardData]);
 
   // Memoize the loading component to prevent unnecessary re-renders
   const LoadingComponent = useMemo(

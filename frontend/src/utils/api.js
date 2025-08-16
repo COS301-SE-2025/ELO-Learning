@@ -1,20 +1,93 @@
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL;
 
-// Helper function to get auth token (client-side only)
-function getAuthToken() {
+// Replace your current getAuthToken function with this:
+
+import { getSession } from 'next-auth/react';
+
+// Fixed Helper function to get auth token (client-side only)
+async function getAuthToken() {
   // Check if we're on the client side
   if (typeof window === 'undefined') {
     return null; // Return null on server side
   }
   
-  // Try to get token from localStorage (for manual login)
-  const token = localStorage.getItem('token');
-  if (token && token !== 'undefined') {
+  let token = null;
+
+  try {
+    // 🎯 PRIMARY: Try to get token from NextAuth session
+    const session = await getSession();
+    if (session?.backendToken) {
+      token = session.backendToken;
+      console.log('🔐 Token retrieved from NextAuth session');
+      return token;
+    }
+  } catch (error) {
+    console.warn('🔐 Session retrieval failed:', error);
+  }
+
+  // 🔄 FALLBACK: Check localStorage
+  const possibleTokens = [
+    localStorage.getItem('token'),
+    localStorage.getItem('oauth_token'),
+    localStorage.getItem('authToken'),
+    localStorage.getItem('backendToken'),
+  ].filter(Boolean);
+
+  if (possibleTokens.length > 0) {
+    token = possibleTokens[0];
+    console.log('🔐 Token found in localStorage');
     return token;
   }
-  
-  // Fallback for testing
-  return 'placeholder-token';
+
+  console.log('🔐 No token found');
+  return null; // Don't return placeholder-token
+}
+
+// Update your fetchUserAchievements function to be async and use await:
+export async function fetchUserAchievements(userId) {
+  try {
+    console.log('🎯 Fetching achievements for user:', userId);
+    
+    const token = await getAuthToken(); // Make this async call
+    
+    if (!token) {
+      console.log('🔐 No authentication token found');
+      console.log('🎯 This is normal for newly registered users');
+      console.log('🎯 Returning empty achievements array');
+      return { achievements: [], total: 0 };
+    }
+
+    console.log('✅ Found authentication token, fetching achievements...');
+
+    const response = await fetch(`${API_BASE_URL}/users/${userId}/achievements`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`,
+      },
+    });
+
+    if (!response.ok) {
+      if (response.status === 401) {
+        console.log('🔑 Authentication failed - token might be expired');
+        return { achievements: [], total: 0 };
+      }
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    const data = await response.json();
+    console.log('✅ Successfully fetched achievements:', data.total || 0, 'achievements');
+    
+    return {
+      achievements: data.achievements || [],
+      total: data.total || 0,
+      message: data.message
+    };
+
+  } catch (error) {
+    console.error('❌ Error fetching user achievements:', error);
+    return { achievements: [], total: 0 };
+  }
 }
 
 // Get questions by specific type
@@ -182,7 +255,6 @@ export async function submitQuestionAnswer({
     }
 
     const data = await response.json();
-    console.log('🔍 API Response:', data);
 
     if (!response.ok) {
       return {

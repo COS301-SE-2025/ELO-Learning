@@ -7,6 +7,7 @@ import QuestionNumber from '@/app/ui/memo/question-num';
 import RightAnswer from '@/app/ui/memo/right-answer';
 import WrongAnswer from '@/app/ui/memo/wrong-answer';
 import QuestionTemplate from '@/app/ui/question-template';
+
 export default function Page() {
   const [questions, setQuestions] = useState([]);
   const [currQuestion, setCurrQuestion] = useState(null);
@@ -14,14 +15,33 @@ export default function Page() {
   const [correctAnswer, setCorrectAnswer] = useState(null);
   const [isCorrect, setIsCorrect] = useState(false);
   const [index, setIndex] = useState(0);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    const tempQuestions = JSON.parse(localStorage.getItem('questionsObj'));
-    setQuestions(tempQuestions);
-    setCurrQuestion(tempQuestions[index]);
-    setCorrectAnswer(tempQuestions[index].actualAnswer);
-    setAnswer(tempQuestions[index].answer);
-    setIsCorrect(tempQuestions[index].isCorrect);
+    // Only run on client side
+    if (typeof window !== 'undefined') {
+      const tempQuestions = JSON.parse(
+        localStorage.getItem('questionsObj') || '[]',
+      );
+
+      if (tempQuestions.length === 0) {
+        // No questions found, redirect to dashboard
+        redirect('/dashboard');
+        return;
+      }
+
+      setQuestions(tempQuestions);
+
+      // Set initial question data - no re-validation needed!
+      if (tempQuestions[0]) {
+        setCurrQuestion(tempQuestions[0]);
+        setCorrectAnswer(tempQuestions[0].actualAnswer);
+        setAnswer(tempQuestions[0].answer);
+        setIsCorrect(tempQuestions[0].isCorrect);
+      }
+
+      setIsLoading(false);
+    }
   }, []);
 
   const nextPage = () => {
@@ -37,13 +57,25 @@ export default function Page() {
   };
 
   useEffect(() => {
-    if (questions.length > 0) {
-      setCurrQuestion(questions[index]);
-      setCorrectAnswer(questions[index].actualAnswer);
-      setAnswer(questions[index].answer);
-      setIsCorrect(questions[index].isCorrect);
+    if (questions.length > 0 && questions[index]) {
+      const currentQ = questions[index];
+      setCurrQuestion(currentQ);
+      setCorrectAnswer(currentQ.actualAnswer);
+      setAnswer(currentQ.answer);
+      setIsCorrect(currentQ.isCorrect);
     }
-  }, [index]);
+  }, [index, questions]);
+
+  // Show loading state during SSR and initial client load
+  if (isLoading || !currQuestion) {
+    return (
+      <div className="full-screen w-full h-full flex items-center justify-center">
+        <div className="text-center">
+          <div className="text-2xl">Loading...</div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="full-screen w-full h-full flex flex-col justify-between">
@@ -64,7 +96,24 @@ export default function Page() {
         </div>
         <div>
           <p className="text-xl">System answer:</p>
-          <RightAnswer answer={correctAnswer?.answer_text} />
+          <RightAnswer
+            answer={
+              // Smart fallback for different question types and answer formats
+              (() => {
+                if (typeof correctAnswer === 'string') {
+                  return correctAnswer; // Direct string answer (like "True" or "False")
+                }
+                if (correctAnswer && typeof correctAnswer === 'object') {
+                  return (
+                    correctAnswer.answer_text ||
+                    correctAnswer.answerText ||
+                    JSON.stringify(correctAnswer)
+                  );
+                }
+                return 'Answer not available';
+              })()
+            }
+          />
         </div>
       </div>
       <div className="flex flex-row items-center justify-between w-full gap-4 md:w-[50%] md:m-auto">

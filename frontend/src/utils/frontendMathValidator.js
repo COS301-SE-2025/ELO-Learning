@@ -1,11 +1,4 @@
-/**
- * Enhanced Frontend Math Validation Utils for ELO Learning
- * Validates student math answers for manually typed responses
- * Supports advanced mathematical functions and symbols
- * Uses math.js for expression evaluation and comparison
- */
-
-const math = require('mathjs');
+import * as math from 'mathjs';
 
 // Singleton instance to prevent multiple MathJS initializations
 let mathValidatorInstance = null;
@@ -21,7 +14,6 @@ class FrontendMathValidator {
     });
 
     // Only import custom functions and constants if they haven't been imported yet
-    // This prevents the "Cannot import 'phi': already exists" error
     if (!this.math._phi) {
       try {
         this.math.import({
@@ -63,7 +55,6 @@ class FrontendMathValidator {
           permutation: (n, k) => this.math.permutations(n, k),
         });
       } catch (error) {
-        // If import fails (e.g., constants already exist), continue without custom imports
         console.warn(
           'MathJS custom imports skipped (may already be initialized):',
           error.message,
@@ -125,6 +116,7 @@ class FrontendMathValidator {
         this.checkExactMatch(normalizedStudent, normalizedCorrect) ||
         this.checkNumericalEquality(normalizedStudent, normalizedCorrect) ||
         this.checkAlgebraicEquivalence(normalizedStudent, normalizedCorrect) ||
+        this.checkCommutativeFactors(normalizedStudent, normalizedCorrect) ||
         this.checkAdvancedEquivalence(normalizedStudent, normalizedCorrect)
       );
     } catch (error) {
@@ -143,7 +135,8 @@ class FrontendMathValidator {
       return (
         this.checkExactMatch(normalized1, normalized2) ||
         this.checkNumericalEquality(normalized1, normalized2) ||
-        this.checkSimpleAlgebraicEquivalence(normalized1, normalized2)
+        this.checkSimpleAlgebraicEquivalence(normalized1, normalized2) ||
+        this.checkCommutativeFactors(normalized1, normalized2)
       );
     } catch {
       return false;
@@ -233,6 +226,118 @@ class FrontendMathValidator {
     );
   }
 
+  /**
+   * NEW METHOD: Check if two expressions are equivalent when factors are commutative
+   */
+  checkCommutativeFactors(student, correct) {
+    try {
+      // Extract factors from both expressions
+      const studentFactors = this.extractFactors(student);
+      const correctFactors = this.extractFactors(correct);
+
+      // If both expressions are factored forms, check if they have the same factors
+      if (studentFactors.length > 1 && correctFactors.length > 1) {
+        if (studentFactors.length !== correctFactors.length) {
+          return false;
+        }
+
+        // Sort factors and compare
+        const sortedStudentFactors = this.sortFactors(studentFactors);
+        const sortedCorrectFactors = this.sortFactors(correctFactors);
+
+        return this.arraysEqual(sortedStudentFactors, sortedCorrectFactors);
+      }
+
+      // If one is factored and one isn't, try expanding both
+      try {
+        const expandedStudent = this.math.simplify(student).toString();
+        const expandedCorrect = this.math.simplify(correct).toString();
+        return expandedStudent === expandedCorrect;
+      } catch {
+        return false;
+      }
+    } catch (error) {
+      console.debug('Commutative factors check failed:', error.message);
+      return false;
+    }
+  }
+
+  /**
+   * Extract individual factors from a product expression
+   */
+  extractFactors(expression) {
+    const factors = [];
+    let currentFactor = '';
+    let depth = 0;
+    let i = 0;
+
+    while (i < expression.length) {
+      const char = expression[i];
+
+      if (char === '(') {
+        if (depth === 0 && currentFactor.trim()) {
+          // Found a coefficient or variable before parentheses
+          factors.push(currentFactor.trim());
+          currentFactor = '';
+        }
+        currentFactor += char;
+        depth++;
+      } else if (char === ')') {
+        currentFactor += char;
+        depth--;
+        if (depth === 0) {
+          factors.push(currentFactor.trim());
+          currentFactor = '';
+        }
+      } else if (depth === 0 && char === '*') {
+        if (currentFactor.trim()) {
+          factors.push(currentFactor.trim());
+          currentFactor = '';
+        }
+      } else {
+        currentFactor += char;
+      }
+
+      i++;
+    }
+
+    if (currentFactor.trim()) {
+      factors.push(currentFactor.trim());
+    }
+
+    return factors.length > 0 ? factors : [expression];
+  }
+
+  /**
+   * Sort factors to enable comparison
+   * Each factor is normalized and then sorted
+   */
+  sortFactors(factors) {
+    return factors
+      .map((factor) => {
+        // Normalize each factor
+        try {
+          // Try to expand and simplify each factor for consistent comparison
+          const simplified = this.math.simplify(factor).toString();
+          return simplified;
+        } catch {
+          return factor;
+        }
+      })
+      .sort();
+  }
+
+  /**
+   * Check if two arrays are equal
+   */
+  arraysEqual(arr1, arr2) {
+    if (arr1.length !== arr2.length) return false;
+    for (let i = 0; i < arr1.length; i++) {
+      if (arr1[i] !== arr2[i]) return false;
+    }
+    return true;
+  }
+
   isValidMathExpression(input) {
     try {
       if (!input || typeof input !== 'string' || !input.trim()) {
@@ -243,6 +348,16 @@ class FrontendMathValidator {
 
       // Check for empty or whitespace-only input
       if (!normalized.trim()) return false;
+
+      // Reject single parentheses or incomplete expressions
+      if (normalized === '(' || normalized === ')' || normalized === '()') {
+        return false;
+      }
+
+      // Reject expressions that are only operators or punctuation
+      if (/^[+\-*/^()=,\s\[\]{}]+$/.test(normalized)) {
+        return false;
+      }
 
       // Check for obviously invalid patterns
       if (/[+\-*/^]{2,}/.test(normalized.replace(/\*\*/g, '^'))) {
@@ -628,24 +743,19 @@ if (!mathValidatorInstance) {
 }
 const MathValidator = mathValidatorInstance;
 
-// Export functions for compatibility
-const validateMathAnswer = (studentAnswer, correctAnswer) =>
+// ES6 Named Exports for Next.js
+export const validateMathAnswer = (studentAnswer, correctAnswer) =>
   MathValidator.validateAnswer(studentAnswer, correctAnswer);
 
-const quickValidateMath = (studentAnswer, correctAnswer) =>
+export const quickValidateMath = (studentAnswer, correctAnswer) =>
   MathValidator.quickValidate(studentAnswer, correctAnswer);
 
-const isValidMathExpression = (input) =>
+export const isValidMathExpression = (input) =>
   MathValidator.isValidMathExpression(input);
 
-const getMathValidationMessage = (input) =>
+export const getMathValidationMessage = (input) =>
   MathValidator.getValidationMessage(input);
 
-module.exports = {
-  validateMathAnswer,
-  quickValidateMath,
-  isValidMathExpression,
-  getMathValidationMessage,
-  FrontendMathValidator,
-  default: MathValidator,
-};
+export { FrontendMathValidator };
+
+export default MathValidator;

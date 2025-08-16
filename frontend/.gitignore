@@ -43,3 +43,8 @@ next-env.d.ts
 /cypress/screenshots
 
 screenshots/
+
+# Build artifacts
+fallback-*
+workbox-*
+sw.js

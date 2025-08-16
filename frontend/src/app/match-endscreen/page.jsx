@@ -1,10 +1,11 @@
 'use client';
 import Score from '@/app/ui/end-screen-ui/end-screen-score';
 import Time from '@/app/ui/end-screen-ui/end-screen-total-time';
-import TotalXP from '@/app/ui/end-screen-ui/end-screen-total-xp';
+import TotalXPMP from '@/app/ui/end-screen-ui/end-screen-totalxp-multiplayer';
 import { updateUserXP } from '@/services/api';
 import Image from 'next/image';
 import { useRouter, useSearchParams } from 'next/navigation';
+import { getSession } from 'next-auth/react';
 import { Suspense, useState } from 'react';
 
 function MatchEndScreenContent() {
@@ -18,48 +19,21 @@ function MatchEndScreenContent() {
     try {
       setIsLoading(true);
 
-      // Get user data from cookie
-      const userCookie = document.cookie
-        .split('; ')
-        .find((row) => row.startsWith('user='));
+      // Get session from Next.js auth
+      const session = await getSession();
 
-      if (!userCookie) {
-        console.error('User cookie not found');
+      if (!session || !session.user) {
+        console.error('No authenticated session found');
         router.push('/dashboard');
         return;
       }
 
-      // Decode the URL-encoded cookie value
-      const encodedUserData = userCookie.split('=')[1];
-      const decodedUserData = decodeURIComponent(encodedUserData);
-      const userData = JSON.parse(decodedUserData);
+      const userData = session.user;
 
       // Calculate XP earned using the same logic as TotalXP component
       const questions = JSON.parse(
         localStorage.getItem('questionsObj') || '[]',
       );
-      const correctAnswers = questions.filter(
-        (question) => question.isCorrect == true,
-      );
-      const xpEarned = correctAnswers.reduce(
-        (accumulator, question) => accumulator + question.question.xpGain,
-        0,
-      );
-
-      if (xpEarned > 0) {
-        // Calculate new total XP
-        const newTotalXP = userData.xp + xpEarned;
-
-        // Update user XP in database
-        await updateUserXP(userData.id, newTotalXP);
-
-        // Update the cookie with new XP value
-        const updatedUserData = { ...userData, xp: newTotalXP };
-        const updatedCookie = encodeURIComponent(
-          JSON.stringify(updatedUserData),
-        );
-        document.cookie = `user=${updatedCookie}; path=/`;
-      }
 
       // Clear localStorage
       localStorage.removeItem('questionsObj');
@@ -107,7 +81,7 @@ function MatchEndScreenContent() {
             </p>
           </div>
           <div className="flex flex-row items-center justify-center gap-8 my-7">
-            <TotalXP />
+            <TotalXPMP />
             <Score />
             <Time />
           </div>

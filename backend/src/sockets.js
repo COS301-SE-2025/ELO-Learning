@@ -5,8 +5,28 @@ const queue = [];
 const matchMap = new Map();
 
 export default (io, socket) => {
-  const queueForGame = () => {
-    console.log('Queueing for game:', socket.id);
+  const queueForGame = async (userData) => {
+    console.log('Queueing for game:', socket.id, 'User:', userData?.username);
+
+    const { data: dbUser, error } = await supabase
+      .from('Users')
+      .select(
+        'name, email, id, surname, username, xp, currentLevel, rank, joinDate',
+      )
+      .eq('id', userData.id)
+      .single();
+
+    if (error || !dbUser) {
+      console.error('Could not fetch user data from DB:', error);
+      return;
+    }
+
+    // Merge DB user data (including rank) with incoming userData
+    const mergedUserData = { ...userData, ...dbUser, rank: dbUser.rank };
+
+    // Store user data with the socket
+    socket.userData = mergedUserData;
+
     if (!queue.includes(socket)) {
       queue.push(socket);
     }
@@ -14,16 +34,44 @@ export default (io, socket) => {
     if (queue.length >= 2) {
       const player1 = queue.shift();
       const player2 = queue.shift();
-      //Write to the database
+
       console.log('Starting game between:', player1.id, 'and', player2.id);
+      console.log('Player 1:', player1.userData?.username);
+      console.log('Player 2:', player2.userData?.username);
+      console.log('Player 1 rank:', player1.userData.rank);
+      console.log('Player 2 rank:', player2.userData.rank);
+
       const gameId = uuidv4();
       player1.join(gameId);
       player2.join(gameId);
-      io.to(player1.id).emit('startGame', gameId);
-      io.to(player2.id).emit('startGame', gameId);
+
+      // Send game start with opponent data
+      io.to(player1.id).emit('startGame', {
+        gameId,
+        opponent: {
+          name: player2.userData?.name,
+          username: player2.userData?.username,
+          xp: player2.userData?.xp,
+          rank: player2.userData?.rank,
+        },
+      });
+      io.to(player2.id).emit('startGame', {
+        gameId,
+        opponent: {
+          name: player1.userData?.name,
+          username: player1.userData?.username,
+          xp: player1.userData?.xp,
+          rank: player1.userData?.rank,
+        },
+      });
+
       matchMap.set(gameId, {
         players: [player1.id, player2.id],
-        levels: [],
+        playerData: {
+          [player1.id]: player1.userData,
+          [player2.id]: player2.userData,
+        },
+        playerLevels: {},
         playerReadyCount: [],
         playerDoneCount: [],
         playerResults: [],
@@ -44,9 +92,16 @@ export default (io, socket) => {
   };
 
   const startMatch = async (gameId, level) => {
-    console.log('Starting match for game:', gameId, 'with level:', level);
+    console.log(
+      'Starting match for game:',
+      gameId,
+      'with level:',
+      level,
+      'type:',
+      typeof level,
+    );
     const gameData = matchMap.get(gameId);
-    console.log(gameData);
+    console.log('Game data:', gameData);
     if (!gameData) {
       console.log('Game not found:', gameId);
       return;
@@ -57,10 +112,19 @@ export default (io, socket) => {
       gameData.playerReadyCount.push(socket.id);
     }
 
-    // Store user level data
-    if (!gameData.levels.includes(level)) {
-      gameData.levels.push(level);
+    console.log(
+      `Player ${socket.id} is ready. Ready count: ${gameData.playerReadyCount.length}/2`,
+    );
+
+    // Store user level data (ensure it's a number)
+    const numericLevel = Number(level);
+    console.log('Converting level to number:', level, '->', numericLevel);
+
+    // Store level for this specific player (use socket.id as key to avoid duplicates)
+    if (!gameData.playerLevels) {
+      gameData.playerLevels = {};
     }
+    gameData.playerLevels[socket.id] = numericLevel;
 
     // Update the matchMap with the modified data
     matchMap.set(gameId, gameData);
@@ -68,20 +132,35 @@ export default (io, socket) => {
     if (gameData.playerReadyCount.length === 2) {
       console.log('Both players are ready for game:', gameId);
 
-      console.log('Game levels: ', gameData.levels);
+      // Get levels from all players
+      const playerLevels = Object.values(gameData.playerLevels);
+      console.log('Player levels:', playerLevels);
+      console.log(
+        'Player levels data types:',
+        playerLevels.map((l) => ({ value: l, type: typeof l })),
+      );
 
       try {
         // Calculate the average level from all players
-        const averageLevel = Math.round(
-          gameData.levels.reduce((sum, level) => sum + level, 0) /
-            gameData.levels.length,
-        );
+        const sum = playerLevels.reduce((sum, level) => {
+          console.log(`Adding ${level} (type: ${typeof level}) to sum ${sum}`);
+          return sum + level;
+        }, 0);
+
+        console.log('Sum of levels:', sum);
+        console.log('Number of players:', playerLevels.length);
+
+        const rawAverage = sum / playerLevels.length;
+        console.log('Raw average:', rawAverage);
+
+        const averageLevel = Math.round(rawAverage);
+        console.log('Rounded average level:', averageLevel);
 
         console.log(
-          `Game ${gameId} - Player levels: ${gameData.levels}, Average level: ${averageLevel}`,
+          `Game ${gameId} - Player levels: ${playerLevels}, Average level: ${averageLevel}`,
         );
 
-        // Fetch 15 random questions for the calculated average level
+        // Fetch 6 random questions for the calculated average level
         const { data: questions, error: qError } = await supabase
           .from('Questions')
           .select('*')
@@ -102,9 +181,9 @@ export default (io, socket) => {
           return;
         }
 
-        // Shuffle and pick 15
+        // Shuffle and pick 6
         const shuffled = questions.sort(() => 0.5 - Math.random());
-        const selected = shuffled.slice(0, 16);
+        const selected = shuffled.slice(0, 6);
 
         //fetch the answers for the above questions
         const questionIds = selected.map((q) => q.Q_id);
@@ -147,100 +226,100 @@ export default (io, socket) => {
     }
   };
 
-  const matchComplete = (gameId, playerResults, playerID) => {
+  const matchComplete = async (gameId, playerResults, playerID) => {
     const gameData = matchMap.get(gameId);
     if (!gameData) {
       console.log('Game not found:', gameId);
       return;
     }
 
-    // Update player done count
+    // Store player results
+    gameData.playerResults = gameData.playerResults || {};
+    gameData.playerResults[playerID] = playerResults;
+
+    // Mark player as done
     if (!gameData.playerDoneCount.includes(playerID)) {
       gameData.playerDoneCount.push(playerID);
-      gameData.playerResults.push(playerResults);
     }
 
     matchMap.set(gameId, gameData);
+
     if (gameData.playerDoneCount.length < 2) {
       console.log('Waiting for other player to finish game:', gameId);
       return;
     }
 
-    console.log('Both players have completed the game:', gameId);
+    // Calculate stats for both players
+    const calculateStats = (results) => {
+      let xpGain = 0;
+      let timeTaken = 0;
 
-    // Process player results and update database or emit events as needed
-    console.log('Match complete for game:', gameId);
+      try {
+        const parsedResults =
+          typeof results === 'string' ? JSON.parse(results) : results;
+        if (Array.isArray(parsedResults)) {
+          parsedResults.forEach((question) => {
+            if (question?.isCorrect && question.question?.xpGain) {
+              xpGain += question.question.xpGain;
+            }
+            timeTaken += question.timeElapsed || 0;
+          });
+        }
+      } catch (e) {
+        console.error('Error parsing results:', e);
+      }
 
-    const secondPlayer =
-      gameData.players[0] === playerID
-        ? gameData.players[0]
-        : gameData.players[1];
-    const firstPlayer =
-      gameData.players[0] === secondPlayer
-        ? gameData.players[1]
-        : gameData.players[0];
+      return { xpGain, timeTaken };
+    };
 
-    //array with player 1 question objects
-    //another array with player 2 question objects
-    const firstPlayerToFinishResults = JSON.parse(gameData.playerResults[0]);
-    const secondPlayerToFinishResults = JSON.parse(gameData.playerResults[1]);
+    const [player1Id, player2Id] = gameData.players;
+    const player1Stats = calculateStats(gameData.playerResults[player1Id]);
+    const player2Stats = calculateStats(gameData.playerResults[player2Id]);
 
-    console.log('First player results:', firstPlayerToFinishResults);
-    console.log('Second player results:', secondPlayerToFinishResults);
-
-    const correctAnswersForFirstPlayer = firstPlayerToFinishResults.filter(
-      (question) => question.isCorrect == true,
-    );
-
-    const correctAnswersForSecondPlayer = secondPlayerToFinishResults.filter(
-      (question) => question.isCorrect == true,
-    );
-
-    if (
-      correctAnswersForFirstPlayer.length > correctAnswersForSecondPlayer.length
-    ) {
-      console.log(
-        'Player 1 wins:',
-        firstPlayer,
-        'Player 2 loses:',
-        secondPlayer,
-      );
-      io.to(firstPlayer).emit('matchEnd', {
-        isWinner: true,
-      });
-      io.to(secondPlayer).emit('matchEnd', {
-        isWinner: false,
-      });
-    } else if (
-      correctAnswersForFirstPlayer.length < correctAnswersForSecondPlayer.length
-    ) {
-      console.log(
-        'Player 2 wins:',
-        secondPlayer,
-        'Player 1 loses:',
-        firstPlayer,
-      );
-      io.to(secondPlayer).emit('matchEnd', {
-        isWinner: true,
-      });
-      io.to(firstPlayer).emit('matchEnd', {
-        isWinner: false,
-      });
+    // Determine winner based on time (faster wins)
+    let score1;
+    if (player1Stats.timeTaken < player2Stats.timeTaken) {
+      score1 = 1; // Player 1 wins
+    } else if (player1Stats.timeTaken > player2Stats.timeTaken) {
+      score1 = 0; // Player 2 wins
     } else {
-      console.log('Match is a draw between:', firstPlayer, 'and', secondPlayer);
-      io.to(firstPlayer).emit('matchEnd', {
-        isWinner: false,
-      });
-      io.to(secondPlayer).emit('matchEnd', {
-        isWinner: false,
-      });
-    } //@Ntokozo: update the if statement to be in line with ELO
+      score1 = 0.5; // Draw
+    }
 
-    //TODO: process the results, here is where the elo logic comes in. A object is passed through from the FE with all of the questions and their answers. Can we update the ELO algorithm so that it can give back the amount of XP for each player?
+    // Get user IDs
+    const user1Id = gameData.playerData[player1Id].id;
+    const user2Id = gameData.playerData[player2Id].id;
 
-    //I added the multiPlayerArray functionality. Can you see if that will work.
+    console.log('Player 1 id:', user1Id);
+    console.log('Player 1 totalXPGain:', player1Stats.xpGain);
+    console.log('Player 2 id:', user2Id);
+    console.log('Player 2 totalXPGain:', player2Stats.xpGain);
 
-    // Clean up the matchMap entry
+    // Prepare match data for frontend
+    const matchResults = {
+      players: [user1Id, user2Id],
+      player1Results: gameData.playerResults[player1Id],
+      player2Results: gameData.playerResults[player2Id],
+      score1,
+      totalXP: player1Stats.xpGain + player2Stats.xpGain, // Total XP from both players
+    };
+
+    // Emit to both players with their results
+    io.to(player1Id).emit('matchEnd', {
+      matchResults,
+      isWinner: score1 === 1,
+    });
+
+    io.to(player2Id).emit('matchEnd', {
+      matchResults,
+      isWinner: score1 === 0,
+    });
+
+    // Save to localStorage
+    io.to(player1Id).emit('saveMatchData', matchResults);
+    io.to(player2Id).emit('saveMatchData', matchResults);
+
+    // Clean up
     matchMap.delete(gameId);
   };
 
@@ -287,7 +366,7 @@ export default (io, socket) => {
     }
   });
 
-  socket.on('queue', queueForGame);
+  socket.on('queue', (data) => queueForGame(data?.userData));
   socket.on('cancelQueue', cancelQueue);
   socket.on('startMatch', (data) => startMatch(data.game, data.level));
   socket.on('matchComplete', (data) => {

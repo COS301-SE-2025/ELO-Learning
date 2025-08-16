@@ -6,6 +6,7 @@ import { updateUserXP } from '@/services/api';
 import Image from 'next/image';
 import Link from 'next/link';
 import { redirect, useRouter, useSearchParams } from 'next/navigation';
+import { getSession } from 'next-auth/react';
 import { Suspense, useEffect, useState } from 'react';
 
 function EndScreen() {
@@ -13,6 +14,7 @@ function EndScreen() {
   const router = useRouter();
   const mode = searchParams.get('mode');
   const [isLoading, setIsLoading] = useState(false);
+  const [xpReady, setXpReady] = useState(false);
 
   const [mistakes, setMistakes] = useState(0);
   useEffect(() => {
@@ -32,6 +34,7 @@ function EndScreen() {
     try {
       setIsLoading(true);
 
+      /*
       // Get user data from cookie
       const userCookie = document.cookie
         .split('; ')
@@ -48,10 +51,24 @@ function EndScreen() {
       const decodedUserData = decodeURIComponent(encodedUserData);
       const userData = JSON.parse(decodedUserData);
 
+      */
+
+      //Get session from Next.js auth
+      const session = await getSession();
+
+      if (!session || !session.user) {
+        console.error('No authenticated session found');
+        router.push('/dashboard');
+        return;
+      }
+
+      const userData = session.user;
+
       // Calculate XP earned using the same logic as TotalXP component
       const questions = JSON.parse(
         localStorage.getItem('questionsObj') || '[]',
       );
+      /*
       const correctAnswers = questions.filter(
         (question) => question.isCorrect == true,
       );
@@ -74,7 +91,7 @@ function EndScreen() {
         );
         document.cookie = `user=${updatedCookie}; path=/`;
       }
-
+*/
       // Clear localStorage
       localStorage.removeItem('questionsObj');
 
@@ -126,7 +143,7 @@ function EndScreen() {
           )}
           {mode === 'single-player' && (
             <div className="flex flex-row items-center justify-center gap-8 my-7">
-              <TotalXP />
+              <TotalXP onLoadComplete={() => setXpReady(true)} />
               <Score />
               <Time />
             </div>
@@ -153,9 +170,13 @@ function EndScreen() {
             <button
               className="secondary-button w-full uppercase"
               onClick={calculateXP}
-              disabled={isLoading}
+              disabled={isLoading || !xpReady}
             >
-              {isLoading ? 'Claiming XP...' : 'Claim XP'}
+              {isLoading
+                ? 'Claiming XP...'
+                : !xpReady
+                  ? 'Calculating...'
+                  : 'Claim XP'}
             </button>
           )}
         </div>

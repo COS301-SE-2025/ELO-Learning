@@ -25,10 +25,12 @@ describe('Form Workflows', () => {
      * API Mocks: POST /login
      */
     it('should show an error message on failed login', () => {
+      cy.visit('/login-landing/login');
+
       // Mock the API call for a failed login
-      cy.intercept('POST', '**/login', {
-        statusCode: 401,
-        body: { error: 'Unauthorized' },
+      cy.intercept('POST', '**/api/auth/callback/credentials', {
+        statusCode: 200,
+        body: { error: 'CredentialsSignin' },
       }).as('loginRequest');
 
       // Fill out the form with incorrect credentials

@@ -1,4 +1,5 @@
 // baselineEngine.js
+//This is logic only — no Express routes, no HTTP handling. Contains baseline algorithm.
 import { supabase } from '../database/supabaseClient.js';
 
 class BaselineEngine {
@@ -18,7 +19,7 @@ class BaselineEngine {
       this.correctCount++;
       this.currentLevel = Math.min(this.currentLevel + 1, 10);
     } else {
-      this.currentLevel = Math.max(this.currentLevel - 1, 1); //min is now 1
+      this.currentLevel = Math.max(this.currentLevel - 1, 1); 
     }
   }
 
@@ -38,11 +39,25 @@ class BaselineEngine {
     return null;
   }
 
-  async fetchQuestion() {
-    const { data: questions, error } = await supabase
-      .from('Questions')
-      .select('*')
-      .eq('level', this.currentLevel);
+async fetchQuestion() {
+  const { data: questions, error } = await supabase
+    .from('Questions')
+    .select(`
+      Q_id,
+      topic,
+      difficulty,
+      level,
+      questionText,
+      xpGain,
+      elo_rating,
+      imageUrl,
+      Answers (
+        answer_id,
+        answer_text,
+        isCorrect
+      )
+    `)
+    .eq('level', this.currentLevel);
 
     if (error || !questions || questions.length === 0) {
       throw new Error('No questions found');
@@ -59,7 +74,6 @@ class BaselineEngine {
     this.askedQuestionIds.add(selected.Q_id);
 
     return selected;
-    //frontend needs the answer so the a question needs 
     //find optimised way to find the questions per level so it doesnt take long - DEMO 4
   }
 
@@ -73,7 +87,7 @@ class BaselineEngine {
       return { done: true, rating: bounceEnd };
     }
 
-    if (this.questionCount >= 15) {
+    if (this.questionCount >= 10) { //max is 10 for now
       return { done: true, rating: this.currentLevel };
     }
 

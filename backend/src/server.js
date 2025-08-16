@@ -18,6 +18,10 @@ import userRoutes from './userRoutes.js';
 import validateRoutes from './validateRoutes.js';
 import baselineRoutes from './baselineRoutes.js';
 
+const allowedOrigins = [
+  "http://localhost:8080", // Frontend
+  "http://localhost:3000"  // Backend 
+];
 
 // Load environment variables
 dotenv.config();
@@ -30,7 +34,7 @@ const server = createServer(app);
 // Middleware
 //app.use(cors());
 app.use(cors({
-  origin: 'http://localhost:8080',
+  origin: allowedOrigins,
   credentials: true
 }));
 app.use(express.json());
@@ -44,7 +48,7 @@ app.use('/', validateRoutes);
 app.use('/', singlePlayerRoutes);
 app.use('/', multiPlayerRoutes);
 app.use('/', oauthRoutes);
-app.use('/baseline', baselineRoutes);
+app.use('/', baselineRoutes);
 
 
 // Simple health check route
@@ -58,13 +62,6 @@ if (process.env.NODE_ENV !== 'test') {
   });
 }
 
-//Socket IO setup
-// const io = new Server(server, {
-//   cors: {
-//     origin: '*',
-//     methods: ['GET', 'POST'],
-//   },
-// });
 // Socket.IO CORS config
 const io = new Server(server, {
   cors: {
@@ -79,6 +76,7 @@ io.on('connection', (socket) => {
   // add handlers for sockets.js here
   socketsHandlers(io, socket);
 });
+
 
 // for Jest + Supertest
 export default app;

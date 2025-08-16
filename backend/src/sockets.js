@@ -238,107 +238,100 @@ export default (io, socket) => {
     }
   };
 
-  const matchComplete = (gameId, playerResults, playerID) => {
+  const matchComplete = async (gameId, playerResults, playerID) => {
     const gameData = matchMap.get(gameId);
     if (!gameData) {
       console.log('Game not found:', gameId);
       return;
     }
 
-    // Update player done count
+    // Store player results
+    gameData.playerResults = gameData.playerResults || {};
+    gameData.playerResults[playerID] = playerResults;
+
+    // Mark player as done
     if (!gameData.playerDoneCount.includes(playerID)) {
       gameData.playerDoneCount.push(playerID);
-      gameData.playerResults.push(playerResults);
     }
 
     matchMap.set(gameId, gameData);
+
     if (gameData.playerDoneCount.length < 2) {
       console.log('Waiting for other player to finish game:', gameId);
       return;
     }
 
-    console.log('Both players have completed the game:', gameId);
+    // Calculate stats for both players
+    const calculateStats = (results) => {
+      let xpGain = 0;
+      let timeTaken = 0;
 
-    // Process player results and update database or emit events as needed
-    console.log('Match complete for game:', gameId);
+      try {
+        const parsedResults =
+          typeof results === 'string' ? JSON.parse(results) : results;
+        if (Array.isArray(parsedResults)) {
+          parsedResults.forEach((question) => {
+            if (question?.isCorrect && question.question?.xpGain) {
+              xpGain += question.question.xpGain;
+            }
+            timeTaken += question.timeElapsed || 0;
+          });
+        }
+      } catch (e) {
+        console.error('Error parsing results:', e);
+      }
 
-    const secondPlayer =
-      gameData.players[0] === playerID
-        ? gameData.players[0]
-        : gameData.players[1];
-    const firstPlayer =
-      gameData.players[0] === secondPlayer
-        ? gameData.players[1]
-        : gameData.players[0];
+      return { xpGain, timeTaken };
+    };
 
-    //array with player 1 question objects
-    //another array with player 2 question objects
-    const firstPlayerToFinishResults = JSON.parse(gameData.playerResults[0]);
-    const secondPlayerToFinishResults = JSON.parse(gameData.playerResults[1]);
+    const [player1Id, player2Id] = gameData.players;
+    const player1Stats = calculateStats(gameData.playerResults[player1Id]);
+    const player2Stats = calculateStats(gameData.playerResults[player2Id]);
 
-    console.log('First player results:', firstPlayerToFinishResults);
-    console.log('Second player results:', secondPlayerToFinishResults);
-
-    const correctAnswersForFirstPlayer = firstPlayerToFinishResults.filter(
-      (question) => question.isCorrect == true,
-    );
-
-    const correctAnswersForSecondPlayer = secondPlayerToFinishResults.filter(
-      (question) => question.isCorrect == true,
-    );
-
-    if (
-      correctAnswersForFirstPlayer.length > correctAnswersForSecondPlayer.length
-    ) {
-      console.log(
-        'Player 1 wins:',
-        firstPlayer,
-        'Player 2 loses:',
-        secondPlayer,
-      );
-      io.to(firstPlayer).emit('matchEnd', {
-        isWinner: true,
-      });
-      io.to(secondPlayer).emit('matchEnd', {
-        isWinner: false,
-      });
-    } else if (
-      correctAnswersForFirstPlayer.length < correctAnswersForSecondPlayer.length
-    ) {
-      console.log(
-        'Player 2 wins:',
-        secondPlayer,
-        'Player 1 loses:',
-        firstPlayer,
-      );
-      io.to(secondPlayer).emit('matchEnd', {
-        isWinner: true,
-      });
-      io.to(firstPlayer).emit('matchEnd', {
-        isWinner: false,
-      });
+    // Determine winner based on time (faster wins)
+    let score1;
+    if (player1Stats.timeTaken < player2Stats.timeTaken) {
+      score1 = 1; // Player 1 wins
+    } else if (player1Stats.timeTaken > player2Stats.timeTaken) {
+      score1 = 0; // Player 2 wins
     } else {
-      console.log('Match is a draw between:', firstPlayer, 'and', secondPlayer);
-      io.to(firstPlayer).emit('matchEnd', {
-        isWinner: false,
-      });
-      io.to(secondPlayer).emit('matchEnd', {
-        isWinner: false,
-      });
-    } //@Ntokozo: update the if statement to be in line with ELO
+      score1 = 0.5; // Draw
+    }
 
-    //TODO: process the results, here is where the elo logic comes in. A object is passed through from the FE with all of the questions and their answers. Can we update the ELO algorithm so that it can give back the amount of XP for each player?
+    // Get user IDs
+    const user1Id = gameData.playerData[player1Id].id;
+    const user2Id = gameData.playerData[player2Id].id;
 
-    //I added the multiPlayerArray functionality. Can you see if that will work.
-    const multiPlayerArray = [
-      firstPlayerToFinishResults,
-      secondPlayerToFinishResults,
-    ];
-    console.log('first', multiPlayerArray[0]);
-    console.log('\n--------------------\n');
-    console.log('second', multiPlayerArray[1]);
+    console.log('Player 1 id:', user1Id);
+    console.log('Player 1 totalXPGain:', player1Stats.xpGain);
+    console.log('Player 2 id:', user2Id);
+    console.log('Player 2 totalXPGain:', player2Stats.xpGain);
 
-    // Clean up the matchMap entry
+    // Prepare match data for frontend
+    const matchResults = {
+      players: [user1Id, user2Id],
+      player1Results: gameData.playerResults[player1Id],
+      player2Results: gameData.playerResults[player2Id],
+      score1,
+      totalXP: player1Stats.xpGain + player2Stats.xpGain, // Total XP from both players
+    };
+
+    // Emit to both players with their results
+    io.to(player1Id).emit('matchEnd', {
+      matchResults,
+      isWinner: score1 === 1,
+    });
+
+    io.to(player2Id).emit('matchEnd', {
+      matchResults,
+      isWinner: score1 === 0,
+    });
+
+    // Save to localStorage
+    io.to(player1Id).emit('saveMatchData', matchResults);
+    io.to(player2Id).emit('saveMatchData', matchResults);
+
+    // Clean up
     matchMap.delete(gameId);
   };
 

@@ -41,11 +41,11 @@ export default function SimpleQuestionWrapper({ questions }) {
     const handleLifeLost = (event) => {
       console.log('🎮 Life lost event received:', event.detail);
       setNumLives(event.detail.newLives);
-      
+
       // Show feedback for life loss
       setShowFeedback(true);
       setFeedbackMessage(`💔 Life Lost: ${event.detail.reason}`);
-      
+
       // Auto-hide feedback after 3 seconds
       setTimeout(() => {
         setShowFeedback(false);
@@ -54,7 +54,7 @@ export default function SimpleQuestionWrapper({ questions }) {
     };
 
     window.addEventListener('lifeLost', handleLifeLost);
-    
+
     return () => {
       window.removeEventListener('lifeLost', handleLifeLost);
     };
@@ -157,7 +157,7 @@ export default function SimpleQuestionWrapper({ questions }) {
     if (typeof window.checkMatchQuestionCompletion === 'function') {
       window.checkMatchQuestionCompletion();
     }
-    
+
     if (currentStep >= allQuestions.length) {
       console.log('🏁 Quiz completed!');
       handleQuizComplete();
@@ -183,12 +183,12 @@ export default function SimpleQuestionWrapper({ questions }) {
     if (!isAnswerCorrect) {
       setNumLives((prev) => {
         const newLives = prev - 1;
-        
+
         // Update localStorage to keep it in sync (SSR-safe)
         if (typeof window !== 'undefined') {
           localStorage.setItem('lives', newLives.toString());
         }
-        
+
         if (newLives <= 0) {
           // Game over - redirect to practice menu
           setTimeout(() => {
@@ -201,9 +201,9 @@ export default function SimpleQuestionWrapper({ questions }) {
 
     setShowFeedback(true);
     setFeedbackMessage(
-      isAnswerCorrect ? 
-        '🎉 Correct! Well done!' : 
-        '❌ Not quite right. Keep practicing!'
+      isAnswerCorrect
+        ? '🎉 Correct! Well done!'
+        : '❌ Not quite right. Keep practicing!',
     );
 
     // Auto-advance after 2 seconds (or show game over message)
@@ -247,7 +247,9 @@ export default function SimpleQuestionWrapper({ questions }) {
             </span>
           </div>
 
-          <QuestionTemplate question={currQuestion?.questionText || 'Loading...'} />
+          <QuestionTemplate
+            question={currQuestion?.questionText || 'Loading...'}
+          />
         </div>
 
         {/* Answer Section */}
@@ -265,11 +267,13 @@ export default function SimpleQuestionWrapper({ questions }) {
         {/* Feedback */}
         {showFeedback && (
           <div className="px-8">
-            <div className={`p-4 rounded-lg text-center font-semibold ${
-              isAnswerCorrect 
-                ? 'bg-green-100 text-green-800 border border-green-300'
-                : 'bg-red-100 text-red-800 border border-red-300'
-            }`}>
+            <div
+              className={`p-4 rounded-lg text-center font-semibold ${
+                isAnswerCorrect
+                  ? 'bg-green-100 text-green-800 border border-green-300'
+                  : 'bg-red-100 text-red-800 border border-red-300'
+              }`}
+            >
               {feedbackMessage}
             </div>
           </div>

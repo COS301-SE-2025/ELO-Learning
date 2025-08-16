@@ -17,6 +17,7 @@ import { calculateSinglePlayerXP } from './utils/xpCalculator.js';
 const router = express.Router();
 
 router.post('/singleplayer', async (req, res) => {
+  console.log('Using singleplayer route... --------------------');
   try {
     const { user_id, question_id, isCorrect, timeSpent } = req.body;
 

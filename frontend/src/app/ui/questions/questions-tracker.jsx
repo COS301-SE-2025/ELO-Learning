@@ -34,7 +34,31 @@ export default function QuestionsTracker({
   const [isDisabled, setIsDisabled] = useState(true);
   const [answer, setAnswer] = useState('');
   const [isAnswerCorrect, setIsAnswerCorrect] = useState(false);
-  const [numLives, setNumLives] = useState(lives || 5);
+  const [numLives, setNumLives] = useState(() => {
+    // Reset lives to 5 and clear localStorage (only in browser)
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('lives', '5');
+    }
+    return 5;
+  });
+
+  // Listen for life loss events from match questions
+  useEffect(() => {
+    const handleMatchLifeLost = (event) => {
+      console.log('🎮 Match question life lost:', event.detail);
+      const newLives = Math.max(0, event.detail.newLives); // Ensure lives don't go below 0
+      setNumLives(newLives);
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('lives', newLives.toString());
+      }
+    };
+
+    window.addEventListener('lifeLost', handleMatchLifeLost);
+
+    return () => {
+      window.removeEventListener('lifeLost', handleMatchLifeLost);
+    };
+  }, []);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [questionStartTime, setQuestionStartTime] = useState(Date.now());
   
@@ -322,6 +346,9 @@ export default function QuestionsTracker({
   };
 
   const setLocalStorage = async () => {
+    // Only proceed if we're in the browser
+    if (typeof window === 'undefined') return;
+
     // Calculate time elapsed in seconds
     const timeElapsed = Math.round((Date.now() - questionStartTime) / 1000);
 
@@ -329,17 +356,40 @@ export default function QuestionsTracker({
       localStorage.getItem('questionsObj') || '[]',
     );
 
-    // Find the correct answer
-    const correctAnswerObj = currAnswers.find((ans) => ans.isCorrect === true);
-    const correctAnswerText = correctAnswerObj?.answer_text || correctAnswerObj;
+    // Get ALL correct answers, not just the first one
+    const correctAnswers = currAnswers
+      .filter((answer) => answer.isCorrect)
+      .map((answer) => answer.answer_text || answer.answerText)
+      .filter(Boolean);
 
-    // ✅ Re-validate with new validator before storing
-    const revalidatedResult = await validateAnswerEnhanced(
-      answer,
-      correctAnswerText,
-      currQuestion?.questionText || '',
-      currQuestion?.type || 'Math Input',
-    );
+    // Check if student answer matches ANY of the correct answers
+    let revalidatedResult = false;
+    let matchedAnswer = null;
+    let correctAnswerObj = null;
+
+    for (const correctAnswer of correctAnswers) {
+      const individualResult = await validateAnswerEnhanced(
+        answer,
+        correctAnswer,
+        currQuestion?.questionText || '',
+        currQuestion?.type || 'Math Input',
+      );
+
+      if (individualResult) {
+        revalidatedResult = true;
+        matchedAnswer = correctAnswer;
+        // Find the original answer object for this matched answer
+        correctAnswerObj = currAnswers.find(
+          (ans) => (ans.answer_text || ans.answerText) === correctAnswer,
+        );
+        break; // Found a match, no need to check further
+      }
+    }
+
+    // If no match found, use the first correct answer as fallback for storage
+    if (!correctAnswerObj) {
+      correctAnswerObj = currAnswers.find((ans) => ans.isCorrect === true);
+    }
 
     console.log('💾 Storing question with validation:', {
       studentAnswer: answer,
@@ -363,7 +413,14 @@ export default function QuestionsTracker({
 
   const handleLives = (validationResult) => {
     if (!validationResult) {
-      setNumLives((prev) => prev - 1);
+      setNumLives((prev) => {
+        const newLives = Math.max(0, prev - 1);
+        if (typeof window !== 'undefined') {
+          localStorage.setItem('lives', newLives.toString());
+        }
+        return newLives;
+      });
+
       if (numLives <= 1) {
         router.push(`/end-screen?mode=${mode}`);
         return true;

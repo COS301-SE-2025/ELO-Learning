@@ -1,13 +1,12 @@
 // ui/answers/answer-wrapper.jsx
-import { useCallback, useRef } from 'react';
 import ExpressionBuilderTemplate from '@/app/ui/answers/expression-builder';
 import MathInputTemplate from '@/app/ui/answers/input-question';
 import MultipleChoiceTemplate from '@/app/ui/answers/multiple-choice';
 import OpenResponseTemplate from '@/app/ui/answers/open-response';
-import FillInBlankTemplate from '@/app/ui/question-types/fill-in-blank';
 import MatchQuestionTemplate from '@/app/ui/question-types/match-question';
 import { validateAnswerEnhanced } from '@/utils/answerValidator';
 import { Check, X } from 'lucide-react';
+import { useCallback, useRef } from 'react';
 
 export default function AnswerWrapper({
   question,
@@ -280,18 +279,14 @@ export default function AnswerWrapper({
         />
       )}
 
-      {/* Fill in the Blank */}
-      {(question.type === 'Fill-in-the-Blank' || question.type === 'Fill-in-the-Blanks') && (
-        <FillInBlankTemplate
-          question={question}
-          answers={currAnswers}
-          setAnswer={(answer) => {
-            setAnswer(answer);
-            handleAnswerValidation(answer);
-          }}
-          setIsAnswerCorrect={setIsAnswerCorrect}
-          answer={answer}
-        />
+      {/* Fill in the Blank - Not implemented */}
+      {(question.type === 'Fill-in-the-Blank' ||
+        question.type === 'Fill-in-the-Blanks') && (
+        <div className="text-center p-8">
+          <p className="text-yellow-600 font-medium">
+            Fill-in-the-blank questions are not yet implemented.
+          </p>
+        </div>
       )}
 
       {/* Match Question */}
@@ -316,14 +311,18 @@ export default function AnswerWrapper({
           <div className="flex flex-col gap-4 md:gap-2 items-center">
             {[
               { id: 'true', answer_text: 'True', isCorrect: false },
-              { id: 'false', answer_text: 'False', isCorrect: false }
+              { id: 'false', answer_text: 'False', isCorrect: false },
             ].map((option) => {
               // Determine if this option is correct based on the currAnswers from database
               let isOptionCorrect = false;
               if (currAnswers && currAnswers.length > 0) {
-                const correctAnswerObj = currAnswers.find(ans => ans.isCorrect);
+                const correctAnswerObj = currAnswers.find(
+                  (ans) => ans.isCorrect,
+                );
                 if (correctAnswerObj) {
-                  isOptionCorrect = option.answer_text.toLowerCase() === correctAnswerObj.answer_text?.toLowerCase();
+                  isOptionCorrect =
+                    option.answer_text.toLowerCase() ===
+                    correctAnswerObj.answer_text?.toLowerCase();
                 }
               }
 
@@ -334,7 +333,7 @@ export default function AnswerWrapper({
                   key={option.id}
                   onClick={() => {
                     setAnswer(option.answer_text);
-                    
+
                     // Use the enhanced validation function
                     handleAnswerValidation(option.answer_text);
                   }}
@@ -352,24 +351,6 @@ export default function AnswerWrapper({
               );
             })}
           </div>
-
-          {/* Selected Answer Indicator */}
-          {answer && (
-            <div className="text-center">
-              <div className={`inline-flex items-center gap-2 px-4 py-2 rounded-full ${
-                answer === 'True' 
-                  ? 'bg-green-100 text-green-800 border border-green-300' 
-                  : 'bg-red-100 text-red-800 border border-red-300'
-              }`}>
-                {answer === 'True' ? (
-                  <Check size={16} className="text-green-600" />
-                ) : (
-                  <X size={16} className="text-red-600" />
-                )}
-                <span className="font-semibold">You selected: {answer}</span>
-              </div>
-            </div>
-          )}
         </div>
       )}
 

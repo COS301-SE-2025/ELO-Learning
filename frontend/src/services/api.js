@@ -113,6 +113,11 @@ axiosInstance.interceptors.request.use(async (config) => {
   }
 
   // Regular auth logic for non-test environments
+  // Skip auth for random questions endpoint to improve performance
+  if (config.url === '/questions/random') {
+    return config;
+  }
+
   if (isServer) {
     // Server-side logic (keep as is)
     const { cookies } = await import('next/headers');
@@ -430,6 +435,10 @@ export async function fetchRandomQuestions(level) {
     }
 
     console.log(`🌐 Fetching random questions for level ${level}...`);
+    console.log('fetchRandomQuestions called with level:', level);
+    console.log('BASE_URL:', BASE_URL);
+    console.log('isServer:', typeof window === 'undefined');
+
     const res = await axiosInstance.get('/questions/random', {
       params: { level },
     });
@@ -526,10 +535,27 @@ export async function fetchQuestionAnswer(id) {
 }
 
 export async function fetchQuestionsByTopic(topic) {
-  const res = await axiosInstance.get(`/questions/topic`, {
-    params: { topic },
-  });
-  return res.data;
+  try {
+    const res = await axiosInstance.get(`/questions/topic`, {
+      params: { topic },
+    });
+    console.log('fetchQuestionsByTopic success:', res.status);
+    console.log('Questions received:', res.data?.questions?.length || 0);
+
+    return res.data;
+  } catch (error) {
+    console.error('fetchQuestionsByTopic error:', {
+      message: error.message,
+      status: error.response?.status,
+      statusText: error.response?.statusText,
+      data: error.response?.data,
+      topic: topic,
+      url: error.config?.url,
+      baseURL: error.config?.baseURL,
+    });
+
+    throw error;
+  }
 }
 
 export async function submitAnswer(id, answer) {
@@ -541,6 +567,11 @@ export async function submitAnswer(id, answer) {
 
 export async function submitSinglePlayerAttempt(data) {
   const res = await axiosInstance.post('/singleplayer', data);
+  return res.data;
+}
+
+export async function submitMultiplayerResult(data) {
+  const res = await axiosInstance.post('/multiplayer', data, {});
   return res.data;
 }
 

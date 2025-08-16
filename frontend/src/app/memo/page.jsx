@@ -96,18 +96,24 @@ export default function Page() {
         </div>
         <div>
           <p className="text-xl">System answer:</p>
-          <RightAnswer answer={
-            // Smart fallback for different question types and answer formats
-            (() => {
-              if (typeof correctAnswer === 'string') {
-                return correctAnswer; // Direct string answer (like "True" or "False")
-              }
-              if (correctAnswer && typeof correctAnswer === 'object') {
-                return correctAnswer.answer_text || correctAnswer.answerText || JSON.stringify(correctAnswer);
-              }
-              return 'Answer not available';
-            })()
-          } />
+          <RightAnswer
+            answer={
+              // Smart fallback for different question types and answer formats
+              (() => {
+                if (typeof correctAnswer === 'string') {
+                  return correctAnswer; // Direct string answer (like "True" or "False")
+                }
+                if (correctAnswer && typeof correctAnswer === 'object') {
+                  return (
+                    correctAnswer.answer_text ||
+                    correctAnswer.answerText ||
+                    JSON.stringify(correctAnswer)
+                  );
+                }
+                return 'Answer not available';
+              })()
+            }
+          />
         </div>
       </div>
       <div className="flex flex-row items-center justify-between w-full gap-4 md:w-[50%] md:m-auto">

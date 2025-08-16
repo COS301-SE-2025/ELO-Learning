@@ -31,15 +31,13 @@ export default function DebugMatchPage() {
   return (
     <div className="p-8 max-w-4xl mx-auto">
       <h1 className="text-2xl font-bold mb-4">Match Question Debug Page</h1>
-      
+
       <div className="space-y-6">
         {/* API Response Section */}
         <section>
           <h2 className="text-lg font-semibold mb-2">API Response:</h2>
           <div className="bg-gray-100 p-4 rounded-lg overflow-auto">
-            <pre className="text-sm">
-              {JSON.stringify(apiResult, null, 2)}
-            </pre>
+            <pre className="text-sm">{JSON.stringify(apiResult, null, 2)}</pre>
           </div>
         </section>
 
@@ -49,14 +47,26 @@ export default function DebugMatchPage() {
             <h2 className="text-lg font-semibold mb-2">
               Questions Found: {apiResult.data.length}
             </h2>
-            
+
             {apiResult.data.map((question, index) => (
-              <div key={question.Q_id} className="border border-gray-300 p-4 rounded-lg mb-4">
-                <h3 className="font-semibold">Question {index + 1} (ID: {question.Q_id})</h3>
-                <p><strong>Type:</strong> {question.type}</p>
-                <p><strong>Text:</strong> {question.questionText}</p>
-                <p><strong>Answers:</strong> {question.answers?.length || 0} answers</p>
-                
+              <div
+                key={question.Q_id}
+                className="border border-gray-300 p-4 rounded-lg mb-4"
+              >
+                <h3 className="font-semibold">
+                  Question {index + 1} (ID: {question.Q_id})
+                </h3>
+                <p>
+                  <strong>Type:</strong> {question.type}
+                </p>
+                <p>
+                  <strong>Text:</strong> {question.questionText}
+                </p>
+                <p>
+                  <strong>Answers:</strong> {question.answers?.length || 0}{' '}
+                  answers
+                </p>
+
                 {question.answers && question.answers.length > 0 && (
                   <div className="mt-2">
                     <p className="font-medium">Sample Answers:</p>

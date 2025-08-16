@@ -3,20 +3,23 @@ import { getQuestionsByType } from '@/utils/api';
 
 export async function testMatchQuestions() {
   console.log('Testing match questions...');
-  
+
   try {
     const result = await getQuestionsByType('Match Question', 10);
     console.log('Match Question API result:', result);
-    
+
     if (result.success) {
-      console.log('✅ Successfully fetched match questions:', result.data?.length || 0);
+      console.log(
+        '✅ Successfully fetched match questions:',
+        result.data?.length || 0,
+      );
       result.data?.forEach((question, index) => {
         console.log(`Question ${index + 1}:`, {
           id: question.Q_id,
           type: question.type,
           questionText: question.questionText,
           answersCount: question.answers?.length || 0,
-          answers: question.answers
+          answers: question.answers,
         });
       });
     } else {
@@ -29,8 +32,14 @@ export async function testMatchQuestions() {
 
 // Also test other question types for comparison
 export async function testAllQuestionTypes() {
-  const types = ['Multiple Choice', 'Math Input', 'Match Question', 'Matching', 'Open Response'];
-  
+  const types = [
+    'Multiple Choice',
+    'Math Input',
+    'Match Question',
+    'Matching',
+    'Open Response',
+  ];
+
   for (const type of types) {
     console.log(`\n--- Testing ${type} ---`);
     try {

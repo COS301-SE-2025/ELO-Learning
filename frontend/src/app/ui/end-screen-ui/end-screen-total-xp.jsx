@@ -156,7 +156,7 @@ export default function TotalXP({ onLoadComplete }) {
     console.log('TotalXP useEffect triggered');
     console.log('Session status:', status);
     console.log('Session data:', session);
-    
+
     async function calculateTotalXP() {
       try {
         // FIRST: Check if XP calculation already completed for this game session

@@ -118,18 +118,11 @@ export default function ExpressionBuilderTemplate({
   };
 
   return (
-    <div className="w-full space-y-6">
-      <div className="text-center">
-        <p className="text-gray-600 mb-4">
-          Tap tiles below to build your mathematical expression
-        </p>
-      </div>
-
+    <div className="w-full space-y-6 mb-35">
       {/* Expression Display Area - Match App Background */}
-      <div className="bg-gray-800 border-2 border-gray-600 rounded-lg p-4 min-h-[100px] flex flex-wrap items-center gap-2">
+      <div className="border border-[#696969] rounded-lg p-4 min-h-[100px] flex flex-wrap items-center gap-2">
         {selectedTiles.length === 0 ? (
-          <div className="w-full text-center text-gray-400 py-8">
-            <div className="text-4xl mb-2">🧩</div>
+          <div className="w-full text-sm py-2">
             <p>Start building your expression by tapping tiles below</p>
           </div>
         ) : (
@@ -152,9 +145,9 @@ export default function ExpressionBuilderTemplate({
 
       {/* Expression Preview - Match App Background with LaTeX */}
       {selectedTiles.length > 0 && (
-        <div className="bg-gray-800 border border-gray-600 rounded-lg p-4">
-          <div className="text-sm text-gray-400 mb-2">Preview:</div>
-          <div className="text-xl text-white">
+        <div className="border border-[#696969] rounded-lg p-4">
+          <div className="text-sm mb-2">Preview:</div>
+          <div className="text-xl">
             <InlineMath
               math={convertToLatex(
                 selectedTiles.map((tile) => tile.label).join(' '),
@@ -169,7 +162,7 @@ export default function ExpressionBuilderTemplate({
         <button
           onClick={clearAll}
           disabled={selectedTiles.length === 0}
-          className="px-4 py-2 bg-red-500 border-2 border-red-700 text-white rounded-lg disabled:bg-gray-500 disabled:border-gray-700 disabled:cursor-not-allowed hover:bg-red-600 transition-colors"
+          className="px-4 py-2 bg-[#ff6e99] text-white rounded-lg disabled:bg-gray-500 disabled:border-gray-700 disabled:cursor-not-allowed hover:bg-red-600 transition-colors"
         >
           Clear All
         </button>
@@ -331,7 +324,7 @@ export default function ExpressionBuilderTemplate({
 
       {/* Helper Text - Matching Math Input Style */}
       <div
-        className="text-xs bg-gray-800 border border-gray-600 p-3 rounded-lg cursor-pointer select-none"
+        className="text-xs border border-[#696969] p-3 rounded-lg cursor-pointer select-none"
         onClick={() => setShowHelper((prev) => !prev)}
       >
         <div className="flex items-center justify-between text-white">

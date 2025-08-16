@@ -50,7 +50,7 @@ export default function OpenResponsePage() {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center p-8">
-          <div className="w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <div className="w-8 h-8 border border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
           <h2 className="text-xl font-semibold text-gray-800">
             Loading Open Response Questions...
           </h2>

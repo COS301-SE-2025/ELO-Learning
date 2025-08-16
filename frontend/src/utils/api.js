@@ -196,7 +196,7 @@ export async function submitQuestionAnswer({
   isCorrect,
   timeSpent,
   questionType = null,
-  gameMode = 'practice', // 🔧 ADD THIS - defaults to practice
+  gameMode = 'practice',
 }) {
   try {
     // Validate required parameters
@@ -214,7 +214,7 @@ export async function submitQuestionAnswer({
     };
 
     if (typeof window !== 'undefined') {
-      const token = getAuthToken();
+      const token = await getAuthToken();
       if (token) {
         headers['Authorization'] = `Bearer ${token}`;
       }
@@ -227,6 +227,7 @@ export async function submitQuestionAnswer({
       questionType
     });
 
+    //  Use the endpoint that includes achievement checking
     const response = await fetch(
       `${API_BASE_URL}/question/${questionId}/submit`,
       {
@@ -237,7 +238,8 @@ export async function submitQuestionAnswer({
           userId,
           questionType,
           timeSpent,
-          gameMode, // 🔧 Include gameMode
+          gameMode,
+          isCorrect, // Include this for achievement logic
         }),
       },
     );
@@ -264,9 +266,19 @@ export async function submitQuestionAnswer({
       };
     }
 
+    // Return the full data structure that includes achievements
+    console.log('🎯 Full API response data:', data);
+    
     return {
       success: true,
-      data: data.data || data,
+      data: {
+        isCorrect: data.isCorrect,
+        message: data.message,
+        xpAwarded: data.xpAwarded,
+        updatedUser: data.updatedUser,
+        unlockedAchievements: data.unlockedAchievements || [],
+        ...data // Include any other response data
+      },
     };
   } catch (error) {
     console.error('Error submitting answer:', error);
@@ -277,7 +289,6 @@ export async function submitQuestionAnswer({
     };
   }
 }
-
 // Keep all your existing functions but add the server-side check
 export const getAllQuestions = async () => {
   try {

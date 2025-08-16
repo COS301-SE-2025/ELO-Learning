@@ -963,40 +963,6 @@ router.get('/questions/random', async (req, res) => {
 });
 
 
-
-// Make sure this helper function exists in the same file
-function getFeedbackMessage(questionType, isCorrect) {
-  const correctMessages = {
-    'Multiple Choice': 'Correct! Well done!',
-    'Math Input': 'Correct! Your mathematical expression is right!',
-    'Open Response': 'Great response! Your explanation demonstrates good understanding.',
-    'Expression Builder': 'Perfect! Your expression is correctly constructed!',
-    'Fill-in-the-Blank': 'Correct! All blanks filled properly!',
-    'Fill-in-the-Blanks': 'Correct! All blanks filled properly!',
-    'Match Question': 'Excellent! All pairs matched correctly!',
-    'Matching': 'Excellent! All pairs matched correctly!',
-    'True/False': 'Correct! You chose the right answer!',
-    'True-False': 'Correct! You chose the right answer!',
-  };
-
-  const incorrectMessages = {
-    'Multiple Choice': 'Incorrect. Try again!',
-    'Math Input': 'Not quite right. Check your mathematical expression.',
-    'Open Response': 'Your response needs more detail or accuracy. Try explaining step by step.',
-    'Expression Builder': "Your expression isn't quite right. Try rearranging the tiles.",
-    'Fill-in-the-Blank': 'Some blanks are incorrect. Double-check your answers.',
-    'Fill-in-the-Blanks': 'Some blanks are incorrect. Double-check your answers.',
-    'Match Question': 'Some pairs are not matched correctly. Review your connections.',
-    'Matching': 'Some pairs are not matched correctly. Review your connections.',
-    'True/False': 'Incorrect. Think about the statement more carefully.',
-    'True-False': 'Incorrect. Think about the statement more carefully.',
-  };
-
-  return isCorrect
-    ? correctMessages[questionType] || 'Correct!'
-    : incorrectMessages[questionType] || 'Incorrect. Try again!';
-}
-
 router.post('/question/:id/submit', async (req, res) => {
   const { id } = req.params;
   const { studentAnswer, userId, questionType, timeSpent, gameMode } = req.body;

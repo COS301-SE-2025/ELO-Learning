@@ -2,17 +2,19 @@
 
 import QuestionsTracker from '@/app/ui/questions/questions-tracker';
 import { useSocket } from '@/socket';
-import { redirect } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 
 export default function GameClient({ game, level }) {
   const { socket, session, status } = useSocket();
+  const router = useRouter();
   const [questions, setQuestions] = useState([]);
   const [isWaitingForOpponentStart, setIsWaitingForOpponentStart] =
     useState(true);
   const [isWaitingForOpponentFinish, setIsWaitingForOpponentFinish] =
     useState(false);
   const [error, setError] = useState(null);
+  const [hasNavigated, setHasNavigated] = useState(false);
 
   useEffect(() => {
     if (status === 'loading') return; // Wait for session
@@ -50,9 +52,18 @@ export default function GameClient({ game, level }) {
 
     function onMatchEnd(data) {
       console.log('Match ended:', data);
-      // Redirect to match endscreen with the result
+      // Prevent multiple navigations
+      if (hasNavigated) {
+        console.log(
+          'Already navigated to end screen, ignoring duplicate event',
+        );
+        return;
+      }
+      setHasNavigated(true);
+
+      // Use router.push for client-side navigation
       const result = data.isWinner ? 'winner' : 'loser';
-      redirect(`/match-endscreen?result=${result}`);
+      router.push(`/match-endscreen?result=${result}`);
     }
 
     socket.on('gameReady', onGameReady);
@@ -68,7 +79,13 @@ export default function GameClient({ game, level }) {
 
   const submitCallback = () => {
     console.log('Submit callback triggered - Match ended');
+    // Prevent submitting multiple times
+    if (isWaitingForOpponentFinish) {
+      console.log('Already submitted results, ignoring duplicate submission');
+      return;
+    }
     setIsWaitingForOpponentFinish(true);
+
     // Emit an event to the server to handle the end of the match
     const userAnswers = localStorage.getItem('questionsObj');
     socket.emit('matchComplete', {
@@ -98,6 +115,7 @@ export default function GameClient({ game, level }) {
             questions={questions}
             submitCallback={submitCallback}
             lives={6}
+            mode="multiplayer"
           />
         </div>
       )}

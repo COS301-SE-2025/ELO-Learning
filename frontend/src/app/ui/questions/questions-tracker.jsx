@@ -22,6 +22,7 @@ export default function QuestionsTracker({
   // ✅ Safe array handling
   const allQuestions = questions || [];
   const totalSteps = allQuestions.length;
+  const [sessionStartTime] = useState(Date.now()); // Track total session time
 
   // ✅ Safe initialization
   const [currQuestion, setCurrQuestion] = useState(allQuestions[0] || null);
@@ -106,7 +107,13 @@ export default function QuestionsTracker({
   // Handle navigation when lives reach 0
   useEffect(() => {
     if (numLives <= 0) {
-      router.push(`/end-screen?mode=${mode}`);
+      // Default to 'practice' if mode is not provided
+      const gameMode = mode || 'practice';
+      console.log(
+        'Lives reached 0, navigating to end screen with mode:',
+        gameMode,
+      );
+      router.push(`/end-screen?mode=${gameMode}`);
     }
   }, [numLives, mode, router]);
 
@@ -114,8 +121,18 @@ export default function QuestionsTracker({
     // Only proceed if we're in the browser
     if (typeof window === 'undefined') return;
 
-    // Calculate time elapsed in seconds
-    const timeElapsed = Math.round((Date.now() - questionStartTime) / 1000);
+    // Calculate individual question time elapsed in seconds
+    const questionTimeElapsed = Math.round(
+      (Date.now() - questionStartTime) / 1000,
+    );
+
+    // Calculate total session time
+    const sessionTimeElapsed = Math.round(
+      (Date.now() - sessionStartTime) / 1000,
+    );
+
+    // Save total session time in localStorage for access after completion
+    localStorage.setItem('sessionTime', sessionTimeElapsed.toString());
 
     const questionsObj = JSON.parse(
       localStorage.getItem('questionsObj') || '[]',
@@ -171,7 +188,8 @@ export default function QuestionsTracker({
       answer: answer,
       isCorrect: revalidatedResult, // ✅ Use fresh validation instead of isAnswerCorrect
       actualAnswer: correctAnswerObj,
-      timeElapsed: timeElapsed,
+      timeElapsed: questionTimeElapsed,
+      totalSessionTime: sessionTimeElapsed, // Add total session time to first answer
     });
 
     localStorage.setItem('questionsObj', JSON.stringify(questionsObj));
@@ -201,6 +219,17 @@ export default function QuestionsTracker({
       .filter((answer) => answer.isCorrect)
       .map((answer) => answer.answer_text || answer.answerText)
       .filter(Boolean);
+
+    // If we have no lives, navigate to end screen
+    if (numLives <= 0) {
+      const gameMode = mode || 'practice';
+      console.log(
+        'No lives left, navigating to end screen with mode:',
+        gameMode,
+      );
+      router.push(`/end-screen?mode=${gameMode}`);
+      return;
+    }
 
     // Check if student answer matches ANY of the correct answers
     let freshValidationResult = false;

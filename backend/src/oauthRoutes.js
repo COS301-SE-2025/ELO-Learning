@@ -1,5 +1,6 @@
 // oauthRoutes.js
 import express from 'express';
+import jwt from 'jsonwebtoken';
 import { supabase } from '../database/supabaseClient.js';
 
 const router = express.Router();
@@ -28,9 +29,16 @@ router.post('/oauth/user', async (req, res) => {
     }
 
     if (existingUser) {
-      // User exists, return existing user data
+      // User exists, return existing user data with JWT token
+      const token = jwt.sign(
+        { id: existingUser.id, email: existingUser.email },
+        process.env.JWT_SECRET,
+        { expiresIn: '1h' },
+      );
+
       return res.status(200).json({
         message: 'User found',
+        token,
         user: {
           id: existingUser.id,
           name: existingUser.name,
@@ -109,8 +117,16 @@ router.post('/oauth/user', async (req, res) => {
       return res.status(500).json({ error: 'Failed to create user' });
     }
 
+    // Generate JWT token for the new user
+    const token = jwt.sign(
+      { id: newUser.id, email: newUser.email },
+      process.env.JWT_SECRET,
+      { expiresIn: '1h' },
+    );
+
     res.status(201).json({
       message: 'OAuth user created successfully',
+      token,
       user: {
         id: newUser.id,
         name: newUser.name,

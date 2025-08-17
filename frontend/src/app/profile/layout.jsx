@@ -11,9 +11,9 @@ export default function Layout({ children }) {
           <NavBar />
         </div>
 
-        {/* Middle column - Content (2/4) */}
-        <div className=" h-screen flex-grow md:w-4/5 md:overflow-y-auto">
-          {children}
+        {/* Middle column - Content (2/4) - Added proper scrolling */}
+        <div className="flex-grow md:w-4/5 h-screen overflow-y-auto">
+          <div className="min-h-full">{children}</div>
         </div>
       </div>
     </div>

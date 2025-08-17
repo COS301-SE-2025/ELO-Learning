@@ -3,7 +3,7 @@ const beta = 0.05;
 const maxTimeSeconds = 30;
 const maxLevel = 10;
 const scalingFactor = 0.3;
-const minXPFraction = 0.2; // Minimum 20% of xpTotal for the loser
+const minXPFraction = 0.15; // Minimum 15% of xpTotal for the loser
 
 function isValidNumber(n) {
   return typeof n === 'number' && !isNaN(n);

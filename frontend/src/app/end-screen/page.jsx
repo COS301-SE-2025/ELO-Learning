@@ -2,7 +2,7 @@
 import Score from '@/app/ui/end-screen-ui/end-screen-score';
 import Time from '@/app/ui/end-screen-ui/end-screen-total-time';
 import TotalXP from '@/app/ui/end-screen-ui/end-screen-total-xp';
-import { updateUserXP } from '@/services/api';
+import { useSession } from 'next-auth/react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { redirect, useRouter, useSearchParams } from 'next/navigation';
@@ -10,6 +10,7 @@ import { getSession } from 'next-auth/react';
 import { Suspense, useEffect, useState } from 'react';
 
 function EndScreen() {
+  const { data: session } = useSession();
   const searchParams = useSearchParams();
   const router = useRouter();
   const mode = searchParams.get('mode');
@@ -40,11 +41,15 @@ function EndScreen() {
         .split('; ')
         .find((row) => row.startsWith('user='));
 
-      if (!userCookie) {
-        console.error('User cookie not found');
-        router.push('/dashboard');
-        return;
-      }
+        if (!userCookie) {
+          console.error('User cookie not found and no session available');
+          console.log('Available cookies:', document.cookie);
+          console.log('Session data:', session);
+
+          // Don't redirect immediately, just show error
+          setIsLoading(false);
+          return;
+        }
 
       // Decode the URL-encoded cookie value
       const encodedUserData = userCookie.split('=')[1];

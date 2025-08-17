@@ -7,6 +7,7 @@ import { createServer } from 'http';
 import { Server } from 'socket.io';
 
 //Change this import to ES6
+import achievementRoutes from './achievementRoutes.js';
 import answerRoutes from './answerRoutes.js';
 import multiPlayerRoutes from './multiPlayerRoute.js';
 import oauthRoutes from './oauthRoutes.js';
@@ -46,6 +47,7 @@ app.use('/', answerRoutes);
 app.use('/', validateRoutes);
 app.use('/', singlePlayerRoutes);
 app.use('/', multiPlayerRoutes);
+app.use('/', achievementRoutes);
 app.use('/', oauthRoutes);
 
 // Simple health check route

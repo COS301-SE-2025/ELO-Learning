@@ -343,20 +343,42 @@ const validateAnswerByType = (questionType, studentAnswer, correctAnswer) => {
   }
 };
 
-// Validation functions for each question type
+// Replace your validateOpenResponse function in questionRoutes.js with this:
+
 const validateOpenResponse = (studentAnswer, correctAnswer) => {
-  if (!studentAnswer || studentAnswer.trim().length < 10) {
+  if (!studentAnswer || !correctAnswer) {
     return false;
   }
 
-  try {
-    // For now, just check if it's a reasonable length response
-    // You can enhance this later with keyword matching
-    return studentAnswer.trim().length >= 20;
-  } catch (error) {
-    console.log('Open response validation - using basic length check');
-    return studentAnswer.trim().length >= 20;
+  const studentStr = studentAnswer.toString().trim();
+  const correctStr = correctAnswer.toString().trim();
+
+  // Method 1: Try exact match (case-insensitive)
+  if (studentStr.toLowerCase() === correctStr.toLowerCase()) {
+    return true;
   }
+
+  // Method 2: Try numerical comparison for math problems
+  const studentNum = parseFloat(studentStr.replace(/[^\d.-]/g, '')); // Remove non-numeric chars except decimal and minus
+  const correctNum = parseFloat(correctStr.replace(/[^\d.-]/g, ''));
+
+  if (!isNaN(studentNum) && !isNaN(correctNum)) {
+    const isCorrect = Math.abs(studentNum - correctNum) < 0.01; // Allow small floating point differences
+    if (isCorrect) {
+      return true;
+    }
+  }
+
+  // Method 3: Check if student answer contains the correct answer
+  if (studentStr.toLowerCase().includes(correctStr.toLowerCase())) {
+    return true;
+  }
+
+  // Method 4: For text responses, require minimum length (original behavior)
+  if (studentStr.length >= 20) {
+    return true;
+  }
+  return false;
 };
 
 const validateExpressionBuilder = (studentAnswer, correctAnswer) => {
@@ -937,6 +959,301 @@ router.get('/questions/random', async (req, res) => {
   } catch (err) {
     console.log(err);
     return res.status(500).json({ error: 'Server error' });
+  }
+});
+
+router.post('/question/:id/submit', async (req, res) => {
+  const { id } = req.params;
+  const { studentAnswer, userId, questionType, timeSpent, gameMode } = req.body;
+
+  try {
+    // Validate required fields
+    if (!id) {
+      return res.status(400).json({
+        success: false,
+        error: 'Question ID is required',
+      });
+    }
+
+    if (!userId) {
+      return res.status(400).json({
+        success: false,
+        error: 'User ID is required',
+      });
+    }
+
+    if (studentAnswer === undefined || studentAnswer === null) {
+      return res.status(400).json({
+        success: false,
+        error: 'Student answer is required',
+      });
+    }
+
+    const { data: questionData, error: questionError } = await supabase
+      .from('Questions')
+      .select(
+        `
+        type,
+        xpGain,
+        questionText,
+        topic,
+        topic_id,
+        Topics!inner(name)
+      `,
+      )
+      .eq('Q_id', id)
+      .single();
+
+    if (questionError || !questionData) {
+      return res.status(404).json({
+        success: false,
+        error: 'Question not found',
+      });
+    }
+
+    const actualQuestionType = questionType || questionData.type;
+    const topicName = questionData.Topics?.name || questionData.topic;
+    let isCorrect = false;
+
+    // Handle match questions with enhanced validation
+    if (
+      actualQuestionType === 'Match Question' ||
+      actualQuestionType === 'Matching'
+    ) {
+      isCorrect = await validateMatchQuestion(studentAnswer, id);
+    } else {
+      // Handle other question types with existing validation
+      const { data: correctAnswerData, error: answerError } = await supabase
+        .from('Answers')
+        .select('*')
+        .eq('question_id', id)
+        .eq('isCorrect', true)
+        .single();
+
+      if (answerError || !correctAnswerData) {
+        return res.status(404).json({
+          success: false,
+          error: 'Correct answer not found',
+          debug: { answerError, question_id: id },
+        });
+      }
+
+      const correctAnswer =
+        correctAnswerData.answer_text || correctAnswerData.answerText;
+      isCorrect = validateAnswerByType(
+        actualQuestionType,
+        studentAnswer,
+        correctAnswer,
+      );
+    }
+
+    // Award XP if correct
+    let updatedUser = null;
+    let xpAwarded = 0;
+
+    if (isCorrect && userId) {
+      const { data: currentUser, error: userError } = await supabase
+        .from('Users')
+        .select('xp')
+        .eq('id', userId)
+        .single();
+
+      if (!userError && currentUser) {
+        xpAwarded = questionData.xpGain || 10;
+        const newXp = (currentUser.xp || 0) + xpAwarded;
+
+        const { data: updated, error: updateError } = await supabase
+          .from('Users')
+          .update({ xp: newXp })
+          .eq('id', userId)
+          .select('id, xp')
+          .single();
+
+        if (!updateError) {
+          updatedUser = updated;
+        }
+      }
+    }
+
+    // Check for achievement unlocks
+    let unlockedAchievements = [];
+
+    if (userId) {
+      try {
+        console.log('🎯 Starting achievement checks for user:', userId);
+
+        // Use dynamic import to avoid circular dependency issues
+        const achievementModule = await import('./achievementRoutes.js');
+        const {
+          checkQuestionAchievements,
+          checkFastSolveAchievements,
+          checkLeaderboardAchievements,
+          checkBadgeCollectorAchievement,
+          checkTopicMasteryAchievements,
+        } = achievementModule;
+
+        if (isCorrect) {
+          // Check question achievements
+          try {
+            console.log(
+              `🎯 ACHIEVEMENT DEBUG - Checking question achievements for user ${userId}, gameMode: ${
+                gameMode || 'practice'
+              }`,
+            );
+            const questionAchievements = await checkQuestionAchievements(
+              userId,
+              isCorrect,
+              gameMode || 'practice',
+            );
+
+            console.log(
+              `🎯 ACHIEVEMENT DEBUG - checkQuestionAchievements returned:`,
+              {
+                type: typeof questionAchievements,
+                isArray: Array.isArray(questionAchievements),
+                length: questionAchievements?.length,
+                achievements: questionAchievements,
+              },
+            );
+
+            if (questionAchievements && questionAchievements.length > 0) {
+              unlockedAchievements.push(...questionAchievements);
+              console.log(
+                '� Question achievements unlocked:',
+                questionAchievements.length,
+              );
+              console.log(
+                '🏆 Achievement details:',
+                questionAchievements.map((a) => ({ name: a.name, id: a.id })),
+              );
+            } else {
+              console.log('🤷 No question achievements unlocked this time');
+            }
+          } catch (qError) {
+            console.error('❌ Question achievement error:', qError.message);
+            console.error('❌ Stack trace:', qError.stack);
+          }
+
+          // Check Fast Solve achievements
+          if (timeSpent && typeof timeSpent === 'number') {
+            try {
+              const fastSolveAchievements = await checkFastSolveAchievements(
+                userId,
+                timeSpent,
+                isCorrect,
+              );
+              if (fastSolveAchievements && fastSolveAchievements.length > 0) {
+                unlockedAchievements.push(...fastSolveAchievements);
+                console.log(
+                  '🎯 Fast solve achievements unlocked:',
+                  fastSolveAchievements.length,
+                );
+              }
+            } catch (fastSolveError) {
+              console.error(
+                'Fast solve achievement error:',
+                fastSolveError.message,
+              );
+            }
+          }
+
+          // Check Topic Mastery Achievements
+          if (topicName) {
+            try {
+              const topicAchievements = await checkTopicMasteryAchievements(
+                userId,
+                topicName,
+                isCorrect,
+              );
+              if (topicAchievements && topicAchievements.length > 0) {
+                unlockedAchievements.push(...topicAchievements);
+                console.log(
+                  '🎯 Topic achievements unlocked:',
+                  topicAchievements.length,
+                );
+              }
+            } catch (topicError) {
+              console.error('Topic achievement error:', topicError.message);
+            }
+          }
+        }
+
+        // Check Badge Collector achievements when new achievements are unlocked
+        if (unlockedAchievements.length > 0) {
+          try {
+            const badgeCollectorAchievements =
+              await checkBadgeCollectorAchievement(userId);
+            if (
+              badgeCollectorAchievements &&
+              badgeCollectorAchievements.length > 0
+            ) {
+              unlockedAchievements.push(...badgeCollectorAchievements);
+              console.log(
+                '🎯 Badge collector achievements unlocked:',
+                badgeCollectorAchievements.length,
+              );
+            }
+          } catch (badgeError) {
+            console.error(
+              'Badge collector achievement error:',
+              badgeError.message,
+            );
+          }
+        }
+
+        // Check leaderboard achievements if user gained XP
+        if (updatedUser && xpAwarded > 0) {
+          try {
+            const leaderboardAchievements =
+              await checkLeaderboardAchievements(userId);
+            if (leaderboardAchievements && leaderboardAchievements.length > 0) {
+              unlockedAchievements.push(...leaderboardAchievements);
+              console.log(
+                '🎯 Leaderboard achievements unlocked:',
+                leaderboardAchievements.length,
+              );
+            }
+          } catch (leaderboardError) {
+            console.error(
+              'Leaderboard achievement error:',
+              leaderboardError.message,
+            );
+          }
+        }
+      } catch (achievementError) {
+        console.error('❌ Error checking achievements:', achievementError);
+        // Don't fail the whole request if achievements fail
+      }
+    }
+
+    console.log('🏆 Final unlocked achievements:', unlockedAchievements);
+
+    // Generate feedback message
+    const feedbackMessage = getFeedbackMessage(actualQuestionType, isCorrect);
+
+    // Use the exact response format your frontend expects
+    const responseData = {
+      success: true,
+      data: {
+        isCorrect,
+        studentAnswer,
+        message: feedbackMessage,
+        xpAwarded,
+        newXP: updatedUser?.xp,
+        updatedUser,
+        questionType: actualQuestionType,
+        unlockedAchievements: unlockedAchievements || [],
+      },
+    };
+
+    res.status(200).json(responseData);
+  } catch (error) {
+    console.error('Error submitting answer:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to submit answer',
+      details: error.message,
+    });
   }
 });
 

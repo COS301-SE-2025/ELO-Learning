@@ -2,6 +2,7 @@
 
 import MathInputTemplate from '@/app/ui/math-keyboard/math-input-template';
 import ProgressBar from '@/app/ui/progress-bar';
+import { showAchievementNotificationsWhenReady } from '@/utils/achievementNotifications';
 import { submitQuestionAnswer } from '@/utils/api';
 import { Heart, X } from 'lucide-react';
 import Link from 'next/link';
@@ -78,19 +79,73 @@ export default function MathKeyboardWrapper({ questions }) {
     setShowFeedback(false);
 
     try {
+      // Get authenticated user ID with session fallback
+      const user = JSON.parse(localStorage.getItem('user') || '{}');
+      let userId = user.id;
+
+      // Fallback to NextAuth session if no localStorage user
+      if (!userId && session?.user?.id) {
+        userId = session.user.id;
+        console.log('🔍 Using userId from NextAuth session:', userId);
+      }
+
+      if (!userId) {
+        console.error('❌ No authenticated user found');
+        setFeedbackMessage('Please log in to continue');
+        setShowFeedback(true);
+        return;
+      }
+
       const result = await submitQuestionAnswer(
         currQuestion.Q_id,
         studentAnswer,
-        'current-user-id',
+        userId,
       );
 
       if (result.success) {
         setFeedbackMessage(result.data.message);
         setShowFeedback(true);
 
+        // 🎉 Handle achievement unlocks!
+        if (
+          result.data.unlockedAchievements &&
+          result.data.unlockedAchievements.length > 0
+        ) {
+          console.log(
+            '🏆 Achievements unlocked:',
+            result.data.unlockedAchievements,
+          );
+
+          // Use centralized achievement notification utility
+          showAchievementNotificationsWhenReady(
+            result.data.unlockedAchievements,
+          )
+            .then(() =>
+              console.log(
+                '✅ Achievement notifications triggered successfully',
+              ),
+            )
+            .catch((error) =>
+              console.error('❌ Failed to show achievements:', error),
+            );
+        } else {
+          console.log('ℹ️  No achievements unlocked for this question');
+        }
+
+        // 🎯 Update user XP in localStorage
+        if (result.data.newXP) {
+          const user = JSON.parse(localStorage.getItem('user') || '{}');
+          const updatedUser = { ...user, xp: result.data.newXP };
+          localStorage.setItem('user', JSON.stringify(updatedUser));
+          console.log(`💰 XP updated: ${result.data.newXP}`);
+        }
+
         if (result.data.isCorrect && result.data.xpAwarded > 0) {
           console.log(`Awarded ${result.data.xpAwarded} XP!`);
         }
+      } else {
+        setFeedbackMessage(result.error || 'Error submitting answer');
+        setShowFeedback(true);
       }
 
       setTimeout(() => {

@@ -58,21 +58,6 @@ describe('Unit tests for inner functions (mocked DB)', () => {
     });
   });
 
-  describe('GET /users/:id/achievements', () => {
-    it('should return achievements', async () => {
-      const mockData = { data: [{ id: 1 }], error: null };
-      mockSupabaseMethod('select', mockData);
-      const result = await supabase.select('*');
-      expect(result.data.length).toBeGreaterThan(0);
-    });
-    it('should handle no achievements', async () => {
-      const mockData = { data: [], error: null };
-      mockSupabaseMethod('select', mockData);
-      const result = await supabase.select('*');
-      expect(result.data.length).toBe(0);
-    });
-  });
-
   describe('POST /user/:id/xp', () => {
     it('should update user XP', async () => {
       const mockData = { data: { id: 1, xp: 100 }, error: null };

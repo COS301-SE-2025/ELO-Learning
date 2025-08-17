@@ -4,8 +4,11 @@
 
 import MathInputTemplate from '@/app/ui/math-keyboard/math-input-template';
 import ProgressBar from '@/app/ui/progress-bar';
+import { showAchievementNotificationsWhenReady } from '@/utils/achievementNotifications';
 import { submitQuestionAnswer } from '@/utils/api';
+import { showAchievementWithFallback } from '@/utils/fallbackAchievementNotifications';
 import { Heart, X } from 'lucide-react';
+import { useSession } from 'next-auth/react';
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { useEffect, useState } from 'react';
@@ -18,7 +21,7 @@ import OpenResponseTemplate from '@/app/ui/question-types/open-response';
 import TrueFalseTemplate from '@/app/ui/question-types/true-false';
 
 export default function UniversalQuestionWrapper({ questions, numLives = 5 }) {
-  // ✅ Safe array handling
+  const { data: session } = useSession();
   const allQuestions = questions || [];
   const totalSteps = allQuestions.length;
 
@@ -28,13 +31,13 @@ export default function UniversalQuestionWrapper({ questions, numLives = 5 }) {
   );
   console.log('🔥 UniversalQuestionWrapper - Total questions:', totalSteps);
 
-  // ✅ Safe initialization
+  //  Safe initialization
   const [currQuestion, setCurrQuestion] = useState(allQuestions[0] || null);
   const [currAnswers, setCurrAnswers] = useState(currQuestion?.answers || []);
   const [currentStep, setCurrentStep] = useState(1);
   const [isDisabled, setIsDisabled] = useState(true);
 
-  // 🔍 Debug logging
+  //  Debug logging
   console.log('UniversalQuestionWrapper - currQuestion:', currQuestion);
   console.log(
     'UniversalQuestionWrapper - currQuestion.type:',
@@ -52,7 +55,7 @@ export default function UniversalQuestionWrapper({ questions, numLives = 5 }) {
   const [feedbackMessage, setFeedbackMessage] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // ✅ Handle case where no questions are available
+  //  Handle case where no questions are available
   if (!allQuestions || allQuestions.length === 0) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -73,7 +76,7 @@ export default function UniversalQuestionWrapper({ questions, numLives = 5 }) {
     );
   }
 
-  // ✅ Handle case where currQuestion is null
+  //  Handle case where currQuestion is null
   if (!currQuestion) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -86,7 +89,7 @@ export default function UniversalQuestionWrapper({ questions, numLives = 5 }) {
 
   // Dynamic validation based on question type
   useEffect(() => {
-    // ✅ Safe access to question type
+    //  Safe access to question type
     if (!currQuestion || !currQuestion.type) {
       setIsDisabled(true);
       return;
@@ -134,16 +137,87 @@ export default function UniversalQuestionWrapper({ questions, numLives = 5 }) {
     setShowFeedback(false);
 
     try {
-      const result = await submitQuestionAnswer(
-        currQuestion.Q_id,
-        answer,
-        'current-user-id',
-        currQuestion.type,
-      );
+      // Get authenticated user ID with fallback to session
+      const user = JSON.parse(localStorage.getItem('user') || '{}');
+      let userId = user.id;
+
+      // Fallback to NextAuth session if no localStorage user
+      if (!userId && session?.user?.id) {
+        userId = session.user.id;
+        console.log('🔍 Using userId from NextAuth session:', userId);
+      }
+
+      if (!userId) {
+        console.error('❌ No authenticated user found');
+        setFeedbackMessage('Please log in to continue');
+        setShowFeedback(true);
+        return;
+      }
+
+      const result = await submitQuestionAnswer({
+        questionId: currQuestion.Q_id,
+        userId: userId,
+        userAnswer: answer,
+        questionType: currQuestion.type,
+        gameMode: 'practice',
+      });
+
+      console.log('🔍 REAL GAME DEBUG - Full API response:', result);
+      console.log('🔍 REAL GAME DEBUG - Result success:', result.success);
+      console.log('🔍 REAL GAME DEBUG - Result data:', result.data);
 
       if (result.success) {
         setFeedbackMessage(result.data.message);
         setShowFeedback(true);
+
+        console.log(
+          '🔍 REAL GAME DEBUG - Checking for achievements in result.data...',
+        );
+        console.log(
+          '🔍 REAL GAME DEBUG - unlockedAchievements exists:',
+          !!result.data.unlockedAchievements,
+        );
+        console.log(
+          '🔍 REAL GAME DEBUG - unlockedAchievements type:',
+          typeof result.data.unlockedAchievements,
+        );
+        console.log(
+          '🔍 REAL GAME DEBUG - unlockedAchievements value:',
+          result.data.unlockedAchievements,
+        );
+
+        // 🎉 Handle achievement unlocks!
+        if (
+          result.data.unlockedAchievements &&
+          result.data.unlockedAchievements.length > 0
+        ) {
+          console.log(
+            '🏆 Achievements unlocked:',
+            result.data.unlockedAchievements,
+          );
+
+          // Try the main achievement system first, then fallback
+          Promise.race([
+            showAchievementNotificationsWhenReady(
+              result.data.unlockedAchievements,
+            ),
+            new Promise((_, reject) =>
+              setTimeout(() => reject(new Error('Timeout')), 3000),
+            ),
+          ])
+            .then(() => {
+              console.log(
+                '✅ Achievement notifications displayed successfully',
+              );
+            })
+            .catch((error) => {
+              console.error('❌ Main achievement system failed:', error);
+              console.log('🔄 Using fallback notification system...');
+              showAchievementWithFallback(result.data.unlockedAchievements);
+            });
+        } else {
+          console.log('🤷 No achievements unlocked this time');
+        }
 
         if (result.data.isCorrect && result.data.xpAwarded > 0) {
           console.log(`Awarded ${result.data.xpAwarded} XP!`);

@@ -3,13 +3,34 @@ import { fetchUsersByRank } from '@/services/api';
 import { useSession } from 'next-auth/react';
 import { useEffect, useMemo, useState } from 'react';
 import LeaderboardTable from '../ui/leaderboard-table';
+import useAchievementChecker from '@/hooks/useAchievementChecker';
 
 export default function Page() {
-  const { data: session, status } = useSession();
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [sortType, setSortType] = useState('xp');
+  const { data: session, status, update: updateSession } = useSession();
+
+  // ACHIEVEMENT CHECKING
+  useAchievementChecker({
+    checkOnMount: true,
+    debug: false, // Set to true if you want to see achievement logs
+  });
+
+  // Function to update session with leaderboard data
+  const updateSessionWithLeaderboardData = async (leaderboardData) => {
+    try {
+      // You can customize this based on what data you want to add to the session
+      await updateSession({
+        ...session,
+        leaderboardData: leaderboardData,
+        lastLeaderboardUpdate: new Date().toISOString(),
+      });
+    } catch (error) {
+      console.error('Failed to update session with leaderboard data:', error);
+    }
+  };
 
   // Sorting function for XP or ELO
   const sortUsers = (userData, type = 'xp') => {
@@ -42,11 +63,14 @@ export default function Page() {
         const data = await fetchUsersByRank(session.user.rank);
 
         // Use setTimeout to defer sorting and avoid blocking the UI
-        timeoutId = setTimeout(() => {
+        timeoutId = setTimeout(async () => {
           if (mounted) {
             const sortedData = sortUsers([...data], sortType); // Clone array before sorting
             setUsers(sortedData);
             setLoading(false);
+
+            // Update session with fresh leaderboard data
+            await updateSessionWithLeaderboardData(data);
           }
         }, 0);
       } catch (error) {
@@ -68,6 +92,26 @@ export default function Page() {
         clearTimeout(timeoutId);
       }
     };
+  }, [session?.user?.rank, sortType]); // Removed updateSessionWithLeaderboardData from deps
+
+  // Auto-refresh leaderboard every 2 minutes to get fresh data
+  useEffect(() => {
+    const interval = setInterval(async () => {
+      console.log('🔄 Auto-refreshing leaderboard data...');
+      try {
+        // Fixed: Use fetchUsersByRank instead of fetchAllUsers
+        if (session?.user?.rank != null) {
+          const data = await fetchUsersByRank(session.user.rank);
+          const sortedData = sortUsers([...data], sortType);
+          setUsers(sortedData);
+          await updateSessionWithLeaderboardData(data);
+        }
+      } catch (error) {
+        console.error('Auto-refresh failed:', error);
+      }
+    }, 120000); // 2 minutes
+
+    return () => clearInterval(interval);
   }, [session?.user?.rank, sortType]);
 
   // Memoize the loading component to prevent unnecessary re-renders

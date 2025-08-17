@@ -8,6 +8,7 @@ export default (io, socket) => {
   const queueForGame = async (userData) => {
     console.log('Queueing for game:', socket.id, 'User:', userData?.username);
 
+    // Fetch complete user data from database (including rank)
     const { data: dbUser, error } = await supabase
       .from('Users')
       .select(
@@ -24,7 +25,38 @@ export default (io, socket) => {
     // Merge DB user data (including rank) with incoming userData
     const mergedUserData = { ...userData, ...dbUser, rank: dbUser.rank };
 
-    // Store user data with the socket
+    // 🎯 NEW: Track queue join for achievements
+    if (mergedUserData?.id) {
+      try {
+        console.log(
+          `🎯 QUEUE ACHIEVEMENT: Checking queue achievements for user ${mergedUserData.id}`,
+        );
+        const { checkQueueAchievements } = await import(
+          './achievementRoutes.js'
+        );
+        const queueAchievements = await checkQueueAchievements(
+          mergedUserData.id,
+        );
+
+        if (queueAchievements.length > 0) {
+          console.log(
+            `🏆 Queue achievements unlocked:`,
+            queueAchievements.map((a) => a.name),
+          );
+
+          // Emit queue achievements to the user
+          socket.emit('achievementsUnlocked', {
+            achievements: queueAchievements,
+            source: 'queue_join',
+          });
+        }
+      } catch (error) {
+        console.error('❌ Error checking queue achievements:', error);
+        // Don't fail the queue process if achievements fail
+      }
+    }
+
+    // Store merged user data with the socket
     socket.userData = mergedUserData;
 
     if (!queue.includes(socket)) {
@@ -45,14 +77,14 @@ export default (io, socket) => {
       player1.join(gameId);
       player2.join(gameId);
 
-      // Send game start with opponent data
+      // Send game start with opponent data (including rank)
       io.to(player1.id).emit('startGame', {
         gameId,
         opponent: {
           name: player2.userData?.name,
           username: player2.userData?.username,
           xp: player2.userData?.xp,
-          rank: player2.userData?.rank,
+          rank: player2.userData?.rank, // 🎯 Include rank
         },
       });
       io.to(player2.id).emit('startGame', {
@@ -61,7 +93,7 @@ export default (io, socket) => {
           name: player1.userData?.name,
           username: player1.userData?.username,
           xp: player1.userData?.xp,
-          rank: player1.userData?.rank,
+          rank: player1.userData?.rank, // 🎯 Include rank
         },
       });
 
@@ -201,17 +233,6 @@ export default (io, socket) => {
         selected.forEach((q) => {
           q.answers = answers.filter((a) => a.question_id === q.Q_id);
         });
-
-        // Map to clean structure
-        // const cleanQuestions = selected.map((q) => ({
-        //     id: q.Q_id,
-        //     topic: q.topic,
-        //     difficulty: q.difficulty,
-        //     level: q.level,
-        //     question: q.questionText,
-        //     xpGain: q.xpGain,
-        //     type: q.type,
-        // }))
 
         // Emit the questions to both players
         io.to(gameId).emit('gameReady', {

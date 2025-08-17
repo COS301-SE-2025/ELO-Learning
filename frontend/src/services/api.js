@@ -1,7 +1,8 @@
 import axios from 'axios';
+import { getSession } from 'next-auth/react';
 import { CACHE_DURATIONS, performanceCache } from '../utils/performanceCache';
 
-// ✅ Environment-aware base URL with CI support
+// Environment-aware base URL with CI support
 const getBaseURL = () => {
   if (process.env.NODE_ENV === 'test' || process.env.CI) {
     return 'http://localhost:3001'; // Test server port
@@ -21,7 +22,7 @@ const axiosInstance = axios.create({
   timeout: process.env.NODE_ENV === 'test' ? 5000 : 10000,
 });
 
-// ✅ Mock data for tests (prevents API failures)
+//  Mock data for tests (prevents API failures)
 function getMockData(url) {
   if (url.includes('/users')) {
     return [
@@ -116,12 +117,7 @@ function getMockData(url) {
   return null;
 }
 
-// 🔧 IMMEDIATE FIX: Add this to your API.js file
-
-// Import getSession for NextAuth session access
-import { getSession } from 'next-auth/react';
-
-// Replace your current token retrieval in the interceptor:
+// FIXED REQUEST INTERCEPTOR - Now properly gets NextAuth token
 axiosInstance.interceptors.request.use(async (config) => {
   // In test environment, add mock auth and continue
   if (process.env.NODE_ENV === 'test' || process.env.CI) {
@@ -130,7 +126,6 @@ axiosInstance.interceptors.request.use(async (config) => {
     return config;
   }
 
-  // Regular auth logic for non-test environments
   // Skip auth for random questions endpoint to improve performance
   if (config.url === '/questions/random') {
     return config;
@@ -161,7 +156,7 @@ axiosInstance.interceptors.request.use(async (config) => {
       }
     }
   } else {
-    // 🔧 CLIENT-SIDE: Get token from NextAuth session FIRST, then fallback to localStorage
+    // ✅ CLIENT-SIDE: Fixed token retrieval
     let token = null;
 
     try {
@@ -169,76 +164,40 @@ axiosInstance.interceptors.request.use(async (config) => {
       const session = await getSession();
       if (session?.backendToken) {
         token = session.backendToken;
-        console.log('🔐 Token retrieved from NextAuth session:', {
-          tokenPreview: token.substring(0, 20) + '...',
-          userId: session.user?.id,
-          source: 'nextauth-session',
-        });
+        console.log('🔐 Using NextAuth backend token');
       } else {
-        // 🔄 FALLBACK: Check localStorage (for existing tokens)
-        const possibleTokens = [
-          localStorage.getItem('token'),
-          localStorage.getItem('oauth_token'),
-          localStorage.getItem('authToken'),
-          localStorage.getItem('backendToken'),
-          sessionStorage.getItem('token'),
-          sessionStorage.getItem('authToken'),
-        ].filter(Boolean); // Remove null/undefined values
-
-        token = possibleTokens[0]; // Use the first valid token found
-
-        console.log('🔐 Token search results:', {
-          localStorage_token: localStorage.getItem('token'),
-          localStorage_oauth: localStorage.getItem('oauth_token'),
-          localStorage_auth: localStorage.getItem('authToken'),
-          localStorage_backend: localStorage.getItem('backendToken'),
-          sessionStorage_token: sessionStorage.getItem('token'),
-          sessionStorage_auth: sessionStorage.getItem('authToken'),
-          selectedToken: token ? 'Found' : 'Not found',
-        });
-
-        // 🔧 FALLBACK: Try to get token from NextAuth session
-        if (!token) {
-          try {
-            // Check if we can get the session token from NextAuth
-            const sessionData = localStorage.getItem('user');
-            if (sessionData) {
-              const user = JSON.parse(sessionData);
-              console.log('🔐 User data found:', user);
-
-              // If we have user data but no token, this suggests the token was cleared
-              console.warn(
-                '🔐 User data exists but no token found - token may have been cleared',
-              );
-            }
-          } catch (e) {
-            console.warn('🔐 Could not parse user data:', e);
-          }
-        }
+        // 🔄 FALLBACK: Check localStorage
+        token =
+          localStorage.getItem('token') || localStorage.getItem('oauth_token');
+        console.log(
+          '🔐 Using localStorage token:',
+          token ? 'Found' : 'Not found',
+        );
       }
     } catch (error) {
       console.warn('🔐 Token retrieval failed:', error);
+
+      // Final fallback to localStorage only
+      try {
+        token =
+          localStorage.getItem('token') || localStorage.getItem('oauth_token');
+      } catch (storageError) {
+        console.warn('localStorage access failed:', storageError);
+      }
     }
 
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
-      console.log('🔐 Token attached to request');
+      console.log('🔐 Authorization header set');
     } else {
-      console.warn('🔐 No token found for request to:', config.url);
-
-      // 🔧 SPECIAL HANDLING: For achievement requests from new users
-      if (config.url?.includes('/achievements')) {
-        console.log(
-          '🎯 Achievement request without token - this is normal for new users',
-        );
-      }
+      console.warn('🚫 No authentication token available for:', config.url);
     }
   }
 
   return config;
 });
 
-// ✅ Test-aware response interceptor (prevents CI failures)
+// Test-aware response interceptor (prevents CI failures)
 axiosInstance.interceptors.response.use(
   (response) => response,
   (error) => {
@@ -253,7 +212,7 @@ axiosInstance.interceptors.response.use(
   },
 );
 
-// ✅ LEADERBOARD - Cache with CI support
+// LEADERBOARD - Cache with CI support
 export async function fetchAllUsers() {
   try {
     // Skip caching in tests for predictable behavior
@@ -281,7 +240,7 @@ export async function fetchAllUsers() {
   }
 }
 
-// ✅ QUESTIONS - Cache for 30 minutes (with CI support)
+//  QUESTIONS - Cache for 30 minutes (with CI support)
 export async function fetchAllQuestions() {
   try {
     if (process.env.NODE_ENV !== 'test') {
@@ -306,7 +265,7 @@ export async function fetchAllQuestions() {
   }
 }
 
-// ✅ LOGIN - Keep your caching fixes
+//  LOGIN - Keep your caching fixes
 export async function loginUser(email, password) {
   try {
     console.log('🚀 Starting login...');
@@ -356,7 +315,7 @@ export async function loginUser(email, password) {
   }
 }
 
-// ✅ REGISTRATION - Keep your caching fixes
+//  REGISTRATION - Keep your caching fixes
 export async function registerUser(
   name,
   surname,
@@ -425,7 +384,7 @@ export async function registerUser(
   }
 }
 
-// ✅ LOGOUT - Clear performance cache (your caching fix)
+//  LOGOUT - Clear performance cache (your caching fix)
 export async function logoutUser() {
   try {
     localStorage.removeItem('token');
@@ -444,7 +403,7 @@ export async function logoutUser() {
   }
 }
 
-// ✅ OAuth handling with CI support
+// OAuth handling with CI support
 export async function handleOAuthUser(email, name, image, provider) {
   try {
     const res = await axiosInstance.post('/oauth/user', {
@@ -475,9 +434,6 @@ export async function handleOAuthUser(email, name, image, provider) {
     throw error;
   }
 }
-
-// ✅ Continue with all your other functions...
-// (I'll show a few key ones with the pattern)
 
 export async function fetchRandomQuestions(level) {
   try {
@@ -727,25 +683,10 @@ export async function fetchUserAchievements(userId) {
   try {
     console.log('🎯 Fetching achievements for user:', userId);
 
-    // 🔧 PRE-CHECK: Verify we have some authentication
-    const hasToken = !!(
-      localStorage.getItem('token') ||
-      localStorage.getItem('oauth_token') ||
-      localStorage.getItem('authToken') ||
-      localStorage.getItem('backendToken')
-    );
-
-    if (!hasToken) {
-      console.log('🔐 No authentication token found');
-      console.log('🎯 This is normal for newly registered users');
-      console.log('🎯 Returning empty achievements array');
-      return []; // ✅ Always return array
-    }
-
     const res = await axiosInstance.get(`/users/${userId}/achievements`);
     console.log('✅ Successfully fetched user achievements:', res.data);
 
-    // 🔧 ROBUST RESPONSE HANDLING: Always return an array
+    // ✅ Robust response handling: Always return an array
     let achievementsArray = [];
 
     if (res.data) {
@@ -772,19 +713,19 @@ export async function fetchUserAchievements(userId) {
     // Handle specific error cases
     if (error.response?.status === 401) {
       console.warn('🔐 Authentication failed (401) - normal for new users');
-      return []; // ✅ Always return array
+      return [];
     }
 
     if (error.response?.status === 404) {
       console.warn(
         '🎯 User achievements not found (404) - normal for new users',
       );
-      return []; // ✅ Always return array
+      return [];
     }
 
     // For other errors, still return empty array to prevent UI breaking
     console.warn('🎯 Returning empty achievements to prevent UI errors');
-    return []; // ✅ Always return array
+    return [];
   }
 }
 
@@ -820,7 +761,8 @@ export async function fetchUserAchievementsWithStatus(userId) {
       );
       throw new Error(
         `Server error: ${error.response.status} - ${
-          error.response.data?.error || 'Unknown error'
+          error.response.data?.error ||
+          'You are unauthorized to make this request.'
         }`,
       );
     }

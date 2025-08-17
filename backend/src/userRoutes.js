@@ -12,7 +12,9 @@ const TOKEN_EXPIRY = 3600; // 1 hour in seconds
 router.get('/users', async (req, res) => {
   const { data, error } = await supabase
     .from('Users')
-    .select('id,name,surname,username,email,currentLevel,joinDate,xp,avatar');
+    .select(
+      'id,name,surname,username,email,currentLevel,joinDate,xp,avatar,elo_rating,rank',
+    );
   if (error) {
     console.error('Error fetching users:', error.message);
     return res.status(500).json({ error: 'Failed to fetch users' });
@@ -27,7 +29,9 @@ router.get('/user/:id', verifyToken, async (req, res) => {
   // Fetch user from Supabase
   const { data, error } = await supabase
     .from('Users')
-    .select('id,name,surname,username,email,currentLevel,joinDate,xp,avatar')
+    .select(
+      'id,name,surname,username,email,currentLevel,joinDate,xp,avatar,elo_rating,rank',
+    )
     .eq('id', id)
     .single();
 
@@ -42,27 +46,91 @@ router.get('/user/:id', verifyToken, async (req, res) => {
   res.status(200).json(data);
 });
 
-// Return user's achievements: (works)
+router.get('/users/rank/:rank', async (req, res) => {
+  const { rank } = req.params;
+  // Fetch users by rank from Supabase
+  const { data, error } = await supabase
+    .from('Users')
+    .select('id,username,xp,avatar,elo_rating,rank')
+    .eq('rank', rank);
+  if (error) {
+    console.error('Error fetching users by rank:', error.message);
+    return res.status(500).json({ error: 'Failed to fetch users by rank' });
+  }
+  if (data.length === 0) {
+    return res.status(404).json({ error: 'No users found with that rank' });
+  }
+  res.status(200).json(data);
+});
+
+router.get('/users/rank/:rank', async (req, res) => {
+  const { rank } = req.params;
+  // Fetch users by rank from Supabase
+  const { data, error } = await supabase
+    .from('Users')
+    .select('id,username,xp,avatar,elo_rating,rank')
+    .eq('rank', rank);
+  if (error) {
+    console.error('Error fetching users by rank:', error.message);
+    return res.status(500).json({ error: 'Failed to fetch users by rank' });
+  }
+  if (data.length === 0) {
+    return res.status(404).json({ error: 'No users found with that rank' });
+  }
+  res.status(200).json(data);
+});
+
+// Return user's achievements: (using proper junction table)
 router.get('/users/:id/achievements', verifyToken, async (req, res) => {
   const { id } = req.params;
 
+  // Use the proper junction table approach
   const { data, error } = await supabase
-    .from('Achievements')
-    .select('*')
-    .eq('user_id', id);
+    .from('UserAchievements')
+    .select(
+      `
+      unlocked_at,
+      Achievements (
+        id,
+        name,
+        description,
+        condition_type,
+        condition_value,
+        icon_path,
+        AchievementCategories (
+          name
+        )
+      )
+    `,
+    )
+    .eq('user_id', id)
+    .order('unlocked_at', { ascending: false });
 
   if (error) {
     console.error('Error fetching achievements:', error.message);
     return res.status(500).json({ error: 'Failed to fetch achievements' });
   }
 
-  if (data.length === 0) {
-    return res
-      .status(404)
-      .json({ error: "User doesn't exist or has no achievements" });
+  // Format the response to match expected structure
+  const formattedAchievements = (data || []).map((ua) => ({
+    id: ua.Achievements.id,
+    name: ua.Achievements.name,
+    description: ua.Achievements.description,
+    condition_type: ua.Achievements.condition_type,
+    condition_value: ua.Achievements.condition_value,
+    icon_path: ua.Achievements.icon_path,
+    category: ua.Achievements.AchievementCategories?.name || 'General',
+    unlocked_at: ua.unlocked_at,
+  }));
+
+  if (formattedAchievements.length === 0) {
+    return res.status(200).json({
+      achievements: [],
+      message: 'User has no achievements yet',
+    });
   }
 
-  res.status(200).json({ achievements: data });
+  res.status(200).json({ achievements: formattedAchievements });
 });
 
 // Update a user's XP: (works)
@@ -145,6 +213,14 @@ router.post('/register', async (req, res) => {
   const safeCurrentLevel = 5;
   const safeJoinDate = joinDate || new Date().toISOString();
   const safeXP = 1000;
+  const DEFAULT_AVATAR = {
+    eyes: 'Eye 1',
+    mouth: 'Mouth 1',
+    bodyShape: 'Circle',
+    background: 'solid-pink',
+  };
+  const eloRating = 100;
+  const defaultRank = 'Iron';
 
   const { data, error } = await supabase
     .from('Users')
@@ -158,6 +234,9 @@ router.post('/register', async (req, res) => {
         currentLevel: safeCurrentLevel,
         joinDate: safeJoinDate,
         xp: safeXP,
+        avatar: DEFAULT_AVATAR,
+        elo_rating: eloRating,
+        rank: defaultRank,
       },
     ])
     .select()
@@ -186,6 +265,9 @@ router.post('/register', async (req, res) => {
       currentLevel: data.currentLevel,
       joinDate: data.joinDate,
       xp: data.xp,
+      avatar: data.avatar,
+      elo_rating: data.elo_rating,
+      rank: data.rank,
     },
   });
 });
@@ -202,7 +284,7 @@ router.post('/login', async (req, res) => {
   const { data: user, error: fetchError } = await supabase
     .from('Users')
     .select(
-      'id,name,surname,username,email,password,currentLevel,joinDate,xp,avatar',
+      'id,name,surname,username,email,password,currentLevel,joinDate,xp,avatar,elo_rating,rank',
     )
     .eq('email', email)
     .single();
@@ -238,6 +320,8 @@ router.post('/login', async (req, res) => {
       joinDate: user.joinDate || new Date().toISOString(), // Default to current date if not set
       xp: user.xp || 0, // Default to 0 XP if not set
       avatar: user.avatar,
+      elo_rating: user.elo_rating,
+      rank: user.rank,
     },
   });
 });

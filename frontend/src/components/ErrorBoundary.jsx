@@ -26,26 +26,27 @@ class ErrorBoundary extends React.Component {
   render() {
     if (this.state.hasError) {
       return (
-        <div className="min-h-screen flex items-center justify-center bg-gray-100">
-          <div className="max-w-md w-full bg-white shadow-lg rounded-lg p-6">
+        <div className="min-h-screen flex items-center justify-center">
+          <div className="max-w-md w-full">
             <div className="text-center">
-              <h2 className="text-2xl font-bold text-red-600 mb-4">
+              <h2 className="text-2xl font-bold text-[#FF6E99] mb-4">
                 Something went wrong
               </h2>
-              <p className="text-gray-600 mb-6">
+              <p className="mb-6">
                 We're sorry, but something unexpected happened. Please try
                 refreshing the page.
               </p>
-              <div className="space-y-3">
+              <div className="space-y-3 gap-4">
                 <button
                   onClick={() => window.location.reload()}
-                  className="w-full bg-blue-600 text-white py-2 px-4 rounded hover:bg-blue-700"
+                  className="main-button"
                 >
                   Refresh Page
                 </button>
+                <div className="h-3"></div>
                 <button
                   onClick={() => (window.location.href = '/dashboard')}
-                  className="w-full bg-gray-600 text-white py-2 px-4 rounded hover:bg-gray-700"
+                  className="secondary-button"
                 >
                   Go to Dashboard
                 </button>

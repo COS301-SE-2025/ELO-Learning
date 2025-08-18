@@ -84,6 +84,8 @@ export const authOptions = {
               avatar: data.user.avatar,
               // Store the JWT token from backend
               backendToken: data.token,
+              elo_rating: data.user.elo_rating,
+              rank: data.user.rank,
             };
           } else {
             console.log('❌ Login failed:', data.error || 'Unknown error');
@@ -117,6 +119,8 @@ export const authOptions = {
           user.joinDate = response.user.joinDate;
           user.avatar = response.user.avatar;
           user.backendToken = response.token; // This was missing!
+          user.elo_rating = response.user.elo_rating;
+          user.rank = response.user.rank;
 
           return true;
         } catch (error) {
@@ -152,6 +156,8 @@ export const authOptions = {
         token.currentLevel = session.user.currentLevel || 1;
         token.joinDate = session.user.joinDate;
         token.avatar = session.user.avatar;
+        token.elo_rating = session.user.elo_rating;
+        token.rank = session.user.rank;
       }
 
       // Persist user data in the token right after signin
@@ -168,6 +174,8 @@ export const authOptions = {
         token.avatar = user.avatar;
         //  Store the backend JWT token for ALL users (credentials + OAuth)
         token.backendToken = user.backendToken;
+        token.elo_rating = user.elo_rating;
+        token.rank = user.rank;
       }
 
       return token;
@@ -195,6 +203,8 @@ export const authOptions = {
         session.user.avatar = token.avatar;
         //  Pass backend JWT token to session for ALL users
         session.backendToken = token.backendToken;
+        session.user.elo_rating = token.elo_rating;
+        session.user.rank = token.rank;
       }
 
       return session;

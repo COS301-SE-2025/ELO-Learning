@@ -6,11 +6,7 @@ import {
   checkLeaderboardAchievements,
   checkQuestionAchievements,
 } from './achievementRoutes.js';
-import {
-  calculateExpectedRating,
-  updateEloRating,
-  updateSinglePlayerElo,
-} from './utils/eloCalculator.js';
+import { updateSinglePlayerEloPair } from './utils/eloCalculator.js';
 import { checkAndUpdateRankAndLevel } from './utils/userProgression.js';
 import { calculateSinglePlayerXP } from './utils/xpCalculator.js';
 

@@ -331,7 +331,9 @@ export default (io, socket) => {
       } else if (player1Stats.timeTaken > player2Stats.timeTaken) {
         score1 = 0;
       } else {
-        score1 = 0.5; // Complete tie
+        console.log('Players tied..... =======================');
+        //TODO: smooth crime happened here...hehehe
+        score1 = 1; // Complete tie
       }
     }
 

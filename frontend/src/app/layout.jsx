@@ -1,15 +1,12 @@
-import { Geist, Geist_Mono } from 'next/font/google';
+import AchievementNotificationManager from '@/app/ui/achievements/achievement-notification-manager';
+import ErrorBoundary from '@/components/ErrorBoundary';
+import { Nunito } from 'next/font/google';
 import './globals.css';
 import Providers from './providers';
 import PWALifecycle from './ui/pwa-lifecycle';
 
-const geistSans = Geist({
-  variable: '--font-geist-sans',
-  subsets: ['latin'],
-});
-
-const geistMono = Geist_Mono({
-  variable: '--font-geist-mono',
+const nunito = Nunito({
+  variable: '--font-nunito',
   subsets: ['latin'],
 });
 
@@ -55,13 +52,17 @@ export const viewport = {
 export default function RootLayout({ children }) {
   return (
     <html lang="en">
-      <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
-      >
-        <Providers>
-          <PWALifecycle />
-          {children}
-        </Providers>
+      <head>{/* Debug utilities removed: debug.js no longer exists */}</head>
+      <body className={`${nunito.variable} antialiased`}>
+        <ErrorBoundary>
+          <Providers>
+            <PWALifecycle />
+            {children}
+
+            {/* Achievement notifications - appears above all content */}
+            <AchievementNotificationManager />
+          </Providers>
+        </ErrorBoundary>
       </body>
     </html>
   );

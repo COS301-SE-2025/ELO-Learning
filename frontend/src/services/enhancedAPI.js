@@ -31,8 +31,9 @@ export const enhancedAPI = {
   // Submit answer and update user data if XP is awarded
   async submitAnswerWithXPUpdate(questionId, answer, userId) {
     try {
-      // This would be your existing submit answer API call
-      const response = await fetch('http://localhost:3000/submit-answer', {
+      const API_BASE_URL =
+        process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
+      const response = await fetch(`${API_BASE_URL}/submit-answer`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -63,15 +64,26 @@ export const enhancedAPI = {
     }
   },
 
-  // Get auth token (works with NextAuth)
+  // Get auth token (works with NextAuth and JWT)
   getAuthToken() {
+    // Priority 1: NextAuth session token
     const nextAuthSession = cache.get(CACHE_KEYS.NEXTAUTH_SESSION);
     if (nextAuthSession?.accessToken) {
       return nextAuthSession.accessToken;
     }
 
-    // Fallback to localStorage token
-    return localStorage.getItem('token');
+    // Priority 2: JWT token from cache or localStorage
+    const jwtToken = cache.get(CACHE_KEYS.TOKEN);
+    if (jwtToken) {
+      return jwtToken;
+    }
+
+    // Priority 3: JWT token from localStorage
+    if (typeof window !== 'undefined') {
+      return localStorage.getItem('token');
+    }
+
+    return null;
   },
 
   // Cached fetch functions

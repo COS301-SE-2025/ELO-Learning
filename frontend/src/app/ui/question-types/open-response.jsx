@@ -22,7 +22,7 @@ export default function OpenResponseTemplate({ setAnswer, answer }) {
 
   return (
     <div className="space-y-4">
-      <div className="text-sm text-gray-600 mb-2">
+      <div className="text-sm mb-2">
         Write your explanation or step-by-step solution below. Be detailed and
         show your work.
       </div>

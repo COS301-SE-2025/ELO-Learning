@@ -1,15 +1,26 @@
 'use client';
-import Picture from '@/app/ui/profile/picture-block';
+import ClickableAvatar from '@/app/ui/profile/clickable-avatar';
 import { Cog } from 'lucide-react';
 import { useSession } from 'next-auth/react';
 import Link from 'next/link';
+import { useAvatar } from '../context/avatar-context';
+import { gradients } from '../ui/avatar/avatar-colors';
+import { AvatarColors } from '../ui/avatar/color';
 import Achievements from '../ui/profile/achievements';
 import MatchStats from '../ui/profile/match-stats';
 import UserInfo from '../ui/profile/user-info';
 import UsernameBlock from '../ui/profile/username-block';
+import useAchievementChecker from '@/hooks/useAchievementChecker';
 
 export default function Page() {
   const { data: session, status } = useSession();
+  const { avatar } = useAvatar();
+
+  // ACHIEVEMENT CHECKING
+  useAchievementChecker({
+    checkOnMount: true,
+    debug: false, // Set to true if you want to see achievement logs
+  });
 
   if (status === 'loading') return <div>Loading...</div>;
   if (status === 'unauthenticated')
@@ -18,20 +29,46 @@ export default function Page() {
 
   const user = session.user;
 
+  const getBackgroundStyle = (backgroundType) => {
+    let style = { backgroundColor: '#421e68' };
+    if (backgroundType && backgroundType.startsWith('solid-')) {
+      const idx = parseInt(backgroundType.split('-')[1], 10);
+      style = { backgroundColor: AvatarColors[idx] || '#421e68' };
+    } else if (backgroundType && backgroundType.startsWith('gradient-')) {
+      const idx = parseInt(backgroundType.split('-')[1], 10);
+      const g = gradients[idx];
+      if (g) {
+        style = {
+          background: `linear-gradient(135deg, ${g.colors.join(', ')})`,
+        };
+      }
+    }
+    return style;
+  };
+
   return (
-    <div className="h-full">
-      <div className="bg-[#FF6E99] flex items-center justify-between px-4">
+    <div className="min-h-full flex flex-col">
+      {/* Header section - FIXED at top */}
+      <div
+        className="sticky top-0 z-10 flex items-center justify-between px-4 py-4"
+        style={getBackgroundStyle(avatar?.background)}
+      >
         <div className="flex-1"></div>
         <div className="flex-2 flex justify-center">
-          <Picture src={user.pfpURL || '/user.svg'} />
+          <ClickableAvatar avatar={{ ...avatar, background: 'transparent' }} />
         </div>
         <div className="flex-1 flex justify-center">
-          <Link href="settings">
+          <Link
+            href="settings"
+            className="transition-transform hover:scale-105 active:scale-95"
+          >
             <Cog stroke="black" size={40} />
           </Link>
         </div>
       </div>
-      <div>
+
+      {/* Content section - scrollable */}
+      <div className="flex-1 flex flex-col">
         <UsernameBlock
           username={user.username}
           name={user.name}
@@ -46,11 +83,18 @@ export default function Page() {
               : 'N/A'
           }
         />
-      </div>
-      <div className="flex flex-col justify-between">
-        <UserInfo ranking="1st" xp={user.xp || 0} />
-        <MatchStats />
-        <Achievements />
+
+        <div className="flex flex-col space-y-4 pb-24">
+          {' '}
+          {/* Increased from pb-8 to pb-24 */}
+          <UserInfo
+            elo={user.elo_rating || 0}
+            xp={user.xp || 0}
+            ranking={user.rank || 'Unranked'}
+          />
+          <MatchStats />
+          <Achievements />
+        </div>
       </div>
     </div>
   );

@@ -2,6 +2,7 @@ import QuestionsTracker from '@/app/ui/questions/questions-tracker';
 import { authOptions } from '@/lib/auth';
 import { fetchQuestionsByLevelAndTopic } from '@/services/api';
 import { getServerSession } from 'next-auth/next';
+import Link from 'next/link';
 import { redirect } from 'next/navigation';
 
 export default async function PracticeTopic({ params }) {
@@ -37,20 +38,17 @@ export default async function PracticeTopic({ params }) {
   // Defensive check
   if (!questions || !Array.isArray(questions) || questions.length === 0) {
     return (
-      <div className="min-h-screen flex items-center justify-center p-8">
+      <div className="h-full flex items-center justify-center">
         <div className="text-center">
-          <h2 className="text-2xl font-bold mb-4 text-yellow-600">
+          <h2 className="text-2xl font-bold mb-4 text-[#7d32ce]">
             No Questions Available
           </h2>
-          <p className="text-gray-600 mb-4">
+          <p className="mb-4">
             No questions found for this topic at level {level}.
           </p>
-          <p className="text-sm text-gray-500 mb-4">
-            API Response Type: {typeof apiResponse}
-          </p>
-          <a href="/practice" className="text-blue-600 hover:underline">
-            Back to Practice
-          </a>
+          <Link href="/practice" className="main-button py-2 px-4">
+            <button className="py-2 px-4">Back to Practice</button>
+          </Link>
         </div>
       </div>
     );

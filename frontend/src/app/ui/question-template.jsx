@@ -75,8 +75,11 @@ export default function QuestionTemplate({ question, calculation }) {
   const formattedQuestion = formatMathInText(question);
 
   return (
-    <div>
-      <div className="text-center text-xl font-bold my-15 mx-10 md:m-10">
+    <div data-cy="question-container">
+      <div
+        className="text-center text-xl font-bold my-15 mx-10 md:m-10"
+        data-cy="question"
+      >
         {formattedQuestion.map((part, index) => {
           if (part.type === 'math') {
             return <InlineMath key={index} math={part.content} />;
@@ -86,7 +89,7 @@ export default function QuestionTemplate({ question, calculation }) {
         })}
       </div>
       {calculation && (
-        <p className="text-xl text-center">
+        <p className="text-xl text-center" data-cy="calculation">
           <InlineMath math={convertToLatex(calculation)} />
         </p>
       )}

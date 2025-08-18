@@ -1,8 +1,8 @@
 'use client';
 
-import { useEffect, useState } from 'react';
 import UniversalQuestionWrapper from '@/app/ui/universal-question-wrapper';
 import { getMixedQuestions } from '@/utils/api';
+import { useEffect, useState } from 'react';
 
 export default function MixedQuestionsPage() {
   const [questions, setQuestions] = useState([]);

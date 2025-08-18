@@ -54,7 +54,7 @@ body {
   background: var(--background);
   color: var(--foreground);
   font-family: 'Nunito', Arial, Helvetica, sans-serif;
-  font-weight: 500;
+  font-weight: 400;
   height: 100vh;
   /* padding: 5%; */
 }
@@ -122,7 +122,7 @@ textarea:focus-visible {
 }
 
 .form_heading {
-  font-weight: 1000;
+  font-weight: 800;
   font-size: 16px;
 }
 
@@ -167,7 +167,7 @@ textarea:focus-visible {
   border: var(--main-button-stroke) 1px solid;
   box-shadow: 2px 2px 0px 0px var(--main-button-stroke);
   border-radius: 5px;
-  font-weight: 1000;
+  font-weight: 800;
   letter-spacing: 3px;
   transition: 0.3s ease-out;
 }
@@ -193,7 +193,7 @@ textarea:focus-visible {
   border: var(--main-button-stroke) 1px solid;
   box-shadow: 2px 2px 0px 0px var(--main-button-stroke);
   border-radius: 5px;
-  font-weight: 1000;
+  font-weight: 800;
   letter-spacing: 3px;
   transition: 0.3s ease-out;
 }
@@ -208,7 +208,7 @@ textarea:focus-visible {
   border: var(--main-button-stroke) 1px solid;
   box-shadow: 2px 2px 0px 0px var(--main-button-stroke);
   border-radius: 5px;
-  font-weight: 1000;
+  font-weight: 800;
   letter-spacing: 3px;
   transition: 0.3s ease-out;
 }
@@ -223,7 +223,7 @@ textarea:focus-visible {
   border: var(--disabled-button-stroke) 1px solid;
   box-shadow: 2px 2px 0px 0px var(--disabled-button-stroke);
   border-radius: 5px;
-  font-weight: 1000;
+  font-weight: 800;
   letter-spacing: 3px;
   transition: 0.3s ease-out;
 }
@@ -260,7 +260,7 @@ textarea:focus-visible {
   border: var(--vector-violet) 1px solid;
   box-shadow: 2px 2px 0px 0px var(--vector-violet);
   border-radius: 5px;
-  font-weight: 1000;
+  font-weight: 800;
   letter-spacing: 3px;
   transition: 0.3s ease-out;
 }
@@ -296,7 +296,7 @@ textarea:focus-visible {
   border: var(--main-button-stroke) 1px solid;
   box-shadow: 2px 2px 0px 0px var(--main-button-stroke);
   border-radius: 5px;
-  font-weight: 1000;
+  font-weight: 800;
   letter-spacing: 3px;
   transition: 0.3s ease-out;
 }
@@ -533,4 +533,20 @@ textarea:focus-visible {
   border-left: var(--form-outline) 1px solid !important;
   border-right: var(--form-outline) 1px solid !important;
   border-radius: 0px !important;
+}
+
+/* Avatar triangle shape */
+.clip-triangle {
+  clip-path: polygon(50% 0%, 0% 100%, 100% 100%);
+}
+
+.text-pink-custom {
+  color: #ff6e99;
+}
+
+/* Fix for mobile navigation covering content */
+@media only screen and (max-width: 768px) {
+  .profile-content {
+    padding-bottom: 100px; /* Space for mobile nav */
+  }
 }

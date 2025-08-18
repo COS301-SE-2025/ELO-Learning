@@ -20,7 +20,9 @@ export default function Page() {
 
     try {
       const result = await signIn('credentials', {
-        callbackUrl: 'http://localhost:8080/dashboard',
+        callbackUrl: `${
+          process.env.NEXT_PUBLIC_FRONTEND_URL || 'http://localhost:8080'
+        }/dashboard`,
         email,
         password,
         redirect: false,
@@ -107,7 +109,7 @@ export default function Page() {
         </form>
         <div>
           <Link href="/login-landing/forgot-password">
-            <p className="text-center py-3 text-[#ff6e99] hover:text-[#ffffff] hover:font-bold hover:scale-1.1% w-[90vw] md:w-[500px] mx-auto">
+            <p className="text-center font-bold py-3 text-[#ff6e99] hover:text-[#ffffff] hover:font-bold hover:scale-1.1% w-[90vw] md:w-[500px] mx-auto">
               Forgot your password?
             </p>
           </Link>
@@ -123,7 +125,9 @@ export default function Page() {
             cache.clear();
 
             signIn('google', {
-              callbackUrl: 'http://localhost:8080/dashboard',
+              callbackUrl: `${
+                process.env.NEXT_PUBLIC_FRONTEND_URL || 'http://localhost:8080'
+              }/dashboard`,
             });
           }}
         >

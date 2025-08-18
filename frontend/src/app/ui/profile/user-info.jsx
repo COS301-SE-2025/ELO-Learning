@@ -1,16 +1,16 @@
 import { Gem, Trophy, Zap } from 'lucide-react';
-export default function UserInfo({ ranking, xp }) {
+export default function UserInfo({ elo, xp, ranking }) {
   return (
     <div className="flex flex-row items-center justify-between m-10 md:mx-50">
       <div className="flex flex-col items-center">
-        <h4 className="text-lg font-bold">Ranking</h4>
+        <h4 className="text-lg font-bold">ELO Rating</h4>
         <Trophy size={34} stroke="#FF8000" fill="#FF8000" className="m-2" />
-        <p>Coming soon</p>
+        <p>{elo}</p>
       </div>
       <div className="flex flex-col items-center">
         <h4 className="text-lg font-bold">League</h4>
         <Gem size={34} stroke="#201F1F" fill="#50EEFF" className="m-2" />
-        <p>Coming soon</p>
+        <p>{ranking}</p>
       </div>
       <div className="flex flex-col items-center">
         <h4 className="text-lg font-bold">Total XP</h4>

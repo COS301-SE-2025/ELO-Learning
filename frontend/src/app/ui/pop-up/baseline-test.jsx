@@ -25,6 +25,7 @@ export default function BaselineTestPopup({ user_id, onClose }) {
           baseLineTest: true, // Set baseLineTest to true
         },
       });
+      onClose(); // Close the popup
     } catch (err) {
       console.error('Error skipping baseline test:', err);
     } finally {

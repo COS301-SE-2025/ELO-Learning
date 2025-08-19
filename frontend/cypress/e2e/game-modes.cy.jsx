@@ -40,7 +40,6 @@ describe('Game Modes Smoke Tests', () => {
       '/practice',
       '/single-player',
       '/match',
-      '/base-assessment',
       '/question-templates',
       '/question-templates/multiple-choice',
       '/question-templates/input-questions',

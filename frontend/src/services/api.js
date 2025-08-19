@@ -309,6 +309,7 @@ export async function loginUser(email, password) {
           },
           elo_rating: 5.0,
           rank: 'Bronze',
+          baseLineTest: true,
         },
       };
     }
@@ -379,6 +380,7 @@ export async function registerUser(
           avatar,
           elo_rating,
           rank,
+          baseLineTest,
         },
       };
     }

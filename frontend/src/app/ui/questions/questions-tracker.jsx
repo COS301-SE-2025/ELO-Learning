@@ -344,6 +344,9 @@ export default function QuestionsTracker({
 
   const handleLives = (validationResult) => {
     if (!validationResult) {
+      // Store current lives value before setting state
+      const currentLives = numLives;
+
       setNumLives((prev) => {
         const newLives = Math.max(0, prev - 1);
         if (typeof window !== 'undefined') {
@@ -352,8 +355,24 @@ export default function QuestionsTracker({
         return newLives;
       });
 
-      if (numLives <= 1) {
-        router.push(`/end-screen?mode=${mode}`);
+      // Use current lives value for navigation check
+      if (currentLives <= 1) {
+        try {
+          // Default to 'practice' if mode is not provided
+          const gameMode = mode || 'practice';
+          console.log(
+            'Lives reached 0, navigating to end screen with mode:',
+            gameMode,
+          );
+          router.push(`/end-screen?mode=${gameMode}`);
+        } catch (error) {
+          console.error('Navigation error:', error);
+
+          // Fallback using window.location if router fails
+          if (typeof window !== 'undefined') {
+            window.location.href = `/end-screen?mode=${mode || 'practice'}`;
+          }
+        }
         return true;
       }
     }

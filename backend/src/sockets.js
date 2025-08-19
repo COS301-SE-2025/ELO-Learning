@@ -355,20 +355,27 @@ export default (io, socket) => {
       totalXP: player1Stats.xpGain + player2Stats.xpGain, // Total XP from both players
     };
 
-    // Emit to both players with their results
-    io.to(player1Id).emit('matchEnd', {
-      matchResults,
-      isWinner: score1 === 1,
-    });
+    // Emit to both players with their results - wrap in try/catch for safety
+    try {
+      io.to(player1Id).emit('matchEnd', {
+        matchResults,
+        isWinner: score1 === 1,
+      });
 
-    io.to(player2Id).emit('matchEnd', {
-      matchResults,
-      isWinner: score1 === 0,
-    });
+      io.to(player2Id).emit('matchEnd', {
+        matchResults,
+        isWinner: score1 === 0,
+      });
 
-    // Save to localStorage
-    io.to(player1Id).emit('saveMatchData', matchResults);
-    io.to(player2Id).emit('saveMatchData', matchResults);
+      // Save to localStorage - wait a brief moment before sending this data
+      // This ensures matchEnd is processed first
+      setTimeout(() => {
+        io.to(player1Id).emit('saveMatchData', matchResults);
+        io.to(player2Id).emit('saveMatchData', matchResults);
+      }, 300);
+    } catch (emitError) {
+      console.error('Error emitting match results:', emitError);
+    }
 
     // Add a small delay to ensure both clients receive the events
     setTimeout(() => {

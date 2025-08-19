@@ -1,40 +1,46 @@
 // baselineRoutes.js
-import express from 'express'
-import { supabase } from '../database/supabaseClient.js'
+import express from 'express';
+import { supabase } from '../database/supabaseClient.js';
 
-
-const router = express.Router()
-
+const router = express.Router();
 
 // Submit answer and get next question or result
 router.post('/baseline/answer', async (req, res) => {
-  const { user_id, question_id, isCorrect, currentLevel, questionNumber } = req.body
+  const { user_id, question_id, isCorrect, currentLevel, questionNumber } =
+    req.body;
 
   if (!user_id || !question_id) {
-    return res.status(400).json({ error: 'Missing required fields' })
+    return res.status(400).json({ error: 'Missing required fields' });
   }
 
   // Log attempt
-  await supabase.from('QuestionAttempts').insert([{
-    user_id,
-    question_id,
-    isCorrect,
-    attemptType: 'baseline',
-    attemptDate: new Date()
-  }])
+  await supabase.from('QuestionAttempts').insert([
+    {
+      user_id,
+      question_id,
+      isCorrect,
+      attemptType: 'baseline',
+      attemptDate: new Date(),
+    },
+  ]);
 
-  let nextLevel = currentLevel
+  let nextLevel = currentLevel;
   if (isCorrect) {
-    nextLevel = Math.min(currentLevel + 1, 10)
+    nextLevel = Math.min(currentLevel + 1, 10);
   } else {
-    nextLevel = Math.max(currentLevel - 1, 1)
+    nextLevel = Math.max(currentLevel - 1, 1);
   }
 
   // Check if test is done
-  if (questionNumber >= 10) { //to be changed to 15 later
+  if (questionNumber >= 10) {
+    //to be changed to 15 later
     //const finalElo = await setBaselineElo(user_id, nextLevel);
     //return res.json({ done: true, finalLevel: nextLevel , elo_rating: finalElo});
-    return res.json({ done: true, finalLevel: nextLevel, elo_rating: currentLevel })
+    return res.json({
+      done: true,
+      finalLevel: nextLevel,
+      elo_rating: currentLevel,
+    });
   }
 
   // Fetch next question
@@ -44,48 +50,47 @@ router.post('/baseline/answer', async (req, res) => {
     .eq('level', nextLevel)
     // .limit(1)
     // .single();
-    .order('RANDOM()') //try
+    .order('RANDOM()'); //try
 
   res.json({
     question: nextQuestion,
     currentLevel: nextLevel,
-    questionNumber: questionNumber + 1
-  })
-})
+    questionNumber: questionNumber + 1,
+  });
+});
 
 // POST /baseline/skip
 router.post('/baseline/skip', async (req, res) => {
-  const { user_id } = req.body
+  const { user_id } = req.body;
 
   if (!user_id) {
-    return res.status(400).json({ error: 'Missing user_id' })
+    return res.status(400).json({ error: 'Missing user_id' });
   }
 
   try {
     const { error } = await supabase
       .from('Users')
       .update({ baseLineTest: true })
-      .eq('id', user_id)
+      .eq('id', user_id);
 
     if (error) {
-      console.error(error)
-      return res.status(500).json({ error: 'Failed to update baseLineTest' })
+      console.error(error);
+      return res.status(500).json({ error: 'Failed to update baseLineTest' });
     }
 
-    return res.status(200).json({ success: true })
+    return res.status(200).json({ success: true });
   } catch (err) {
-    console.error(err)
-    return res.status(500).json({ error: 'Server error' })
+    console.error(err);
+    return res.status(500).json({ error: 'Server error' });
   }
-})
-
+});
 
 // Confirm baseline test: update baseLineTest = true
 router.post('/baseline/confirm', async (req, res) => {
-  const { user_id } = req.body
+  const { user_id } = req.body;
 
   if (!user_id) {
-    return res.status(400).json({ error: 'Missing userId' })
+    return res.status(400).json({ error: 'Missing userId' });
   }
 
   try {
@@ -93,19 +98,19 @@ router.post('/baseline/confirm', async (req, res) => {
     const { data, error } = await supabase
       .from('Users')
       .update({ baseLineTest: true })
-      .eq('id', user_id)
+      .eq('id', user_id);
 
     if (error) {
-      console.error('Error updating baseLineTest:', error)
-      return res.status(500).json({ error: 'Database update failed' })
+      console.error('Error updating baseLineTest:', error);
+      return res.status(500).json({ error: 'Database update failed' });
     }
 
-    return res.status(200).json({ success: true, updatedUser: data })
+    return res.status(200).json({ success: true, updatedUser: data });
   } catch (err) {
-    console.error('Server error:', err)
-    return res.status(500).json({ error: 'Internal server error' })
+    console.error('Server error:', err);
+    return res.status(500).json({ error: 'Internal server error' });
   }
-})
+});
 
 /**
  * GET /baseline/questions
@@ -114,9 +119,7 @@ router.post('/baseline/confirm', async (req, res) => {
 router.get('/baseline/questions', async (req, res) => {
   try {
     // fetch all questions grouped by level
-    const { data: questions, error } = await supabase
-      .from('Questions')
-      .select(`
+    const { data: questions, error } = await supabase.from('Questions').select(`
         Q_id,
         topic,
         difficulty,
@@ -127,26 +130,26 @@ router.get('/baseline/questions', async (req, res) => {
           answer_text,
           isCorrect
         )
-      `)
+      `);
 
     if (error) {
-      console.error('Error fetching questions:', error)
-      return res.status(500).json({ error: 'Failed to fetch questions' })
+      console.error('Error fetching questions:', error);
+      return res.status(500).json({ error: 'Failed to fetch questions' });
     }
 
     // group by level
-    const byLevel = {}
+    const byLevel = {};
     for (let q of questions) {
-      if (!byLevel[q.level]) byLevel[q.level] = []
-      byLevel[q.level].push(q)
+      if (!byLevel[q.level]) byLevel[q.level] = [];
+      byLevel[q.level].push(q);
     }
 
-    res.json({ questions: byLevel })
+    res.json({ questions: byLevel });
   } catch (err) {
-    console.error(err)
-    res.status(500).json({ error: 'Server error' })
+    console.error(err);
+    res.status(500).json({ error: 'Server error' });
   }
-})
+});
 
 /**
  * POST /baseline/complete
@@ -154,25 +157,25 @@ router.get('/baseline/questions', async (req, res) => {
  * Body: { user_id, elo_rating }
  */
 router.post('/baseline/complete', async (req, res) => {
-  const { user_id, finalElo } = req.body
+  const { user_id, finalElo } = req.body;
 
   if (!user_id || finalElo == null) {
-    return res.status(400).json({ error: 'Missing fields' })
+    return res.status(400).json({ error: 'Missing fields' });
   }
 
   try {
     const { data, error } = await supabase
       .from('Users')
-      .update({ elo_rating: finalElo, base_line_test: true })
-      .eq('id', user_id)
+      .update({ currentLevel: finalElo, base_line_test: true })
+      .eq('id', user_id);
 
-    if (error) return res.status(500).json({ error: 'Failed to update user ELO' })
-    res.json({ success: true, elo_rating: finalElo })
+    if (error)
+      return res.status(500).json({ error: 'Failed to update user ELO' });
+    res.json({ success: true, elo_rating: finalElo });
   } catch (err) {
-    console.error('Server error:', err)
-    res.status(500).json({ error: 'Internal server error' })
+    console.error('Server error:', err);
+    res.status(500).json({ error: 'Internal server error' });
   }
-})
+});
 
-
-export default router
+export default router;

@@ -7,7 +7,7 @@ export async function handleBaselineComplete(userId, finalElo) {
   try {
     // Update user's ELO rating and baseline test status
     await updateUserElo(userId, finalElo);
-    
+
     // Redirect to end screen with baseline mode and elo rating
     redirect(`/end-screen?mode=baseline&elo=${finalElo}`);
   } catch (error) {

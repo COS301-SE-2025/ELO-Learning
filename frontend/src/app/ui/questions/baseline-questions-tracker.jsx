@@ -91,8 +91,7 @@ export default function QuestionsTracker({ questions, userId }) {
         update({
           user: {
             ...session.user,
-            baseLineTest: true,
-            elo_rating: nextLevel, // Update ELO rating in session
+            baseLineTest: true, // Update ELO rating in session
             level: nextLevel, // Update level in session
           },
         });

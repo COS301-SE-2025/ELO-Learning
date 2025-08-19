@@ -13,14 +13,16 @@ export default function BaselineTracker({ questions, userId, onComplete }) {
 
   // State
   const [currentQuestion, setCurrentQuestion] = useState(questions[0]);
-  const [currentAnswers, setCurrentAnswers] = useState(questions[0]?.answers || []);
+  const [currentAnswers, setCurrentAnswers] = useState(
+    questions[0]?.answers || [],
+  );
   const [currentStep, setCurrentStep] = useState(1);
   const [currentLevel, setCurrentLevel] = useState(5); // Start at level 5
   const [answer, setAnswer] = useState('');
   const [isAnswerCorrect, setIsAnswerCorrect] = useState(false);
   const [isDisabled, setIsDisabled] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  
+
   // Enable/disable submit button based on answer
   useEffect(() => {
     setIsDisabled(!answer);
@@ -28,14 +30,15 @@ export default function BaselineTracker({ questions, userId, onComplete }) {
 
   // Save question attempt to localStorage
   const saveAttempt = () => {
-    const attempts = JSON.parse(localStorage.getItem('baselineQuestionsObj')) || [];
-    
+    const attempts =
+      JSON.parse(localStorage.getItem('baselineQuestionsObj')) || [];
+
     attempts.push({
       question: currentQuestion,
       level: currentLevel,
       answer,
       isCorrect: isAnswerCorrect,
-      actualAnswer: currentAnswers.find((ans) => ans.isCorrect === true)
+      actualAnswer: currentAnswers.find((ans) => ans.isCorrect === true),
     });
 
     localStorage.setItem('baselineQuestionsObj', JSON.stringify(attempts));
@@ -60,10 +63,11 @@ export default function BaselineTracker({ questions, userId, onComplete }) {
       }
 
       // Find next question at appropriate level
-      const nextQuestion = questions.find(q => q.level === nextLevel) || questions[0];
+      const nextQuestion =
+        questions.find((q) => q.level === nextLevel) || questions[0];
       setCurrentQuestion(nextQuestion);
       setCurrentAnswers(nextQuestion.answers || []);
-      setCurrentStep(prev => prev + 1);
+      setCurrentStep((prev) => prev + 1);
       setAnswer('');
       setIsAnswerCorrect(false);
       setIsDisabled(true);

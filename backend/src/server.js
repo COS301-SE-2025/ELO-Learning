@@ -20,8 +20,8 @@ import validateRoutes from './validateRoutes.js';
 import baselineRoutes from './baselineRoutes.js';
 
 const allowedOrigins = [
-  "http://localhost:8080", // Frontend
-  "http://localhost:3000"  // Backend 
+  'http://localhost:8080', // Frontend
+  'http://localhost:3000', // Backend
 ];
 
 // Load environment variables
@@ -34,10 +34,12 @@ const server = createServer(app);
 
 // Middleware
 //app.use(cors());
-app.use(cors({
-  origin: allowedOrigins,
-  credentials: true
-}));
+app.use(
+  cors({
+    origin: allowedOrigins,
+    credentials: true,
+  }),
+);
 app.use(express.json());
 
 // Health check endpoint
@@ -61,7 +63,6 @@ app.use('/', achievementRoutes);
 app.use('/', oauthRoutes);
 app.use('/', baselineRoutes);
 
-
 // Simple health check route
 app.get('/', (req, res) => {
   res.send('API is running successfully!');
@@ -78,8 +79,8 @@ const io = new Server(server, {
   cors: {
     origin: 'http://localhost:8080', // must match frontend URL
     methods: ['GET', 'POST'],
-    credentials: true
-  }
+    credentials: true,
+  },
 });
 
 io.on('connection', (socket) => {
@@ -87,7 +88,6 @@ io.on('connection', (socket) => {
   // add handlers for sockets.js here
   socketsHandlers(io, socket);
 });
-
 
 // for Jest + Supertest
 export default app;

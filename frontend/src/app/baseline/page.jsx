@@ -18,15 +18,11 @@ export default function Page() {
 
       <div className="flex flex-col items-center gap-6">
         <Link href="/baseline-game">
-          <button className="main-button-landing uppercase">
-            Start Test
-          </button>
+          <button className="main-button-landing uppercase">Start Test</button>
         </Link>
 
         <Link href="/dashboard">
-          <button className="secondary-button uppercase">
-            Cancel
-          </button>
+          <button className="secondary-button uppercase">Cancel</button>
         </Link>
       </div>
     </div>

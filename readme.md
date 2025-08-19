@@ -32,6 +32,12 @@ The platform encourages growth through competitive, skill-based challenges—suc
   </summary>
   <a href="https://drive.google.com/file/d/1h8D7pI16n6AEnDAZ44I-xgcbYiTjGWAs/view?usp=sharing">Watch Demo 2 Video</a>
 </details>
+<details>
+  <summary>
+    Demo 3 Presentation Video (August 20, 2025)
+  </summary>
+  <a href="[INSERT_DEMO_3_VIDEO_LINK_HERE]">Watch Demo 3 Video</a>
+</details>
 
 ## 📁 Documentation
 
@@ -106,6 +112,44 @@ The platform encourages growth through competitive, skill-based challenges—suc
   <a href="https://docs.google.com/document/d/1YdhTuejO4JdwaaNWz-BV63t_mzgbSKEl/edit?usp=sharing&ouid=111519098189217056979&rtpof=true&sd=true">Postman Tests</a>
 </details>
 
+DEMO 3 Documentation (August 20, 2025)
+<details>
+  <summary>
+    Services Requirement Specification (SRS) v3
+  </summary>
+  <a href="[INSERT_SRS_V3_LINK_HERE]">Services Requirement Specification (SRS) v3</a>
+</details>
+<details>
+  <summary>
+    Architectural Diagram & Design
+  </summary>
+  <a href="[INSERT_ARCHITECTURAL_DIAGRAM_LINK_HERE]">Architectural Diagram (3+ Patterns)</a>
+</details>
+<details>
+  <summary>
+    Deployment Model
+  </summary>
+  <a href="[INSERT_DEPLOYMENT_MODEL_LINK_HERE]">Deployment Model Documentation</a>
+</details>
+<details>
+  <summary>
+    Service Contracts v3 (API/Interface Specifications)
+  </summary>
+  <a href="[INSERT_SERVICE_CONTRACTS_V3_LINK_HERE]">Service Contracts v3</a>
+</details>
+<details>
+  <summary>
+    Quality Requirements (Updated & Quantified)
+  </summary>
+  <a href="[INSERT_QUALITY_REQUIREMENTS_LINK_HERE]">Quality Requirements v3</a>
+</details>
+<details>
+  <summary>
+    Testing Documentation (Unit & Integration)
+  </summary>
+  <a href="[INSERT_TESTING_DOCS_LINK_HERE]">Automated Testing Suite</a>
+</details>
+
 Shared Documentation
 
 <details>
@@ -119,6 +163,12 @@ Shared Documentation
     User Manual
   </summary>
   <a href="https://docs.google.com/document/d/1SW5_SxLHrdIEG0yTvba2_4nfIop5MrP82Jwp3I-evYI/edit?usp=drive_link">User Manual</a>
+</details>
+details>
+  <summary>
+    Technical Installation Manual
+  </summary>
+  <a href="[INSERT_TECH_INSTALLATION_MANUAL_LINK_HERE]">Technical Installation Manual</a>
 </details>
 <details>
     <summary>

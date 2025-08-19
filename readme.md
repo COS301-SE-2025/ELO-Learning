@@ -112,7 +112,7 @@ The platform encourages growth through competitive, skill-based challenges—suc
   <a href="https://docs.google.com/document/d/1YdhTuejO4JdwaaNWz-BV63t_mzgbSKEl/edit?usp=sharing&ouid=111519098189217056979&rtpof=true&sd=true">Postman Tests</a>
 </details>
 
-DEMO 3 Documentation (August 20, 2025)
+### DEMO 3 Documentation (August 20, 2025)
 <details>
   <summary>
     Services Requirement Specification (SRS) v3

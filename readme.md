@@ -150,7 +150,7 @@ The platform encourages growth through competitive, skill-based challenges—suc
   <a href="[INSERT_TESTING_DOCS_LINK_HERE]">Automated Testing Suite</a>
 </details>
 
-Shared Documentation
+### Shared Documentation
 
 <details>
   <summary>
@@ -164,7 +164,7 @@ Shared Documentation
   </summary>
   <a href="https://docs.google.com/document/d/1SW5_SxLHrdIEG0yTvba2_4nfIop5MrP82Jwp3I-evYI/edit?usp=drive_link">User Manual</a>
 </details>
-details>
+<details>
   <summary>
     Technical Installation Manual
   </summary>

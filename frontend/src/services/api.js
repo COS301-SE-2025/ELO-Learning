@@ -19,7 +19,7 @@ const axiosInstance = axios.create({
   headers: {
     'Content-Type': 'application/json',
   },
-  timeout: process.env.NODE_ENV === 'test' ? 5000 : 10000,
+  timeout: process.env.NODE_ENV === 'test' ? 5000 : 30000, // Increased timeout for production
 });
 
 //  Mock data for tests (prevents API failures)
@@ -564,8 +564,21 @@ export async function submitSinglePlayerAttempt(data) {
 }
 
 export async function submitMultiplayerResult(data) {
-  const res = await axiosInstance.post('/multiplayer', data, {});
-  return res.data;
+  try {
+    const res = await axiosInstance.post('/multiplayer', data, {
+      timeout: 30000, // Extended timeout for multiplayer
+      retries: 2, // Allow retries
+    });
+    return res.data;
+  } catch (error) {
+    console.error('Error submitting multiplayer result:', error);
+    // Return a valid fallback object instead of throwing
+    return {
+      players: [],
+      error: true,
+      message: error.message || 'Failed to submit multiplayer results',
+    };
+  }
 }
 
 export async function sendPasswordResetEmail(email) {

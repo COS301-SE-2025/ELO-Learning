@@ -885,6 +885,26 @@ export async function fetchAllBaselineQuestions() {
   }
 }
 
+export async function fetchNextRandomBaselineQuestion(level) {
+  try {
+    const res = await axiosInstance.get('/questions/random', {
+      params: {
+        level: level || 5, // Default to level 5 if not provided
+        count: 1 // Get a single question
+      }
+    })
+
+    if (!res.data || !res.data.questions) {
+      throw new Error('No questions received from server')
+    }
+
+    return res.data.questions[0]
+  } catch (err) {
+    console.error('fetchNextRandomBaselineQuestion error:', err)
+    throw new Error('Failed to fetch next random baseline question: ' + (err.response?.data?.message || err.message))
+  }
+}
+
 export async function skipBaselineTest(userId) {
   if (!userId) throw new Error('Missing userId')
   try {

@@ -2,12 +2,12 @@
 import Score from '@/app/ui/end-screen-ui/end-screen-score';
 import Time from '@/app/ui/end-screen-ui/end-screen-total-time';
 import TotalXP from '@/app/ui/end-screen-ui/end-screen-total-xp';
-import { useSession } from 'next-auth/react';
+import { getSession, useSession } from 'next-auth/react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { redirect, useRouter, useSearchParams } from 'next/navigation';
-import { getSession } from 'next-auth/react';
 import { Suspense, useEffect, useState } from 'react';
+import EndELO from '@/app/ui/end-screen-ui/end-screen-elo';
 
 function EndScreen() {
   const { data: session } = useSession();
@@ -20,7 +20,7 @@ function EndScreen() {
 
   const [mistakes, setMistakes] = useState(0);
   useEffect(() => {
-    const questions = JSON.parse(localStorage.getItem('questionsObj'));
+    const questions = JSON.parse(localStorage.getItem('questionsObj')) || [];
     const correctAnswers = questions.filter(
       (question) => question.isCorrect == true,
     );
@@ -117,34 +117,38 @@ function EndScreen() {
     <div className="flex md:flex-col md:items-center h-full p-5 md:p-10">
       <div className="flex items-center justify-between flex-col gap-4 ">
         <div className="mt-25 md:mt-0">
-          <div className="flex items-center justify-center flex-col gap-0">
-            <Image
-              src="/ELO-Learning-Mascot.png"
-              width={300}
-              height={300}
-              className="hidden md:block"
-              alt="ELO Learning Mascot"
-              priority
-            />
-            <Image
-              src="/ELO-Learning-Mascot.png"
-              width={200}
-              height={200}
-              className="block md:hidden"
-              alt="ELO Learning Mascot"
-              priority
-            />
-            <h1 className="text-2xl font-bold">
-              {mistakes} {mistakes === 1 ? 'Mistake' : 'Mistakes'}
-            </h1>
-            <p className="text-center m-5 md:m-1">
-              Continue upskilling your maths! You are doing an amazing job!
-            </p>
-          </div>
+          {mode !== 'baseline' && (
+            <div className="flex items-center justify-center flex-col gap-0">
+              <Image
+                src="/ELO-Learning-Mascot.png"
+                width={300}
+                height={300}
+                className="hidden md:block"
+                alt="ELO Learning Mascot"
+                priority
+              />
+              <Image
+                src="/ELO-Learning-Mascot.png"
+                width={200}
+                height={200}
+                className="block md:hidden"
+                alt="ELO Learning Mascot"
+                priority
+              />
+              <h1 className="text-2xl font-bold">
+                {mistakes} {mistakes === 1 ? 'Mistake' : 'Mistakes'}
+              </h1>
+              <p className="text-center m-5 md:m-1">
+                Continue upskilling your maths! You are doing an amazing job!
+              </p>
+            </div>
+          )}
           {mode === 'practice' && (
-            <div className="flex flex-row items-center justify-center gap-8 my-7">
-              <Score />
-              <Time />
+            <div>
+              <div className="flex flex-row items-center justify-center gap-8 my-7">
+                <Score />
+                <Time />
+              </div>
             </div>
           )}
           {mode === 'single-player' && (
@@ -156,19 +160,36 @@ function EndScreen() {
           )}
           {/* Blocks with information */}
           {mode === 'baseline' && (
-            <div className="flex flex-col items-center justify-center gap-4 my-7">
-              <h2 className="text-2xl font-bold text-center">🎉 Baseline Test Complete! 🎉</h2>
-              <p className="text-lg text-center">
+            <div className="h-full flex flex-col items-center justify-center gap-4 my-7">
+              <Image
+                src="/ELO-Learning-Mascot.png"
+                width={300}
+                height={300}
+                className="hidden md:block"
+                alt="ELO Learning Mascot"
+                priority
+              />
+              <Image
+                src="/ELO-Learning-Mascot.png"
+                width={200}
+                height={200}
+                className="block md:hidden"
+                alt="ELO Learning Mascot"
+                priority
+              />
+              <h2 className="text-2xl font-bold text-center text-[var(--vector-violet-light)]">
+                Baseline Test Complete!
+              </h2>
+              <p className="text-lg text-center mb-5">
                 Congratulations! You've completed your baseline assessment.
               </p>
-              <p className="text-lg">Your starting ELO rating is:</p>
-              <div className="text-4xl font-extrabold text-blue-600">{eloRating}</div>
-              <p className="text-sm text-center mt-2 text-gray-600 max-w-md">
-                This rating will help us provide you with questions at the right difficulty level.
-                Keep practicing to improve your rating!
-              </p>
+              <p className="text-lg font-bold">Your starting level is:</p>
+              <div className="mb-15">
+                <EndELO elo={eloRating} />
+              </div>
+
               <button
-                className="primary-button mt-6"
+                className="main-button mt-10 uppercase"
                 onClick={() => {
                   localStorage.removeItem('baselineQuestionsObj');
                   router.push('/dashboard');
@@ -210,7 +231,6 @@ function EndScreen() {
             </button>
           )}
           {/* this is where i will change the baseline end screen button */}
-
         </div>
       </div>
     </div>

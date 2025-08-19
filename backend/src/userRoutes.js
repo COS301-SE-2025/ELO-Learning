@@ -13,7 +13,7 @@ router.get('/users', async (req, res) => {
   const { data, error } = await supabase
     .from('Users')
     .select(
-      'id,name,surname,username,email,currentLevel,joinDate,xp,avatar,elo_rating,rank,baseLineTest',
+      'id,name,surname,username,email,currentLevel,joinDate,xp,avatar,elo_rating,rank,base_line_test',
     )
   if (error) {
     console.error('Error fetching users:', error.message)
@@ -30,7 +30,7 @@ router.get('/user/:id', verifyToken, async (req, res) => {
   const { data, error } = await supabase
     .from('Users')
     .select(
-      'id,name,surname,username,email,currentLevel,joinDate,xp,avatar,elo_rating,rank,baseLineTest',
+      'id,name,surname,username,email,currentLevel,joinDate,xp,avatar,elo_rating,rank,base_line_test',
     )
     .eq('id', id)
     .single()
@@ -259,7 +259,7 @@ router.post('/register', async (req, res) => {
         currentLevel: safeCurrentLevel,
         joinDate: safeJoinDate,
         xp: safeXP,
-        baseLineTest: startBase,
+        base_line_test: startBase,
         avatar: DEFAULT_AVATAR,
         elo_rating: eloRating,
         rank: defaultRank,
@@ -291,7 +291,7 @@ router.post('/register', async (req, res) => {
       currentLevel: data.currentLevel,
       joinDate: data.joinDate,
       xp: data.xp,
-      baseLineTest: data.baseLineTest,
+      baseLineTest: data.base_line_test,
       avatar: data.avatar,
       elo_rating: data.elo_rating,
       rank: data.rank,
@@ -311,7 +311,7 @@ router.post('/login', async (req, res) => {
   const { data: user, error: fetchError } = await supabase
     .from('Users')
     .select(
-      'id,name,surname,username,email,password,currentLevel,joinDate,xp,avatar,elo_rating,rank,baseLineTest',
+      'id,name,surname,username,email,password,currentLevel,joinDate,xp,avatar,elo_rating,rank,base_line_test',
     )
     .eq('email', email)
     .single()
@@ -349,7 +349,7 @@ router.post('/login', async (req, res) => {
       avatar: user.avatar,
       elo_rating: user.elo_rating,
       rank: user.rank,
-      baseLineTest: user.baseLineTest,
+      baseLineTest: user.base_line_test,
     },
   })
 })

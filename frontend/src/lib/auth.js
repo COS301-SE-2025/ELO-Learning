@@ -45,10 +45,6 @@ export const authOptions = {
       },
       async authorize(credentials) {
         try {
-          console.log(
-            '🔐 Attempting credentials login for:',
-            credentials.email,
-          )
 
           const response = await fetch(
             `${process.env.NEXT_PUBLIC_API_URL}/login`,
@@ -65,13 +61,8 @@ export const authOptions = {
           )
 
           const data = await response.json()
-          console.log('🔐 Backend response:', {
-            success: response.ok,
-            status: response.status,
-          })
 
           if (response.ok && data.user) {
-            console.log('✅ Login successful for user:', data.user.username)
             return {
               id: data.user.id,
               email: data.user.email,
@@ -89,7 +80,6 @@ export const authOptions = {
               baseLineTest: data.user.baseLineTest,
             }
           } else {
-            console.log('❌ Login failed:', data.error || 'Unknown error')
             return null
           }
         } catch (error) {
@@ -139,14 +129,6 @@ export const authOptions = {
         token.accessToken = account.access_token
       }
 
-      console.log('JWT callback:', {
-        user,
-        account,
-        token,
-        trigger,
-        session,
-      })
-
       if (trigger === 'update' && session?.user) {
         // Update token with user data from session
         token.id = session.user.id
@@ -160,29 +142,7 @@ export const authOptions = {
         token.avatar = session.user.avatar
         token.elo_rating = session.user.elo_rating
         token.rank = session.user.rank
-      }
-
-      console.log('JWT callback:', {
-        user,
-        account,
-        token,
-        trigger,
-        session,
-      })
-
-      if (trigger === 'update' && session?.user) {
-        // Update token with user data from session
-        token.id = session.user.id
-        token.email = session.user.email
-        token.name = session.user.name
-        token.surname = session.user.surname
-        token.username = session.user.username
-        token.xp = session.user.xp || 0
-        token.currentLevel = session.user.currentLevel || 1
-        token.joinDate = session.user.joinDate
-        token.avatar = session.user.avatar
-        token.elo_rating = session.user.elo_rating
-        token.rank = session.user.rank
+        token.baseLineTest = session.user.baseLineTest
       }
 
       // Persist user data in the token right after signin
@@ -209,12 +169,6 @@ export const authOptions = {
     async session({ session, token, trigger, newSession }) {
       // Send properties to the client, getting data from the token
       session.accessToken = token.accessToken
-      console.log('Session callback:', {
-        user: session.user,
-        token,
-        trigger,
-        newSession,
-      })
 
       // Pass user data from token to session
       if (token) {

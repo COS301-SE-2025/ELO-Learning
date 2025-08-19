@@ -1,9 +1,12 @@
 'use client';
 
-import { useRouter } from 'next/navigation';
 import BaselineTracker from '@/app/ui/questions/baseline-questions-tracker';
+import { useSession } from 'next-auth/react';
+import { useRouter } from 'next/navigation';
 
-export default function BaselineGameClient({ questions, userId }) {
+export default function BaselineGameClient({ questions }) {
+  const { data: session, status } = useSession();
+
   const router = useRouter();
 
   const handleCompletion = async (finalElo) => {
@@ -18,13 +21,23 @@ export default function BaselineGameClient({ questions, userId }) {
     }
   };
 
+  if (status === 'loading') {
+    return <div>Loading...</div>;
+  }
+  if (status === 'authenticated') {
+    return (
+      <div className="full-screen w-full h-full flex flex-col justify-between">
+        <BaselineTracker
+          questions={questions}
+          userId={session.user.id}
+          onComplete={handleCompletion}
+        />
+      </div>
+    );
+  }
   return (
-    <div className="full-screen w-full h-full flex flex-col justify-between">
-      <BaselineTracker
-        questions={questions}
-        userId={userId}
-        onComplete={handleCompletion}
-      />
+    <div className="flex justify-center items-center h-full">
+      <p>Please log in to play the baseline game.</p>
     </div>
   );
 }

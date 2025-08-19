@@ -1,5 +1,5 @@
 'use client';
-import { fetchUserById, fetchUsersByRank } from '@/services/api';
+import { fetchUsersByRank } from '@/services/api';
 import { useSession } from 'next-auth/react';
 import { useEffect, useMemo, useState } from 'react';
 import LeaderboardTable from '../ui/leaderboard-table';
@@ -92,8 +92,8 @@ export default function Page() {
 
       try {
         // Fetch current user info including baseLineTest
-        const userData = await fetchUserById(session.user.id);
-        if (userData?.baseLineTest === false) {
+        // const userData = await fetchUserById(session.user.id);
+        if (session.user.baseLineTest === false) {
           setShowPopup(true);
         }
       } catch (error) {

@@ -421,7 +421,8 @@ export default function QuestionsTracker({
       }
 
       // 🏆 Submit to API for additional achievements (non-blocking)
-      if (session?.user?.id) {
+      // Skip API submission in multiplayer mode to prevent double XP calculation
+      if (session?.user?.id && mode !== 'multiplayer') {
         console.log('🎯 ACHIEVEMENT DEBUG - Submitting question:', {
           userId: session.user.id,
           questionId: currQuestion?.Q_id || currQuestion?.id,
@@ -467,6 +468,10 @@ export default function QuestionsTracker({
           .catch((error) => {
             console.error('API submission failed (non-critical):', error);
           });
+      } else if (mode === 'multiplayer') {
+        console.log(
+          '🎮 Multiplayer mode - skipping individual question XP calculation',
+        );
       }
 
       await setLocalStorage();

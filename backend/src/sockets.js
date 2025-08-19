@@ -327,8 +327,10 @@ export default (io, socket) => {
     } else {
       // XP tie - use time as tiebreaker
       if (player1Stats.timeTaken < player2Stats.timeTaken) {
+        console.log('Player1 won..... =======================');
         score1 = 1;
       } else if (player1Stats.timeTaken > player2Stats.timeTaken) {
+        console.log('Player2 won..... =======================');
         score1 = 0;
       } else {
         console.log('Players tied..... =======================');

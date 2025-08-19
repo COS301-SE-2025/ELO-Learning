@@ -24,6 +24,7 @@ export function updateEloRating({
   kFactor = DEFAULT_K,
 }) {
   const change = kFactor * (actual - expected);
+  //console.log(`ELO Change: ${change}`);
   return Math.max(0, rating + change * scalingFactor);
 }
 

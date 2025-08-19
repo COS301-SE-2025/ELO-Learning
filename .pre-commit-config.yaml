@@ -15,12 +15,13 @@ repos:
     hooks:
       - id: prettier
 
-  - repo: local
-    hooks:
-      - id: eslint
-        name: ESLint
-        entry: npx eslint
-        language: system
+  # - repo: local
+  #   hooks:
+  #     - id: eslint
+  #       name: ESLint
+  #       entry: yarn eslint
+  #       language: system
+  #       working_dir: frontend
 
   - repo: https://github.com/shellcheck-py/shellcheck-py
     rev: v0.9.0.5

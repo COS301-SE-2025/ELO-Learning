@@ -1,193 +1,145 @@
 // userRoutes.js
-import bcrypt from 'bcrypt';
-import express from 'express';
-import jwt from 'jsonwebtoken';
-import { supabase } from '../database/supabaseClient.js';
+import bcrypt from 'bcrypt'
+import express from 'express'
+import jwt from 'jsonwebtoken'
+import { supabase } from '../database/supabaseClient.js'
+import { verifyToken } from './middleware/auth.js'
 
-const router = express.Router();
-const TOKEN_EXPIRY = 3600; // 1 hour in seconds
+const router = express.Router()
+const TOKEN_EXPIRY = 3600 // 1 hour in seconds
 
 // GET /users Endpoint: works.
 router.get('/users', async (req, res) => {
   const { data, error } = await supabase
     .from('Users')
-    .select('id,name,surname,username,email,currentLevel,joinDate,xp,pfpURL,baseLineTest');
+    .select(
+      'id,name,surname,username,email,currentLevel,joinDate,xp,avatar,elo_rating,rank,baseLineTest',
+    )
   if (error) {
-    console.error('Error fetching users:', error.message);
-    return res.status(500).json({ error: 'Failed to fetch users' });
+    console.error('Error fetching users:', error.message)
+    return res.status(500).json({ error: 'Failed to fetch users' })
   }
-  res.status(200).json(data);
-});
+  res.status(200).json(data)
+})
 
 // Return specific user: (works)
-router.get('/user/:id', async (req, res) => {
-  const { id } = req.params;
-
-  // Check for Authorization header (mock for now)
-  const authHeader = req.headers.authorization;
-  if (!authHeader || !authHeader.startsWith('Bearer ')) {
-    return res
-      .status(401)
-      .json({ error: 'You are unauthorized to make this request.' });
-  }
+router.get('/user/:id', verifyToken, async (req, res) => {
+  const { id } = req.params
 
   // Fetch user from Supabase
   const { data, error } = await supabase
     .from('Users')
-    .select('id,name,surname,username,email,currentLevel,joinDate,xp,pfpURL,baseLineTest')
+    .select(
+      'id,name,surname,username,email,currentLevel,joinDate,xp,avatar,elo_rating,rank,baseLineTest',
+    )
     .eq('id', id)
-    .single();
+    .single()
 
   if (error) {
     if (error.code === 'PGRST116') {
-      return res.status(404).json({ error: "User doesn't exist" });
+      return res.status(404).json({ error: "User doesn't exist" })
     }
-    console.error('Error fetching user:', error.message);
-    return res.status(500).json({ error: 'Failed to fetch user' });
+    console.error('Error fetching user:', error.message)
+    return res.status(500).json({ error: 'Failed to fetch user' })
   }
 
-  res.status(200).json(data);
-});
+  res.status(200).json(data)
+})
 
-router.get('/user/me', async (req, res) => {
-  try {
-    // Try to get token from Authorization header or cookie
-    let token = null;
-    const authHeader = req.headers.authorization;
-    if (authHeader && authHeader.startsWith('Bearer ')) {
-      token = authHeader.split(' ')[1];
-    } else if (req.cookies && req.cookies.token) {
-      token = req.cookies.token;
-    }
-
-    if (!token) {
-      return res.status(401).json({ error: 'Unauthorized: No token provided' });
-    }
-
-    // Verify JWT token
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    const userId = decoded.id || decoded.userId; // depends on your JWT payload
-
-    if (!userId) {
-      return res.status(401).json({ error: 'Unauthorized: Invalid token payload' });
-    }
-
-    // Fetch user from Supabase by id
-    const { data: user, error } = await supabase
-      .from('Users')
-      .select('id, name, surname, username, email, baseLineTest, currentLevel, xp')
-      .eq('id', userId)
-      .single();
-
-    if (error || !user) {
-      return res.status(404).json({ error: 'User not found' });
-    }
-
-    // Return user info
-    return res.status(200).json({ user });
-  } catch (error) {
-    console.error('Error fetching current user:', error);
-    return res.status(401).json({ error: 'Unauthorized: Invalid or expired token' });
-  }
-});
-
-
-//get user's baseline
-router.get('/user/:id/baseline', async (req, res) => {
-  const { id } = req.params;
+router.get('/users/rank/:rank', async (req, res) => {
+  const { rank } = req.params
+  // Fetch users by rank from Supabase
   const { data, error } = await supabase
     .from('Users')
-    .select('baseLineTest')
-    .eq('id', id)
-    .single();
-
+    .select('id,username,xp,avatar,elo_rating,rank')
+    .eq('rank', rank)
   if (error) {
-    return res.status(500).json({ error: 'Failed to fetch baseline test value' });
+    console.error('Error fetching users by rank:', error.message)
+    return res.status(500).json({ error: 'Failed to fetch users by rank' })
   }
-  res.status(200).json({ baseLineTest: data.baseLineTest });
-});
-
-// Update user's baseLineTest value
-router.put('/user/:id/baseline', async (req, res) => {
-  const { id } = req.params;
-  const { baseLineTest } = req.body;
-
-  // Validate input
-  if (typeof baseLineTest !== 'boolean') {
-    return res.status(400).json({ error: 'baseLineTest must be a boolean' });
-  }
-
-  const authHeader = req.headers.authorization;
-  if (!authHeader || !authHeader.startsWith('Bearer ')) {
-    return res.status(401).json({ error: 'Unauthorized: No token provided' });
-  }
-
-  try {
-    // Optional: Verify token here if needed (like in /user/me)
-    // Update the value
-    const { data, error } = await supabase
-      .from('Users')
-      .update({ baseLineTest })
-      .eq('id', id)
-      .select()
-      .single();
-
-    if (error) {
-      return res.status(500).json({ error: 'Failed to update baseLineTest' });
-    }
-
-    res.status(200).json({ message: 'baseLineTest updated', baseLineTest: data.baseLineTest });
-  } catch (err) {
-    console.error('Error updating baseLineTest:', err);
-    res.status(500).json({ error: 'Internal server error' });
-  }
-});
-
-
-// Return user's achievements: (works)
-router.get('/users/:id/achievements', async (req, res) => {
-  const { id } = req.params;
-
-  const authHeader = req.headers.authorization;
-  if (!authHeader || !authHeader.startsWith('Bearer ')) {
-    return res
-      .status(401)
-      .json({ error: 'You are unauthorized to make this request.' });
-  }
-
-  const { data, error } = await supabase
-    .from('Achievements')
-    .select('*')
-    .eq('user_id', id);
-
-  if (error) {
-    console.error('Error fetching achievements:', error.message);
-    return res.status(500).json({ error: 'Failed to fetch achievements' });
-  }
-
   if (data.length === 0) {
-    return res
-      .status(404)
-      .json({ error: "User doesn't exist or has no achievements" });
+    return res.status(404).json({ error: 'No users found with that rank' })
+  }
+  res.status(200).json(data)
+})
+
+router.get('/users/rank/:rank', async (req, res) => {
+  const { rank } = req.params
+  // Fetch users by rank from Supabase
+  const { data, error } = await supabase
+    .from('Users')
+    .select('id,username,xp,avatar,elo_rating,rank')
+    .eq('rank', rank)
+  if (error) {
+    console.error('Error fetching users by rank:', error.message)
+    return res.status(500).json({ error: 'Failed to fetch users by rank' })
+  }
+  if (data.length === 0) {
+    return res.status(404).json({ error: 'No users found with that rank' })
+  }
+  res.status(200).json(data)
+})
+
+// Return user's achievements: (using proper junction table)
+router.get('/users/:id/achievements', verifyToken, async (req, res) => {
+  const { id } = req.params
+
+  // Use the proper junction table approach
+  const { data, error } = await supabase
+    .from('UserAchievements')
+    .select(
+      `
+      unlocked_at,
+      Achievements (
+        id,
+        name,
+        description,
+        condition_type,
+        condition_value,
+        icon_path,
+        AchievementCategories (
+          name
+        )
+      )
+    `,
+    )
+    .eq('user_id', id)
+    .order('unlocked_at', { ascending: false })
+
+  if (error) {
+    console.error('Error fetching users by rank:', error.message)
+    return res.status(500).json({ error: 'Failed to fetch users by rank' })
   }
 
-  res.status(200).json({ achievements: data });
-});
+  // Format the response to match expected structure
+  const formattedAchievements = (data || []).map((ua) => ({
+    id: ua.Achievements.id,
+    name: ua.Achievements.name,
+    description: ua.Achievements.description,
+    condition_type: ua.Achievements.condition_type,
+    condition_value: ua.Achievements.condition_value,
+    icon_path: ua.Achievements.icon_path,
+    category: ua.Achievements.AchievementCategories?.name || 'General',
+    unlocked_at: ua.unlocked_at,
+  }))
+
+  if (formattedAchievements.length === 0) {
+    return res.status(200).json({
+      achievements: [],
+      message: 'User has no achievements yet',
+    })
+  }
+
+  res.status(200).json({ achievements: formattedAchievements })
+})
 
 // Update a user's XP: (works)
-router.post('/user/:id/xp', async (req, res) => {
-  const { id } = req.params;
-  const { xp } = req.body;
-
-  const authHeader = req.headers.authorization;
-  if (!authHeader || !authHeader.startsWith('Bearer ')) {
-    return res
-      .status(401)
-      .json({ error: 'You are unauthorized to make this request.' });
-  }
+router.post('/user/:id/xp', verifyToken, async (req, res) => {
+  const { id } = req.params
+  const { xp } = req.body
 
   if (typeof xp !== 'number') {
-    return res.status(400).json({ error: 'XP must be a number.' });
+    return res.status(400).json({ error: 'XP must be a number.' })
   }
 
   const { data, error } = await supabase
@@ -195,25 +147,71 @@ router.post('/user/:id/xp', async (req, res) => {
     .update({ xp })
     .eq('id', id)
     .select()
-    .single();
+    .single()
 
   if (error) {
     if (error.code === 'PGRST116') {
-      return res.status(404).json({ error: "User doesn't exist" });
+      return res.status(404).json({ error: "User doesn't exist" })
     }
-    console.error('Error updating XP:', error.message);
-    return res.status(500).json({ error: 'Failed to update XP' });
+    console.error('Error updating XP:', error.message)
+    return res.status(500).json({ error: 'Failed to update XP' })
   }
 
-  res.status(200).json(data);
-});
+  res.status(200).json(data)
+})
+
+// Update a user's avatar
+router.post('/user/:id/avatar', async (req, res) => {
+  const { id } = req.params
+  const { avatar } = req.body
+
+  const { data, error } = await supabase
+    .from('Users')
+    .update({ avatar })
+    .eq('id', id)
+    .select()
+    .single()
+
+  if (error) {
+    if (error.code === 'PGRST116') {
+      return res.status(404).json({ error: "User doesn't exist" })
+    }
+    console.error('Error updating AVATAR:', error.message)
+    return res.status(500).json({ error: 'Failed to update AVATAR' })
+  }
+
+  res.status(200).json(data)
+})
+
+// Update a user's avatar
+router.post('/user/:id/avatar', async (req, res) => {
+  const { id } = req.params
+  const { avatar } = req.body
+
+  const { data, error } = await supabase
+    .from('Users')
+    .update({ avatar })
+    .eq('id', id)
+    .select()
+    .single()
+
+  if (error) {
+    if (error.code === 'PGRST116') {
+      return res.status(404).json({ error: "User doesn't exist" })
+    }
+    console.error('Error updating AVATAR:', error.message)
+    return res.status(500).json({ error: 'Failed to update AVATAR' })
+  }
+
+  res.status(200).json(data)
+})
 
 // Register new user
 router.post('/register', async (req, res) => {
-  const { name, surname, username, email, password, joinDate, currentLevel, baseLineTest } = req.body;
+  const { name, surname, username, email, password, joinDate } = req.body
 
   if (!name || !surname || !username || !email || !password) {
-    return res.status(400).json({ error: 'All fields are required' });
+    return res.status(400).json({ error: 'All fields are required' })
   }
 
   // Check if user already exists
@@ -221,24 +219,33 @@ router.post('/register', async (req, res) => {
     .from('Users')
     .select('id')
     .eq('email', email)
-    .maybeSingle();
+    .maybeSingle()
 
   if (fetchError) {
-    console.error('Error checking existing user:', fetchError.message);
-    return res.status(500).json({ error: 'Internal server error' });
+    console.error('Error checking existing user:', fetchError.message)
+    return res.status(500).json({ error: 'Internal server error' })
   }
 
   if (existingUser) {
-    return res.status(409).json({ error: 'Email already registered' });
+    return res.status(409).json({ error: 'Email already registered' })
   }
 
   // Hash password
-  const hashedPassword = await bcrypt.hash(password, 10);
+  const hashedPassword = await bcrypt.hash(password, 10)
 
-  const safeCurrentLevel = 5;
-  const safeJoinDate = joinDate || new Date().toISOString();
-  const safeXP = 1000;
-  const startBase = false;
+  const safeCurrentLevel = 5
+  const safeJoinDate = joinDate || new Date().toISOString()
+  const safeXP = 1000
+  const DEFAULT_AVATAR = {
+    eyes: 'Eye 1',
+    mouth: 'Mouth 1',
+    bodyShape: 'Circle',
+    background: 'solid-pink',
+  }
+  const eloRating = 100
+  const defaultRank = 'Iron'
+
+  const startBase = false
 
   const { data, error } = await supabase
     .from('Users')
@@ -253,21 +260,24 @@ router.post('/register', async (req, res) => {
         joinDate: safeJoinDate,
         xp: safeXP,
         baseLineTest: startBase,
+        avatar: DEFAULT_AVATAR,
+        elo_rating: eloRating,
+        rank: defaultRank,
       },
     ])
     .select()
-    .single();
+    .single()
 
   if (error) {
-    console.error('Error registering user:', error.message);
-    return res.status(500).json({ error: 'Failed to register user' });
+    console.error('Error registering user:', error.message)
+    return res.status(500).json({ error: 'Failed to register user' })
   }
 
   const token = jwt.sign(
     { id: data.id, email: data.email },
     process.env.JWT_SECRET,
     { expiresIn: '1h' },
-  );
+  )
 
   res.status(201).json({
     message: 'User registered successfully',
@@ -282,36 +292,39 @@ router.post('/register', async (req, res) => {
       joinDate: data.joinDate,
       xp: data.xp,
       baseLineTest: data.baseLineTest,
+      avatar: data.avatar,
+      elo_rating: data.elo_rating,
+      rank: data.rank,
     },
-  });
-});
+  })
+})
 
 // Login user
 router.post('/login', async (req, res) => {
-  const { email, password } = req.body;
+  const { email, password } = req.body
 
   if (!email || !password) {
-    return res.status(400).json({ error: 'Email and password are required' });
+    return res.status(400).json({ error: 'Email and password are required' })
   }
 
   // Fetch user by email
   const { data: user, error: fetchError } = await supabase
     .from('Users')
     .select(
-      'id,name,surname,username,email,password,currentLevel,joinDate,xp,pfpURL,baseLineTest',
+      'id,name,surname,username,email,password,currentLevel,joinDate,xp,avatar,elo_rating,rank,baseLineTest',
     )
     .eq('email', email)
-    .single();
+    .single()
 
   if (fetchError || !user) {
-    console.error('Error fetching user:', fetchError?.message);
-    return res.status(401).json({ error: 'Invalid email or password' });
+    console.error('Error fetching user:', fetchError?.message)
+    return res.status(401).json({ error: 'Invalid email or password' })
   }
 
   // Verify password
-  const isPasswordValid = await bcrypt.compare(password, user.password);
+  const isPasswordValid = await bcrypt.compare(password, user.password)
   if (!isPasswordValid) {
-    return res.status(401).json({ error: 'Invalid email or password' });
+    return res.status(401).json({ error: 'Invalid email or password' })
   }
 
   // Generate JWT token
@@ -319,7 +332,7 @@ router.post('/login', async (req, res) => {
     { id: user.id, email: user.email },
     process.env.JWT_SECRET,
     { expiresIn: '1h' },
-  );
+  )
 
   res.status(200).json({
     message: 'Login successful',
@@ -333,18 +346,20 @@ router.post('/login', async (req, res) => {
       currentLevel: user.currentLevel || 5, // Default to level 1 if not set
       joinDate: user.joinDate || new Date().toISOString(), // Default to current date if not set
       xp: user.xp || 0, // Default to 0 XP if not set
-      pfpURL: user.pfpURL,
+      avatar: user.avatar,
+      elo_rating: user.elo_rating,
+      rank: user.rank,
       baseLineTest: user.baseLineTest,
     },
-  });
-});
+  })
+})
 
 // Send password reset email
 router.post('/forgot-password', async (req, res) => {
-  const { email } = req.body;
+  const { email } = req.body
 
   if (!email) {
-    return res.status(400).json({ error: 'Email is required' });
+    return res.status(400).json({ error: 'Email is required' })
   }
 
   try {
@@ -353,18 +368,18 @@ router.post('/forgot-password', async (req, res) => {
       .from('Users')
       .select('id, email, name')
       .eq('email', email)
-      .single();
+      .single()
 
     if (fetchError || !user) {
       // For security, don't reveal if email exists or not
       return res.status(200).json({
         message:
           'If an account with that email exists, a reset link has been sent.',
-      });
+      })
     }
 
     // Generate reset token (valid for 1 hour)
-    const now = Math.floor(Date.now() / 1000); // Current UTC timestamp in seconds
+    const now = Math.floor(Date.now() / 1000) // Current UTC timestamp in seconds
     const resetToken = jwt.sign(
       {
         userId: user.id,
@@ -374,11 +389,11 @@ router.post('/forgot-password', async (req, res) => {
         exp: now + TOKEN_EXPIRY,
       },
       process.env.JWT_SECRET,
-    );
+    )
 
     // Store in database with explicit UTC timestamp
-    const expiresAt = new Date();
-    expiresAt.setTime(now * 1000 + TOKEN_EXPIRY * 1000);
+    const expiresAt = new Date()
+    expiresAt.setTime(now * 1000 + TOKEN_EXPIRY * 1000)
 
     const { error: tokenError } = await supabase.from('PasswordResets').insert([
       {
@@ -386,10 +401,10 @@ router.post('/forgot-password', async (req, res) => {
         token: resetToken,
         expires_at: expiresAt.toISOString(), // Stores in UTC
       },
-    ]);
+    ])
 
     if (tokenError) {
-      console.error('Error storing reset token:', tokenError.message);
+      console.error('Error storing reset token:', tokenError.message)
       // Continue anyway - token is still valid via JWT
     }
 
@@ -397,46 +412,46 @@ router.post('/forgot-password', async (req, res) => {
     // const resetLink = `${process.env.FRONTEND_URL}/login-landing/reset-password?token=${resetToken}`;
     // await sendPasswordResetEmail(user.email, user.name, resetLink);
 
-    console.log(`Password reset requested for: ${email}`);
-    console.log(`Reset token: ${resetToken}`); // Remove in production
+    console.log(`Password reset requested for: ${email}`)
+    console.log(`Reset token: ${resetToken}`) // Remove in production
 
     res.status(200).json({
       message:
         'If an account with that email exists, a reset link has been sent.',
-    });
+    })
   } catch (error) {
-    console.error('Error in forgot password:', error);
-    res.status(500).json({ error: 'Internal server error' });
+    console.error('Error in forgot password:', error)
+    res.status(500).json({ error: 'Internal server error' })
   }
-});
+})
 
 // Reset password with token
 router.post('/reset-password', async (req, res) => {
   try {
-    const { token, newPassword } = req.body;
+    const { token, newPassword } = req.body
 
     if (!token || !newPassword) {
       return res
         .status(400)
-        .json({ error: 'Token and new password are required' });
+        .json({ error: 'Token and new password are required' })
     }
 
     // Validate password strength (same as registration)
     if (newPassword.length < 8) {
       return res.status(400).json({
         error: 'Password must be at least 8 characters long',
-      });
+      })
     }
 
     // First verify JWT validity
-    let decoded;
+    let decoded
     try {
-      decoded = jwt.verify(token, process.env.JWT_SECRET);
+      decoded = jwt.verify(token, process.env.JWT_SECRET)
       if (decoded.type !== 'password_reset') {
-        return res.status(400).json({ error: 'Invalid token type' });
+        return res.status(400).json({ error: 'Invalid token type' })
       }
     } catch (jwtError) {
-      return res.status(400).json({ error: 'Invalid or expired token' });
+      return res.status(400).json({ error: 'Invalid or expired token' })
     }
 
     // Then verify token in database
@@ -444,66 +459,66 @@ router.post('/reset-password', async (req, res) => {
       .from('PasswordResets')
       .select('user_id, expires_at')
       .eq('token', token)
-      .single();
+      .single()
 
     if (resetError || !resetEntry) {
-      return res.status(400).json({ error: 'Invalid or expired reset token' });
+      return res.status(400).json({ error: 'Invalid or expired reset token' })
     }
 
     // Compare UTC timestamps
-    const now = new Date();
-    const expiresAt = new Date(resetEntry.expires_at);
+    const now = new Date()
+    const expiresAt = new Date(resetEntry.expires_at)
 
     if (now.getTime() > expiresAt.getTime()) {
       // Clean up expired token
-      await supabase.from('PasswordResets').delete().eq('token', token);
-      return res.status(400).json({ error: 'Reset token has expired' });
+      await supabase.from('PasswordResets').delete().eq('token', token)
+      return res.status(400).json({ error: 'Reset token has expired' })
     }
 
     // Hash the new password
-    const hashedPassword = await bcrypt.hash(newPassword, 10);
+    const hashedPassword = await bcrypt.hash(newPassword, 10)
 
     // Update user's password
     const { error: updateError } = await supabase
       .from('Users')
       .update({ password: hashedPassword })
-      .eq('id', resetEntry.user_id);
+      .eq('id', resetEntry.user_id)
 
     if (updateError) {
-      console.error('Error updating password:', updateError.message);
-      return res.status(500).json({ error: 'Failed to update password' });
+      console.error('Error updating password:', updateError.message)
+      return res.status(500).json({ error: 'Failed to update password' })
     }
 
     // Delete used reset token
-    await supabase.from('PasswordResets').delete().eq('token', token);
+    await supabase.from('PasswordResets').delete().eq('token', token)
 
     res.status(200).json({
       message: 'Password has been successfully reset',
-    });
+    })
   } catch (err) {
-    console.error('Error in reset-password:', err);
-    res.status(500).json({ error: 'Internal server error' });
+    console.error('Error in reset-password:', err)
+    res.status(500).json({ error: 'Internal server error' })
   }
-});
+})
 
 // Verify reset token
 router.get('/verify-reset-token/:token', async (req, res) => {
-  const { token } = req.params;
+  const { token } = req.params
 
   if (!token) {
-    return res.status(400).json({ error: 'Token is required' });
+    return res.status(400).json({ error: 'Token is required' })
   }
 
   try {
     // First verify JWT
-    let decoded;
+    let decoded
     try {
-      decoded = jwt.verify(token, process.env.JWT_SECRET);
+      decoded = jwt.verify(token, process.env.JWT_SECRET)
       if (decoded.type !== 'password_reset') {
-        return res.status(400).json({ error: 'Invalid token type' });
+        return res.status(400).json({ error: 'Invalid token type' })
       }
     } catch (jwtError) {
-      return res.status(400).json({ error: 'Invalid or expired token' });
+      return res.status(400).json({ error: 'Invalid or expired token' })
     }
 
     // Then verify in database
@@ -511,30 +526,30 @@ router.get('/verify-reset-token/:token', async (req, res) => {
       .from('PasswordResets')
       .select('expires_at')
       .eq('token', token)
-      .single();
+      .single()
 
     if (fetchError || !resetRecord) {
-      return res.status(400).json({ error: 'Invalid or expired token' });
+      return res.status(400).json({ error: 'Invalid or expired token' })
     }
 
     // Check expiration
-    const now = new Date();
-    const expiresAt = new Date(resetRecord.expires_at);
+    const now = new Date()
+    const expiresAt = new Date(resetRecord.expires_at)
 
     if (now > expiresAt) {
       // Clean up expired token
-      await supabase.from('PasswordResets').delete().eq('token', token);
-      return res.status(400).json({ error: 'Token has expired' });
+      await supabase.from('PasswordResets').delete().eq('token', token)
+      return res.status(400).json({ error: 'Token has expired' })
     }
 
     res.status(200).json({
       message: 'Token is valid',
       userId: decoded.userId,
-    });
+    })
   } catch (error) {
-    console.error('Error verifying reset token:', error);
-    res.status(500).json({ error: 'Internal server error' });
+    console.error('Error verifying reset token:', error)
+    res.status(500).json({ error: 'Internal server error' })
   }
-});
+})
 
-export default router;
+export default router

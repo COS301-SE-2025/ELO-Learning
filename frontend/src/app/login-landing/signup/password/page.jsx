@@ -1,10 +1,10 @@
 'use client';
-import { setCookie } from '@/app/lib/authCookie';
 import ProgressBar from '@/app/ui/progress-bar';
 import { registerUser } from '@/services/api';
-import { signIn } from 'next-auth/react';
 import { Eye, EyeOff, X } from 'lucide-react';
+import { signIn } from 'next-auth/react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation'; // ← ADD THIS
 import { useState } from 'react';
 import {
   clearRegistration,
@@ -16,7 +16,6 @@ const currentStep = 6;
 const totalSteps = 6;
 
 function validatePassword(password) {
-  // At least 1 uppercase, 1 number, 1 special char, min 8 chars
   return /^(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?]).{8,}$/.test(
     password,
   );
@@ -29,6 +28,7 @@ export default function Page() {
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const router = useRouter(); // ← ADD THIS
 
   const handleContinue = async (e) => {
     e.preventDefault();
@@ -50,12 +50,12 @@ export default function Page() {
     setError('');
     setLoading(true);
 
-    // Get registration data
     const reg = getRegistration();
-    console.log('Registration object:', reg);
+    console.log('🚀 Starting registration...', reg);
     setRegistration({ password });
 
     try {
+      // Step 1: Register user via your API
       const response = await registerUser(
         reg.name,
         reg.surname,
@@ -66,27 +66,54 @@ export default function Page() {
         reg.joinDate,
         reg.baseLineTest,
       );
-      // Save token and user to localStorage
-      if (response.token && response.user) {
-        await setCookie(response);
+
+      console.log('✅ Registration API successful:', response);
+
+      // Step 2: Immediately sign in with NextAuth to create proper session
+      console.log('🔐 Creating NextAuth session...');
+
+      const signInResult = await signIn('credentials', {
+        email: reg.email,
+        password: password,
+        redirect: false,
+      });
+
+      if (signInResult?.error) {
+        console.error('❌ NextAuth signin failed:', signInResult.error);
+        setError(
+          'Registration successful but login failed. Please try logging in.',
+        );
+        return;
       }
 
-              // Automatically sign in the new user using NextAuth signIn
-        const signInResult = await signIn('credentials', {
-          redirect: false,
-          email: reg.email,
-          password: password,
-        });
+      console.log('🎉 NextAuth session created successfully!');
 
-        if (signInResult?.error) {
-          setError('Registration succeeded but automatic login failed.');
-          setLoading(false);
-          return;
-        }
+      // Step 3: Clean up and redirect
+
+      // Automatically sign in the new user using NextAuth signIn
+      // const signInResult = await signIn('credentials', {
+      //   redirect: false,
+      //   email: reg.email,
+      //   password: password,
+      // });
+
+      if (signInResult?.error) {
+        setError('Registration succeeded but automatic login failed.');
+        setLoading(false);
+        return;
+      }
 
       clearRegistration();
-      window.location.href = '/dashboard';
+
+      // Clear any old localStorage auth data
+      localStorage.removeItem('token');
+      localStorage.removeItem('user');
+      localStorage.removeItem('auth_provider');
+
+      console.log('🔄 Redirecting to dashboard...');
+      router.push('/dashboard');
     } catch (err) {
+      console.error('❌ Registration failed:', err);
       setError(err?.response?.data?.error || 'Registration failed. Try again.');
     } finally {
       setLoading(false);
@@ -116,11 +143,7 @@ export default function Page() {
           <p className="text-lg text-center font-bold">Choose a password</p>
           <form onSubmit={handleContinue}>
             <div className="flex flex-col items-center w-full px-4 md:px-0">
-              {' '}
-              {/* Added px-4 for mobile padding */}
               <div className="relative w-[90vw] md:w-[500px]">
-                {' '}
-                {/* Changed to match button width */}
                 <input
                   type={showPassword ? 'text' : 'password'}
                   placeholder="Enter a password"
@@ -138,8 +161,6 @@ export default function Page() {
                 </button>
               </div>
               <div className="relative w-[90vw] md:w-[500px]">
-                {' '}
-                {/* Changed to match button width */}
                 <input
                   type={showConfirmPassword ? 'text' : 'password'}
                   placeholder="Confirm password"
@@ -171,7 +192,7 @@ export default function Page() {
                 type="submit"
                 disabled={loading}
               >
-                {loading ? 'Registering...' : 'Continue'}
+                {loading ? 'Creating Account...' : 'Continue'}
               </button>
             </div>
           </form>

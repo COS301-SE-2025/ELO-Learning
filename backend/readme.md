@@ -231,9 +231,8 @@ Request Body:
 
 ```json
 {
-  "player1_id": 7,
-  "player2_id": 14,
-  "question_id": 22,
+  "player1_id": 40,
+  "player2_id": 48,
   "score1": 1,
   "xpTotal": 80
 }
@@ -246,18 +245,22 @@ Example Response:
   "message": "Multiplayer match processed successfully",
   "players": [
     {
-      "id": 7,
-      "xpEarned": 104,
-      "newXP": 1104,
-      "currentLevel": 6,
-      "leveledUp": false
+      "id": 40,
+      "xpEarned": 31,
+      "eloChange": 0.01,
+      "newXP": 868,
+      "newElo": 4.83,
+      "currentLevel": 5,
+      "currentRank": "Gold"
     },
     {
-      "id": 14,
-      "xpEarned": 56,
-      "newXP": 906,
+      "id": 48,
+      "xpEarned": 0,
+      "eloChange": -0.01,
+      "newXP": 824,
+      "newElo": 2.86,
       "currentLevel": 5,
-      "leveledUp": false
+      "currentRank": "Bronze"
     }
   ]
 }

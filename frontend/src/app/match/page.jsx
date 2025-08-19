@@ -3,6 +3,7 @@ import { useSocket } from '@/socket';
 import { CircleSmall } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
+import useAchievementChecker from '@/hooks/useAchievementChecker';
 
 export default function Page() {
   const { socket, session, status, isConnected } = useSocket();
@@ -11,6 +12,12 @@ export default function Page() {
   const [opponent, setOpponent] = useState(null);
   const [gameId, setGameId] = useState(null);
   const router = useRouter();
+
+  // ACHIEVEMENT CHECKING
+  useAchievementChecker({
+    checkOnMount: true,
+    debug: false, // Set to true if you want to see achievement logs
+  });
 
   // Update connection color based on socket status
   useEffect(() => {
@@ -124,7 +131,7 @@ export default function Page() {
                   {/* <span className="font-medium text-black">Username:</span> */}
                   <span>{opponent.username}</span>
                   <span className="text-[#FF6E99] font-bold">
-                    {opponent.xp} XP
+                    Rank: {opponent.rank}
                   </span>
                 </div>
               </div>

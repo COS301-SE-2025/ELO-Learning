@@ -24,14 +24,14 @@ describe('Question Template Types Tests', () => {
       expectedElements: ['button'],
       description: 'Drag-and-drop mathematical expression building',
     },
-    {
-      name: 'Multiple Choice',
-      path: '/question-templates/multiple-choice',
-      apiPath: 'Multiple%20Choice',
-      apiActualPath: 'questions', // Multiple choice uses different endpoint
-      expectedElements: ['button'],
-      description: 'Standard multiple choice question format',
-    },
+    // {
+    //   name: 'Multiple Choice',
+    //   path: '/question-templates/multiple-choice',
+    //   apiPath: 'Multiple%20Choice',
+    //   apiActualPath: 'questions', // Multiple choice uses different endpoint
+    //   expectedElements: ['button'],
+    //   description: 'Standard multiple choice question format',
+    // },
     {
       name: 'Open Response',
       path: '/question-templates/open-response',

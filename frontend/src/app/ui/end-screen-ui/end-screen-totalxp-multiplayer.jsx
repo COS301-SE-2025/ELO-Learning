@@ -134,11 +134,25 @@ export default function TotalXPMP({ onLoadComplete }) {
           xpTotal: matchData.totalXP,
         });
 
-        // Find current user's results from the response
-        const userResults = response.players.find((p) => p.id === userId);
-        if (userResults) {
-          setXPEarned(userResults.xpEarned);
-          await updateUserDataAfterMultiplayer(userId, userResults);
+        // Check if we got an error response
+        if (response.error) {
+          console.error(
+            'Error in multiplayer result submission:',
+            response.message,
+          );
+          // Show fallback XP value
+          setXPEarned(totalXPSum || 50);
+        } else {
+          // Find current user's results from the response
+          const userResults = response.players?.find((p) => p.id === userId);
+          if (userResults) {
+            setXPEarned(userResults.xpEarned);
+            await updateUserDataAfterMultiplayer(userId, userResults);
+          } else {
+            // Fallback if user results not found
+            console.warn('User results not found in API response');
+            setXPEarned(totalXPSum || 50);
+          }
         }
 
         // Clean up

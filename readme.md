@@ -198,7 +198,7 @@ The platform encourages growth through competitive, skill-based challenges—suc
   <summary>
     User Manual
   </summary>
-  <a href="https://docs.google.com/document/d/1SW5_SxLHrdIEG0yTvba2_4nfIop5MrP82Jwp3I-evYI/edit?usp=drive_link">User Manual</a>
+  <a href="https://drive.google.com/file/d/1_ukigKbH-mRQ3RIWRLJBoKM6OxOwE7HE/view?usp=drive_link">User Manual</a>
 </details>
 <details>
   <summary>

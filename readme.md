@@ -174,7 +174,7 @@ The platform encourages growth through competitive, skill-based challenges—suc
   <a href="https://drive.google.com/file/d/1PddWCG-7KAXiI27Cv_axrp_4m_zq7moa/view?usp=drive_link">Testing Documentation v3</a>
 </details>
 
-### Shared Documentation
+## Shared Documentation
 
 <details>
   <summary>

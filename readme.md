@@ -145,6 +145,18 @@ The platform encourages growth through competitive, skill-based challenges—suc
 </details>
 <details>
   <summary>
+    ELO Algorithm Flow
+  </summary>
+  <a href="https://drive.google.com/file/d/1OBBBIIVbYEvQXRA5Ht7IbjGjyRRJZcgS/view?usp=drive_link">ELO Algorithm Sequence Diagram</a>
+</details>
+<details>
+  <summary>
+    ELO Algorithm Description
+  </summary>
+  <a href="https://drive.google.com/file/d/1TUewtkVmtlPbTx_lH5kH7kevhPm_RCNf/view?usp=drive_link">ELO Algorithm Description</a>
+</details>
+<details>
+  <summary>
     Service Contracts v3 (API/Interface Specifications)
   </summary>
   <a href="https://drive.google.com/file/d/1HDaeXbcBt_FJsHkkG7IgzxgyEFPFJRQ1/view?usp=drive_link">Service Contracts v3</a>
@@ -153,13 +165,13 @@ The platform encourages growth through competitive, skill-based challenges—suc
   <summary>
     Quality Requirements (Updated & Quantified)
   </summary>
-  <a href="[INSERT_QUALITY_REQUIREMENTS_LINK_HERE]">Quality Requirements v3</a>
+  <a href="https://drive.google.com/file/d/1F2Soa-TseOHp0zTvh16d9d96hoQlGImW/view?usp=drive_link">Quality Requirements v3</a>
 </details>
 <details>
   <summary>
     Testing Documentation (Unit & Integration)
   </summary>
-  <a href="https://drive.google.com/file/d/1PddWCG-7KAXiI27Cv_axrp_4m_zq7moa/view?usp=drive_link">Automated Testing Suite</a>
+  <a href="https://drive.google.com/file/d/1PddWCG-7KAXiI27Cv_axrp_4m_zq7moa/view?usp=drive_link">API Endpoint Testing</a>
 </details>
 
 ### Shared Documentation

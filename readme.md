@@ -36,7 +36,7 @@ The platform encourages growth through competitive, skill-based challenges—suc
   <summary>
     Demo 3 Presentation Video (August 20, 2025)
   </summary>
-  <a href="[INSERT_DEMO_3_VIDEO_LINK_HERE]">Watch Demo 3 Video</a>
+  <a href="https://drive.google.com/file/d/1DwynL0g0CKzLbp2S27Q--R37b1FxexyD/view?usp=drive_link">Watch Demo 3 Video</a>
 </details>
 
 ## 📁 Documentation

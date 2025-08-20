@@ -13,7 +13,7 @@ router.get('/users', async (req, res) => {
   const { data, error } = await supabase
     .from('Users')
     .select(
-      'id,name,surname,username,email,currentLevel,joinDate,xp,avatar,elo_rating,rank',
+      'id,name,surname,username,email,currentLevel,joinDate,xp,avatar,elo_rating,rank,base_line_test',
     );
   if (error) {
     console.error('Error fetching users:', error.message);
@@ -30,7 +30,7 @@ router.get('/user/:id', verifyToken, async (req, res) => {
   const { data, error } = await supabase
     .from('Users')
     .select(
-      'id,name,surname,username,email,currentLevel,joinDate,xp,avatar,elo_rating,rank',
+      'id,name,surname,username,email,currentLevel,joinDate,xp,avatar,elo_rating,rank,base_line_test',
     )
     .eq('id', id)
     .single();
@@ -107,8 +107,8 @@ router.get('/users/:id/achievements', verifyToken, async (req, res) => {
     .order('unlocked_at', { ascending: false });
 
   if (error) {
-    console.error('Error fetching achievements:', error.message);
-    return res.status(500).json({ error: 'Failed to fetch achievements' });
+    console.error('Error fetching users by rank:', error.message);
+    return res.status(500).json({ error: 'Failed to fetch users by rank' });
   }
 
   // Format the response to match expected structure
@@ -183,6 +183,29 @@ router.post('/user/:id/avatar', async (req, res) => {
   res.status(200).json(data);
 });
 
+// Update a user's avatar
+router.post('/user/:id/avatar', async (req, res) => {
+  const { id } = req.params;
+  const { avatar } = req.body;
+
+  const { data, error } = await supabase
+    .from('Users')
+    .update({ avatar })
+    .eq('id', id)
+    .select()
+    .single();
+
+  if (error) {
+    if (error.code === 'PGRST116') {
+      return res.status(404).json({ error: "User doesn't exist" });
+    }
+    console.error('Error updating AVATAR:', error.message);
+    return res.status(500).json({ error: 'Failed to update AVATAR' });
+  }
+
+  res.status(200).json(data);
+});
+
 // Register new user
 router.post('/register', async (req, res) => {
   const { name, surname, username, email, password, joinDate } = req.body;
@@ -222,6 +245,8 @@ router.post('/register', async (req, res) => {
   const eloRating = 100;
   const defaultRank = 'Iron';
 
+  const startBase = false;
+
   const { data, error } = await supabase
     .from('Users')
     .insert([
@@ -234,6 +259,7 @@ router.post('/register', async (req, res) => {
         currentLevel: safeCurrentLevel,
         joinDate: safeJoinDate,
         xp: safeXP,
+        base_line_test: startBase,
         avatar: DEFAULT_AVATAR,
         elo_rating: eloRating,
         rank: defaultRank,
@@ -265,6 +291,7 @@ router.post('/register', async (req, res) => {
       currentLevel: data.currentLevel,
       joinDate: data.joinDate,
       xp: data.xp,
+      baseLineTest: data.base_line_test,
       avatar: data.avatar,
       elo_rating: data.elo_rating,
       rank: data.rank,
@@ -284,7 +311,7 @@ router.post('/login', async (req, res) => {
   const { data: user, error: fetchError } = await supabase
     .from('Users')
     .select(
-      'id,name,surname,username,email,password,currentLevel,joinDate,xp,avatar,elo_rating,rank',
+      'id,name,surname,username,email,password,currentLevel,joinDate,xp,avatar,elo_rating,rank,base_line_test',
     )
     .eq('email', email)
     .single();
@@ -322,6 +349,7 @@ router.post('/login', async (req, res) => {
       avatar: user.avatar,
       elo_rating: user.elo_rating,
       rank: user.rank,
+      baseLineTest: user.base_line_test,
     },
   });
 });

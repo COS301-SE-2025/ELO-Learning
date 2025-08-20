@@ -1,0 +1,57 @@
+{
+  "info": {
+    "_postman_id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+    "name": "Baseline Test API",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Start Baseline Test",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"userId\": 1\n}"
+        },
+        "url": {
+          "raw": "http://localhost:3000/baseline/start",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "3000",
+          "path": ["baseline", "start"]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Submit Answer to Baseline Test",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"userId\": 1,\n  \"questionId\": 5,\n  \"answerText\": \"x = 2\"\n}"
+        },
+        "url": {
+          "raw": "http://localhost:3000/baseline/answer",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "3000",
+          "path": ["baseline", "answer"]
+        }
+      },
+      "response": []
+    }
+  ]
+}

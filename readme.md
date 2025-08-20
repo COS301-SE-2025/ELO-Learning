@@ -169,13 +169,25 @@ The platform encourages growth through competitive, skill-based challenges—suc
 </details>
 <details>
   <summary>
-    Testing Documentation (Unit & Integration)
+    Testing Documentation
   </summary>
   <a href="https://drive.google.com/file/d/1PddWCG-7KAXiI27Cv_axrp_4m_zq7moa/view?usp=drive_link">API Endpoint Testing</a>
 </details>
 
 ### Shared Documentation
 
+<details>
+  <summary>
+    Demo 2 Sprint Planning
+  </summary>
+  <a href="https://drive.google.com/file/d/11aN03ohE0Ib9bMRrQ7Xc-9tar-GBTYc7/view?usp=drive_link">Demo 2 Sprint Planning</a>
+</details>
+<details>
+  <summary>
+    Demo 3 Sprint Planning
+  </summary>
+  <a href="https://drive.google.com/file/d/1Lp7TMgBfsIIFsU3eSuWhZH23DeOr8Ypo/view?usp=drive_link">Demo 3 Sprint Planning/a>
+</details>
 <details>
   <summary>
     Coding Standards

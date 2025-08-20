@@ -157,13 +157,13 @@ The platform encourages growth through competitive, skill-based challenges—suc
 </details>
 <details>
   <summary>
-    Service Contracts v3 (API/Interface Specifications)
+    Service Contracts v3
   </summary>
   <a href="https://drive.google.com/file/d/1HDaeXbcBt_FJsHkkG7IgzxgyEFPFJRQ1/view?usp=drive_link">Service Contracts v3</a>
 </details>
 <details>
   <summary>
-    Quality Requirements (Updated & Quantified)
+    Quality Requirements v3
   </summary>
   <a href="https://drive.google.com/file/d/1F2Soa-TseOHp0zTvh16d9d96hoQlGImW/view?usp=drive_link">Quality Requirements v3</a>
 </details>

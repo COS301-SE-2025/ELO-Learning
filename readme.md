@@ -113,6 +113,7 @@ The platform encourages growth through competitive, skill-based challenges—suc
 </details>
 
 ### DEMO 3 Documentation (August 20, 2025)
+
 <details>
   <summary>
     Services Requirement Specification (SRS) v3

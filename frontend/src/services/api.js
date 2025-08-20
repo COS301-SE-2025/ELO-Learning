@@ -4,10 +4,18 @@ import { CACHE_DURATIONS, performanceCache } from '../utils/performanceCache';
 
 // Environment-aware base URL with CI support
 const getBaseURL = () => {
+  // Use a dedicated test/CI API URL if provided
   if (process.env.NODE_ENV === 'test' || process.env.CI) {
-    return 'http://localhost:3001'; // Test server port
+    return (
+      process.env.NEXT_PUBLIC_API_TEST_URL ||
+      process.env.NEXT_PUBLIC_API_URL ||
+      'https://api.your-production-domain.com'
+    );
   }
-  return process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
+  // Default to production API URL
+  return (
+    process.env.NEXT_PUBLIC_API_URL || 'https://api.your-production-domain.com'
+  );
 };
 
 const BASE_URL = getBaseURL();
@@ -930,12 +938,10 @@ export async function fetchNextRandomBaselineQuestion(level) {
 export async function skipBaselineTest(userId) {
   if (!userId) throw new Error('Missing userId');
   try {
-    const res = await axios.post(
-      `${process.env.NEXT_PUBLIC_API_URL}/baseline/skip`,
-      {
-        user_id: userId,
-      },
-    );
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL;
+    const res = await axios.post(`${apiUrl}/baseline/skip`, {
+      user_id: userId,
+    });
     return res.data; // { success: true }
   } catch (err) {
     console.error('Failed to skip baseline test:', err);

@@ -129,7 +129,7 @@ The platform encourages growth through competitive, skill-based challenges—suc
   <summary>
     Architectural Diagram & Design
   </summary>
-  <a href="https://drive.google.com/file/d/1JctiEwfif_VWGe_UBfRNc39oanhuT6fD/view?usp=drive_link">Architectural Diagram (3+ Patterns)</a>
+  <a href="https://drive.google.com/file/d/1JctiEwfif_VWGe_UBfRNc39oanhuT6fD/view?usp=drive_link">Architectural Diagram</a>
 </details>
 <details>
   <summary>
@@ -171,7 +171,7 @@ The platform encourages growth through competitive, skill-based challenges—suc
   <summary>
     Testing Documentation
   </summary>
-  <a href="https://drive.google.com/file/d/1PddWCG-7KAXiI27Cv_axrp_4m_zq7moa/view?usp=drive_link">API Endpoint Testing</a>
+  <a href="https://drive.google.com/file/d/1PddWCG-7KAXiI27Cv_axrp_4m_zq7moa/view?usp=drive_link">Testing Documentation v3</a>
 </details>
 
 ### Shared Documentation

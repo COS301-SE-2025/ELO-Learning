@@ -153,7 +153,7 @@ The platform encourages growth through competitive, skill-based challenges—suc
   <summary>
     ELO Algorithm Description
   </summary>
-  <a href="https://drive.google.com/file/d/1TUewtkVmtlPbTx_lH5kH7kevhPm_RCNf/view?usp=drive_link">ELO Algorithm Description</a>
+  <a href="https://drive.google.com/file/d/1TUewtkVmtlPbTx_lH5kH7kevhPm_RCNf/view?usp=drive_link">ELO Algorithm Documentation</a>
 </details>
 <details>
   <summary>
@@ -169,7 +169,7 @@ The platform encourages growth through competitive, skill-based challenges—suc
 </details>
 <details>
   <summary>
-    Testing Documentation
+    Testing Documentation v3
   </summary>
   <a href="https://drive.google.com/file/d/1PddWCG-7KAXiI27Cv_axrp_4m_zq7moa/view?usp=drive_link">Testing Documentation v3</a>
 </details>

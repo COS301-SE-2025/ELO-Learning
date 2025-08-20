@@ -77,7 +77,7 @@ if (process.env.NODE_ENV !== 'test') {
 // Socket.IO CORS config
 const io = new Server(server, {
   cors: {
-    origin: 'http://localhost:8080', // must match frontend URL
+    origin: '*', // must match frontend URL
     methods: ['GET', 'POST'],
     credentials: true,
   },

@@ -117,25 +117,37 @@ The platform encourages growth through competitive, skill-based challenges—suc
   <summary>
     Services Requirement Specification (SRS) v3
   </summary>
-  <a href="[INSERT_SRS_V3_LINK_HERE]">Services Requirement Specification (SRS) v3</a>
+  <a href="https://drive.google.com/file/d/1c5F-KYrRMSUwsCPAiUqHn013Deheb74-/view?usp=drive_link">Services Requirement Specification (SRS) v3</a>
+</details>
+<details>
+  <summary>
+    Domain Model v3
+  </summary>
+  <a href="https://drive.google.com/file/d/1UN_ElLcKhIiTUD3fG3aZFk1QCv1tjdLh/view?usp=drive_link">Domain Model v3</a>
 </details>
 <details>
   <summary>
     Architectural Diagram & Design
   </summary>
-  <a href="[INSERT_ARCHITECTURAL_DIAGRAM_LINK_HERE]">Architectural Diagram (3+ Patterns)</a>
+  <a href="https://drive.google.com/file/d/1JctiEwfif_VWGe_UBfRNc39oanhuT6fD/view?usp=drive_link">Architectural Diagram (3+ Patterns)</a>
 </details>
 <details>
   <summary>
     Deployment Model
   </summary>
-  <a href="[INSERT_DEPLOYMENT_MODEL_LINK_HERE]">Deployment Model Documentation</a>
+  <a href="https://drive.google.com/file/d/1oLRaxopLhq9ap94Oy85Rsp4OsniRE_n5/view?usp=drive_link">Deployment Model</a>
+</details>
+<details>
+  <summary>
+    Deployment Model Description
+  </summary>
+  <a href="https://drive.google.com/file/d/1MGzxs_QGBO0yfGINoaznTBGPKl1QSjkK/view?usp=drive_link">Deployment Model Documentation</a>
 </details>
 <details>
   <summary>
     Service Contracts v3 (API/Interface Specifications)
   </summary>
-  <a href="[INSERT_SERVICE_CONTRACTS_V3_LINK_HERE]">Service Contracts v3</a>
+  <a href="https://drive.google.com/file/d/1HDaeXbcBt_FJsHkkG7IgzxgyEFPFJRQ1/view?usp=drive_link">Service Contracts v3</a>
 </details>
 <details>
   <summary>
@@ -147,7 +159,7 @@ The platform encourages growth through competitive, skill-based challenges—suc
   <summary>
     Testing Documentation (Unit & Integration)
   </summary>
-  <a href="[INSERT_TESTING_DOCS_LINK_HERE]">Automated Testing Suite</a>
+  <a href="https://drive.google.com/file/d/1PddWCG-7KAXiI27Cv_axrp_4m_zq7moa/view?usp=drive_link">Automated Testing Suite</a>
 </details>
 
 ### Shared Documentation
@@ -156,7 +168,7 @@ The platform encourages growth through competitive, skill-based challenges—suc
   <summary>
     Coding Standards
   </summary>
-  <a href="https://docs.google.com/document/d/1e4U_fcfMQQVNAGfhPgr4udJurXSMR1kxjpEV58yQLgk/edit?usp=drive_link">Coding Standards</a>
+  <a href="https://drive.google.com/file/d/11W_o9bVQl1MoiHN3gq5NChPXf0ac8vSJ/view?usp=drive_link">Coding Standards</a>
 </details>
 <details>
   <summary>
@@ -168,7 +180,7 @@ The platform encourages growth through competitive, skill-based challenges—suc
   <summary>
     Technical Installation Manual
   </summary>
-  <a href="[INSERT_TECH_INSTALLATION_MANUAL_LINK_HERE]">Technical Installation Manual</a>
+  <a href="https://drive.google.com/file/d/1ABZPw9iexNimm0fN_v_hPJuvXYFvH6Df/view?usp=drive_link">Technical Installation Manual</a>
 </details>
 <details>
     <summary>

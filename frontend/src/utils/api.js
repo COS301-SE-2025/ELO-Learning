@@ -43,61 +43,68 @@ async function getAuthToken() {
 
 // Helper function to handle API responses and errors
 async function handleApiResponse(response, endpoint) {
-  // Check if response is ok first
-  if (!response.ok) {
-    // Try to get error message from response
-    const contentType = response.headers.get('content-type');
+  try {
+    // Check if response is ok first
+    if (!response.ok) {
+      // Try to get error message from response
+      const contentType = response.headers.get('content-type');
 
-    if (contentType && contentType.includes('application/json')) {
-      try {
-        const errorData = await response.json();
-        throw new Error(
-          errorData.error || `HTTP ${response.status}: ${response.statusText}`,
-        );
-      } catch (jsonError) {
-        // If JSON parsing fails, use status text
-        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-      }
-    } else {
-      // Non-JSON error response (likely HTML error page)
-      const textResponse = await response.text();
-      console.error(
-        `❌ ${endpoint} returned non-JSON response:`,
-        textResponse.substring(0, 200),
-      );
-
-      if (response.status === 404) {
-        throw new Error(`Endpoint not found: ${endpoint}`);
-      } else if (response.status >= 500) {
-        throw new Error(
-          `Server error (${response.status}). Please try again later.`,
-        );
+      if (contentType && contentType.includes('application/json')) {
+        try {
+          const errorData = await response.json();
+          throw new Error(
+            errorData.error ||
+              `HTTP ${response.status}: ${response.statusText}`,
+          );
+        } catch (jsonError) {
+          // If JSON parsing fails, use status text
+          throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
       } else {
-        throw new Error(
-          `Request failed (${response.status}): ${response.statusText}`,
+        // Non-JSON error response (likely HTML error page)
+        const textResponse = await response.text();
+        console.error(
+          `❌ ${endpoint} returned non-JSON response:`,
+          textResponse.substring(0, 200),
         );
+
+        if (response.status === 404) {
+          throw new Error(`Endpoint not found: ${endpoint}`);
+        } else if (response.status >= 500) {
+          throw new Error(
+            `Server error (${response.status}). Please try again later.`,
+          );
+        } else {
+          throw new Error(
+            `Request failed (${response.status}): ${response.statusText}`,
+          );
+        }
       }
     }
-  }
 
-  // Parse JSON response
-  const contentType = response.headers.get('content-type');
-  if (!contentType || !contentType.includes('application/json')) {
-    const textResponse = await response.text();
-    console.error(
-      `❌ Expected JSON but got ${contentType}:`,
-      textResponse.substring(0, 200),
-    );
-    throw new Error(
-      `Server returned unexpected content type: ${contentType || 'unknown'}`,
-    );
-  }
+    // Parse JSON response
+    const contentType = response.headers.get('content-type');
+    if (!contentType || !contentType.includes('application/json')) {
+      const textResponse = await response.text();
+      console.error(
+        `❌ Expected JSON but got ${contentType}:`,
+        textResponse.substring(0, 200),
+      );
+      throw new Error(
+        `Server returned unexpected content type: ${contentType || 'unknown'}`,
+      );
+    }
 
-  try {
-    return await response.json();
-  } catch (parseError) {
-    console.error('❌ Failed to parse JSON response:', parseError);
-    throw new Error('Invalid JSON response from server');
+    try {
+      return await response.json();
+    } catch (parseError) {
+      console.error('❌ Failed to parse JSON response:', parseError);
+      throw new Error('Invalid JSON response from server');
+    }
+  } catch (mainError) {
+    console.error(`API Response Error for ${endpoint}:`, mainError);
+    // Return a default error object rather than throwing
+    return { error: true, message: mainError.message || 'Unknown API error' };
   }
 }
 

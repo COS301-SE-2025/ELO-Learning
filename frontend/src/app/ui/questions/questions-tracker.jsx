@@ -26,6 +26,7 @@ export default function QuestionsTracker({
   // ✅ Safe array handling
   const allQuestions = questions || [];
   const totalSteps = allQuestions.length;
+  const [sessionStartTime] = useState(Date.now()); // Track total session time
 
   // ✅ Safe initialization
   const [currQuestion, setCurrQuestion] = useState(allQuestions[0] || null);
@@ -262,8 +263,18 @@ export default function QuestionsTracker({
     // Only proceed if we're in the browser
     if (typeof window === 'undefined') return;
 
-    // Calculate time elapsed in seconds
-    const timeElapsed = Math.round((Date.now() - questionStartTime) / 1000);
+    // Calculate individual question time elapsed in seconds
+    const questionTimeElapsed = Math.round(
+      (Date.now() - questionStartTime) / 1000,
+    );
+
+    // Calculate total session time
+    const sessionTimeElapsed = Math.round(
+      (Date.now() - sessionStartTime) / 1000,
+    );
+
+    // Save total session time in localStorage for access after completion
+    localStorage.setItem('sessionTime', sessionTimeElapsed.toString());
 
     const questionsObj = JSON.parse(
       localStorage.getItem('questionsObj') || '[]',
@@ -324,7 +335,8 @@ export default function QuestionsTracker({
       answer: answer,
       isCorrect: revalidatedResult,
       actualAnswer: correctAnswerObj,
-      timeElapsed: timeElapsed,
+      timeElapsed: questionTimeElapsed,
+      totalSessionTime: sessionTimeElapsed, // Add total session time to first answer
     });
 
     localStorage.setItem('questionsObj', JSON.stringify(questionsObj));
@@ -332,6 +344,9 @@ export default function QuestionsTracker({
 
   const handleLives = (validationResult) => {
     if (!validationResult) {
+      // Store current lives value before setting state
+      const currentLives = numLives;
+
       setNumLives((prev) => {
         const newLives = Math.max(0, prev - 1);
         if (typeof window !== 'undefined') {
@@ -340,8 +355,24 @@ export default function QuestionsTracker({
         return newLives;
       });
 
-      if (numLives <= 1) {
-        router.push(`/end-screen?mode=${mode}`);
+      // Use current lives value for navigation check
+      if (currentLives <= 1) {
+        try {
+          // Default to 'practice' if mode is not provided
+          const gameMode = mode || 'practice';
+          console.log(
+            'Lives reached 0, navigating to end screen with mode:',
+            gameMode,
+          );
+          router.push(`/end-screen?mode=${gameMode}`);
+        } catch (error) {
+          console.error('Navigation error:', error);
+
+          // Fallback using window.location if router fails
+          if (typeof window !== 'undefined') {
+            window.location.href = `/end-screen?mode=${mode || 'practice'}`;
+          }
+        }
         return true;
       }
     }
@@ -390,7 +421,8 @@ export default function QuestionsTracker({
       }
 
       // 🏆 Submit to API for additional achievements (non-blocking)
-      if (session?.user?.id) {
+      // Skip API submission in multiplayer mode to prevent double XP calculation
+      if (session?.user?.id && mode !== 'multiplayer') {
         console.log('🎯 ACHIEVEMENT DEBUG - Submitting question:', {
           userId: session.user.id,
           questionId: currQuestion?.Q_id || currQuestion?.id,
@@ -436,6 +468,10 @@ export default function QuestionsTracker({
           .catch((error) => {
             console.error('API submission failed (non-critical):', error);
           });
+      } else if (mode === 'multiplayer') {
+        console.log(
+          '🎮 Multiplayer mode - skipping individual question XP calculation',
+        );
       }
 
       await setLocalStorage();

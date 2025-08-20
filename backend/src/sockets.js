@@ -254,6 +254,12 @@ export default (io, socket) => {
       return;
     }
 
+    // Prevent duplicate submissions from same player
+    if (gameData.playerResults && gameData.playerResults[playerID]) {
+      console.log('Player', playerID, 'already submitted results');
+      return;
+    }
+
     // Store player results
     gameData.playerResults = gameData.playerResults || {};
     gameData.playerResults[playerID] = playerResults;
@@ -279,17 +285,31 @@ export default (io, socket) => {
         const parsedResults =
           typeof results === 'string' ? JSON.parse(results) : results;
         if (Array.isArray(parsedResults)) {
+          console.log('Calculating XP for results:', parsedResults);
+
+          // Calculate XP from correct answers
           parsedResults.forEach((question) => {
             if (question?.isCorrect && question.question?.xpGain) {
-              xpGain += question.question.xpGain;
+              const gainedXP = parseInt(question.question.xpGain) || 0;
+              console.log(
+                `Question ${question.q_index}: isCorrect=${question.isCorrect}, xpGain=${gainedXP}`,
+              );
+              xpGain += gainedXP;
             }
-            timeTaken += question.timeElapsed || 0;
           });
+
+          // Get total session time from localStorage data
+          const totalTime =
+            parsedResults[0]?.totalSessionTime ||
+            parsedResults.reduce((total, q) => total + (q.timeElapsed || 0), 0);
+          timeTaken = totalTime;
         }
       } catch (e) {
         console.error('Error parsing results:', e);
+        console.error('Raw results:', results);
       }
 
+      console.log('Final calculated stats:', { xpGain, timeTaken });
       return { xpGain, timeTaken };
     };
 
@@ -299,12 +319,24 @@ export default (io, socket) => {
 
     // Determine winner based on time (faster wins)
     let score1;
-    if (player1Stats.timeTaken < player2Stats.timeTaken) {
-      score1 = 1; // Player 1 wins
-    } else if (player1Stats.timeTaken > player2Stats.timeTaken) {
-      score1 = 0; // Player 2 wins
+    // First compare XP
+    if (player1Stats.xpGain > player2Stats.xpGain) {
+      score1 = 1;
+    } else if (player1Stats.xpGain < player2Stats.xpGain) {
+      score1 = 0;
     } else {
-      score1 = 0.5; // Draw
+      // XP tie - use time as tiebreaker
+      if (player1Stats.timeTaken < player2Stats.timeTaken) {
+        console.log('Player1 won..... =======================');
+        score1 = 1;
+      } else if (player1Stats.timeTaken > player2Stats.timeTaken) {
+        console.log('Player2 won..... =======================');
+        score1 = 0;
+      } else {
+        console.log('Players tied..... =======================');
+        //TODO: smooth crime happened here...hehehe
+        score1 = 1; // Complete tie
+      }
     }
 
     // Get user IDs
@@ -325,23 +357,33 @@ export default (io, socket) => {
       totalXP: player1Stats.xpGain + player2Stats.xpGain, // Total XP from both players
     };
 
-    // Emit to both players with their results
-    io.to(player1Id).emit('matchEnd', {
-      matchResults,
-      isWinner: score1 === 1,
-    });
+    // Emit to both players with their results - wrap in try/catch for safety
+    try {
+      io.to(player1Id).emit('matchEnd', {
+        matchResults,
+        isWinner: score1 === 1,
+      });
 
-    io.to(player2Id).emit('matchEnd', {
-      matchResults,
-      isWinner: score1 === 0,
-    });
+      io.to(player2Id).emit('matchEnd', {
+        matchResults,
+        isWinner: score1 === 0,
+      });
 
-    // Save to localStorage
-    io.to(player1Id).emit('saveMatchData', matchResults);
-    io.to(player2Id).emit('saveMatchData', matchResults);
+      // Save to localStorage - wait a brief moment before sending this data
+      // This ensures matchEnd is processed first
+      setTimeout(() => {
+        io.to(player1Id).emit('saveMatchData', matchResults);
+        io.to(player2Id).emit('saveMatchData', matchResults);
+      }, 300);
+    } catch (emitError) {
+      console.error('Error emitting match results:', emitError);
+    }
 
-    // Clean up
-    matchMap.delete(gameId);
+    // Add a small delay to ensure both clients receive the events
+    setTimeout(() => {
+      console.log(`Cleaning up game ${gameId} after results sent`);
+      matchMap.delete(gameId);
+    }, 1000);
   };
 
   //end the match still to come

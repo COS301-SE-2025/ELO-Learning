@@ -204,7 +204,7 @@ The platform encourages growth through competitive, skill-based challenges—suc
   <summary>
     Technical Installation Manual
   </summary>
-  <a href="https://drive.google.com/file/d/1ABZPw9iexNimm0fN_v_hPJuvXYFvH6Df/view?usp=drive_link">Technical Installation Manual</a>
+  <a href="https://drive.google.com/file/d/1LWd8ysOxiqDRQpEMF5OuIIIFP7c_HeRC/view?usp=drive_link">Technical Installation Manual</a>
 </details>
 <details>
     <summary>

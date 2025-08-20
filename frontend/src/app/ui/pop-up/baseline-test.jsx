@@ -1,9 +1,8 @@
 'use client';
-import axios from 'axios';
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
 import { updateUserElo } from '@/services/api';
 import { useSession } from 'next-auth/react';
+import { useRouter } from 'next/navigation';
+import { useState } from 'react';
 
 export default function BaselineTestPopup({ user_id, onClose }) {
   const router = useRouter();
@@ -18,10 +17,11 @@ export default function BaselineTestPopup({ user_id, onClose }) {
     setLoading(true);
     try {
       // Call skip endpoint
-      await updateUserElo(user_id, 100);
+      await updateUserElo(user_id, 5);
       update({
         user: {
           ...session.user,
+          currentLevel: 5,
           baseLineTest: true, // Set baseLineTest to true
         },
       });

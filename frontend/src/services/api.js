@@ -944,11 +944,11 @@ export async function skipBaselineTest(userId) {
 }
 
 // Submit baseline result
-export async function submitBaselineResult(userId, finalElo) {
+export async function submitBaselineResult(userId, finalLevel) {
   const res = await fetch('/baseline/complete', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ user_id: userId, finalElo }),
+    body: JSON.stringify({ user_id: userId, finalLevel }),
   });
   const data = await res.json();
   return data;
@@ -967,15 +967,15 @@ export async function fetchBaselineQuestion(level) {
   }
 }
 
-export async function updateUserElo(userId, elo) {
+export async function updateUserElo(userId, finalElo) {
   try {
     const res = await axiosInstance.post('/baseline/complete', {
       user_id: userId,
-      finalElo: elo,
+      finalElo,
     });
     return res.data;
   } catch (err) {
-    console.error('Failed to update user Elo:', err);
+    console.error('Failed to update user level:', err);
     throw err;
   }
 }

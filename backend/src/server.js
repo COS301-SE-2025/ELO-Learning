@@ -19,10 +19,10 @@ import userRoutes from './userRoutes.js';
 import validateRoutes from './validateRoutes.js';
 import baselineRoutes from './baselineRoutes.js';
 
-const allowedOrigins = [
-  'http://localhost:8080', // Frontend
-  'http://localhost:3000', // Backend
-];
+// const allowedOrigins = [
+//   'http://localhost:8080', // Frontend
+//   'http://localhost:3000', // Backend
+// ];
 
 // Load environment variables
 dotenv.config();
@@ -34,12 +34,12 @@ const server = createServer(app);
 
 // Middleware
 //app.use(cors());
-app.use(
-  cors({
-    origin: allowedOrigins,
-    credentials: true,
-  }),
-);
+// app.use(
+//   cors({
+//     origin: allowedOrigins,
+//     credentials: true,
+//   }),
+// );
 app.use(express.json());
 
 // Health check endpoint

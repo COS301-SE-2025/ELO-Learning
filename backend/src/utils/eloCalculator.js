@@ -41,6 +41,17 @@ export function updateEloRating({
  * @returns {number} New player rating
  */
 
+/**
+ * Set a player's baseline ELO rating after the baseline test.
+ * @param {number} finalLevel - The level reached in baseline test
+ * @returns {number} baseline ELO rating
+ */
+export function getBaselineElo(finalLevel) {
+  // Example: ELO scales with level (tweak formula if needed)
+  // You can adjust multiplier if you want ratings to be more/less spread out
+  return parseFloat((finalLevel * 100).toFixed(2));
+}
+
 export function updateSinglePlayerEloPair({
   playerRating,
   questionRating,

@@ -17,6 +17,12 @@ import singlePlayerRoutes from './singlePlayerRoutes.js';
 import socketsHandlers from './sockets.js';
 import userRoutes from './userRoutes.js';
 import validateRoutes from './validateRoutes.js';
+import baselineRoutes from './baselineRoutes.js';
+
+const allowedOrigins = [
+  'http://localhost:8080', // Frontend
+  'http://localhost:3000', // Backend
+];
 
 // Load environment variables
 dotenv.config();
@@ -27,7 +33,13 @@ const PORT = process.env.PORT || 3000;
 const server = createServer(app);
 
 // Middleware
-app.use(cors());
+//app.use(cors());
+app.use(
+  cors({
+    origin: allowedOrigins,
+    credentials: true,
+  }),
+);
 app.use(express.json());
 
 // Health check endpoint
@@ -49,6 +61,7 @@ app.use('/', singlePlayerRoutes);
 app.use('/', multiPlayerRoutes);
 app.use('/', achievementRoutes);
 app.use('/', oauthRoutes);
+app.use('/', baselineRoutes);
 
 // Simple health check route
 app.get('/', (req, res) => {
@@ -61,11 +74,12 @@ if (process.env.NODE_ENV !== 'test') {
   });
 }
 
-//Socket IO setup
+// Socket.IO CORS config
 const io = new Server(server, {
   cors: {
-    origin: '*',
+    origin: 'http://localhost:8080', // must match frontend URL
     methods: ['GET', 'POST'],
+    credentials: true,
   },
 });
 

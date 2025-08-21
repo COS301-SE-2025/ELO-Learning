@@ -32,6 +32,12 @@ The platform encourages growth through competitive, skill-based challenges—suc
   </summary>
   <a href="https://drive.google.com/file/d/1h8D7pI16n6AEnDAZ44I-xgcbYiTjGWAs/view?usp=sharing">Watch Demo 2 Video</a>
 </details>
+<details>
+  <summary>
+    Demo 3 Presentation Video (August 20, 2025)
+  </summary>
+  <a href="https://drive.google.com/file/d/1DwynL0g0CKzLbp2S27Q--R37b1FxexyD/view?usp=drive_link">Watch Demo 3 Video</a>
+</details>
 
 ## 📁 Documentation
 
@@ -106,19 +112,100 @@ The platform encourages growth through competitive, skill-based challenges—suc
   <a href="https://docs.google.com/document/d/1YdhTuejO4JdwaaNWz-BV63t_mzgbSKEl/edit?usp=sharing&ouid=111519098189217056979&rtpof=true&sd=true">Postman Tests</a>
 </details>
 
-Shared Documentation
+### DEMO 3 Documentation (August 20, 2025)
 
+<details>
+  <summary>
+    Services Requirement Specification (SRS) v3
+  </summary>
+  <a href="https://drive.google.com/file/d/1c5F-KYrRMSUwsCPAiUqHn013Deheb74-/view?usp=drive_link">Services Requirement Specification (SRS) v3</a>
+</details>
+<details>
+  <summary>
+    Domain Model v3
+  </summary>
+  <a href="https://drive.google.com/file/d/1UN_ElLcKhIiTUD3fG3aZFk1QCv1tjdLh/view?usp=drive_link">Domain Model v3</a>
+</details>
+<details>
+  <summary>
+    Architectural Diagram & Design
+  </summary>
+  <a href="https://drive.google.com/file/d/1JctiEwfif_VWGe_UBfRNc39oanhuT6fD/view?usp=drive_link">Architectural Diagram</a>
+</details>
+<details>
+  <summary>
+    Deployment Model
+  </summary>
+  <a href="https://drive.google.com/file/d/1oLRaxopLhq9ap94Oy85Rsp4OsniRE_n5/view?usp=drive_link">Deployment Model</a>
+</details>
+<details>
+  <summary>
+    Deployment Model Description
+  </summary>
+  <a href="https://drive.google.com/file/d/1MGzxs_QGBO0yfGINoaznTBGPKl1QSjkK/view?usp=drive_link">Deployment Model Documentation</a>
+</details>
+<details>
+  <summary>
+    ELO Algorithm Flow
+  </summary>
+  <a href="https://drive.google.com/file/d/1OBBBIIVbYEvQXRA5Ht7IbjGjyRRJZcgS/view?usp=drive_link">ELO Algorithm Sequence Diagram</a>
+</details>
+<details>
+  <summary>
+    ELO Algorithm Description
+  </summary>
+  <a href="https://drive.google.com/file/d/1TUewtkVmtlPbTx_lH5kH7kevhPm_RCNf/view?usp=drive_link">ELO Algorithm Documentation</a>
+</details>
+<details>
+  <summary>
+    Service Contracts v3
+  </summary>
+  <a href="https://drive.google.com/file/d/1HDaeXbcBt_FJsHkkG7IgzxgyEFPFJRQ1/view?usp=drive_link">Service Contracts v3</a>
+</details>
+<details>
+  <summary>
+    Quality Requirements v3
+  </summary>
+  <a href="https://drive.google.com/file/d/1F2Soa-TseOHp0zTvh16d9d96hoQlGImW/view?usp=drive_link">Quality Requirements v3</a>
+</details>
+<details>
+  <summary>
+    Testing Documentation v3
+  </summary>
+  <a href="https://drive.google.com/file/d/1PddWCG-7KAXiI27Cv_axrp_4m_zq7moa/view?usp=drive_link">Testing Documentation v3</a>
+</details>
+
+## 🤝 Shared Documentation
+
+<details>
+  <summary>
+    Demo 2 Sprint Planning
+  </summary>
+  <a href="https://drive.google.com/file/d/11aN03ohE0Ib9bMRrQ7Xc-9tar-GBTYc7/view?usp=drive_link">Demo 2 Sprint Planning</a>
+</details>
+<details>
+  <summary>
+    Demo 3 Sprint Planning
+  </summary>
+  <a href="https://drive.google.com/file/d/1Lp7TMgBfsIIFsU3eSuWhZH23DeOr8Ypo/view?usp=drive_link">Demo 3 Sprint Planning</a>
+</details>
 <details>
   <summary>
     Coding Standards
   </summary>
-  <a href="https://docs.google.com/document/d/1e4U_fcfMQQVNAGfhPgr4udJurXSMR1kxjpEV58yQLgk/edit?usp=drive_link">Coding Standards</a>
+  <a href="https://drive.google.com/file/d/11W_o9bVQl1MoiHN3gq5NChPXf0ac8vSJ/view?usp=drive_link">Coding Standards</a>
 </details>
 <details>
   <summary>
     User Manual
   </summary>
-  <a href="https://docs.google.com/document/d/1SW5_SxLHrdIEG0yTvba2_4nfIop5MrP82Jwp3I-evYI/edit?usp=drive_link">User Manual</a>
+  <a href="https://drive.google.com/file/d/1_ukigKbH-mRQ3RIWRLJBoKM6OxOwE7HE/view?usp=drive_link">User Manual</a>
+</details>
+<details>
+  <summary>
+    Technical Installation Manual
+  </summary>
+  <a href="https://drive.google.com/file/d/1LWd8ysOxiqDRQpEMF5OuIIIFP7c_HeRC/view?usp=drive_link">Technical Installation Manual</a>
 </details>
 <details>
     <summary>

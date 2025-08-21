@@ -74,7 +74,7 @@ if (process.env.NODE_ENV !== 'test') {
 // Socket.IO setup
 const io = new Server(server, {
   cors: {
-    origin: NEXT_PUBLIC_FRONTEND_URL,
+    origin: NEXT_PUBLIC_FRONTEND_URL || 'http://localhost:8080',
     methods: ['GET', 'POST'],
     credentials: true,
   },

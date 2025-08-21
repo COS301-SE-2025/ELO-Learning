@@ -3,6 +3,8 @@ const beta = 0.05;
 const maxTimeSeconds = 30;
 const maxLevel = 10;
 const scalingFactor = 0.3;
+const minXPFraction = 0.15; // Minimum 15% of xpTotal for the loser
+const multiplayerScalingFactor = 0.4;
 
 function isValidNumber(n) {
   return typeof n === 'number' && !isNaN(n);
@@ -67,12 +69,19 @@ export async function calculateSinglePlayerXP({
 export function calculateMultiplayerXP(xpTotal, expected1, expected2, score1) {
   const score2 = 1 - score1;
 
-  let xp1 = xpTotal * (score1 - expected1);
-  let xp2 = xpTotal * (score2 - expected2);
+  let scaledTotal = xpTotal * multiplayerScalingFactor;
+
+  let xp1 = scaledTotal * (score1 - expected1);
+  let xp2 = scaledTotal * (score2 - expected2);
 
   // Prevent negative XP
-  xp1 = Math.max(0, xp1);
-  xp2 = Math.max(0, xp2);
+  if (xp1 <= 0) {
+    xp1 = scaledTotal * minXPFraction;
+    xp2 = scaledTotal - xp1; // Remainder goes to player 2
+  } else if (xp2 <= 0) {
+    xp2 = scaledTotal * minXPFraction;
+    xp1 = scaledTotal - xp2; // Remainder goes to player 1
+  }
 
   return [Math.round(xp1), Math.round(xp2)];
 }

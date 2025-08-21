@@ -2,7 +2,7 @@
 import ProgressBar from '@/app/ui/progress-bar';
 import { registerUser } from '@/services/api';
 import { Eye, EyeOff, X } from 'lucide-react';
-import { signIn } from 'next-auth/react'; // ← ADD THIS
+import { signIn } from 'next-auth/react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation'; // ← ADD THIS
 import { useState } from 'react';
@@ -64,12 +64,14 @@ export default function Page() {
         password,
         reg.currentLevel,
         reg.joinDate,
+        reg.baseLineTest,
       );
 
       console.log('✅ Registration API successful:', response);
 
       // Step 2: Immediately sign in with NextAuth to create proper session
       console.log('🔐 Creating NextAuth session...');
+
       const signInResult = await signIn('credentials', {
         email: reg.email,
         password: password,
@@ -87,6 +89,20 @@ export default function Page() {
       console.log('🎉 NextAuth session created successfully!');
 
       // Step 3: Clean up and redirect
+
+      // Automatically sign in the new user using NextAuth signIn
+      // const signInResult = await signIn('credentials', {
+      //   redirect: false,
+      //   email: reg.email,
+      //   password: password,
+      // });
+
+      if (signInResult?.error) {
+        setError('Registration succeeded but automatic login failed.');
+        setLoading(false);
+        return;
+      }
+
       clearRegistration();
 
       // Clear any old localStorage auth data

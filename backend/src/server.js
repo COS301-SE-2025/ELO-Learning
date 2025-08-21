@@ -8,6 +8,7 @@ import { Server } from 'socket.io';
 
 import achievementRoutes from './achievementRoutes.js';
 import answerRoutes from './answerRoutes.js';
+import baselineRoutes from './baselineRoutes.js';
 import multiPlayerRoutes from './multiPlayerRoute.js';
 import oauthRoutes from './oauthRoutes.js';
 import practiceRoutes from './practiceRoutes.js';
@@ -16,7 +17,6 @@ import singlePlayerRoutes from './singlePlayerRoutes.js';
 import socketsHandlers from './sockets.js';
 import userRoutes from './userRoutes.js';
 import validateRoutes from './validateRoutes.js';
-import baselineRoutes from './baselineRoutes.js';
 
 // Load environment variables
 dotenv.config();
@@ -33,7 +33,7 @@ const server = createServer(app);
 // Middleware
 app.use(
   cors({
-    origin: FRONTEND_URL,
+    origin: process.env.NEXT_PUBLIC_FRONTEND_URL || 'http://localhost:8080',
     credentials: true,
   }),
 );

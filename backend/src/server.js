@@ -6,7 +6,6 @@ import express from 'express';
 import { createServer } from 'http';
 import { Server } from 'socket.io';
 
-//Change this import to ES6
 import achievementRoutes from './achievementRoutes.js';
 import answerRoutes from './answerRoutes.js';
 import multiPlayerRoutes from './multiPlayerRoute.js';
@@ -19,27 +18,25 @@ import userRoutes from './userRoutes.js';
 import validateRoutes from './validateRoutes.js';
 import baselineRoutes from './baselineRoutes.js';
 
-// const allowedOrigins = [
-//   'http://localhost:8080', // Frontend
-//   'http://localhost:3000', // Backend
-// ];
-
 // Load environment variables
 dotenv.config();
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+// Use the frontend URL from env or fallback to localhost:8080 for dev
+const FRONTEND_URL =
+  process.env.NEXT_PUBLIC_FRONTEND_URL || 'http://localhost:8080';
+
 const server = createServer(app);
 
 // Middleware
-//app.use(cors());
-// app.use(
-//   cors({
-//     origin: allowedOrigins,
-//     credentials: true,
-//   }),
-// );
+app.use(
+  cors({
+    origin: FRONTEND_URL,
+    credentials: true,
+  }),
+);
 app.use(express.json());
 
 // Health check endpoint
@@ -74,10 +71,10 @@ if (process.env.NODE_ENV !== 'test') {
   });
 }
 
-// Socket.IO CORS config
+// Socket.IO setup
 const io = new Server(server, {
   cors: {
-    origin: '*',
+    origin: FRONTEND_URL,
     methods: ['GET', 'POST'],
     credentials: true,
   },
@@ -85,7 +82,6 @@ const io = new Server(server, {
 
 io.on('connection', (socket) => {
   console.log('New client connected:', socket.id);
-  // add handlers for sockets.js here
   socketsHandlers(io, socket);
 });
 

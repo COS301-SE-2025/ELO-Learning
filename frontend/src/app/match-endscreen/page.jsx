@@ -1,7 +1,7 @@
 'use client';
-import Score from '@/app/ui/end-screen-ui/end-screen-score';
 import Time from '@/app/ui/end-screen-ui/end-screen-total-time';
 import TotalXPMP from '@/app/ui/end-screen-ui/end-screen-totalxp-multiplayer';
+import EndELO from '../ui/end-screen-ui/end-screen-elo';
 import { updateUserXP } from '@/services/api';
 import Image from 'next/image';
 import { useRouter, useSearchParams } from 'next/navigation';
@@ -82,7 +82,7 @@ function MatchEndScreenContent() {
           </div>
           <div className="flex flex-row items-center justify-center gap-8 my-7">
             <TotalXPMP />
-            <Score />
+            <EndELO />
             <Time />
           </div>
         </div>

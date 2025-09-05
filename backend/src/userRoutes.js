@@ -117,7 +117,16 @@ router.post('/user/:id/avatar', async (req, res) => {
 
 // Register new user
 router.post('/register', async (req, res) => {
-  const { name, surname, username, email, password, joinDate } = req.body;
+  const {
+    name,
+    surname,
+    username,
+    email,
+    password,
+    joinDate,
+    location,
+    institution,
+  } = req.body;
 
   if (!name || !surname || !username || !email || !password) {
     return res.status(400).json({ error: 'All fields are required' });
@@ -158,6 +167,8 @@ router.post('/register', async (req, res) => {
         currentLevel: safeCurrentLevel,
         joinDate: safeJoinDate,
         xp: safeXP,
+        location: location || null,
+        institution: institution || null,
       },
     ])
     .select()

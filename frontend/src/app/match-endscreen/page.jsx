@@ -16,8 +16,9 @@ function MatchEndScreenContent() {
   const [isWinner, setIsWinner] = useState(result === 'winner');
   const [isLoading, setIsLoading] = useState(false);
   const [eloInfo, setEloInfo] = useState({ newElo: null, eloChange: null });
+  const [xpReady, setXpReady] = useState(false);
 
-  const clearStorageAndRedirect = async () => {
+  const claimXP = async () => {
     try {
       setIsLoading(true);
 
@@ -83,7 +84,12 @@ function MatchEndScreenContent() {
             </p>
           </div>
           <div className="flex flex-row items-center justify-center gap-8 my-7">
-            <TotalXPMP onResults={(res) => setEloInfo(res)} />
+            <TotalXPMP
+              onResults={(res) => {
+                setEloInfo(res);
+                setXpReady(true);
+              }}
+            />
 
             <EndELOChange eloChange={eloInfo.eloChange} />
 
@@ -94,10 +100,14 @@ function MatchEndScreenContent() {
         <div className="flex flex-col gap-4 mb-5">
           <button
             className="secondary-button w-full uppercase"
-            onClick={clearStorageAndRedirect}
-            disabled={isLoading}
+            onClick={claimXP}
+            disabled={isLoading || !xpReady}
           >
-            {isLoading ? 'Claiming XP...' : 'Claim XP'}
+            {isLoading
+              ? 'Claiming Changes..'
+              : !xpReady
+                ? 'Calculating Changes...'
+                : 'Claim Changes'}
           </button>
         </div>
       </div>

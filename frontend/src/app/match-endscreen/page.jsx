@@ -7,6 +7,7 @@ import Image from 'next/image';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { getSession } from 'next-auth/react';
 import { Suspense, useState } from 'react';
+import EndELOChange from '../ui/end-screen-ui/end-screen-elo-change';
 
 function MatchEndScreenContent() {
   const searchParams = useSearchParams();
@@ -14,6 +15,7 @@ function MatchEndScreenContent() {
   const result = searchParams.get('result');
   const [isWinner, setIsWinner] = useState(result === 'winner');
   const [isLoading, setIsLoading] = useState(false);
+  const [eloInfo, setEloInfo] = useState({ newElo: null, eloChange: null });
 
   const clearStorageAndRedirect = async () => {
     try {
@@ -81,8 +83,10 @@ function MatchEndScreenContent() {
             </p>
           </div>
           <div className="flex flex-row items-center justify-center gap-8 my-7">
-            <TotalXPMP />
-            <EndELO />
+            <TotalXPMP onResults={(res) => setEloInfo(res)} />
+
+            <EndELOChange eloChange={eloInfo.eloChange} />
+
             <Time />
           </div>
         </div>

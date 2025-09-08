@@ -7,7 +7,7 @@ function daysBetween(date1, date2) {
   const oneDay = 24 * 60 * 60 * 1000;
   const firstDate = new Date(date1);
   const secondDate = new Date(date2);
-  
+
   return Math.round(Math.abs((secondDate - firstDate) / oneDay));
 }
 
@@ -31,14 +31,14 @@ export async function updateUserStreak(userId) {
         success: false,
         currentStreak: 0,
         longestStreak: 0,
-        message: 'User not found'
+        message: 'User not found',
       };
     }
 
-    const { 
-      daily_streak: currentStreak = 0, 
-      longest_daily_streak: longestStreak = 0, 
-      last_daily_activity: lastActivity 
+    const {
+      daily_streak: currentStreak = 0,
+      longest_daily_streak: longestStreak = 0,
+      last_daily_activity: lastActivity,
     } = userData;
 
     // Get today's date in YYYY-MM-DD format
@@ -63,7 +63,7 @@ export async function updateUserStreak(userId) {
         success: true,
         currentStreak: newStreak,
         longestStreak: newLongestStreak,
-        message
+        message,
       };
     } else {
       // Calculate days difference
@@ -85,7 +85,7 @@ export async function updateUserStreak(userId) {
           success: false,
           currentStreak: newStreak,
           longestStreak: newLongestStreak,
-          message
+          message,
         };
       }
     }
@@ -103,7 +103,7 @@ export async function updateUserStreak(userId) {
         .update({
           daily_streak: newStreak,
           longest_daily_streak: newLongestStreak,
-          last_daily_activity: today
+          last_daily_activity: today,
         })
         .eq('id', userId);
 
@@ -113,7 +113,7 @@ export async function updateUserStreak(userId) {
           success: false,
           currentStreak: currentStreak,
           longestStreak: longestStreak,
-          message: 'Database update failed'
+          message: 'Database update failed',
         };
       }
     }
@@ -122,16 +122,15 @@ export async function updateUserStreak(userId) {
       success: true,
       currentStreak: newStreak,
       longestStreak: newLongestStreak,
-      message
+      message,
     };
-
   } catch (error) {
     console.error('Error in updateUserStreak:', error);
     return {
       success: false,
       currentStreak: 0,
       longestStreak: 0,
-      message: 'Internal error'
+      message: 'Internal error',
     };
   }
 }
@@ -152,7 +151,7 @@ export async function getUserStreakInfo(userId) {
         success: false,
         currentStreak: 0,
         longestStreak: 0,
-        lastActivity: null
+        lastActivity: null,
       };
     }
 
@@ -160,7 +159,7 @@ export async function getUserStreakInfo(userId) {
       success: true,
       currentStreak: userData.daily_streak || 0,
       longestStreak: userData.longest_daily_streak || 0,
-      lastActivity: userData.last_daily_activity
+      lastActivity: userData.last_daily_activity,
     };
   } catch (error) {
     console.error('Error getting user streak info:', error);
@@ -168,7 +167,7 @@ export async function getUserStreakInfo(userId) {
       success: false,
       currentStreak: 0,
       longestStreak: 0,
-      lastActivity: null
+      lastActivity: null,
     };
   }
 }

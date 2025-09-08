@@ -21,24 +21,27 @@ export default function AchievementSessionManager() {
     if (currentUserId !== lastUserId) {
       console.log('🏆 User session changed:', {
         from: lastUserId,
-        to: currentUserId
+        to: currentUserId,
       });
 
       try {
         // Set the current user in achievement tracker
         achievementTracker.setCurrentUser(currentUserId);
-        
+
         // Update the ref only after successful update
         lastUserIdRef.current = currentUserId;
       } catch (error) {
         console.error('🏆 Failed to update achievement tracker:', error);
-        
+
         // Attempt recovery by clearing the tracker state
         try {
           achievementTracker.setCurrentUser(null);
           console.log('🏆 Achievement tracker reset to safe state');
         } catch (recoveryError) {
-          console.error('🏆 Failed to recover achievement tracker:', recoveryError);
+          console.error(
+            '🏆 Failed to recover achievement tracker:',
+            recoveryError,
+          );
         }
       }
     }

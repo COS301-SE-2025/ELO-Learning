@@ -11,16 +11,21 @@ const ACHIEVEMENT_CACHE_DURATION = 10000; // 10 seconds
  * Generate a unique key for achievement processing requests
  */
 export function generateAchievementKey(userId, achievementType, context = {}) {
-  const contextStr = Object.keys(context).length > 0 ? JSON.stringify(context) : '';
+  const contextStr =
+    Object.keys(context).length > 0 ? JSON.stringify(context) : '';
   return `${userId}-${achievementType}-${contextStr}`;
 }
 
 /**
  * Check if this achievement request was processed recently
  */
-export function isRecentAchievementRequest(userId, achievementType, context = {}) {
+export function isRecentAchievementRequest(
+  userId,
+  achievementType,
+  context = {},
+) {
   const key = generateAchievementKey(userId, achievementType, context);
-  
+
   if (recentAchievementRequests.has(key)) {
     const requestTime = recentAchievementRequests.get(key);
     if (Date.now() - requestTime < ACHIEVEMENT_CACHE_DURATION) {
@@ -31,17 +36,21 @@ export function isRecentAchievementRequest(userId, achievementType, context = {}
       recentAchievementRequests.delete(key);
     }
   }
-  
+
   return false;
 }
 
 /**
  * Mark an achievement request as processed
  */
-export function markAchievementProcessed(userId, achievementType, context = {}) {
+export function markAchievementProcessed(
+  userId,
+  achievementType,
+  context = {},
+) {
   const key = generateAchievementKey(userId, achievementType, context);
   recentAchievementRequests.set(key, Date.now());
-  
+
   // Clean up old entries
   for (const [cacheKey, timestamp] of recentAchievementRequests.entries()) {
     if (Date.now() - timestamp > ACHIEVEMENT_CACHE_DURATION) {
@@ -68,15 +77,21 @@ export function handleDatabaseConstraintError(error, context = '') {
     return {
       isDuplicate: true,
       message: 'Resource already exists (handled gracefully)',
-      shouldContinue: true
+      shouldContinue: true,
     };
-  } else if (error && error.message && error.message.includes('duplicate key value violates unique constraint')) {
+  } else if (
+    error &&
+    error.message &&
+    error.message.includes('duplicate key value violates unique constraint')
+  ) {
     // Text-based duplicate detection
-    console.log(`🔄 DUPLICATE CONSTRAINT (text): ${context} - ${error.message}`);
+    console.log(
+      `🔄 DUPLICATE CONSTRAINT (text): ${context} - ${error.message}`,
+    );
     return {
       isDuplicate: true,
       message: 'Resource already exists (handled gracefully)',
-      shouldContinue: true
+      shouldContinue: true,
     };
   } else if (error) {
     // Other database error
@@ -84,24 +99,31 @@ export function handleDatabaseConstraintError(error, context = '') {
     return {
       isDuplicate: false,
       message: error.message,
-      shouldContinue: false
+      shouldContinue: false,
     };
   }
-  
+
   return {
     isDuplicate: false,
     message: 'Success',
-    shouldContinue: true
+    shouldContinue: true,
   };
 }
 
 /**
  * Safe achievement unlock with duplicate handling
  */
-export async function safeUnlockAchievement(supabase, userId, achievementId, context = '') {
+export async function safeUnlockAchievement(
+  supabase,
+  userId,
+  achievementId,
+  context = '',
+) {
   try {
-    console.log(`🏆 SAFE UNLOCK: Attempting to unlock achievement ${achievementId} for user ${userId}`);
-    
+    console.log(
+      `🏆 SAFE UNLOCK: Attempting to unlock achievement ${achievementId} for user ${userId}`,
+    );
+
     const { error: unlockError } = await supabase
       .from('UserAchievements')
       .insert({
@@ -110,29 +132,34 @@ export async function safeUnlockAchievement(supabase, userId, achievementId, con
         unlocked_at: new Date().toISOString(),
       });
 
-    const errorResult = handleDatabaseConstraintError(unlockError, `Achievement ${achievementId} unlock ${context}`);
-    
+    const errorResult = handleDatabaseConstraintError(
+      unlockError,
+      `Achievement ${achievementId} unlock ${context}`,
+    );
+
     if (errorResult.isDuplicate) {
       // Achievement already unlocked - this is OK
       return {
         success: true,
         wasNewUnlock: false,
-        message: 'Achievement already unlocked'
+        message: 'Achievement already unlocked',
       };
     } else if (!errorResult.shouldContinue) {
       // Real error occurred
       return {
         success: false,
         wasNewUnlock: false,
-        error: errorResult.message
+        error: errorResult.message,
       };
     } else {
       // Successfully unlocked
-      console.log(`✅ SAFE UNLOCK: Successfully unlocked achievement ${achievementId} for user ${userId}`);
+      console.log(
+        `✅ SAFE UNLOCK: Successfully unlocked achievement ${achievementId} for user ${userId}`,
+      );
       return {
         success: true,
         wasNewUnlock: true,
-        message: 'Achievement unlocked successfully'
+        message: 'Achievement unlocked successfully',
       };
     }
   } catch (error) {
@@ -140,7 +167,7 @@ export async function safeUnlockAchievement(supabase, userId, achievementId, con
     return {
       success: false,
       wasNewUnlock: false,
-      error: error.message
+      error: error.message,
     };
   }
 }
@@ -148,36 +175,43 @@ export async function safeUnlockAchievement(supabase, userId, achievementId, con
 /**
  * Batch process achievements with deduplication
  */
-export async function batchProcessAchievements(supabase, userId, achievementChecks) {
+export async function batchProcessAchievements(
+  supabase,
+  userId,
+  achievementChecks,
+) {
   const results = [];
   const errors = [];
-  
+
   for (const { type, context, checkFunction } of achievementChecks) {
     try {
       // Check if this type was processed recently
       if (isRecentAchievementRequest(userId, type, context)) {
-        console.log(`⏭️ BATCH: Skipping recent ${type} check for user ${userId}`);
+        console.log(
+          `⏭️ BATCH: Skipping recent ${type} check for user ${userId}`,
+        );
         continue;
       }
-      
+
       // Mark as being processed
       markAchievementProcessed(userId, type, context);
-      
+
       // Run the achievement check
       const achievementResults = await checkFunction();
-      
+
       if (achievementResults && achievementResults.length > 0) {
         results.push(...achievementResults);
-        console.log(`✅ BATCH: ${type} check yielded ${achievementResults.length} achievements`);
+        console.log(
+          `✅ BATCH: ${type} check yielded ${achievementResults.length} achievements`,
+        );
       } else {
         console.log(`📊 BATCH: ${type} check completed (no new achievements)`);
       }
-      
     } catch (error) {
       console.error(`❌ BATCH: Error in ${type} check:`, error);
       errors.push({ type, error: error.message });
     }
   }
-  
+
   return { results, errors };
 }

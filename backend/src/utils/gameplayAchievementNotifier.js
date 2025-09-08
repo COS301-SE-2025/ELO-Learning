@@ -8,27 +8,33 @@
  * @param {boolean} debug - Debug logging
  * @returns {Object} API response object
  */
-export function formatAchievementsForResponse(achievements, userId, debug = false) {
+export function formatAchievementsForResponse(
+  achievements,
+  userId,
+  debug = false,
+) {
   if (!achievements || !Array.isArray(achievements)) {
     if (debug) console.log('🏆 Backend: No achievements to format');
     return {
       achievements: [],
-      achievementSummary: null
+      achievementSummary: null,
     };
   }
 
   try {
-    const formattedAchievements = achievements.map(ach => ({
+    const formattedAchievements = achievements.map((ach) => ({
       id: ach.id || ach.achievement_id,
       name: ach.name || 'Achievement Unlocked',
       description: ach.description || 'You unlocked an achievement!',
       unlocked_at: ach.unlocked_at || new Date().toISOString(),
       category: ach.AchievementCategories?.name || 'General',
-      ...ach
+      ...ach,
     }));
 
     if (debug) {
-      console.log(`🏆 Backend: Formatted ${formattedAchievements.length} achievements for user ${userId}`);
+      console.log(
+        `🏆 Backend: Formatted ${formattedAchievements.length} achievements for user ${userId}`,
+      );
     }
 
     return {
@@ -36,15 +42,14 @@ export function formatAchievementsForResponse(achievements, userId, debug = fals
       achievementSummary: {
         totalUnlocked: formattedAchievements.length,
         newCount: formattedAchievements.length,
-        hasNewAchievements: formattedAchievements.length > 0
-      }
+        hasNewAchievements: formattedAchievements.length > 0,
+      },
     };
-    
   } catch (error) {
     console.error('🏆 Backend: Error formatting achievements:', error);
     return {
       achievements: [],
-      achievementSummary: null
+      achievementSummary: null,
     };
   }
 }

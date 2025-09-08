@@ -486,24 +486,34 @@ export async function triggerAchievementProgress(
                 unlocked_at: new Date().toISOString(),
               });
 
-            if (!unlockError) {
-              // Get achievement details for notification
-              const { data: achievementDetails, error: detailsError } =
-                await supabase
-                  .from('Achievements')
-                  .select('*, AchievementCategories(name)')
-                  .eq('id', achievement.id)
-                  .single();
+            // Handle duplicate key errors gracefully (achievement already unlocked by another request)
+            if (!unlockError || unlockError.code === '23505') {
+              // Success or duplicate key constraint violation (already unlocked)
+              if (unlockError && unlockError.code === '23505') {
+                console.log(
+                  `🔄 Achievement ${achievement.id} already unlocked (duplicate key handled gracefully)`,
+                );
+              }
 
-              if (!detailsError && achievementDetails) {
-                unlockedAchievements.push(achievementDetails);
+              // Get achievement details for notification (only if not a duplicate error)
+              if (!unlockError) {
+                const { data: achievementDetails, error: detailsError } =
+                  await supabase
+                    .from('Achievements')
+                    .select('*, AchievementCategories(name)')
+                    .eq('id', achievement.id)
+                    .single();
 
-                // Check for Badge Collector achievement after unlocking any achievement
-                if (conditionType !== 'Badges Collected') {
-                  // Prevent infinite loop
-                  const badgeCollectorResults =
-                    await checkBadgeCollectorAchievement(userId);
-                  unlockedAchievements.push(...badgeCollectorResults);
+                if (!detailsError && achievementDetails) {
+                  unlockedAchievements.push(achievementDetails);
+
+                  // Check for Badge Collector achievement after unlocking any achievement
+                  if (conditionType !== 'Badges Collected') {
+                    // Prevent infinite loop
+                    const badgeCollectorResults =
+                      await checkBadgeCollectorAchievement(userId);
+                    unlockedAchievements.push(...badgeCollectorResults);
+                  }
                 }
               }
             } else {
@@ -602,10 +612,160 @@ export async function checkFastSolveAchievements(userId, timeSpent, isCorrect) {
   return [];
 }
 
-export async function checkStreakAchievements(userId, days) {
-  // For daily login/activity streaks
-  const result = await triggerAchievementProgress(userId, 'Daily Streak', days);
-  return result.unlockedAchievements;
+export async function checkStreakAchievements(userId, currentStreak) {
+  try {
+    console.log(
+      `🔥 Checking streak achievements for user ${userId}, current streak: ${currentStreak}`,
+    );
+
+    if (!currentStreak || currentStreak <= 0) {
+      console.log('🤷 No streak to check achievements for');
+      return [];
+    }
+
+    // Get all Daily Streak achievements to check multiple milestones
+    const { data: streakAchievements, error: achievementsError } =
+      await supabase
+        .from('Achievements')
+        .select('id, name, description, condition_value')
+        .eq('condition_type', 'Daily Streak')
+        .order('condition_value', { ascending: true });
+
+    if (achievementsError) {
+      console.error(
+        'Error fetching streak achievements:',
+        achievementsError.message,
+      );
+      return [];
+    }
+
+    if (!streakAchievements || streakAchievements.length === 0) {
+      console.log('No streak achievements found in database');
+      return [];
+    }
+
+    console.log(
+      `📋 Found ${streakAchievements.length} streak achievements to check`,
+    );
+
+    // Get user's already unlocked achievements to avoid duplicates
+    const { data: userAchievements, error: userError } = await supabase
+      .from('UserAchievements')
+      .select('achievement_id')
+      .eq('user_id', userId)
+      .in(
+        'achievement_id',
+        streakAchievements.map((a) => a.id),
+      );
+
+    if (userError) {
+      console.error('Error fetching user achievements:', userError.message);
+      return [];
+    }
+
+    const unlockedIds = (userAchievements || []).map((ua) => ua.achievement_id);
+    const newlyUnlockedAchievements = [];
+
+    // Check each streak achievement
+    for (const achievement of streakAchievements) {
+      // Skip if already unlocked
+      if (unlockedIds.includes(achievement.id)) {
+        console.log(`⏭️ Skipping ${achievement.name} - already unlocked`);
+        continue;
+      }
+
+      // Check if user's current streak meets the requirement
+      if (currentStreak >= achievement.condition_value) {
+        console.log(
+          `🎯 User qualifies for ${achievement.name} (${currentStreak} >= ${achievement.condition_value})`,
+        );
+
+        try {
+          // Update achievement progress to the current streak value
+          const { error: upsertError } = await supabase
+            .from('AchievementProgress')
+            .upsert(
+              {
+                user_id: userId,
+                achievement_id: achievement.id,
+                current_value: currentStreak, // Set to current streak, not increment
+                updated_at: new Date().toISOString(),
+              },
+              {
+                onConflict: 'user_id,achievement_id',
+                ignoreDuplicates: false,
+              },
+            );
+
+          if (upsertError) {
+            console.error(
+              `Error updating progress for streak achievement ${achievement.id}:`,
+              upsertError.message,
+            );
+            continue;
+          }
+
+          // Unlock the achievement
+          const { error: unlockError } = await supabase
+            .from('UserAchievements')
+            .insert({
+              user_id: userId,
+              achievement_id: achievement.id,
+              unlocked_at: new Date().toISOString(),
+            });
+
+          // Handle duplicate key errors gracefully (achievement already unlocked by another request)
+          if (!unlockError || unlockError.code === '23505') {
+            // Success or duplicate key constraint violation (already unlocked)
+            if (unlockError && unlockError.code === '23505') {
+              console.log(
+                `🔄 Streak achievement ${achievement.id} already unlocked (duplicate key handled gracefully)`,
+              );
+              continue; // Skip this achievement, don't add to results
+            }
+
+            // Get full achievement details for response (only if not a duplicate error)
+            const { data: fullAchievement, error: detailsError } =
+              await supabase
+                .from('Achievements')
+                .select('*, AchievementCategories(name)')
+                .eq('id', achievement.id)
+                .single();
+
+            if (!detailsError && fullAchievement) {
+              newlyUnlockedAchievements.push(fullAchievement);
+              console.log(
+                `🏆 Unlocked streak achievement: ${achievement.name}`,
+              );
+            }
+          } else {
+            console.error(
+              `Error unlocking streak achievement ${achievement.id}:`,
+              unlockError.message,
+            );
+            continue;
+          }
+        } catch (error) {
+          console.error(
+            `Error processing streak achievement ${achievement.id}:`,
+            error,
+          );
+        }
+      } else {
+        console.log(
+          `📊 ${achievement.name}: ${currentStreak}/${achievement.condition_value} days`,
+        );
+      }
+    }
+
+    console.log(
+      `🏆 Unlocked ${newlyUnlockedAchievements.length} new streak achievements`,
+    );
+    return newlyUnlockedAchievements;
+  } catch (error) {
+    console.error('Error in checkStreakAchievements:', error);
+    return [];
+  }
 }
 
 export async function checkNeverGiveUpAchievement(
@@ -979,8 +1139,17 @@ export async function checkLeaderboardAchievements(userId) {
               unlocked_at: new Date().toISOString(),
             });
 
-          if (!unlockError) {
-            // Get achievement details for notification
+          // Handle duplicate key errors gracefully
+          if (!unlockError || unlockError.code === '23505') {
+            // Success or duplicate key constraint violation (already unlocked)
+            if (unlockError && unlockError.code === '23505') {
+              console.log(
+                `🔄 Leaderboard achievement ${achievement.id} already unlocked (duplicate key handled gracefully)`,
+              );
+              continue; // Skip this achievement, don't add to results
+            }
+
+            // Get achievement details for notification (only if not a duplicate error)
             const { data: achievementDetails, error: detailsError } =
               await supabase
                 .from('Achievements')
@@ -1139,24 +1308,33 @@ export async function checkEloAchievements(userId, newEloRating) {
               unlocked_at: new Date().toISOString(),
             });
 
-          // Ignore duplicate errors (achievement already unlocked)
-          if (unlockError && unlockError.code !== '23505') {
+          // Handle duplicate key errors gracefully
+          if (!unlockError || unlockError.code === '23505') {
+            // Success or duplicate key constraint violation (already unlocked)
+            if (unlockError && unlockError.code === '23505') {
+              console.log(
+                `🔄 ELO achievement ${achievement.id} already unlocked (duplicate key handled gracefully)`,
+              );
+              continue; // Skip this achievement, don't add to results
+            }
+
+            // Get full achievement details for response (only if not a duplicate error)
+            const { data: fullAchievement, error: detailsError } =
+              await supabase
+                .from('Achievements')
+                .select('*, AchievementCategories(name)')
+                .eq('id', achievement.id)
+                .single();
+
+            if (!detailsError && fullAchievement) {
+              newlyUnlockedAchievements.push(fullAchievement);
+            }
+          } else {
             console.error(
               `Error unlocking achievement ${achievement.id}:`,
               unlockError.message,
             );
             continue;
-          }
-
-          // Get full achievement details for response
-          const { data: fullAchievement, error: detailsError } = await supabase
-            .from('Achievements')
-            .select('*, AchievementCategories(name)')
-            .eq('id', achievement.id)
-            .single();
-
-          if (!detailsError && fullAchievement) {
-            newlyUnlockedAchievements.push(fullAchievement);
           }
         } catch (error) {
           console.error(
@@ -1629,6 +1807,184 @@ router.post('/test-achievement/:userId', async (req, res) => {
     res.status(500).json({
       success: false,
       error: error.message,
+    });
+  }
+});
+
+// Badge Collector Sync Endpoint - Fix existing count discrepancies
+router.post('/sync-badge-collector/:userId', async (req, res) => {
+  try {
+    const { userId } = req.params;
+
+    console.log(`🔧 BADGE COLLECTOR SYNC - Starting sync for user ${userId}`);
+
+    // Get current count of unlocked achievements (excluding Badge Collector to avoid loops)
+    const { data: userAchievements, error: countError } = await supabase
+      .from('UserAchievements')
+      .select('achievement_id, Achievements!inner(name, condition_type)')
+      .eq('user_id', userId)
+      .neq('Achievements.condition_type', 'Badges Collected');
+
+    if (countError) {
+      console.error('Error counting user achievements:', countError.message);
+      return res.status(500).json({
+        success: false,
+        error: 'Failed to count user achievements',
+      });
+    }
+
+    const actualBadgeCount = userAchievements?.length || 0;
+    console.log(
+      `📊 User ${userId} has ${actualBadgeCount} actual achievements unlocked`,
+    );
+
+    // Get current Badge Collector progress
+    const { data: badgeProgress, error: progressError } = await supabase
+      .from('AchievementProgress')
+      .select(
+        'current_value, achievement_id, Achievements!inner(name, condition_type)',
+      )
+      .eq('user_id', userId)
+      .eq('Achievements.condition_type', 'Badges Collected');
+
+    if (progressError) {
+      console.error(
+        'Error getting Badge Collector progress:',
+        progressError.message,
+      );
+    }
+
+    const currentBadgeProgress = badgeProgress?.[0]?.current_value || 0;
+    console.log(
+      `📈 Badge Collector shows: ${currentBadgeProgress}/${actualBadgeCount}`,
+    );
+
+    // Force update Badge Collector progress to match actual count
+    const badgeCollectorResult = await triggerAchievementProgress(
+      userId,
+      'Badges Collected',
+      actualBadgeCount, // Set to actual total count
+    );
+
+    // Get updated progress after sync
+    const { data: updatedProgress, error: updatedError } = await supabase
+      .from('AchievementProgress')
+      .select(
+        'current_value, achievement_id, Achievements!inner(name, condition_type)',
+      )
+      .eq('user_id', userId)
+      .eq('Achievements.condition_type', 'Badges Collected');
+
+    const newBadgeProgress = updatedProgress?.[0]?.current_value || 0;
+
+    res.json({
+      success: true,
+      message: `Badge Collector sync completed for user ${userId}`,
+      sync_results: {
+        actual_badge_count: actualBadgeCount,
+        previous_badge_progress: currentBadgeProgress,
+        new_badge_progress: newBadgeProgress,
+        was_sync_needed: currentBadgeProgress !== actualBadgeCount,
+        newly_unlocked_achievements:
+          badgeCollectorResult.unlockedAchievements || [],
+      },
+    });
+  } catch (error) {
+    console.error('🔧 BADGE COLLECTOR SYNC ERROR:', error);
+    res.status(500).json({
+      success: false,
+      error: error.message,
+    });
+  }
+});
+
+// 🔥 Streak management endpoints
+router.get('/users/:userId/streak', async (req, res) => {
+  try {
+    const { userId } = req.params;
+
+    // Import streak calculator functions
+    const { getUserStreakInfo } = await import('./utils/streakCalculator.js');
+
+    const streakInfo = await getUserStreakInfo(userId);
+
+    res.json({
+      success: streakInfo.success,
+      streak_data: {
+        current_streak: streakInfo.currentStreak,
+        longest_streak: streakInfo.longestStreak,
+        last_activity: streakInfo.lastActivity,
+      },
+    });
+  } catch (error) {
+    console.error('Error getting user streak:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to get user streak',
+    });
+  }
+});
+
+router.post('/users/:userId/streak/update', async (req, res) => {
+  try {
+    const { userId } = req.params;
+
+    // Import streak calculator functions
+    const { updateUserStreak } = await import('./utils/streakCalculator.js');
+
+    const streakResult = await updateUserStreak(userId);
+
+    if (streakResult.success) {
+      // Check for streak achievements
+      const streakAchievements = await checkStreakAchievements(
+        userId,
+        streakResult.currentStreak,
+      );
+
+      res.json({
+        success: true,
+        message: streakResult.message,
+        streak_data: {
+          current_streak: streakResult.currentStreak,
+          longest_streak: streakResult.longestStreak,
+        },
+        unlocked_achievements: streakAchievements,
+      });
+    } else {
+      res.status(400).json({
+        success: false,
+        error: streakResult.message,
+      });
+    }
+  } catch (error) {
+    console.error('Error updating user streak:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to update user streak',
+    });
+  }
+});
+
+router.get('/streaks/leaderboard', async (req, res) => {
+  try {
+    const { limit = 10 } = req.query;
+
+    // Import streak calculator functions
+    const { getStreakLeaderboard } = await import(
+      './utils/streakCalculator.js'
+    );
+
+    const leaderboard = await getStreakLeaderboard(parseInt(limit));
+
+    res.json({
+      success: true,
+      leaderboard,
+    });
+  } catch (error) {
+    console.error('Error getting streak leaderboard:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to get streak leaderboard',
     });
   }
 });

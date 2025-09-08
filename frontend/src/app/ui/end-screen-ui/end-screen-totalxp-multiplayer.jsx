@@ -6,7 +6,7 @@ import { useSession } from 'next-auth/react';
 import { useEffect, useState } from 'react';
 //import { cache, CACHE_KEYS } from '@/utils/cache';
 
-export default function TotalXPMP({ onLoadComplete }) {
+export default function TotalXPMP({ onLoadComplete, onResults }) {
   const [xpEarned, setXPEarned] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [hasProcessed, setHasProcessed] = useState(false); // Prevent duplicate processing
@@ -176,6 +176,15 @@ export default function TotalXPMP({ onLoadComplete }) {
           const userResults = response.players?.find((p) => p.id === userId);
           if (userResults) {
             setXPEarned(userResults.xpEarned);
+
+            if (onResults) {
+              onResults({
+                newElo: userResults.newElo,
+                eloChange: userResults.eloChange,
+                currentRank: userResults.currentRank,
+              });
+            }
+
             await updateUserDataAfterMultiplayer(userId, userResults);
 
             // Cache the results to prevent duplicate processing
@@ -258,8 +267,8 @@ export default function TotalXPMP({ onLoadComplete }) {
   }
 
   return (
-    <div className="border-1 border-[#FF6E99] rounded-[10px] w-[90px]">
-      <div className="uppercase bg-[#FF6E99] p-2 rounded-t-[9px] text-[14px] font-bold text-center tracking-wide">
+    <div className="border-1 border-[#4D5DED] rounded-[10px] w-[90px]">
+      <div className="uppercase bg-[#4D5DED] p-2 rounded-t-[9px] text-[14px] font-bold text-center tracking-wide">
         XP
       </div>
       <div className="text-center text-[18px] font-bold py-3 px-5">

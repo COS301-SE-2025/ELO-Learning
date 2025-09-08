@@ -451,4 +451,87 @@ router.get('/verify-reset-token/:token', async (req, res) => {
   }
 });
 
+// --- FRIEND REQUEST ENDPOINTS ---
+
+// Send a friend request
+router.post('/user/:id/friend-request', verifyToken, async (req, res) => {
+  const { id } = req.params;
+  const { friend_email } = req.body;
+  // Find friend by email
+  const { data: friend, error: friendError } = await supabase
+    .from('Users')
+    .select('id')
+    .eq('email', friend_email)
+    .single();
+  if (friendError || !friend) {
+    return res.status(404).json({ error: 'Friend not found' });
+  }
+  // Insert friend request
+  const { data: request, error: reqError } = await supabase
+    .from('Friends')
+    .insert([
+      {
+        user_id: id,
+        friend_id: friend.id,
+        status: 'pending',
+        created_at: new Date().toISOString(),
+      },
+    ])
+    .select()
+    .single();
+  if (reqError) {
+    return res.status(500).json({ error: 'Failed to send friend request' });
+  }
+  // TODO: Trigger push notification to friend
+  res.status(201).json({ message: 'Friend request sent', request });
+});
+
+// Accept a friend request
+router.post('/user/:id/friend-accept', verifyToken, async (req, res) => {
+  const { id } = req.params;
+  const { request_id } = req.body;
+  const { data, error } = await supabase
+    .from('Friends')
+    .update({ status: 'accepted' })
+    .eq('id', request_id)
+    .eq('friend_id', id)
+    .select()
+    .single();
+  if (error) {
+    return res.status(500).json({ error: 'Failed to accept friend request' });
+  }
+  res.status(200).json({ message: 'Friend request accepted', data });
+});
+
+// Reject a friend request
+router.post('/user/:id/friend-reject', verifyToken, async (req, res) => {
+  const { id } = req.params;
+  const { request_id } = req.body;
+  const { data, error } = await supabase
+    .from('Friends')
+    .update({ status: 'rejected' })
+    .eq('id', request_id)
+    .eq('friend_id', id)
+    .select()
+    .single();
+  if (error) {
+    return res.status(500).json({ error: 'Failed to reject friend request' });
+  }
+  res.status(200).json({ message: 'Friend request rejected', data });
+});
+
+// List friends
+router.get('/user/:id/friends', verifyToken, async (req, res) => {
+  const { id } = req.params;
+  const { data, error } = await supabase
+    .from('Friends')
+    .select('friend_id, user_id, status')
+    .or(`user_id.eq.${id},friend_id.eq.${id}`)
+    .eq('status', 'accepted');
+  if (error) {
+    return res.status(500).json({ error: 'Failed to fetch friends' });
+  }
+  res.status(200).json({ friends: data });
+});
+
 export default router;

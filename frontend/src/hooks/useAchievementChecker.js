@@ -1,10 +1,9 @@
 // hooks/useAchievementChecker.js
 'use client';
-import { useSession } from 'next-auth/react';
-import { useEffect, useRef } from 'react';
 import { fetchUserAchievementsWithStatus } from '@/services/api';
-import { showAchievementNotificationsWhenReady } from '@/utils/achievementNotifications';
 import achievementTracker from '@/utils/achievementTracker';
+import { useSession } from 'next-auth/react';
+import { useCallback, useEffect, useRef } from 'react';
 
 export default function useAchievementChecker(options = {}) {
   const { status, data: session } = useSession();
@@ -16,8 +15,9 @@ export default function useAchievementChecker(options = {}) {
 
   const lastCheckRef = useRef(0);
   const intervalRef = useRef(null);
+  const hasMountedRef = useRef(false);
 
-  const checkForNewAchievements = async () => {
+  const checkForNewAchievements = useCallback(async () => {
     if (status !== 'authenticated' || !session?.user?.id) {
       if (debug)
         console.log('🏆 Achievement check skipped - no authenticated session');
@@ -25,8 +25,11 @@ export default function useAchievementChecker(options = {}) {
     }
 
     try {
+      // Ensure the achievement tracker is set to the current user
+      achievementTracker.setCurrentUser(session.user.id);
+
       if (debug)
-        console.log('🏆 Checking for achievements for user:', session.user.id);
+        console.log('🏆 Fetching achievements for user:', session.user.id);
 
       const data = await fetchUserAchievementsWithStatus(session.user.id);
 
@@ -35,44 +38,41 @@ export default function useAchievementChecker(options = {}) {
         return;
       }
 
-      // Find NEW unlocked achievements (not previously notified)
-      const newUnlockedAchievements =
-        achievementTracker.getNewUnlockedAchievements(data);
+      // IMPORTANT: We DO NOT show notifications here
+      // This hook only fetches data for display purposes
+      // Notifications are ONLY shown during gameplay when achievements are earned
 
       if (debug) {
+        const unlockedCount = data.filter(
+          (ach) => ach.unlocked === true,
+        ).length;
         console.log(
-          `🏆 Found ${newUnlockedAchievements.length} NEW unlocked achievements`,
+          `🏆 Fetched ${data.length} total achievements, ${unlockedCount} unlocked`,
         );
-      }
-
-      // Show notifications only for NEW achievements
-      if (newUnlockedAchievements.length > 0) {
-        await showAchievementNotificationsWhenReady(newUnlockedAchievements);
-
-        // Mark as notified so they don't show again
-        const achievementIds = newUnlockedAchievements.map(
-          (ach) => ach.id || ach.achievement_id,
+        console.log(
+          '🏆 No notifications shown - this is data fetching, not gameplay',
         );
-        achievementTracker.markMultipleAsNotified(achievementIds);
-
-        if (debug)
-          console.log('🏆 Achievement notifications triggered successfully');
       }
 
       lastCheckRef.current = Date.now();
     } catch (error) {
-      console.error('🏆 Error checking achievements:', error);
+      console.error('🏆 Error fetching achievements:', error);
     }
-  };
+  }, [status, session?.user?.id, debug]);
 
   // Check on mount
   useEffect(() => {
     if (checkOnMount && status === 'authenticated') {
-      // Small delay to ensure notification system is ready
-      const timer = setTimeout(checkForNewAchievements, 1000);
+      // Small delay to ensure system is ready
+      const timer = setTimeout(() => {
+        if (!hasMountedRef.current) {
+          hasMountedRef.current = true;
+          checkForNewAchievements();
+        }
+      }, 500);
       return () => clearTimeout(timer);
     }
-  }, [status, checkOnMount]);
+  }, [status, checkOnMount, checkForNewAchievements]);
 
   // Set up interval checking if requested
   useEffect(() => {
@@ -81,7 +81,10 @@ export default function useAchievementChecker(options = {}) {
       typeof checkInterval === 'number' &&
       status === 'authenticated'
     ) {
-      intervalRef.current = setInterval(checkForNewAchievements, checkInterval);
+      intervalRef.current = setInterval(
+        () => checkForNewAchievements(),
+        checkInterval,
+      );
 
       return () => {
         if (intervalRef.current) {
@@ -89,7 +92,7 @@ export default function useAchievementChecker(options = {}) {
         }
       };
     }
-  }, [checkInterval, status]);
+  }, [checkInterval, status, checkForNewAchievements]);
 
   // Cleanup on unmount
   useEffect(() => {

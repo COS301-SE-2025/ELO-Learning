@@ -1,4 +1,5 @@
 import AchievementNotificationManager from '@/app/ui/achievements/achievement-notification-manager';
+import AchievementSessionManager from '@/app/ui/achievements/achievement-session-manager';
 import ErrorBoundary from '@/components/ErrorBoundary';
 import { Nunito } from 'next/font/google';
 import './globals.css';
@@ -57,6 +58,7 @@ export default function RootLayout({ children }) {
         <ErrorBoundary>
           <Providers>
             <PWALifecycle />
+            <AchievementSessionManager />
             {children}
 
             {/* Achievement notifications - appears above all content */}

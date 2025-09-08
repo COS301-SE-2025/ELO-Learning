@@ -2,6 +2,7 @@
 
 import { fetchUserById, submitSinglePlayerAttempt } from '@/services/api';
 import { cache, CACHE_KEYS } from '@/utils/cache';
+import { handleGameplayAchievements } from '@/utils/gameplayAchievementHandler';
 import { useSession } from 'next-auth/react';
 import { useEffect, useState } from 'react';
 
@@ -339,6 +340,21 @@ export default function TotalXP({ onLoadComplete }) {
             // Store the latest user data from backend response
             q.totalXP = totalXP;
             q.leveledUp = leveledUp;
+
+            // Handle achievements from API response
+            if (response.achievements && response.achievements.length > 0) {
+              try {
+                await handleGameplayAchievements(response, user_id, true);
+                console.log(
+                  `🏆 Handled ${response.achievements.length} achievements for question ${questionId}`,
+                );
+              } catch (achievementError) {
+                console.error(
+                  '🏆 Error handling achievements:',
+                  achievementError,
+                );
+              }
+            }
 
             console.log(
               `Submitted question ${questionId}: earned ${q.xpEarned} XP (Total: ${totalXP})`,

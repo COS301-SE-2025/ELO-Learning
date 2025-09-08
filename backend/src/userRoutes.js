@@ -455,43 +455,74 @@ router.get('/verify-reset-token/:token', async (req, res) => {
 
 // Send a friend request
 router.post('/user/:id/friend-request', verifyToken, async (req, res) => {
-  const { id } = req.params;
-  const { friend_email } = req.body;
-  // Find friend by email
-  const { data: friend, error: friendError } = await supabase
-    .from('Users')
-    .select('id')
-    .eq('email', friend_email)
-    .single();
-  if (friendError || !friend) {
-    return res.status(404).json({ error: 'Friend not found' });
+  try {
+    // Use user ID from URL params, matching avatar endpoint logic
+    const { id } = req.params;
+    const { friend_email } = req.body;
+    console.log(
+      `[FRIEND REQUEST] Sender ID: ${id}, Friend Email: ${friend_email}`,
+    );
+    // Find friend by email
+    const { data: friend, error: friendError } = await supabase
+      .from('Users')
+      .select('id, email')
+      .eq('email', friend_email)
+      .single();
+    if (friendError || !friend) {
+      console.error(
+        `[FRIEND REQUEST] Friend lookup failed. Error: ${friendError?.message}, Data:`,
+        friend,
+      );
+      return res.status(404).json({ error: 'Friend not found' });
+    }
+    console.log(`[FRIEND REQUEST] Found friend:`, friend);
+    // Insert friend request
+    const friendRequestPayload = {
+      user_id: Number(id),
+      friend_id: Number(friend.id),
+      status: 'pending',
+      created_at: new Date().toISOString(),
+    };
+    console.log(
+      `[FRIEND REQUEST] Inserting friend request:`,
+      friendRequestPayload,
+    );
+    const { data: request, error: reqError } = await supabase
+      .from('friends')
+      .insert([friendRequestPayload])
+      .select()
+      .single();
+    if (reqError) {
+      console.error(`[FRIEND REQUEST] Insert failed. Full Supabase response:`, {
+        data: request,
+        error: reqError,
+      });
+      return res.status(500).json({
+        error: 'Failed to send friend request',
+        details: { data: request, error: reqError },
+      });
+    }
+    console.log(`[FRIEND REQUEST] Success. Request:`, request);
+    // TODO: Trigger push notification to friend
+    res.status(201).json({ message: 'Friend request sent', request });
+  } catch (err) {
+    console.error('[FRIEND REQUEST] Unexpected error:', err);
+    res
+      .status(500)
+      .json({ error: 'Internal server error', details: err.message });
   }
-  // Insert friend request
-  const { data: request, error: reqError } = await supabase
-    .from('Friends')
-    .insert([
-      {
-        user_id: id,
-        friend_id: friend.id,
-        status: 'pending',
-        created_at: new Date().toISOString(),
-      },
-    ])
-    .select()
-    .single();
-  if (reqError) {
-    return res.status(500).json({ error: 'Failed to send friend request' });
-  }
-  // TODO: Trigger push notification to friend
-  res.status(201).json({ message: 'Friend request sent', request });
 });
 
 // Accept a friend request
+// Usage: POST /user/:id/friend-accept
+// :id is the acceptor's user ID (the one accepting the request)
+// Body: { "request_id": <id of the friend request row> }
 router.post('/user/:id/friend-accept', verifyToken, async (req, res) => {
-  const { id } = req.params;
-  const { request_id } = req.body;
+  const { id } = req.params; // acceptor's user ID
+  const { request_id } = req.body; // unique id of the friend request row
+  // Only accept the request if the friend_id matches the acceptor's ID
   const { data, error } = await supabase
-    .from('Friends')
+    .from('friends')
     .update({ status: 'accepted' })
     .eq('id', request_id)
     .eq('friend_id', id)
@@ -504,11 +535,15 @@ router.post('/user/:id/friend-accept', verifyToken, async (req, res) => {
 });
 
 // Reject a friend request
+// Usage: POST /user/:id/friend-reject
+// :id is the acceptor's user ID (the one rejecting the request)
+// Body: { "request_id": <id of the friend request row> }
 router.post('/user/:id/friend-reject', verifyToken, async (req, res) => {
-  const { id } = req.params;
-  const { request_id } = req.body;
+  const { id } = req.params; // acceptor's user ID
+  const { request_id } = req.body; // unique id of the friend request row
+  // Only reject the request if the friend_id matches the acceptor's ID
   const { data, error } = await supabase
-    .from('Friends')
+    .from('friends')
     .update({ status: 'rejected' })
     .eq('id', request_id)
     .eq('friend_id', id)
@@ -524,7 +559,7 @@ router.post('/user/:id/friend-reject', verifyToken, async (req, res) => {
 router.get('/user/:id/friends', verifyToken, async (req, res) => {
   const { id } = req.params;
   const { data, error } = await supabase
-    .from('Friends')
+    .from('friends')
     .select('friend_id, user_id, status')
     .or(`user_id.eq.${id},friend_id.eq.${id}`)
     .eq('status', 'accepted');

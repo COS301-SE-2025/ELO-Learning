@@ -476,6 +476,31 @@ router.post('/user/:id/friend-request', verifyToken, async (req, res) => {
       return res.status(404).json({ error: 'Friend not found' });
     }
     console.log(`[FRIEND REQUEST] Found friend:`, friend);
+
+    // Check if there's already a pending request
+    const { data: existingRequest, error: existingError } = await supabase
+      .from('friends')
+      .select('*')
+      .eq('user_id', Number(id))
+      .eq('friend_id', Number(friend.id))
+      .eq('status', 'pending')
+      .maybeSingle(); // <-- returns null if not found
+
+    if (existingError) {
+      console.error('[FRIEND REQUEST] Lookup failed:', existingError);
+      return res
+        .status(500)
+        .json({ error: 'Error checking existing requests' });
+    }
+
+    if (existingRequest) {
+      console.log(
+        '[FRIEND REQUEST] Duplicate request blocked:',
+        existingRequest,
+      );
+      return res.status(400).json({ error: 'Friend request already sent' });
+    }
+
     // Insert friend request
     const friendRequestPayload = {
       user_id: Number(id),

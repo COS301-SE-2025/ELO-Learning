@@ -5,18 +5,18 @@ import { useEffect, useState } from 'react';
 /**
  * Confirmation modal for starting practice sessions
  * Follows the same pattern as BaselineTestPopup for consistent UX
- * 
+ *
  * @param {Object} props
  * @param {boolean} props.isOpen - Whether the modal is open
  * @param {Function} props.onClose - Function to close the modal
  * @param {string} props.topicName - Name of the topic for practice
  * @param {string} props.topicId - ID of the topic to practice
  */
-export default function PracticeConfirmationPopup({ 
-  isOpen, 
-  onClose, 
-  topicName, 
-  topicId 
+export default function PracticeConfirmationPopup({
+  isOpen,
+  onClose,
+  topicName,
+  topicId,
 }) {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
@@ -54,10 +54,10 @@ export default function PracticeConfirmationPopup({
       setError('Invalid topic selected. Please try again.');
       return;
     }
-    
+
     setLoading(true);
     setError(''); // Clear any previous errors
-    
+
     try {
       // Navigate to the practice session
       router.push(`/topic/${topicId}`);
@@ -88,7 +88,7 @@ export default function PracticeConfirmationPopup({
   if (!isOpen) return null;
 
   return (
-    <div 
+    <div
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur"
       onClick={handleBackdropClick}
       role="dialog"
@@ -97,7 +97,7 @@ export default function PracticeConfirmationPopup({
       aria-describedby="practice-confirmation-description"
     >
       <div className="bg-[var(--background)] rounded-xl shadow-lg p-6 w-[90%] max-w-md">
-        <h2 
+        <h2
           id="practice-confirmation-title"
           className="text-2xl font-bold text-center mb-4"
         >
@@ -105,10 +105,15 @@ export default function PracticeConfirmationPopup({
         </h2>
         <div id="practice-confirmation-description">
           <p className="text-center mb-2">
-            Are you sure you want to do a <span className="font-semibold text-[var(--vector-violet)]">{topicName}</span> practice session?
+            Are you sure you want to do a{' '}
+            <span className="font-semibold text-[var(--vector-violet)]">
+              {topicName}
+            </span>{' '}
+            practice session?
           </p>
           <p className="text-center text-sm text-[var(--grey)] mb-6">
-            This will start a new practice session with questions from this topic.
+            This will start a new practice session with questions from this
+            topic.
           </p>
         </div>
 
@@ -139,7 +144,7 @@ export default function PracticeConfirmationPopup({
             Cancel
           </button>
         </div>
-        
+
         {/* Hidden helper text for screen readers */}
         <div id="start-session-help" className="sr-only">
           Press Enter to start the practice session or Escape to cancel

@@ -60,6 +60,7 @@ router.post('/baseline/answer', async (req, res) => {
 });
 
 // POST /baseline/skip
+//we will only use this when the user chooses to skip also in the profile section
 router.post('/baseline/skip', async (req, res) => {
   const { user_id } = req.body;
 
@@ -70,7 +71,7 @@ router.post('/baseline/skip', async (req, res) => {
   try {
     const { error } = await supabase
       .from('Users')
-      .update({ baseLineTest: true })
+      .update({ base_line_test: true })
       .eq('id', user_id);
 
     if (error) {
@@ -89,23 +90,48 @@ router.post('/baseline/skip', async (req, res) => {
 router.post('/baseline/confirm', async (req, res) => {
   const { user_id } = req.body;
 
+  console.log('🎯 /baseline/confirm called with user_id:', user_id);
+
   if (!user_id) {
+    console.error('❌ Missing user_id in request body');
     return res.status(400).json({ error: 'Missing userId' });
   }
 
   try {
+    console.log('🔄 Updating base_line_test to true for user:', user_id);
+    
     // Update the baseLineTest flag to true
     const { data, error } = await supabase
       .from('Users')
-      .update({ baseLineTest: true })
-      .eq('id', user_id);
+      .update({ base_line_test: true })
+      .eq('id', user_id)
+      .select('*')
+      .single();
 
     if (error) {
-      console.error('Error updating baseLineTest:', error);
-      return res.status(500).json({ error: 'Database update failed' });
+      console.error('❌ Database error updating base_line_test:', error);
+      return res.status(500).json({ error: 'Database update failed', details: error.message });
     }
 
-    return res.status(200).json({ success: true, updatedUser: data });
+    console.log('✅ Successfully updated base_line_test for user:', user_id);
+    
+    // Return the updated user data with proper field name conversion
+    const updatedUser = {
+      id: data.id,
+      name: data.name,
+      surname: data.surname,
+      username: data.username,
+      email: data.email,
+      currentLevel: data.currentLevel,
+      joinDate: data.joinDate,
+      xp: data.xp,
+      avatar: data.avatar,
+      elo_rating: data.elo_rating,
+      rank: data.rank,
+      baseLineTest: data.base_line_test, // Convert snake_case to camelCase
+    };
+    
+    return res.status(200).json({ success: true, user: updatedUser });
   } catch (err) {
     console.error('Server error:', err);
     return res.status(500).json({ error: 'Internal server error' });
@@ -167,11 +193,30 @@ router.post('/baseline/complete', async (req, res) => {
     const { data, error } = await supabase
       .from('Users')
       .update({ currentLevel: finalElo, base_line_test: true })
-      .eq('id', user_id);
+      .eq('id', user_id)
+      .select('*')
+      .single();
 
     if (error)
       return res.status(500).json({ error: 'Failed to update user ELO' });
-    res.json({ success: true, elo_rating: finalElo });
+    
+    // Return the updated user data with proper field name conversion
+    const updatedUser = {
+      id: data.id,
+      name: data.name,
+      surname: data.surname,
+      username: data.username,
+      email: data.email,
+      currentLevel: data.currentLevel,
+      joinDate: data.joinDate,
+      xp: data.xp,
+      avatar: data.avatar,
+      elo_rating: data.elo_rating,
+      rank: data.rank,
+      baseLineTest: data.base_line_test, // Convert snake_case to camelCase
+    };
+    
+    res.json({ success: true, elo_rating: finalElo, user: updatedUser });
   } catch (err) {
     console.error('Server error:', err);
     res.status(500).json({ error: 'Internal server error' });

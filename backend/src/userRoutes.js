@@ -259,7 +259,7 @@ router.post('/register', async (req, res) => {
         currentLevel: safeCurrentLevel,
         joinDate: safeJoinDate,
         xp: safeXP,
-        base_line_test: startBase,
+        baseLineTest: startBase,
         avatar: DEFAULT_AVATAR,
         elo_rating: eloRating,
         rank: defaultRank,

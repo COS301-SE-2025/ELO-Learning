@@ -4,8 +4,9 @@
   "type": "module",
   "main": "src/server.js",
   "scripts": {
-    "start": "node src/server.js",
-    "dev": "node src/server.js",
+    "start": "node --no-deprecation src/server.js",
+    "dev": "node --no-deprecation src/server.js",
+    "trace": "node --trace-deprecation src/server.js",
     "test": "cross-env NODE_OPTIONS=--experimental-vm-modules jest",
     "lint": "eslint ."
   },

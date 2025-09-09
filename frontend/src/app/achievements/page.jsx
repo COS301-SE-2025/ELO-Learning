@@ -1,13 +1,15 @@
 'use client';
 import { fetchUserAchievementsWithStatus } from '@/services/api';
+import {
+  initializeAchievementTracking,
+  preventLoginNotifications,
+} from '@/utils/gameplayAchievementHandler';
 import { ArrowLeft } from 'lucide-react';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 
 import AchievementBadge from '../ui/achievements/achievement-badge';
-import { showAchievementNotificationsWhenReady } from '@/utils/achievementNotifications';
-import achievementTracker from '@/utils/achievementTracker';
 
 export default function AchievementsPage() {
   const [achievements, setAchievements] = useState([]);
@@ -22,9 +24,15 @@ export default function AchievementsPage() {
     }
 
     if (status === 'authenticated' && session?.user?.id) {
+      // Initialize achievement tracking for this user (no notifications)
+      initializeAchievementTracking(session.user.id);
+
       fetchUserAchievementsWithStatus(session.user.id)
         .then((data) => {
-          console.log('✅ Raw achievements data received:', data, typeof data);
+          console.log('✅ Fetched achievements data for viewing');
+
+          // Prevent any existing achievements from showing notifications
+          preventLoginNotifications(data, session.user.id);
 
           // Group achievements by category
           const grouped = data.reduce((acc, achievement) => {
@@ -34,46 +42,11 @@ export default function AchievementsPage() {
             return acc;
           }, {});
 
-          console.log('✅ Setting achievements array:', grouped);
           setAchievements(grouped);
-
-          // Only show notifications for NEW unlocked achievements
-          const allAchievements = Object.values(grouped).flat();
-          const newUnlockedAchievements =
-            achievementTracker.getNewUnlockedAchievements(allAchievements);
-
-          console.log(
-            '🏆 New unlocked achievements only:',
-            newUnlockedAchievements,
-          );
-
-          // SHOW NOTIFICATIONS only for NEW achievements
-          if (newUnlockedAchievements.length > 0) {
-            setTimeout(() => {
-              showAchievementNotificationsWhenReady(newUnlockedAchievements)
-                .then(() => {
-                  console.log(
-                    '✅ Achievement notifications shown successfully',
-                  );
-
-                  // MARK AS NOTIFIED so they don't show again
-                  const achievementIds = newUnlockedAchievements.map(
-                    (ach) => ach.id || ach.achievement_id,
-                  );
-                  achievementTracker.markMultipleAsNotified(achievementIds);
-                })
-                .catch((error) =>
-                  console.error(
-                    '❌ Failed to show achievement notifications:',
-                    error,
-                  ),
-                );
-            }, 1000);
-          } else {
-            console.log('🏆 No new achievements to notify about');
-          }
-
           setLoading(false);
+
+          // NOTE: No notifications on achievements page - this is for viewing only
+          // Notifications only appear during gameplay when achievements are earned
         })
         .catch((error) => {
           console.error('Failed to fetch achievements:', error);

@@ -1,14 +1,12 @@
 'use client';
 import { fetchUsersByRank } from '@/services/api';
+import { initializeAchievementTracking } from '@/utils/gameplayAchievementHandler';
 import { useSession } from 'next-auth/react';
 import { useEffect, useMemo, useState } from 'react';
 import LeaderboardTable from '../ui/leaderboard-table';
 import BaselineTestPopup from '../ui/pop-up/baseline-test';
 
-import useAchievementChecker from '@/hooks/useAchievementChecker';
-
 export default function Page() {
-  // const { data: session, status } = useSession();
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -16,16 +14,16 @@ export default function Page() {
   const { data: session, status, update: updateSession } = useSession();
   const [showPopup, setShowPopup] = useState(false);
 
-  // ACHIEVEMENT CHECKING
-  useAchievementChecker({
-    checkOnMount: true,
-    debug: false, // Set to true if you want to see achievement logs
-  });
+  // Initialize achievement tracking when user logs in (no notifications)
+  useEffect(() => {
+    if (status === 'authenticated' && session?.user?.id) {
+      initializeAchievementTracking(session.user.id);
+    }
+  }, [status, session?.user?.id]);
 
   // Function to update session with leaderboard data
   const updateSessionWithLeaderboardData = async (leaderboardData) => {
     try {
-      // You can customize this based on what data you want to add to the session
       await updateSession({
         ...session,
         leaderboardData: leaderboardData,
@@ -69,7 +67,7 @@ export default function Page() {
         // Use setTimeout to defer sorting and avoid blocking the UI
         timeoutId = setTimeout(async () => {
           if (mounted) {
-            const sortedData = sortUsers([...data], sortType); // Clone array before sorting
+            const sortedData = sortUsers([...data], sortType);
             setUsers(sortedData);
             setLoading(false);
 
@@ -86,13 +84,10 @@ export default function Page() {
       }
     }
 
-    if (status === 'loading') return; // Don't load users while session is loading
     async function checkBaselineTest() {
-      if (!session?.user?.id) return; // user not loaded yet
+      if (!session?.user?.id) return;
 
       try {
-        // Fetch current user info including baseLineTest
-        // const userData = await fetchUserById(session.user.id);
         if (session.user.baseLineTest === false) {
           setShowPopup(true);
         }
@@ -101,24 +96,24 @@ export default function Page() {
       }
     }
 
+    if (status === 'loading') return;
+
     if (status === 'authenticated') {
       checkBaselineTest();
       loadDashboard();
     }
 
-    //cleanup
     return () => {
       mounted = false;
       if (timeoutId) clearTimeout(timeoutId);
     };
-  }, [session?.user?.rank, sortType]); // Removed updateSessionWithLeaderboardData from deps
+  }, [session?.user?.rank, sortType]);
 
-  // Auto-refresh leaderboard every 2 minutes to get fresh data
+  // Auto-refresh leaderboard every 2 minutes
   useEffect(() => {
     const interval = setInterval(async () => {
       console.log('🔄 Auto-refreshing leaderboard data...');
       try {
-        // Fixed: Use fetchUsersByRank instead of fetchAllUsers
         if (session?.user?.rank != null) {
           const data = await fetchUsersByRank(session.user.rank);
           const sortedData = sortUsers([...data], sortType);
@@ -170,14 +165,12 @@ export default function Page() {
     );
   }
 
-  // Handler for dropdown change
   const handleSortTypeChange = (type) => {
     setSortType(type);
   };
 
   return (
     <>
-      {/* {showPopup && <BaselineTestPopup onClose={() => setShowPopup(false)} />} */}
       {showPopup && (
         <BaselineTestPopup
           user_id={session?.user?.id}

@@ -1,8 +1,10 @@
 'use client';
 import ClickableAvatar from '@/app/ui/profile/clickable-avatar';
+import { initializeAchievementTracking } from '@/utils/gameplayAchievementHandler';
 import { Cog } from 'lucide-react';
 import { useSession } from 'next-auth/react';
 import Link from 'next/link';
+import { useEffect } from 'react';
 import { useAvatar } from '../context/avatar-context';
 import { gradients } from '../ui/avatar/avatar-colors';
 import { AvatarColors } from '../ui/avatar/color';
@@ -10,17 +12,17 @@ import Achievements from '../ui/profile/achievements';
 import MatchStats from '../ui/profile/match-stats';
 import UserInfo from '../ui/profile/user-info';
 import UsernameBlock from '../ui/profile/username-block';
-import useAchievementChecker from '@/hooks/useAchievementChecker';
 
 export default function Page() {
   const { data: session, status } = useSession();
   const { avatar } = useAvatar();
 
-  // ACHIEVEMENT CHECKING
-  useAchievementChecker({
-    checkOnMount: true,
-    debug: false, // Set to true if you want to see achievement logs
-  });
+  // Initialize achievement tracking when user logs in (no notifications)
+  useEffect(() => {
+    if (status === 'authenticated' && session?.user?.id) {
+      initializeAchievementTracking(session.user.id);
+    }
+  }, [status, session?.user?.id]);
 
   if (status === 'loading') return <div>Loading...</div>;
   if (status === 'unauthenticated')
@@ -85,8 +87,6 @@ export default function Page() {
         />
 
         <div className="flex flex-col space-y-4 pb-24">
-          {' '}
-          {/* Increased from pb-8 to pb-24 */}
           <UserInfo
             elo={user.elo_rating || 0}
             xp={user.xp || 0}

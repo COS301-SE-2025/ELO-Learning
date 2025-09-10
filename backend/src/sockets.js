@@ -3,8 +3,161 @@ import { supabase } from '../database/supabaseClient.js';
 
 const queue = [];
 const matchMap = new Map();
+let ioServer = null;
+
+const findMatchForPlayer = (player) => {
+  if (!player || player.matching) {
+    console.log('Tried to match null player');
+    return null;
+  }
+  player.matching = true; // Prevent concurrent matching attempts
+  const waitingTime = Date.now() - player.joinedAt;
+
+  // ELO difference allowed
+  // Start with 50, increase by 50 every 5 seconds
+  let tolerance = 50 + Math.floor(waitingTime / 5000) * 50;
+  const maxTolerance = 1000; // Cap tolerance to prevent too wide matches
+  if (tolerance > maxTolerance) tolerance = maxTolerance;
+
+  console.log(
+    `🔍 Matching ${player.userData.username} (ELO ${player.elo}), tolerance ±${tolerance}`,
+  );
+
+  for (let i = 0; i < queue.length; i++) {
+    const candidate = queue[i];
+    if (candidate.socket.id === player.socket.id || candidate.matching)
+      continue;
+
+    console.log(
+      `➡️ Checking ${candidate.userData.username} (ELO ${candidate.elo})`,
+    );
+
+    if (Math.abs(player.elo - candidate.elo) <= tolerance) {
+      console.log(
+        `✅ Match success: ${player.userData.username} vs ${candidate.userData.username}`,
+      );
+
+      queue.splice(
+        queue.findIndex((p) => p.socket.id === candidate.socket.id),
+        1,
+      );
+      queue.splice(
+        queue.findIndex((p) => p.socket.id === player.socket.id),
+        1,
+      );
+
+      candidate.matching = false;
+      player.matching = false;
+
+      return candidate;
+    }
+  }
+
+  console.log(`❌ No opponent found for ${player.userData.username} yet`);
+  player.matching = false; // Reset matching flag
+  return null; // No match yet
+};
+
+// Add startGame helper so setInterval can use it (accepts player wrapper objects)
+const startGame = (playerWrapper, opponentWrapper) => {
+  try {
+    const player1Socket = playerWrapper.socket || playerWrapper;
+    const player2Socket = opponentWrapper.socket || opponentWrapper;
+
+    // Clean up any lingering queue entries for these sockets
+    const idx1 = queue.findIndex(
+      (p) => p.socket && p.socket.id === player1Socket.id,
+    );
+    if (idx1 !== -1) queue.splice(idx1, 1);
+    const idx2 = queue.findIndex(
+      (p) => p.socket && p.socket.id === player2Socket.id,
+    );
+    if (idx2 !== -1) queue.splice(idx2, 1);
+
+    console.log(
+      'Starting game between (startGame helper):',
+      player1Socket.id,
+      'and',
+      player2Socket.id,
+    );
+
+    const gameId = uuidv4();
+    player1Socket.join(gameId);
+    player2Socket.join(gameId);
+
+    const p1Data = playerWrapper.userData
+      ? playerWrapper.userData
+      : player1Socket.userData;
+    const p2Data = opponentWrapper.userData
+      ? opponentWrapper.userData
+      : player2Socket.userData;
+
+    // Use ioServer (set when export default is invoked) so helper can emit
+    if (!ioServer) {
+      console.error('startGame helper: ioServer is not set');
+      return;
+    }
+
+    ioServer.to(player1Socket.id).emit('startGame', {
+      gameId,
+      opponent: {
+        name: p2Data?.name,
+        username: p2Data?.username,
+        xp: p2Data?.xp,
+        rank: p2Data?.rank,
+      },
+    });
+
+    ioServer.to(player2Socket.id).emit('startGame', {
+      gameId,
+      opponent: {
+        name: p1Data?.name,
+        username: p1Data?.username,
+        xp: p1Data?.xp,
+        rank: p1Data?.rank,
+      },
+    });
+
+    matchMap.set(gameId, {
+      players: [player1Socket.id, player2Socket.id],
+      playerData: {
+        [player1Socket.id]: p1Data,
+        [player2Socket.id]: p2Data,
+      },
+      playerLevels: {},
+      playerReadyCount: [],
+      playerDoneCount: [],
+      playerResults: [],
+    });
+  } catch (err) {
+    console.error('Error in startGame helper:', err);
+  }
+};
+
+setInterval(() => {
+  if (queue.length < 2) return; // Need at least 2 players
+
+  console.log('🔄 Running matchmaking check...');
+
+  for (let i = 0; i < queue.length; i++) {
+    const player = queue[i];
+    if (!player || player.matching) continue;
+
+    const opponent = findMatchForPlayer(player);
+    if (opponent) {
+      console.log(
+        `🎉 Matched ${player.userData.username} vs ${opponent.userData.username}`,
+      );
+      startGame(player, opponent);
+      break; // stop after a successful match
+    }
+  }
+}, 2000);
 
 export default (io, socket) => {
+  // assign io to a top-level variable so top-level helpers can use it
+  ioServer = io;
+
   const queueForGame = async (userData) => {
     console.log('Queueing for game:', socket.id, 'User:', userData?.username);
 
@@ -12,7 +165,7 @@ export default (io, socket) => {
     const { data: dbUser, error } = await supabase
       .from('Users')
       .select(
-        'name, email, id, surname, username, xp, currentLevel, rank, joinDate',
+        'name, email, id, surname, username, xp, currentLevel, elo_rating, rank, joinDate',
       )
       .eq('id', userData.id)
       .single();
@@ -23,7 +176,12 @@ export default (io, socket) => {
     }
 
     // Merge DB user data (including rank) with incoming userData
-    const mergedUserData = { ...userData, ...dbUser, rank: dbUser.rank };
+    const mergedUserData = {
+      ...userData,
+      ...dbUser,
+      elo: dbUser.elo_rating,
+      rank: dbUser.rank,
+    };
 
     // 🎯 NEW: Track queue join for achievements
     if (mergedUserData?.id) {
@@ -59,61 +217,77 @@ export default (io, socket) => {
     // Store merged user data with the socket
     socket.userData = mergedUserData;
 
-    if (!queue.includes(socket)) {
-      queue.push(socket);
+    // Create a player wrapper so matchmaking functions can rely on consistent shape
+    const playerWrapper = {
+      socket,
+      userData: mergedUserData,
+      elo: mergedUserData.elo || mergedUserData.elo_rating,
+      joinedAt: Date.now(),
+      matching: false,
+    };
+
+    // Only add if not already present (compare by socket id)
+    if (!queue.some((p) => p.socket && p.socket.id === socket.id)) {
+      queue.push(playerWrapper);
     }
 
+    // Try to match using the ELO-aware matcher
     if (queue.length >= 2) {
-      const player1 = queue.shift();
-      const player2 = queue.shift();
+      const opponent = findMatchForPlayer(playerWrapper);
+      if (opponent) {
+        console.log(
+          'Starting game between:',
+          playerWrapper.socket.id,
+          'and',
+          opponent.socket.id,
+        );
 
-      console.log('Starting game between:', player1.id, 'and', player2.id);
-      console.log('Player 1:', player1.userData?.username);
-      console.log('Player 2:', player2.userData?.username);
-      console.log('Player 1 rank:', player1.userData.rank);
-      console.log('Player 2 rank:', player2.userData.rank);
+        const player1 = playerWrapper.socket;
+        const player2 = opponent.socket;
 
-      const gameId = uuidv4();
-      player1.join(gameId);
-      player2.join(gameId);
+        const gameId = uuidv4();
+        player1.join(gameId);
+        player2.join(gameId);
 
-      // Send game start with opponent data (including rank)
-      io.to(player1.id).emit('startGame', {
-        gameId,
-        opponent: {
-          name: player2.userData?.name,
-          username: player2.userData?.username,
-          xp: player2.userData?.xp,
-          rank: player2.userData?.rank, // 🎯 Include rank
-        },
-      });
-      io.to(player2.id).emit('startGame', {
-        gameId,
-        opponent: {
-          name: player1.userData?.name,
-          username: player1.userData?.username,
-          xp: player1.userData?.xp,
-          rank: player1.userData?.rank, // 🎯 Include rank
-        },
-      });
+        // Send game start with opponent data (including rank)
+        io.to(player1.id).emit('startGame', {
+          gameId,
+          opponent: {
+            name: opponent.userData?.name,
+            username: opponent.userData?.username,
+            xp: opponent.userData?.xp,
+            rank: opponent.userData?.rank,
+          },
+        });
+        io.to(player2.id).emit('startGame', {
+          gameId,
+          opponent: {
+            name: playerWrapper.userData?.name,
+            username: playerWrapper.userData?.username,
+            xp: playerWrapper.userData?.xp,
+            rank: playerWrapper.userData?.rank,
+          },
+        });
 
-      matchMap.set(gameId, {
-        players: [player1.id, player2.id],
-        playerData: {
-          [player1.id]: player1.userData,
-          [player2.id]: player2.userData,
-        },
-        playerLevels: {},
-        playerReadyCount: [],
-        playerDoneCount: [],
-        playerResults: [],
-      });
+        matchMap.set(gameId, {
+          players: [player1.id, player2.id],
+          playerData: {
+            [player1.id]: playerWrapper.userData,
+            [player2.id]: opponent.userData,
+          },
+          playerLevels: {},
+          playerReadyCount: [],
+          playerDoneCount: [],
+          playerResults: [],
+        });
+      }
     }
   };
 
   const cancelQueue = () => {
     console.log('Cancelling queue for game:', socket.id);
-    const index = queue.indexOf(socket);
+    // Find by socket id since queue stores wrapper objects
+    const index = queue.findIndex((p) => p.socket && p.socket.id === socket.id);
     //This will potentially cause some issues. Consider integration with the db
     if (index !== -1) {
       queue.splice(index, 1);

@@ -1,5 +1,6 @@
 'use client';
 
+import { SafeButton } from '@/components/SafeButton';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
@@ -42,14 +43,20 @@ export function AvatarCreator() {
     setCurrentAvatar(newAvatar);
   };
 
-  const handleSave = () => {
-    updateAvatar(session.user.id, currentAvatar);
-
+  const handleSave = async () => {
+    // Keep the original simple logic, just make it async for SafeButton
+    await updateAvatar(session.user.id, currentAvatar);
+    
     // Navigate back to profile
     router.push('/profile');
   };
 
   const renderTabContent = () => {
+    // Add safety check only if currentAvatar is null/undefined
+    if (!currentAvatar) {
+      return <div>Loading avatar options...</div>;
+    }
+
     switch (activeTab) {
       case 'body':
         return (
@@ -143,9 +150,13 @@ export function AvatarCreator() {
           </div>
           {/* Save Button at the bottom of the builder section */}
           <div className="w-full flex justify-center p-6">
-            <button onClick={handleSave} className="main-button">
+            <SafeButton 
+              onClick={handleSave} 
+              className="main-button"
+              loadingText="Saving Avatar..."
+            >
               Save Avatar
-            </button>
+            </SafeButton>
           </div>
         </div>
       </div>

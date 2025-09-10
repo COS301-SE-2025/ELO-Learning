@@ -12,6 +12,7 @@ export default function CachingExample() {
   const session = useSessionWithCache();
   const [xp, setXp] = useState(0);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
 
   useEffect(() => {
     if (session.status === 'authenticated') {
@@ -20,9 +21,13 @@ export default function CachingExample() {
   }, [session]);
 
   const handleUpdateXP = async () => {
-    if (!session?.user?.id) return;
+    if (!session?.user?.id || loading) {
+      return;
+    }
 
     setLoading(true);
+    setError(''); // Clear any previous errors
+    
     try {
       const newXP = xp + 100; // Award 100 XP
 
@@ -35,6 +40,7 @@ export default function CachingExample() {
       console.log('XP updated successfully!');
     } catch (error) {
       console.error('Failed to update XP:', error);
+      setError('Failed to update XP. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -93,24 +99,32 @@ export default function CachingExample() {
         </div>
 
         <div className="space-y-2">
+          {error && (
+            <div className="p-3 bg-red-50 border border-red-200 rounded text-red-700 text-sm">
+              {error}
+            </div>
+          )}
+          
           <button
             onClick={handleUpdateXP}
             disabled={loading}
             className="w-full px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 disabled:opacity-50"
           >
-            {loading ? 'Updating...' : 'Award 100 XP (Test Cache Update)'}
+            {loading ? 'Updating XP...' : 'Award 100 XP (Test Cache Update)'}
           </button>
 
           <button
             onClick={handleClearCache}
-            className="w-full px-4 py-2 bg-yellow-500 text-white rounded hover:bg-yellow-600"
+            disabled={loading}
+            className="w-full px-4 py-2 bg-yellow-500 text-white rounded hover:bg-yellow-600 disabled:opacity-50"
           >
             Clear Cache
           </button>
 
           <button
             onClick={handleSignOut}
-            className="w-full px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600"
+            disabled={loading}
+            className="w-full px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600 disabled:opacity-50"
           >
             Sign Out
           </button>

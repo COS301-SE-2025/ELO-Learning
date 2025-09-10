@@ -49,6 +49,8 @@ export default function PracticeConfirmationPopup({
 
   // Handle starting the practice session
   const handleStartSession = async () => {
+    if (loading) return;
+    
     if (!topicId) {
       console.error('No topicId provided to PracticeConfirmationPopup');
       setError('Invalid topic selected. Please try again.');
@@ -61,9 +63,11 @@ export default function PracticeConfirmationPopup({
     try {
       // Navigate to the practice session
       router.push(`/topic/${topicId}`);
+      onClose();
     } catch (error) {
-      console.error('Error navigating to practice session:', error);
-      setError('Failed to start practice session. Please try again.');
+      console.error('Error starting practice session:', error);
+      setError('Failed to start session. Please try again.');
+    } finally {
       setLoading(false);
     }
   };
@@ -134,7 +138,7 @@ export default function PracticeConfirmationPopup({
             autoFocus
             aria-describedby="start-session-help"
           >
-            {loading ? 'Starting...' : 'Start Session'}
+            {loading ? 'Starting Session...' : 'Start Session'}
           </button>
           <button
             className="flex-1 py-2 font-bold rounded-lg bg-[var(--grey)] hover:bg-[var(--vector-violet-light)] disabled:opacity-50 transition-colors focus:outline-none focus:ring-2 focus:ring-[var(--vector-violet-light)] focus:ring-offset-2"

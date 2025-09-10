@@ -49,6 +49,11 @@ function ResetPasswordContent() {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
+    // Prevent double submission
+    if (loading) {
+      return;
+    }
+
     if (!password || !confirmPassword) {
       setError('Please fill in both password fields.');
       return;
@@ -209,7 +214,7 @@ function ResetPasswordContent() {
                   type="submit"
                   disabled={loading}
                 >
-                  {loading ? 'Resetting...' : 'Reset Password'}
+                  {loading ? 'Resetting Password...' : 'Reset Password'}
                 </button>
               </div>
             </form>

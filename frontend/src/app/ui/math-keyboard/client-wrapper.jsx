@@ -2,9 +2,11 @@
 
 import MathInputTemplate from '@/app/ui/math-keyboard/math-input-template';
 import ProgressBar from '@/app/ui/progress-bar';
+import { SafeButton } from '@/components/SafeButton';
 import { showAchievementNotificationsWhenReady } from '@/utils/achievementNotifications';
 import { submitQuestionAnswer } from '@/utils/api';
 import { Heart, X } from 'lucide-react';
+import { useSession } from 'next-auth/react';
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { useEffect, useState } from 'react';
@@ -13,6 +15,7 @@ export default function MathKeyboardWrapper({ questions }) {
   // ✅ Safe array handling
   const mathQuestions = questions || [];
   const totalSteps = mathQuestions.length;
+  const { data: session } = useSession();
 
   // ✅ Safe initialization with null check
   const [currQuestion, setCurrQuestion] = useState(mathQuestions[0] || null);
@@ -28,7 +31,6 @@ export default function MathKeyboardWrapper({ questions }) {
   // Feedback state
   const [showFeedback, setShowFeedback] = useState(false);
   const [feedbackMessage, setFeedbackMessage] = useState('');
-  const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Debug: Log state changes
   useEffect(() => {
@@ -75,7 +77,11 @@ export default function MathKeyboardWrapper({ questions }) {
   }, [studentAnswer, isValidExpression]);
 
   const submitAnswer = async () => {
-    setIsSubmitting(true);
+    // Prevent submission if feedback is showing
+    if (showFeedback) {
+      return;
+    }
+    
     setShowFeedback(false);
 
     try {
@@ -93,7 +99,7 @@ export default function MathKeyboardWrapper({ questions }) {
         console.error('❌ No authenticated user found');
         setFeedbackMessage('Please log in to continue');
         setShowFeedback(true);
-        return;
+        throw new Error('No authenticated user found');
       }
 
       const result = await submitQuestionAnswer(
@@ -146,6 +152,7 @@ export default function MathKeyboardWrapper({ questions }) {
       } else {
         setFeedbackMessage(result.error || 'Error submitting answer');
         setShowFeedback(true);
+        throw new Error(result.error || 'Submission failed');
       }
 
       setTimeout(() => {
@@ -153,10 +160,10 @@ export default function MathKeyboardWrapper({ questions }) {
       }, 2000);
     } catch (error) {
       console.error('Error submitting math answer:', error);
-      setFeedbackMessage('Error submitting answer. Please try again.');
+      const errorMessage = 'Error submitting answer. Please try again.';
+      setFeedbackMessage(errorMessage);
       setShowFeedback(true);
-    } finally {
-      setIsSubmitting(false);
+      throw new Error(errorMessage);
     }
   };
 
@@ -255,23 +262,16 @@ export default function MathKeyboardWrapper({ questions }) {
       {/* Submit Button */}
       <div className="flex fixed bottom-0 left-0 w-full z-10 px-4 py-4 bg-[#201F1F]">
         <div className="flex flex-col justify-center md:m-auto max-w-2xl mx-auto">
-          <button
-            type="button"
-            disabled={isDisabled || isSubmitting}
+          <SafeButton
             onClick={submitAnswer}
+            disabled={isDisabled || showFeedback}
             className={`w-full md:m-auto ${
-              isDisabled || isSubmitting ? 'disabled_button' : 'main-button'
+              isDisabled || showFeedback ? 'disabled_button' : 'main-button'
             }`}
+            loadingText="SUBMITTING..."
           >
-            {isSubmitting ? (
-              <div className="flex items-center justify-center">
-                <div className="w-6 h-6 border-3 rounded-full animate-spin mr-3"></div>
-                SUBMITTING...
-              </div>
-            ) : (
-              'SUBMIT'
-            )}
-          </button>
+            SUBMIT
+          </SafeButton>
         </div>
       </div>
     </div>

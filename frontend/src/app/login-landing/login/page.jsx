@@ -1,4 +1,5 @@
 'use client';
+import { SafeButton } from '@/components/SafeButton';
 import { Eye, EyeOff, X } from 'lucide-react';
 import { signIn } from 'next-auth/react';
 import Link from 'next/link';
@@ -9,41 +10,32 @@ export default function Page() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const router = useRouter();
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+  const handleSubmit = async () => {
     setError('');
-    setIsLoading(true);
 
-    try {
-      const result = await signIn('credentials', {
-        callbackUrl: `${
-          process.env.NEXT_PUBLIC_FRONTEND_URL || 'http://localhost:8080'
-        }/dashboard`,
-        email,
-        password,
-        redirect: false,
-      });
+    const result = await signIn('credentials', {
+      callbackUrl: `${
+        process.env.NEXT_PUBLIC_FRONTEND_URL || 'http://localhost:8080'
+      }/dashboard`,
+      email,
+      password,
+      redirect: false,
+    });
 
-      if (result?.error) {
-        setError('Username or password incorrect, please try again');
-      } else {
-        // Clear any existing cache before redirecting
-        const { cache } = await import('../../../utils/cache');
-        cache.clear();
-
-        // Redirect to dashboard
-        router.push('/dashboard');
-        console.log('Login successful:', result);
-      }
-    } catch (err) {
-      console.error('Login failed:', err);
+    if (result?.error) {
       setError('Username or password incorrect, please try again');
-    } finally {
-      setIsLoading(false);
+      throw new Error('Login failed');
+    } else {
+      // Clear any existing cache before redirecting
+      const { cache } = await import('../../../utils/cache');
+      cache.clear();
+
+      // Redirect to dashboard
+      router.push('/dashboard');
+      console.log('Login successful:', result);
     }
   };
 
@@ -63,7 +55,7 @@ export default function Page() {
           </p>
         </div>
         {/* A form to input a name and email */}
-        <form onSubmit={handleSubmit}>
+        <form>
           <div className="flex flex-col items-center w-full px-4 md:px-0">
             <div className="relative w-[90vw] md:w-[500px]">
               <input
@@ -98,13 +90,13 @@ export default function Page() {
                 {error}
               </p>
             )}
-            <button
-              type="submit"
+            <SafeButton
+              onClick={handleSubmit}
               className="main-button px-2 py-8"
-              disabled={isLoading}
+              loadingText="Signing In..."
             >
-              {isLoading ? 'Loading...' : 'Continue'}
-            </button>
+              Continue
+            </SafeButton>
           </div>
         </form>
         <div>

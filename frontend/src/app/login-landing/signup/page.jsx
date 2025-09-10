@@ -1,9 +1,9 @@
 'use client';
-import { useState } from 'react';
 import ProgressBar from '@/app/ui/progress-bar';
-import Link from 'next/link';
 import { X } from 'lucide-react';
-import { setRegistration, getRegistration } from './registrationUtils';
+import Link from 'next/link';
+import { useState } from 'react';
+import { getRegistration, setRegistration } from './registrationUtils';
 
 const currentStep = 1;
 const totalSteps = 6;
@@ -12,21 +12,37 @@ export default function Page() {
   const [name, setName] = useState(getRegistration().name || '');
   const [surname, setSurname] = useState(getRegistration().surname || '');
   const [error, setError] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
 
-  const handleContinue = (e) => {
+  const handleContinue = async (e) => {
     e.preventDefault();
+    
+    // Prevent double submission
+    if (isLoading) {
+      return;
+    }
+    
     if (!name.trim() || !surname.trim()) {
       setError('Please enter both name and surname.');
       return;
     }
-    setRegistration({
-      name,
-      surname,
-      currentLevel: 5,
-      joinDate: new Date().toISOString(),
-      baseLineTest: false,
-    });
-    window.location.href = '/login-landing/signup/username';
+    
+    setError('');
+    setIsLoading(true);
+    
+    try {
+      setRegistration({
+        name,
+        surname,
+        currentLevel: 5,
+        joinDate: new Date().toISOString(),
+        baseLineTest: false,
+      });
+      window.location.href = '/login-landing/signup/username';
+    } catch (error) {
+      setError('An error occurred. Please try again.');
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -62,8 +78,12 @@ export default function Page() {
               />
               {error && <p className="text-red-500">{error}</p>}
               <div className="break_small"></div>
-              <button className="main-button px-2 py-8" type="submit">
-                Continue
+              <button 
+                className="main-button px-2 py-8" 
+                type="submit"
+                disabled={isLoading}
+              >
+                {isLoading ? 'Processing...' : 'Continue'}
               </button>
             </div>
           </form>

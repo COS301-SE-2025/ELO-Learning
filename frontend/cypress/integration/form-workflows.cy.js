@@ -43,11 +43,9 @@ describe('Form Workflows', () => {
       cy.wait('@authErrorRequest');
 
       // Verify the error message is displayed (give it more time to appear)
-      cy.contains(
-        'p',
-        'Username or password incorrect, please try again',
-        { timeout: 10000 }
-      ).should('be.visible');
+      cy.contains('p', 'Username or password incorrect, please try again', {
+        timeout: 10000,
+      }).should('be.visible');
 
       // Verify the user remains on the login page
       cy.url().should('include', '/login-landing/login');

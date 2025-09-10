@@ -74,7 +74,10 @@ export const authOptions = {
             // In test environment, simulate login behavior
             if (process.env.NODE_ENV === 'test') {
               // Return null for invalid credentials to trigger error handling
-              if (credentials.email === 'wrong@example.com' || credentials.password === 'wrongpassword') {
+              if (
+                credentials.email === 'wrong@example.com' ||
+                credentials.password === 'wrongpassword'
+              ) {
                 return null;
               }
               // Return mock user for valid credentials

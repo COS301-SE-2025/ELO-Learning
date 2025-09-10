@@ -44,9 +44,7 @@ export default function AuthError() {
             Authentication Error
           </h2>
           <div className="mt-4 text-center">
-            <p className="text-red-600 text-sm">
-              {getErrorMessage(error)}
-            </p>
+            <p className="text-red-600 text-sm">{getErrorMessage(error)}</p>
           </div>
         </div>
         <div className="mt-6">

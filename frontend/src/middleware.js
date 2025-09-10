@@ -30,8 +30,12 @@ export function middleware(request) {
     try {
       // Validate request.url more thoroughly
       let baseUrl;
-      
-      if (request.url && typeof request.url === 'string' && request.url.startsWith('http')) {
+
+      if (
+        request.url &&
+        typeof request.url === 'string' &&
+        request.url.startsWith('http')
+      ) {
         try {
           // Test if URL is valid by constructing it
           new URL(request.url);
@@ -41,16 +45,20 @@ export function middleware(request) {
           baseUrl = null;
         }
       }
-      
+
       // Fallback to environment variables
       if (!baseUrl) {
-        baseUrl = process.env.NEXTAUTH_URL || 
-                  process.env.NEXT_PUBLIC_FRONTEND_URL || 
-                  'http://localhost:8080';
+        baseUrl =
+          process.env.NEXTAUTH_URL ||
+          process.env.NEXT_PUBLIC_FRONTEND_URL ||
+          'http://localhost:8080';
       }
-      
+
       // Ensure baseUrl is valid before constructing redirect URL
-      if (typeof baseUrl === 'string' && (baseUrl.startsWith('http://') || baseUrl.startsWith('https://'))) {
+      if (
+        typeof baseUrl === 'string' &&
+        (baseUrl.startsWith('http://') || baseUrl.startsWith('https://'))
+      ) {
         return NextResponse.redirect(new URL('/login-landing', baseUrl));
       } else {
         throw new Error(`Invalid baseUrl: ${baseUrl}`);

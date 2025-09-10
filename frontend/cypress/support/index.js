@@ -31,11 +31,11 @@ Cypress.Commands.add('stubAuthSession', (session = null) => {
 Cypress.Commands.add('stubNextAuthError', (error = 'CredentialsSignin') => {
   cy.intercept('POST', '**/api/auth/callback/credentials', {
     statusCode: 200,
-    body: { 
+    body: {
       error,
       status: 401,
       ok: false,
-      url: null
+      url: null,
     },
   }).as('authErrorRequest');
 });
@@ -44,7 +44,7 @@ Cypress.Commands.add('stubNextAuthError', (error = 'CredentialsSignin') => {
 beforeEach(() => {
   // Always stub the session endpoint to prevent errors
   cy.stubAuthSession();
-  
+
   // Mock environment variables in the browser
   cy.window().then((win) => {
     win.process = win.process || {};

@@ -155,7 +155,7 @@ describe('User Journey', () => {
     cy.url().should('include', '/signup/grade');
 
     // Step 4: Grade
-    cy.get('input[placeholder="Grade"]').type('University Year 3');
+    cy.get('input[placeholder="Grade"]').type('12');
     cy.contains('button', 'Continue').click();
     cy.url().should('include', '/signup/email');
 

@@ -16,31 +16,44 @@ export default function Page() {
   const handleSubmit = async () => {
     setError('');
 
-    // Safe callback URL construction
-    const baseUrl =
-      process.env.NEXT_PUBLIC_FRONTEND_URL ||
-      process.env.NEXTAUTH_URL ||
-      'http://localhost:8080';
+    // More robust callback URL construction for test environment
+    let baseUrl;
+    
+    if (typeof window !== 'undefined') {
+      // In browser environment (including Cypress)
+      baseUrl = window.location.origin;
+    } else {
+      // Fallback for server-side
+      baseUrl = process.env.NEXT_PUBLIC_FRONTEND_URL || 
+                process.env.NEXTAUTH_URL || 
+                'http://localhost:8080';
+    }
+    
     const callbackUrl = `${baseUrl}/dashboard`;
 
-    const result = await signIn('credentials', {
-      callbackUrl,
-      email,
-      password,
-      redirect: false,
-    });
+    try {
+      const result = await signIn('credentials', {
+        callbackUrl,
+        email,
+        password,
+        redirect: false,
+      });
 
-    if (result?.error) {
-      setError('Username or password incorrect, please try again');
-      throw new Error('Login failed');
-    } else {
-      // Clear any existing cache before redirecting
-      const { cache } = await import('../../../utils/cache');
-      cache.clear();
+      if (result?.error) {
+        setError('Username or password incorrect, please try again');
+        return; // Don't throw error, just return
+      } else {
+        // Clear any existing cache before redirecting
+        const { cache } = await import('../../../utils/cache');
+        cache.clear();
 
-      // Redirect to dashboard
-      router.push('/dashboard');
-      console.log('Login successful:', result);
+        // Redirect to dashboard
+        router.push('/dashboard');
+        console.log('Login successful:', result);
+      }
+    } catch (error) {
+      console.error('Login error:', error);
+      setError('An error occurred during login. Please try again.');
     }
   };
 

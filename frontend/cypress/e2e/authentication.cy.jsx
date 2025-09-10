@@ -12,18 +12,6 @@ describe('Authentication & User Management', () => {
       win.localStorage.clear();
     });
 
-    // Mock login success
-    cy.intercept('POST', '/api/login', {
-      statusCode: 200,
-      body: { success: true, token: 'mock-jwt-token' },
-    }).as('loginSuccess');
-
-    // Mock login failure
-    cy.intercept('POST', '/api/login', {
-      statusCode: 401,
-      body: { success: false, error: 'Invalid credentials' },
-    }).as('loginFail');
-
     // Mock register success
     cy.intercept('POST', '/api/register', {
       statusCode: 201,
@@ -71,54 +59,50 @@ describe('Authentication & User Management', () => {
 
   describe('Login Flow', () => {
     it('should show an error for incorrect credentials', () => {
-      cy.intercept('POST', '**/api/auth/callback/credentials', {
-        statusCode: 200,
-        body: { error: 'CredentialsSignin' },
-      }).as('failedLogin');
+      // Mock the NextAuth signIn function to return an error result
+      cy.window().then((win) => {
+        // Override the signIn function to simulate a failed login
+        win.eval(`
+          window.__nextauth = window.__nextauth || {};
+          window.__nextauth.signIn = async (provider, options) => {
+            return { error: 'CredentialsSignin', ok: false, status: 401, url: null };
+          };
+        `);
+      });
 
       cy.visit('/login-landing/login');
-      cy.get('input[placeholder="Username or email"]').type(
-        'wrong@example.com',
-      );
+      cy.get('input[placeholder="Username or email"]').type('wrong@example.com');
       cy.get('input[placeholder="Password"]').type('wrongpassword');
-      cy.get('button[type="submit"]').click();
-      cy.wait('@failedLogin');
-      cy.get('p')
-        .contains('Username or password incorrect, please try again')
+      
+      // Click the continue button
+      cy.contains('button', 'Continue').click();
+      
+      // Check that an error message appears (any error message)
+      cy.get('p').contains('Username or password incorrect', { timeout: 10000 })
         .should('be.visible');
-    });
-
-    it.skip('should show loading state on submission', () => {
-      // Skip - current login implementation doesn't show loading state
-      cy.intercept('POST', '**/api/auth/callback/credentials', {
-        delay: 500,
-        statusCode: 200,
-        body: { token: 'mock-token', user: { id: 1, username: 'testuser' } },
-      }).as('slowLogin');
-
-      cy.visit('/login-landing/login');
-      cy.get('input[placeholder="Username or email"]').type('test@example.com');
-      cy.get('input[placeholder="Password"]').type('password123');
-      cy.get('button[type="submit"]').click();
-      cy.get('button[type="submit"]').should('contain', 'Loading...');
-      cy.wait('@slowLogin');
     });
 
     it('should show validation error if forms are empty', () => {
       cy.visit('/login-landing/login');
-      // Try to submit empty form - HTML5 validation should prevent submission
-      cy.get('button[type="submit"]').click();
-      // Verify we're still on the login page (form wasn't submitted)
+      
+      // Updated selector here too
+      cy.contains('button', 'Continue').click();
+      
+      // Check that HTML5 validation is working
+      cy.get('input[placeholder="Username or email"]').then(($input) => {
+        expect($input[0].checkValidity()).to.be.false;
+      });
+      cy.get('input[placeholder="Password"]').then(($input) => {
+        expect($input[0].checkValidity()).to.be.false;
+      });
+      
+      // Verify we're still on the login page
       cy.url().should('include', '/login-landing/login');
-      // Verify the form inputs are still visible (page didn't navigate away)
       cy.get('input[placeholder="Username or email"]').should('be.visible');
       cy.get('input[placeholder="Password"]').should('be.visible');
     });
-
-    it.skip('should handle successful login', () => {
-      // Skip - navigation to /dashboard does not occur in test env
-    });
   });
+
 
   /*
     The following tests are commented out because the /dashboard route

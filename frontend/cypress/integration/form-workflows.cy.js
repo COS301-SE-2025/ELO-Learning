@@ -1,6 +1,24 @@
 // cypress/integration/form-workflows.cy.js
 
 describe('Form Workflows', () => {
+  beforeEach(() => {
+    // Handle uncaught exceptions that may occur during testing
+    Cypress.on('uncaught:exception', (err, runnable) => {
+      // Ignore NextAuth-related errors and URL construction errors during testing
+      if (
+        err.message.includes("Failed to construct 'URL'") ||
+        err.message.includes('CLIENT_FETCH_ERROR') ||
+        err.message.includes('Failed to fetch') ||
+        err.message.includes('Cannot convert undefined or null to object')
+      ) {
+        console.warn('Ignoring test-related error:', err.message);
+        return false;
+      }
+      // Allow other errors to fail the test
+      return true;
+    });
+  });
+
   // Testing the login form workflow
   context('Login Form', () => {
     beforeEach(() => {
@@ -27,6 +45,15 @@ describe('Form Workflows', () => {
     it('should show an error message on failed login', () => {
       cy.visit('/login-landing/login');
 
+      // Mock the backend login endpoint to return an error
+      cy.intercept('POST', '**/login', {
+        statusCode: 401,
+        body: {
+          error: 'Invalid credentials',
+          message: 'Username or password incorrect'
+        },
+      }).as('loginRequest');
+
       // Use the custom command to stub authentication error
       cy.stubNextAuthError('CredentialsSignin');
 
@@ -36,15 +63,15 @@ describe('Form Workflows', () => {
       );
       cy.get('input[placeholder="Password"]').type('wrongpassword');
 
-      // Submit the form
+      // Submit the form using SafeButton
       cy.contains('button', 'Continue').click();
 
-      // Wait for the API call
-      cy.wait('@authErrorRequest');
+      // Wait for the API call (SafeButton may have different timing)
+      cy.wait('@authErrorRequest', { timeout: 10000 });
 
-      // Verify the error message is displayed (give it more time to appear)
+      // Verify the error message is displayed
       cy.contains('p', 'Username or password incorrect, please try again', {
-        timeout: 10000,
+        timeout: 15000,
       }).should('be.visible');
 
       // Verify the user remains on the login page

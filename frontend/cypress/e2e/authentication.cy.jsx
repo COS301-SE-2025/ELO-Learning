@@ -71,23 +71,26 @@ describe('Authentication & User Management', () => {
       });
 
       cy.visit('/login-landing/login');
-      cy.get('input[placeholder="Username or email"]').type('wrong@example.com');
+      cy.get('input[placeholder="Username or email"]').type(
+        'wrong@example.com',
+      );
       cy.get('input[placeholder="Password"]').type('wrongpassword');
-      
+
       // Click the continue button
       cy.contains('button', 'Continue').click();
-      
+
       // Check that an error message appears (any error message)
-      cy.get('p').contains('Username or password incorrect', { timeout: 10000 })
+      cy.get('p')
+        .contains('Username or password incorrect', { timeout: 10000 })
         .should('be.visible');
     });
 
     it('should show validation error if forms are empty', () => {
       cy.visit('/login-landing/login');
-      
+
       // Updated selector here too
       cy.contains('button', 'Continue').click();
-      
+
       // Check that HTML5 validation is working
       cy.get('input[placeholder="Username or email"]').then(($input) => {
         expect($input[0].checkValidity()).to.be.false;
@@ -95,14 +98,13 @@ describe('Authentication & User Management', () => {
       cy.get('input[placeholder="Password"]').then(($input) => {
         expect($input[0].checkValidity()).to.be.false;
       });
-      
+
       // Verify we're still on the login page
       cy.url().should('include', '/login-landing/login');
       cy.get('input[placeholder="Username or email"]').should('be.visible');
       cy.get('input[placeholder="Password"]').should('be.visible');
     });
   });
-
 
   /*
     The following tests are commented out because the /dashboard route

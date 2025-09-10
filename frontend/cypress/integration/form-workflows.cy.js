@@ -46,7 +46,7 @@ describe('Form Workflows', () => {
       // This test is skipped because mocking NextAuth in Cypress is complex
       // In a real integration test with a test backend, this would work properly
       // For now, we verify that the login form accepts input and the button works
-      
+
       cy.visit('/login-landing/login');
 
       // Fill out the form with incorrect credentials
@@ -56,8 +56,10 @@ describe('Form Workflows', () => {
       cy.get('input[placeholder="Password"]').type('wrongpassword');
 
       // Verify the form elements work correctly
-      cy.contains('button', 'Continue').should('be.visible').and('not.be.disabled');
-      
+      cy.contains('button', 'Continue')
+        .should('be.visible')
+        .and('not.be.disabled');
+
       // Verify we're on the correct page
       cy.url().should('include', '/login-landing/login');
     });

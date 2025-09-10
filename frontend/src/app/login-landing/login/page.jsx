@@ -18,17 +18,18 @@ export default function Page() {
 
     // More robust callback URL construction for test environment
     let baseUrl;
-    
+
     if (typeof window !== 'undefined') {
       // In browser environment (including Cypress)
       baseUrl = window.location.origin;
     } else {
       // Fallback for server-side
-      baseUrl = process.env.NEXT_PUBLIC_FRONTEND_URL || 
-                process.env.NEXTAUTH_URL || 
-                'http://localhost:8080';
+      baseUrl =
+        process.env.NEXT_PUBLIC_FRONTEND_URL ||
+        process.env.NEXTAUTH_URL ||
+        'http://localhost:8080';
     }
-    
+
     const callbackUrl = `${baseUrl}/dashboard`;
 
     try {

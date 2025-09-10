@@ -2,6 +2,9 @@ import '../styles/dashboard.css';
 import Header from '../ui/header';
 import NavBar from '../ui/nav-bar';
 
+// Force dynamic rendering since this layout uses session data
+export const dynamic = 'force-dynamic';
+
 export default function Layout({ children }) {
   return (
     <div className="h-screen flex flex-col md:flex-row">

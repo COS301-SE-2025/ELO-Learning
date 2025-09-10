@@ -1,4 +1,5 @@
-import { useEffect, useRef, useState } from 'react';
+import { useSession } from 'next-auth/react';
+import { memo, useEffect, useMemo, useRef, useState } from 'react';
 
 // Utility to pick a color based on the user's name
 const colors = [
@@ -13,39 +14,187 @@ const colors = [
   'bg-orange-500',
   'bg-gray-500',
 ];
-function getColor(name) {
+
+const getColor = (name) => {
   // Simple hash to pick a color
   const code = name.charCodeAt(0) + name.length;
   return colors[code % colors.length];
+};
+
+// Memoized row component to prevent unnecessary re-renders
+const UserRow = memo(function UserRow({
+  user,
+  index,
+  isCurrent,
+  userRowRef,
+  sortType,
+}) {
+  const colorClass = useMemo(() => getColor(user.username), [user.username]);
+  const initial = useMemo(() => user.username.charAt(0), [user.username]);
+  const formattedValue = useMemo(() => {
+    if (sortType === 'elo')
+      return user.elo?.toFixed?.(0) || user.elo_rating || '-';
+    return user.xp.toFixed(0);
+  }, [user.xp, user.elo, sortType]);
+  const valueLabel = sortType === 'elo' ? '' : 'XP';
+
+  return (
+    <tr
+      key={user.id}
+      ref={isCurrent ? userRowRef : null}
+      className={isCurrent ? 'bg-[#343232] font-bold' : ''}
+    >
+      <td className="p-2">{index + 1}</td>
+      <td className="p-2">
+        <span
+          className={`inline-flex items-center justify-center rounded-full w-8 h-8 font-bold text-lg ${colorClass}`}
+        >
+          {initial}
+        </span>
+      </td>
+      <td className="text-left p-2">{user.username}</td>
+      <td className="text-right p-2">
+        {formattedValue} {valueLabel}
+      </td>
+    </tr>
+  );
+});
+
+// Custom dropdown component for XP/ELO sort
+function DropdownSort({ sortType, onSortTypeChange }) {
+  const [open, setOpen] = useState(false);
+  const options = [
+    { value: 'xp', label: 'XP' },
+    { value: 'elo', label: 'ELO' },
+  ];
+  // Close dropdown on outside click
+  const ref = useRef();
+  useEffect(() => {
+    function handleClick(e) {
+      if (ref.current && !ref.current.contains(e.target)) setOpen(false);
+    }
+    if (open) document.addEventListener('mousedown', handleClick);
+    return () => document.removeEventListener('mousedown', handleClick);
+  }, [open]);
+
+  return (
+    <div className="relative inline-block text-left w-full" ref={ref}>
+      <button
+        className="flex items-center gap-1 font-bold px-2 py-1 rounded cursor-pointer hover:bg-[#232222] focus:outline-none w-full justify-end"
+        onClick={() => setOpen((v) => !v)}
+        aria-haspopup="listbox"
+        aria-expanded={open}
+        tabIndex={0}
+        type="button"
+      >
+        {sortType === 'elo' ? 'ELO' : 'XP'}
+        <svg
+          className={`w-4 h-4 transition-transform ${open ? 'rotate-180' : ''}`}
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+          viewBox="0 0 24 24"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            d="M19 9l-7 7-7-7"
+          />
+        </svg>
+      </button>
+      {open && (
+        <ul
+          className="absolute right-0 z-20 mt-1 w-24 bg-[#232222] border border-[#444] rounded-lg shadow-lg py-1"
+          style={{ minWidth: '80px' }}
+          role="listbox"
+        >
+          {options.map((opt) => (
+            <li
+              key={opt.value}
+              className={`px-4 py-2 flex items-center gap-2 cursor-pointer select-none ${
+                sortType === opt.value
+                  ? 'bg-[#FF6E99] text-white font-bold'
+                  : 'hover:bg-[#343232] text-white'
+              }`}
+              onClick={() => {
+                onSortTypeChange?.(opt.value);
+                setOpen(false);
+              }}
+              role="option"
+              aria-selected={sortType === opt.value}
+            >
+              {sortType === opt.value && (
+                <svg
+                  className="w-4 h-4 mr-1"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="3"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M5 13l4 4L19 7"
+                  />
+                </svg>
+              )}
+              {opt.label}
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
+  );
 }
 
-// Helper to get current user from cookie
-function getCurrentUserFromCookie() {
-  const match = document.cookie.match(/user=([^;]+)/);
-  if (!match) return null;
-  try {
-    return JSON.parse(decodeURIComponent(match[1]));
-  } catch {
-    return null;
-  }
-}
-
-export default function LeaderboardTable({ users = [] }) {
+const LeaderboardTable = memo(function LeaderboardTable({
+  users = [],
+  sortType = 'xp',
+  onSortTypeChange,
+}) {
+  const { data: session } = useSession();
   const [currentUser, setCurrentUser] = useState(null);
   const currentUserRowRef = useRef(null);
 
-  useEffect(() => {
-    setCurrentUser(getCurrentUserFromCookie());
-  }, []);
+  // Memoize current user to avoid unnecessary updates
+  const memoizedCurrentUser = useMemo(() => {
+    return session?.user || null;
+  }, [session?.user?.id]); // Only re-run if user ID changes
 
   useEffect(() => {
-    if (currentUserRowRef.current) {
-      currentUserRowRef.current.scrollIntoView({
-        behavior: 'smooth',
-        block: 'center',
-      });
+    setCurrentUser(memoizedCurrentUser);
+  }, [memoizedCurrentUser]);
+
+  // Scroll to current user with debouncing
+  useEffect(() => {
+    if (currentUserRowRef.current && currentUser && users.length > 0) {
+      const timeoutId = setTimeout(() => {
+        currentUserRowRef.current?.scrollIntoView({
+          behavior: 'smooth',
+          block: 'center',
+        });
+      }, 100);
+
+      return () => clearTimeout(timeoutId);
     }
-  }, [currentUser, users]);
+  }, [currentUser, users.length]);
+
+  // Memoize rendered rows to prevent unnecessary re-renders
+  const renderedRows = useMemo(() => {
+    return users.map((user, idx) => {
+      const isCurrent = currentUser && user.id === currentUser.id;
+      return (
+        <UserRow
+          key={user.id}
+          user={user}
+          index={idx}
+          isCurrent={isCurrent}
+          userRowRef={isCurrent ? currentUserRowRef : null}
+          sortType={sortType}
+        />
+      );
+    });
+  }, [users, currentUser, sortType]);
 
   return (
     <div
@@ -58,35 +207,18 @@ export default function LeaderboardTable({ users = [] }) {
             <th className=" w-0.5/5">#</th>
             <th className="w-1.5/5"></th>
             <th className="text-left px-3 w-1/5">Username</th>
-            <th className="text-right px-3 w-2/5">Total XP</th>
+            <th className="text-right px-3 w-2/5 relative">
+              <DropdownSort
+                sortType={sortType}
+                onSortTypeChange={onSortTypeChange}
+              />
+            </th>
           </tr>
         </thead>
-        <tbody>
-          {users.map((user, idx) => {
-            const isCurrent = currentUser && user.id === currentUser.id;
-            return (
-              <tr
-                key={user.id}
-                ref={isCurrent ? currentUserRowRef : null}
-                className={isCurrent ? 'bg-[#343232] font-bold' : ''}
-              >
-                <td className="p-2">{idx + 1}</td>
-                <td className="p-2">
-                  <span
-                    className={`inline-flex items-center justify-center rounded-full w-8 h-8 font-bold text-lg ${getColor(
-                      user.username,
-                    )}`}
-                  >
-                    {user.username.charAt(0)}
-                  </span>
-                </td>
-                <td className="text-left p-2">{user.username}</td>
-                <td className="text-right p-2">{user.xp.toFixed(0)} XP</td>
-              </tr>
-            );
-          })}
-        </tbody>
+        <tbody>{renderedRows}</tbody>
       </table>
     </div>
   );
-}
+});
+
+export default LeaderboardTable;

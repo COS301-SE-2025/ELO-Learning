@@ -2,6 +2,7 @@
 
 import MathInputTemplate from '@/app/ui/math-keyboard/math-input-template';
 import ProgressBar from '@/app/ui/progress-bar';
+import { showAchievementNotificationsWhenReady } from '@/utils/achievementNotifications';
 import { submitQuestionAnswer } from '@/utils/api';
 import { Heart, X } from 'lucide-react';
 import Link from 'next/link';
@@ -9,12 +10,12 @@ import { redirect } from 'next/navigation';
 import { useEffect, useState } from 'react';
 
 export default function MathKeyboardWrapper({ questions }) {
-  // Remove frontend filtering since backend already filters
-  const mathQuestions = questions;
-
+  // ✅ Safe array handling
+  const mathQuestions = questions || [];
   const totalSteps = mathQuestions.length;
 
-  const [currQuestion, setCurrQuestion] = useState(mathQuestions[0]);
+  // ✅ Safe initialization with null check
+  const [currQuestion, setCurrQuestion] = useState(mathQuestions[0] || null);
   const [currAnswers, setCurrAnswers] = useState(currQuestion?.answers || []);
   const [currentStep, setCurrentStep] = useState(1);
   const [isDisabled, setIsDisabled] = useState(true);
@@ -34,11 +35,12 @@ export default function MathKeyboardWrapper({ questions }) {
     console.log('Student answer changed:', studentAnswer);
   }, [studentAnswer]);
 
-  // Handle case where no math questions are available
+  // ✅ Handle case where no math questions are available
   if (!mathQuestions || mathQuestions.length === 0) {
     return (
-      <div className="min-h-screen flex items-center justify-center ">
+      <div className="min-h-screen flex items-center justify-center">
         <div className="text-center p-8 max-w-md">
+          <div className="text-4xl mb-4">📝</div>
           <h2 className="text-2xl font-bold mb-4">
             No Math Questions Available
           </h2>
@@ -56,6 +58,17 @@ export default function MathKeyboardWrapper({ questions }) {
     );
   }
 
+  // ✅ Handle case where currQuestion is null (safety check)
+  if (!currQuestion) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center p-8">
+          <div className="text-2xl text-gray-600">Loading question...</div>
+        </div>
+      </div>
+    );
+  }
+
   // Enable/disable submit button based on math input validation
   useEffect(() => {
     setIsDisabled(!studentAnswer.trim() || !isValidExpression);
@@ -66,19 +79,73 @@ export default function MathKeyboardWrapper({ questions }) {
     setShowFeedback(false);
 
     try {
+      // Get authenticated user ID with session fallback
+      const user = JSON.parse(localStorage.getItem('user') || '{}');
+      let userId = user.id;
+
+      // Fallback to NextAuth session if no localStorage user
+      if (!userId && session?.user?.id) {
+        userId = session.user.id;
+        console.log('🔍 Using userId from NextAuth session:', userId);
+      }
+
+      if (!userId) {
+        console.error('❌ No authenticated user found');
+        setFeedbackMessage('Please log in to continue');
+        setShowFeedback(true);
+        return;
+      }
+
       const result = await submitQuestionAnswer(
         currQuestion.Q_id,
         studentAnswer,
-        'current-user-id',
+        userId,
       );
 
       if (result.success) {
         setFeedbackMessage(result.data.message);
         setShowFeedback(true);
 
+        // 🎉 Handle achievement unlocks!
+        if (
+          result.data.unlockedAchievements &&
+          result.data.unlockedAchievements.length > 0
+        ) {
+          console.log(
+            '🏆 Achievements unlocked:',
+            result.data.unlockedAchievements,
+          );
+
+          // Use centralized achievement notification utility
+          showAchievementNotificationsWhenReady(
+            result.data.unlockedAchievements,
+          )
+            .then(() =>
+              console.log(
+                '✅ Achievement notifications triggered successfully',
+              ),
+            )
+            .catch((error) =>
+              console.error('❌ Failed to show achievements:', error),
+            );
+        } else {
+          console.log('ℹ️  No achievements unlocked for this question');
+        }
+
+        // 🎯 Update user XP in localStorage
+        if (result.data.newXP) {
+          const user = JSON.parse(localStorage.getItem('user') || '{}');
+          const updatedUser = { ...user, xp: result.data.newXP };
+          localStorage.setItem('user', JSON.stringify(updatedUser));
+          console.log(`💰 XP updated: ${result.data.newXP}`);
+        }
+
         if (result.data.isCorrect && result.data.xpAwarded > 0) {
           console.log(`Awarded ${result.data.xpAwarded} XP!`);
         }
+      } else {
+        setFeedbackMessage(result.error || 'Error submitting answer');
+        setShowFeedback(true);
       }
 
       setTimeout(() => {
@@ -106,14 +173,15 @@ export default function MathKeyboardWrapper({ questions }) {
     setShowFeedback(false);
     setFeedbackMessage('');
 
-    const nextQuestion = mathQuestions[currentStep];
+    // ✅ Safe access to next question
+    const nextQuestion = mathQuestions[currentStep] || null;
     setCurrQuestion(nextQuestion);
     setCurrAnswers(nextQuestion?.answers || []);
   };
 
   const getCorrectAnswer = () => {
     return (
-      currQuestion.correctAnswer ||
+      currQuestion?.correctAnswer ||
       currAnswers.find((a) => a.isCorrect)?.answerText ||
       currAnswers.find((a) => a.isCorrect)?.answer_text ||
       ''
@@ -130,9 +198,6 @@ export default function MathKeyboardWrapper({ questions }) {
           </Link>
 
           <div className="flex-1 mx-4">
-            {/* <div className="text-sm text-gray-700 mb-1 text-center font-medium">
-              Math Question {currentStep} of {totalSteps}
-            </div> */}
             <ProgressBar progress={currentStep / totalSteps} />
           </div>
 
@@ -146,23 +211,10 @@ export default function MathKeyboardWrapper({ questions }) {
       {/* Main Content */}
       <div className="space-y-11 pb-35 md:pb-50 pt-24 max-w-4xl mx-auto">
         {/* Question Section */}
-        <div className=" p-8 ">
+        <div className="p-8">
           <h2 className="text-2xl font-bold text-center leading-relaxed">
-            {currQuestion.questionText}
+            {currQuestion?.questionText || 'Loading question...'}
           </h2>
-
-          {/* Question metadata */}
-          {/* <div className="flex justify-center gap-3 mt-6">
-            <span className="px-4 py-2 bg-blue-100 text-blue-800 rounded-full text-sm font-semibold">
-              📚 {currQuestion.topic}
-            </span>
-            <span className="px-4 py-2 bg-green-100 text-green-800 rounded-full text-sm font-semibold">
-              🎯 {currQuestion.difficulty}
-            </span>
-            <span className="px-4 py-2 bg-purple-100 text-purple-800 rounded-full text-sm font-semibold">
-              ⭐ {currQuestion.xpGain || 10} XP
-            </span>
-          </div> */}
         </div>
 
         {/* Math Input Section */}
@@ -220,22 +272,6 @@ export default function MathKeyboardWrapper({ questions }) {
               'SUBMIT'
             )}
           </button>
-          {/* Status indicator */}
-          {/* <div className="mt-4 text-center">
-            {isValidExpression && studentAnswer.trim() ? (
-              <span className="text-green-600 font-semibold">
-                Ready to submit!
-              </span>
-            ) : !studentAnswer.trim() ? (
-              <span className="text-[#696969]">
-                Enter your mathematical expression above
-              </span>
-            ) : (
-              <span className="text-red-600 font-semibold">
-                Please check your expression format
-              </span>
-            )}
-          </div> */}
         </div>
       </div>
     </div>

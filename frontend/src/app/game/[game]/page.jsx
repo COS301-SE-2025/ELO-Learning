@@ -1,24 +1,25 @@
-import { getCookie } from '@/app/lib/authCookie';
 import GameClient from '@/app/ui/game/game-client';
+import { authOptions } from '@/lib/auth';
+import { getServerSession } from 'next-auth/next';
+import { redirect } from 'next/navigation';
 
 export default async function GameMatch({ params }) {
   try {
     const { game } = await params;
-    const authCookie = await getCookie();
+    const session = await getServerSession(authOptions);
 
     // Add some fallback values and error checking
-    if (!authCookie || !authCookie.user) {
-      console.error('No auth cookie or user data found');
-      // You might want to redirect to login here
-      return <div>Authentication error. Please log in again.</div>;
+    if (!session?.user) {
+      console.error('No session or user data found');
+      redirect('/api/auth/signin');
     }
 
-    const level = authCookie.user.currentLevel || 5; // Default level if not set
+    const level = session.user.currentLevel || 5; // Default level if not set
 
     console.log('Game page rendering with:', {
       game,
       level,
-      user: authCookie.user.username,
+      user: session.user.username,
     });
 
     return (

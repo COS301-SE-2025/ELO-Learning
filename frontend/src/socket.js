@@ -2,48 +2,46 @@
 
 import { io } from 'socket.io-client';
 
-// Function to get user data from cookie/localStorage
-function getUserData() {
-  try {
-    // Try to get from localStorage first
-    const userFromStorage = localStorage.getItem('user');
-    if (userFromStorage) {
-      return JSON.parse(userFromStorage);
-    }
-
-    // Fallback to cookie
-    if (typeof document !== 'undefined') {
-      const match = document.cookie.match(/user=([^;]+)/);
-      if (match) {
-        return JSON.parse(decodeURIComponent(match[1]));
-      }
-    }
-  } catch (error) {
-    console.error('Error getting user data:', error);
-  }
-  return null;
-}
-
-export const socket = io('http://localhost:3000', {
-  autoConnect: false, // We'll connect manually when needed
+// Single socket instance - import this where you need the raw socket
+// But prefer using the useSocket hook for React components
+export const socket = io(process.env.NEXT_PUBLIC_SOCKET_URL, {
+  autoConnect: false, // We'll connect manually through useSocket hook
+  reconnectionAttempts: 5,
+  reconnectionDelay: 1000,
+  timeout: 20000, // Increased timeout
 });
 
-// Function to connect with user data
-export const connectSocket = () => {
-  const userData = getUserData();
-  if (userData && !socket.connected) {
-    socket.connect();
-    // Store user data for socket events
-    socket.userData = userData;
-  }
-  return userData;
-};
+//TODO: I don't think this belongs here....
+// Add localStorage saving handler
+socket.on('saveMatchData', (data) => {
+  if (typeof window !== 'undefined') {
+    try {
+      console.log('Saving match data to localStorage:', data);
 
-// Auto-connect if user data is available (for other components)
-if (typeof window !== 'undefined') {
-  const userData = getUserData();
-  if (userData && !socket.connected) {
-    socket.connect();
-    socket.userData = userData;
+      // Validate the data before saving
+      if (!data || typeof data !== 'object') {
+        console.error('Invalid match data received:', data);
+        return;
+      }
+
+      // Ensure it has the required fields
+      if (
+        !data.players ||
+        !Array.isArray(data.players) ||
+        data.players.length !== 2
+      ) {
+        console.error('Match data missing players array:', data);
+        // Try to reconstruct missing fields with fallbacks
+        data.players = data.players || [];
+      }
+
+      localStorage.setItem('multiplayerGameData', JSON.stringify(data));
+      console.log('Successfully saved match data to localStorage');
+    } catch (error) {
+      console.error('Error saving match data to localStorage:', error);
+    }
   }
-}
+});
+
+// Export useSocket hook for easy access
+export { useSocket } from './hooks/useSocket';

@@ -1,6 +1,10 @@
 'use client';
 
-import { quickValidateMath, validateMathExpression } from '@/utils/api';
+import { validateAnswerSync } from '@/utils/answerValidator';
+import {
+  getMathValidationMessage,
+  isValidMathExpression,
+} from '@/utils/frontendMathValidator';
 import 'katex/dist/katex.min.css';
 import { ChevronDown, ChevronUp } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
@@ -30,6 +34,27 @@ export default function MathInputTemplate({
 
   // Advanced math symbol categories
   const mathCategories = {
+    numbers: {
+      label: 'Numbers',
+      icon: 'ℕ',
+      symbols: [
+        { symbol: '0', label: '0', description: 'Zero' },
+        { symbol: '1', label: '1', description: 'One' },
+        { symbol: '2', label: '2', description: 'Two' },
+        { symbol: '3', label: '3', description: 'Three' },
+        { symbol: '4', label: '4', description: 'Four' },
+        { symbol: '5', label: '5', description: 'Five' },
+        { symbol: '6', label: '6', description: 'Six' },
+        { symbol: '7', label: '7', description: 'Seven' },
+        { symbol: '8', label: '8', description: 'Eight' },
+        { symbol: '9', label: '9', description: 'Nine' },
+        { symbol: '.', label: '.', description: 'Decimal point' },
+        { symbol: ',', label: ',', description: 'Comma' },
+        { symbol: 'x', label: 'x', description: 'Variable x' },
+        { symbol: 'y', label: 'y', description: 'Variable y' },
+        { symbol: 'z', label: 'z', description: 'Variable z' },
+      ],
+    },
     basic: {
       label: 'Basic',
       icon: '±',
@@ -143,27 +168,31 @@ export default function MathInputTemplate({
         setShowSuggestions(false);
       }
 
+      // Use frontend validation for instant feedback - no API calls!
       try {
-        const result = await validateMathExpression(inputValue);
-        if (result.success) {
-          setLocalIsValidExpression(result.data.isValid);
-          setIsValidExpression?.(result.data.isValid);
-          setValidationMessage(result.data.message);
+        const isValid = isValidMathExpression(inputValue);
+        const message = getMathValidationMessage(inputValue);
 
-          if (!result.data.isValid) {
-            setTimeout(() => {
-              setShowErrorMessage(true);
-            }, 1500);
-          } else {
-            setShowErrorMessage(false);
-          }
+        setLocalIsValidExpression(isValid);
+        setIsValidExpression?.(isValid);
+        setValidationMessage(message);
+
+        if (!isValid && message) {
+          setTimeout(() => {
+            setShowErrorMessage(true);
+          }, 800); // Reduced delay
+        } else {
+          setShowErrorMessage(false);
         }
       } catch (error) {
-        console.error('Validation error:', error);
+        console.error('Frontend validation error:', error);
+        // Fallback to true for better UX
+        setLocalIsValidExpression(true);
+        setIsValidExpression?.(true);
       }
     };
 
-    const timeoutId = setTimeout(validateExpression, 300);
+    const timeoutId = setTimeout(validateExpression, 150); // Reduced debounce time
     return () => clearTimeout(timeoutId);
   }, [inputValue, cursorPosition, setIsValidExpression]);
 
@@ -179,9 +208,9 @@ export default function MathInputTemplate({
     }
   }, [inputValue]);
 
-  // Quick validation against correct answer
+  // Quick validation against correct answer - using your new answerValidator
   useEffect(() => {
-    const quickCheck = async () => {
+    const quickCheck = () => {
       if (!inputValue.trim() || !correctAnswer || !localIsValidExpression) {
         setIsAnswerCorrect(false);
         return;
@@ -189,10 +218,14 @@ export default function MathInputTemplate({
 
       setIsChecking(true);
       try {
-        const result = await quickValidateMath(inputValue, correctAnswer);
-        if (result.success) {
-          setIsAnswerCorrect(result.data.isCorrect);
-        }
+        // Use synchronous validation for real-time feedback
+        const isCorrect = validateAnswerSync(
+          inputValue,
+          correctAnswer,
+          '',
+          'Math Input',
+        );
+        setIsAnswerCorrect(isCorrect);
       } catch (error) {
         console.error('Quick validation error:', error);
         setIsAnswerCorrect(false);
@@ -201,9 +234,10 @@ export default function MathInputTemplate({
       }
     };
 
-    const timeoutId = setTimeout(quickCheck, 500);
+    // Reduced timeout for faster feedback
+    const timeoutId = setTimeout(quickCheck, 200);
     return () => clearTimeout(timeoutId);
-  }, [inputValue, correctAnswer, localIsValidExpression]);
+  }, [inputValue, correctAnswer, localIsValidExpression, setIsAnswerCorrect]);
 
   const getCurrentWord = (text, position) => {
     const beforeCursor = text.substring(0, position);
@@ -302,10 +336,7 @@ export default function MathInputTemplate({
   };
 
   return (
-    <div className="w-full space-y-6">
-      <p className="">
-        Use the keyboard below or type your mathematical expression directly
-      </p>
+    <div className="w-full space-y-6 mb-30">
       {/* Enhanced Input Field */}
       <div className="relative">
         <textarea
@@ -314,9 +345,9 @@ export default function MathInputTemplate({
           onChange={handleInputChange}
           onSelect={handleCursorPosition}
           onKeyDown={handleKeyDown}
-          placeholder="Enter your mathematical expression..."
-          style={{ border: '1px solid' }} // Force black text
-          className={`math-input w-full p-4 text-lg border rounded-lg resize-none min-h-[80px] font-mono ${
+          placeholder="Write your answer"
+          style={{ border: '1px solid #696969' }} // Force black text
+          className={`math-input w-full p-4 text-sm border rounded-lg resize-none min-h-[80px] ${
             !localIsValidExpression
               ? 'border-red-500 focus:border-red-600'
               : isChecking
@@ -432,7 +463,13 @@ export default function MathInputTemplate({
 
         {/* Symbol grid */}
         <div className="p-4">
-          <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-3">
+          <div
+            className={`grid gap-3 ${
+              activeTab === 'numbers'
+                ? 'grid-cols-5'
+                : 'grid-cols-3 sm:grid-cols-4 md:grid-cols-5'
+            }`}
+          >
             {mathCategories[activeTab].symbols.map((item, index) => (
               <button
                 key={index}
@@ -449,7 +486,7 @@ export default function MathInputTemplate({
 
       {/* Live LaTeX Preview */}
       {inputValue.trim() && localIsValidExpression && (
-        <div className="p-4 border rounded-lg">
+        <div className="p-4 border border-[#696969] rounded-lg">
           <div className="text-sm mb-2 font-medium">Preview:</div>
           <div className="text-xl">
             <InlineMath math={inputValue} />
@@ -459,7 +496,7 @@ export default function MathInputTemplate({
 
       {/* Helper Text */}
       <div
-        className="text-xs border p-3 rounded-lg cursor-pointer select-none"
+        className="text-xs border border-[#696969] p-3 rounded-lg cursor-pointer select-none"
         onClick={() => setShowHelper((prev) => !prev)}
       >
         <div className="flex items-center justify-between">

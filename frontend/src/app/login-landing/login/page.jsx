@@ -1,10 +1,9 @@
 'use client';
-import { setCookie } from '@/app/lib/authCookie';
 import { Eye, EyeOff, X } from 'lucide-react';
+import { signIn } from 'next-auth/react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
-import { loginUser } from '../../../services/api';
 
 export default function Page() {
   const [email, setEmail] = useState('');
@@ -20,15 +19,26 @@ export default function Page() {
     setIsLoading(true);
 
     try {
-      const response = await loginUser(email, password);
-      await setCookie(response);
+      const result = await signIn('credentials', {
+        callbackUrl: `${
+          process.env.NEXT_PUBLIC_FRONTEND_URL || 'http://localhost:8080'
+        }/dashboard`,
+        email,
+        password,
+        redirect: false,
+      });
 
-      // Store the token and user data
-      localStorage.setItem('token', response.token);
-      localStorage.setItem('user', JSON.stringify(response.user));
+      if (result?.error) {
+        setError('Username or password incorrect, please try again');
+      } else {
+        // Clear any existing cache before redirecting
+        const { cache } = await import('../../../utils/cache');
+        cache.clear();
 
-      // Redirect to dashboard
-      router.push('/dashboard');
+        // Redirect to dashboard
+        router.push('/dashboard');
+        console.log('Login successful:', result);
+      }
     } catch (err) {
       console.error('Login failed:', err);
       setError('Username or password incorrect, please try again');
@@ -99,7 +109,7 @@ export default function Page() {
         </form>
         <div>
           <Link href="/login-landing/forgot-password">
-            <p className="text-center py-3 text-[#ff6e99] hover:text-[#ffffff] hover:font-bold hover:scale-1.1% w-[90vw] md:w-[500px] mx-auto">
+            <p className="text-center font-bold py-3 text-[#ff6e99] hover:text-[#ffffff] hover:font-bold hover:scale-1.1% w-[90vw] md:w-[500px] mx-auto">
               Forgot your password?
             </p>
           </Link>
@@ -107,7 +117,20 @@ export default function Page() {
       </div>
       {/* Disclaimer is now spaced above the bottom */}
       <div className="px-4 text-center">
-        <div className="google-button flex items-center justify-around gap-10 m-2">
+        <div
+          className="google-button flex items-center justify-around gap-10 m-2"
+          onClick={async () => {
+            // Clear cache before OAuth sign in
+            const { cache } = await import('../../../utils/cache');
+            cache.clear();
+
+            signIn('google', {
+              callbackUrl: `${
+                process.env.NEXT_PUBLIC_FRONTEND_URL || 'http://localhost:8080'
+              }/dashboard`,
+            });
+          }}
+        >
           {/* <FaGoogle size={24} /> */}
           <p className="p-3">Sign in with Google</p>
         </div>

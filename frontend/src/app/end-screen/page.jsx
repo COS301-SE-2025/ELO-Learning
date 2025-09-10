@@ -2,21 +2,25 @@
 import Score from '@/app/ui/end-screen-ui/end-screen-score';
 import Time from '@/app/ui/end-screen-ui/end-screen-total-time';
 import TotalXP from '@/app/ui/end-screen-ui/end-screen-total-xp';
-import { updateUserXP } from '@/services/api';
+import { getSession, useSession } from 'next-auth/react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { redirect, useRouter, useSearchParams } from 'next/navigation';
 import { Suspense, useEffect, useState } from 'react';
+import EndELO from '@/app/ui/end-screen-ui/end-screen-elo';
 
 function EndScreen() {
+  const { data: session } = useSession();
   const searchParams = useSearchParams();
   const router = useRouter();
   const mode = searchParams.get('mode');
+  const eloRating = searchParams.get('elo');
   const [isLoading, setIsLoading] = useState(false);
+  const [xpReady, setXpReady] = useState(false);
 
   const [mistakes, setMistakes] = useState(0);
   useEffect(() => {
-    const questions = JSON.parse(localStorage.getItem('questionsObj'));
+    const questions = JSON.parse(localStorage.getItem('questionsObj')) || [];
     const correctAnswers = questions.filter(
       (question) => question.isCorrect == true,
     );
@@ -32,21 +36,39 @@ function EndScreen() {
     try {
       setIsLoading(true);
 
+      /*
       // Get user data from cookie
       const userCookie = document.cookie
         .split('; ')
         .find((row) => row.startsWith('user='));
 
-      if (!userCookie) {
-        console.error('User cookie not found');
-        router.push('/dashboard');
-        return;
-      }
+        if (!userCookie) {
+          console.error('User cookie not found and no session available');
+          console.log('Available cookies:', document.cookie);
+          console.log('Session data:', session);
+
+          // Don't redirect immediately, just show error
+          setIsLoading(false);
+          return;
+        }
 
       // Decode the URL-encoded cookie value
       const encodedUserData = userCookie.split('=')[1];
       const decodedUserData = decodeURIComponent(encodedUserData);
       const userData = JSON.parse(decodedUserData);
+
+      */
+
+      //Get session from Next.js auth
+      const session = await getSession();
+
+      if (!session || !session.user) {
+        console.error('No authenticated session found');
+        router.push('/dashboard');
+        return;
+      }
+
+      const userData = session.user;
 
       // Calculate XP earned using the same logic as TotalXP component
       const questions = JSON.parse(
@@ -95,41 +117,86 @@ function EndScreen() {
     <div className="flex md:flex-col md:items-center h-full p-5 md:p-10">
       <div className="flex items-center justify-between flex-col gap-4 ">
         <div className="mt-25 md:mt-0">
-          <div className="flex items-center justify-center flex-col gap-0">
-            <Image
-              src="/ELO-Learning-Mascot.png"
-              width={300}
-              height={300}
-              className="hidden md:block"
-              alt="ELO Learning Mascot"
-              priority
-            />
-            <Image
-              src="/ELO-Learning-Mascot.png"
-              width={200}
-              height={200}
-              className="block md:hidden"
-              alt="ELO Learning Mascot"
-              priority
-            />
-            <h1 className="text-2xl font-bold">
-              {mistakes} {mistakes === 1 ? 'Mistake' : 'Mistakes'}
-            </h1>
-            <p className="text-center m-5 md:m-1">
-              Continue upskilling your maths! You are doing an amazing job!
-            </p>
-          </div>
+          {mode !== 'baseline' && (
+            <div className="flex items-center justify-center flex-col gap-0">
+              <Image
+                src="/ELO-Learning-Mascot.png"
+                width={300}
+                height={300}
+                className="hidden md:block"
+                alt="ELO Learning Mascot"
+                priority
+              />
+              <Image
+                src="/ELO-Learning-Mascot.png"
+                width={200}
+                height={200}
+                className="block md:hidden"
+                alt="ELO Learning Mascot"
+                priority
+              />
+              <h1 className="text-2xl font-bold">
+                {mistakes} {mistakes === 1 ? 'Mistake' : 'Mistakes'}
+              </h1>
+              <p className="text-center m-5 md:m-1">
+                Continue upskilling your maths! You are doing an amazing job!
+              </p>
+            </div>
+          )}
           {mode === 'practice' && (
-            <div className="flex flex-row items-center justify-center gap-8 my-7">
-              <Score />
-              <Time />
+            <div>
+              <div className="flex flex-row items-center justify-center gap-8 my-7">
+                <Score />
+                <Time />
+              </div>
             </div>
           )}
           {mode === 'single-player' && (
             <div className="flex flex-row items-center justify-center gap-8 my-7">
-              <TotalXP />
+              <TotalXP onLoadComplete={() => setXpReady(true)} />
               <Score />
               <Time />
+            </div>
+          )}
+          {/* Blocks with information */}
+          {mode === 'baseline' && (
+            <div className="h-full flex flex-col items-center justify-center gap-4 my-7">
+              <Image
+                src="/ELO-Learning-Mascot.png"
+                width={300}
+                height={300}
+                className="hidden md:block"
+                alt="ELO Learning Mascot"
+                priority
+              />
+              <Image
+                src="/ELO-Learning-Mascot.png"
+                width={200}
+                height={200}
+                className="block md:hidden"
+                alt="ELO Learning Mascot"
+                priority
+              />
+              <h2 className="text-2xl font-bold text-center text-[var(--vector-violet-light)]">
+                Baseline Test Complete!
+              </h2>
+              <p className="text-lg text-center mb-5">
+                Congratulations! You've completed your baseline assessment.
+              </p>
+              <p className="text-lg font-bold">Your starting level is:</p>
+              <div className="mb-15">
+                <EndELO elo={eloRating} />
+              </div>
+
+              <button
+                className="main-button mt-10 uppercase"
+                onClick={() => {
+                  localStorage.removeItem('baselineQuestionsObj');
+                  router.push('/dashboard');
+                }}
+              >
+                Start Your Learning Journey
+              </button>
             </div>
           )}
         </div>
@@ -154,11 +221,16 @@ function EndScreen() {
             <button
               className="secondary-button w-full uppercase"
               onClick={calculateXP}
-              disabled={isLoading}
+              disabled={isLoading || !xpReady}
             >
-              {isLoading ? 'Claiming XP...' : 'Claim XP'}
+              {isLoading
+                ? 'Claiming XP...'
+                : !xpReady
+                  ? 'Calculating...'
+                  : 'Claim XP'}
             </button>
           )}
+          {/* this is where i will change the baseline end screen button */}
         </div>
       </div>
     </div>

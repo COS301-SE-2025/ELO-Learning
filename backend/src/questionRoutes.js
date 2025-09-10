@@ -1,16 +1,750 @@
-// questionRoutes.js
 import express from 'express';
 import { supabase } from '../database/supabaseClient.js';
 import { backendMathValidator } from './mathValidator.js';
+import { verifyToken } from './middleware/auth.js';
 
 const router = express.Router();
 
-// Return all questions: (works)
+const validateMatchQuestion = async (studentAnswer, questionId) => {
+  try {
+    console.log('Validating match question:', { studentAnswer, questionId });
+
+    // studentAnswer should be an object like:
+    // { "left-0": "right-2", "left-1": "right-0", ... }
+
+    if (typeof studentAnswer !== 'object' || !studentAnswer) {
+      console.log('Invalid student answer format');
+      return false;
+    }
+
+    // Fetch all correct answers/pairs for this question
+    const { data: correctAnswers, error } = await supabase
+      .from('Answers')
+      .select('*')
+      .eq('question_id', questionId)
+      .eq('isCorrect', true);
+
+    if (error || !correctAnswers || correctAnswers.length === 0) {
+      console.error('No correct answers found:', error);
+      return false;
+    }
+
+    console.log('Found correct answers:', correctAnswers);
+
+    // Parse the correct pairs from the database
+    const correctPairs = [];
+    correctAnswers.forEach((answer, index) => {
+      let left, right;
+
+      // Method 1: Check for explicit match_left and match_right fields
+      if (answer.match_left && answer.match_right) {
+        left = answer.match_left;
+        right = answer.match_right;
+      }
+      // Method 2: Parse from answer_text
+      else if (answer.answer_text) {
+        const answerText = answer.answer_text;
+        if (answerText.includes(' → ')) {
+          [left, right] = answerText.split(' → ').map((item) => item.trim());
+        } else if (answerText.includes('→')) {
+          [left, right] = answerText.split('→').map((item) => item.trim());
+        } else if (answerText.includes(' | ')) {
+          [left, right] = answerText.split(' | ').map((item) => item.trim());
+        } else if (answerText.includes('|')) {
+          [left, right] = answerText.split('|').map((item) => item.trim());
+        } else if (answerText.includes(': ')) {
+          [left, right] = answerText.split(': ').map((item) => item.trim());
+        } else if (answerText.includes(':')) {
+          [left, right] = answerText.split(':').map((item) => item.trim());
+        }
+      }
+
+      if (left && right) {
+        correctPairs.push({
+          leftId: `left-${index}`,
+          rightId: `right-${index}`,
+          leftText: left,
+          rightText: right,
+          pairIndex: index,
+        });
+      }
+    });
+
+    console.log('Parsed correct pairs:', correctPairs);
+
+    // Validate student matches against correct pairs
+    const studentMatches = Object.keys(studentAnswer);
+    const totalPairs = correctPairs.length;
+
+    if (studentMatches.length !== totalPairs) {
+      console.log(
+        `Incomplete: ${studentMatches.length}/${totalPairs} pairs matched`,
+      );
+      return false;
+    }
+
+    let correctMatchCount = 0;
+
+    for (const leftId in studentAnswer) {
+      const studentRightId = studentAnswer[leftId];
+
+      // Find the correct pair for this leftId
+      const correctPair = correctPairs.find((pair) => pair.leftId === leftId);
+
+      if (correctPair && correctPair.rightId === studentRightId) {
+        correctMatchCount++;
+        console.log(`✅ Correct match: ${leftId} → ${studentRightId}`);
+      } else {
+        console.log(
+          `❌ Incorrect match: ${leftId} → ${studentRightId} (should be ${correctPair?.rightId})`,
+        );
+      }
+    }
+
+    const isAllCorrect = correctMatchCount === totalPairs;
+    console.log(
+      `Match validation result: ${correctMatchCount}/${totalPairs} correct. All correct: ${isAllCorrect}`,
+    );
+
+    return isAllCorrect;
+  } catch (error) {
+    console.error('Error validating match question:', error);
+    return false;
+  }
+};
+
+// Updated validateMatchQuestion function for your existing code
+const validateMatchQuestionLegacy = (studentAnswer, correctAnswer) => {
+  try {
+    console.log('Legacy match validation:', { studentAnswer, correctAnswer });
+
+    // Handle different formats of correctAnswer
+    let correctPairs;
+
+    if (typeof correctAnswer === 'string') {
+      try {
+        correctPairs = JSON.parse(correctAnswer);
+      } catch {
+        // If it's not JSON, treat as a single pair
+        correctPairs = [correctAnswer];
+      }
+    } else if (Array.isArray(correctAnswer)) {
+      correctPairs = correctAnswer;
+    } else {
+      correctPairs = [correctAnswer];
+    }
+
+    // Build expected match object from correct pairs
+    const expectedMatches = {};
+    correctPairs.forEach((pair, index) => {
+      let left, right;
+
+      if (typeof pair === 'string') {
+        if (pair.includes(' → ')) {
+          [left, right] = pair.split(' → ').map((item) => item.trim());
+        } else if (pair.includes('→')) {
+          [left, right] = pair.split('→').map((item) => item.trim());
+        } else if (pair.includes(' | ')) {
+          [left, right] = pair.split(' | ').map((item) => item.trim());
+        } else if (pair.includes('|')) {
+          [left, right] = pair.split('|').map((item) => item.trim());
+        } else if (pair.includes(': ')) {
+          [left, right] = pair.split(': ').map((item) => item.trim());
+        }
+      } else if (pair.left && pair.right) {
+        left = pair.left;
+        right = pair.right;
+      }
+
+      if (left && right) {
+        expectedMatches[`left-${index}`] = `right-${index}`;
+      }
+    });
+
+    console.log('Expected matches:', expectedMatches);
+    console.log('Student matches:', studentAnswer);
+
+    // Compare student answer with expected matches
+    const expectedKeys = Object.keys(expectedMatches);
+    const studentKeys = Object.keys(studentAnswer);
+
+    if (studentKeys.length !== expectedKeys.length) {
+      return false;
+    }
+
+    for (const leftId in expectedMatches) {
+      if (studentAnswer[leftId] !== expectedMatches[leftId]) {
+        return false;
+      }
+    }
+
+    return true;
+  } catch (error) {
+    console.error('Error in legacy match validation:', error);
+    return false;
+  }
+};
+
+// Enhanced submission route with proper match question handling
+router.post('/question/:id/submit', async (req, res) => {
+  const { id } = req.params;
+  const { studentAnswer, userId, questionType } = req.body;
+
+  try {
+    // Fetch question data
+    const { data: questionData, error: questionError } = await supabase
+      .from('Questions')
+      .select('type, xpGain, questionText')
+      .eq('Q_id', id)
+      .single();
+
+    if (questionError || !questionData) {
+      return res.status(404).json({ error: 'Question not found' });
+    }
+
+    const actualQuestionType = questionType || questionData.type;
+    let isCorrect = false;
+
+    // Handle match questions with enhanced validation
+    if (
+      actualQuestionType === 'Match Question' ||
+      actualQuestionType === 'Matching'
+    ) {
+      console.log('Processing match question submission');
+
+      // Use the enhanced match validation
+      isCorrect = await validateMatchQuestion(studentAnswer, id);
+
+      if (!isCorrect) {
+        // Fallback to legacy validation if new method fails
+        const { data: correctAnswerData, error: answerError } = await supabase
+          .from('Answers')
+          .select('answer_text')
+          .eq('question_id', id)
+          .eq('isCorrect', true);
+
+        if (!answerError && correctAnswerData) {
+          const correctAnswers = correctAnswerData.map((a) => a.answer_text);
+          isCorrect = validateMatchQuestionLegacy(
+            studentAnswer,
+            correctAnswers,
+          );
+        }
+      }
+    } else {
+      // Handle other question types with existing validation
+      const { data: correctAnswerData, error: answerError } = await supabase
+        .from('Answers')
+        .select('*')
+        .eq('question_id', id)
+        .eq('isCorrect', true)
+        .single();
+
+      if (answerError || !correctAnswerData) {
+        return res.status(404).json({
+          error: 'Correct answer not found',
+          debug: { answerError, question_id: id },
+        });
+      }
+
+      const correctAnswer =
+        correctAnswerData.answer_text || correctAnswerData.answerText;
+      isCorrect = validateAnswerByType(
+        actualQuestionType,
+        studentAnswer,
+        correctAnswer,
+      );
+    }
+
+    // Award XP if correct
+    let updatedUser = null;
+    let xpAwarded = 0;
+
+    if (isCorrect && userId) {
+      const { data: currentUser, error: userError } = await supabase
+        .from('Users')
+        .select('xp')
+        .eq('id', userId)
+        .single();
+
+      if (!userError && currentUser) {
+        xpAwarded = questionData.xpGain || 10;
+        const newXp = (currentUser.xp || 0) + xpAwarded;
+
+        const { data: updated, error: updateError } = await supabase
+          .from('Users')
+          .update({ xp: newXp })
+          .eq('id', userId)
+          .select('id, xp')
+          .single();
+
+        if (!updateError) {
+          updatedUser = updated;
+        }
+      }
+    }
+
+    // Generate feedback message
+    const feedbackMessage = getFeedbackMessage(actualQuestionType, isCorrect);
+
+    res.status(200).json({
+      success: true,
+      data: {
+        isCorrect,
+        studentAnswer,
+        message: feedbackMessage,
+        xpAwarded,
+        updatedUser,
+        questionType: actualQuestionType,
+      },
+    });
+  } catch (error) {
+    console.error('Error submitting answer:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to submit answer',
+      details: error.message,
+    });
+  }
+});
+
+export { validateMatchQuestion, validateMatchQuestionLegacy };
+
+// Enhanced answer validation for different question types
+const validateAnswerByType = (questionType, studentAnswer, correctAnswer) => {
+  switch (questionType) {
+    case 'Multiple Choice':
+      return studentAnswer === correctAnswer;
+
+    case 'Math Input':
+      return backendMathValidator.validateAnswer(studentAnswer, correctAnswer);
+
+    case 'Open Response':
+      return validateOpenResponse(studentAnswer, correctAnswer);
+
+    case 'Expression Builder':
+      return validateExpressionBuilder(studentAnswer, correctAnswer);
+
+    case 'Fill-in-the-Blank':
+    case 'Fill-in-the-Blanks':
+      // Fill-in-the-blank functionality not implemented yet
+      return false;
+
+    case 'Match Question':
+    case 'Matching':
+      return validateMatchQuestion(studentAnswer, correctAnswer);
+
+    case 'True/False':
+    case 'True-False':
+      return validateTrueFalse(studentAnswer, correctAnswer);
+
+    default:
+      return studentAnswer === correctAnswer;
+  }
+};
+
+// Replace your validateOpenResponse function in questionRoutes.js with this:
+
+const validateOpenResponse = (studentAnswer, correctAnswer) => {
+  if (!studentAnswer || !correctAnswer) {
+    return false;
+  }
+
+  const studentStr = studentAnswer.toString().trim();
+  const correctStr = correctAnswer.toString().trim();
+
+  // Method 1: Try exact match (case-insensitive)
+  if (studentStr.toLowerCase() === correctStr.toLowerCase()) {
+    return true;
+  }
+
+  // Method 2: Try numerical comparison for math problems
+  const studentNum = parseFloat(studentStr.replace(/[^\d.-]/g, '')); // Remove non-numeric chars except decimal and minus
+  const correctNum = parseFloat(correctStr.replace(/[^\d.-]/g, ''));
+
+  if (!isNaN(studentNum) && !isNaN(correctNum)) {
+    const isCorrect = Math.abs(studentNum - correctNum) < 0.01; // Allow small floating point differences
+    if (isCorrect) {
+      return true;
+    }
+  }
+
+  // Method 3: Check if student answer contains the correct answer
+  if (studentStr.toLowerCase().includes(correctStr.toLowerCase())) {
+    return true;
+  }
+
+  // Method 4: For text responses, require minimum length (original behavior)
+  if (studentStr.length >= 20) {
+    return true;
+  }
+  return false;
+};
+
+const validateExpressionBuilder = (studentAnswer, correctAnswer) => {
+  try {
+    const studentExpression =
+      typeof studentAnswer === 'string'
+        ? studentAnswer
+        : studentAnswer.join('');
+    const correctExpression = correctAnswer;
+
+    return backendMathValidator.validateAnswer(
+      studentExpression,
+      correctExpression,
+    );
+  } catch (error) {
+    console.error('Error validating expression builder:', error);
+    return false;
+  }
+};
+
+const validateTrueFalse = (studentAnswer, correctAnswer) => {
+  try {
+    if (!studentAnswer || !correctAnswer) {
+      return false;
+    }
+
+    // Normalize both answers to lowercase for comparison
+    const normalizedStudent = studentAnswer.toString().toLowerCase().trim();
+    const normalizedCorrect = correctAnswer.toString().toLowerCase().trim();
+
+    // Direct comparison
+    return normalizedStudent === normalizedCorrect;
+  } catch (error) {
+    console.error('Error validating true/false:', error);
+    return false;
+  }
+};
+
+// Helper function to detect if a string looks like a math expression
+const isMathExpression = (str) => {
+  if (!str || typeof str !== 'string') return false;
+
+  // Check for mathematical operators, functions, or patterns
+  const mathPatterns = [
+    /[+\-*/^()=]/, // Basic operators and parentheses
+    /\b(sin|cos|tan|log|ln|sqrt|exp|abs)\b/i, // Math functions
+    /\d+\.\d+/, // Decimal numbers
+    /[a-z]\s*[=]/i, // Variable assignments like x=
+    /\b(pi|e|infinity)\b/i, // Math constants
+    /\d+[a-z]/i, // Number with variable like 2x
+    /[a-z]\d+/i, // Variable with number like x2
+  ];
+
+  return mathPatterns.some((pattern) => pattern.test(str));
+};
+
+// Get questions by type - UPDATED to use only existing columns
+router.get('/questions/type/:type', async (req, res) => {
+  const { type } = req.params;
+  const { limit = 10 } = req.query;
+
+  try {
+    let query = supabase
+      .from('Questions')
+      .select(
+        `
+        Q_id,
+        topic,
+        difficulty,
+        level,
+        questionText,
+        xpGain,
+        type,
+        topic_id,
+        elo_rating,
+        imageUrl
+      `,
+      )
+      .eq('type', type)
+      .limit(parseInt(limit));
+
+    const { data: questions, error: qError } = await query;
+
+    if (qError) {
+      return res.status(500).json({
+        error: 'Failed to fetch questions',
+        details: qError.message,
+      });
+    }
+
+    if (!questions || questions.length === 0) {
+      return res.status(404).json({
+        error: `No questions found for type: ${type}`,
+      });
+    }
+
+    // Fetch answers for each question
+    const questionIds = questions.map((q) => q.Q_id);
+    const { data: answers, error: aError } = await supabase
+      .from('Answers')
+      .select('*')
+      .in('question_id', questionIds)
+      .not('answer_text', 'is', null);
+
+    if (aError) {
+      return res.status(500).json({
+        error: 'Failed to fetch answers',
+        details: aError.message,
+      });
+    }
+
+    // Map answers to questions and add placeholder metadata for frontend compatibility
+    questions.forEach((question) => {
+      question.answers = answers.filter(
+        (answer) => answer.question_id === question.Q_id,
+      );
+
+      // Add placeholder fields for frontend compatibility (all null for now)
+      question.inputLabels = null;
+      question.expressionTiles = null;
+      question.fillInText = null;
+      question.showMathHelper = false;
+    });
+
+    // Filter out questions with no answers (for match questions this means incomplete data)
+    const questionsWithAnswers = questions.filter(
+      (q) => q.answers && q.answers.length > 0,
+    );
+
+    res.status(200).json({
+      success: true,
+      data: questionsWithAnswers,
+      type: type,
+      count: questionsWithAnswers.length,
+    });
+  } catch (err) {
+    console.error('Unexpected error:', err);
+    res.status(500).json({ error: 'Unexpected server error' });
+  }
+});
+
+// Get mixed question types for practice - UPDATED
+router.get('/questions/mixed', async (req, res) => {
+  const { level = 1, count = 10 } = req.query;
+
+  try {
+    const { data: questions, error: qError } = await supabase
+      .from('Questions')
+      .select(
+        `
+        Q_id,
+        topic,
+        difficulty,
+        level,
+        questionText,
+        xpGain,
+        type,
+        topic_id,
+        elo_rating,
+        imageUrl
+      `,
+      )
+      .eq('level', level);
+
+    if (qError) {
+      return res.status(500).json({
+        error: 'Failed to fetch questions',
+        details: qError.message,
+      });
+    }
+
+    // Shuffle and select
+    const shuffled = questions.sort(() => 0.5 - Math.random());
+    const selected = shuffled.slice(0, parseInt(count));
+
+    // Fetch answers
+    const questionIds = selected.map((q) => q.Q_id);
+    const { data: answers, error: aError } = await supabase
+      .from('Answers')
+      .select('*')
+      .in('question_id', questionIds);
+
+    if (aError) {
+      return res.status(500).json({
+        error: 'Failed to fetch answers',
+        details: aError.message,
+      });
+    }
+
+    // Map answers to questions and add placeholder metadata
+    selected.forEach((question) => {
+      question.answers = answers.filter(
+        (answer) => answer.question_id === question.Q_id,
+      );
+
+      // Add placeholder fields for frontend compatibility
+      question.inputLabels = null;
+      question.expressionTiles = null;
+      question.fillInText = null;
+      question.showMathHelper = false;
+    });
+
+    res.status(200).json({
+      success: true,
+      data: selected,
+      level: level,
+      count: selected.length,
+    });
+  } catch (err) {
+    console.error('Unexpected error:', err);
+    res.status(500).json({ error: 'Unexpected server error' });
+  }
+});
+
+// Enhanced submit route with support for all question types - UPDATED
+router.post('/question/:id/submit', async (req, res) => {
+  const { id } = req.params;
+  const { studentAnswer, userId, questionType } = req.body;
+
+  try {
+    // Fetch question and correct answer
+    const { data: questionData, error: questionError } = await supabase
+      .from('Questions')
+      .select('type, xpGain')
+      .eq('Q_id', id)
+      .single();
+
+    if (questionError || !questionData) {
+      return res.status(404).json({ error: 'Question not found' });
+    }
+
+    const { data: correctAnswerData, error: answerError } = await supabase
+      .from('Answers')
+      .select('*') // Select all fields
+      .eq('question_id', id)
+      .eq('isCorrect', true)
+      .single();
+
+    // Add debugging
+    console.log('Answer query result:', { correctAnswerData, answerError });
+
+    if (answerError || !correctAnswerData) {
+      console.log('Answer error details:', answerError);
+      return res.status(404).json({
+        error: 'Correct answer not found',
+        debug: { answerError, question_id: id },
+      });
+    }
+
+    const correctAnswer =
+      correctAnswerData.answer_text || correctAnswerData.answerText;
+    const actualQuestionType = questionType || questionData.type;
+
+    // Validate answer based on question type
+    const isCorrect = validateAnswerByType(
+      actualQuestionType,
+      studentAnswer,
+      correctAnswer,
+    );
+
+    // Award XP if correct and userId provided
+    let updatedUser = null;
+    let xpAwarded = 0;
+
+    if (isCorrect && userId) {
+      const { data: currentUser, error: userError } = await supabase
+        .from('Users')
+        .select('xp')
+        .eq('id', userId)
+        .single();
+
+      if (!userError && currentUser) {
+        xpAwarded = questionData.xpGain || 10;
+        const newXp = (currentUser.xp || 0) + xpAwarded;
+
+        const { data: updated, error: updateError } = await supabase
+          .from('Users')
+          .update({ xp: newXp })
+          .eq('id', userId)
+          .select('id, xp')
+          .single();
+
+        if (!updateError) {
+          updatedUser = updated;
+        }
+      }
+    }
+
+    // Generate feedback message based on question type
+    let feedbackMessage;
+    if (isCorrect) {
+      feedbackMessage = getFeedbackMessage(actualQuestionType, true);
+    } else {
+      feedbackMessage = getFeedbackMessage(actualQuestionType, false);
+    }
+
+    res.status(200).json({
+      success: true,
+      data: {
+        isCorrect,
+        studentAnswer,
+        correctAnswer:
+          actualQuestionType === 'Open Response'
+            ? 'See rubric for details'
+            : correctAnswer,
+        message: feedbackMessage,
+        xpAwarded,
+        updatedUser,
+        questionType: actualQuestionType,
+      },
+    });
+  } catch (error) {
+    console.error('Error submitting answer:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to submit answer',
+      details: error.message,
+    });
+  }
+});
+
+// Helper function for feedback messages
+const getFeedbackMessage = (questionType, isCorrect) => {
+  const correctMessages = {
+    'Multiple Choice': 'Correct! Well done!',
+    'Math Input': 'Correct! Your mathematical expression is right!',
+    'Open Response':
+      'Great response! Your explanation demonstrates good understanding.',
+    'Expression Builder': 'Perfect! Your expression is correctly constructed!',
+    'Fill-in-the-Blank': 'Correct! All blanks filled properly!',
+    'Fill-in-the-Blanks': 'Correct! All blanks filled properly!',
+    'Match Question': 'Excellent! All pairs matched correctly!',
+    Matching: 'Excellent! All pairs matched correctly!',
+    'True/False': 'Correct! You chose the right answer!',
+    'True-False': 'Correct! You chose the right answer!',
+  };
+
+  const incorrectMessages = {
+    'Multiple Choice': 'Incorrect. Try again!',
+    'Math Input': 'Not quite right. Check your mathematical expression.',
+    'Open Response':
+      'Your response needs more detail or accuracy. Try explaining step by step.',
+    'Expression Builder':
+      "Your expression isn't quite right. Try rearranging the tiles.",
+    'Fill-in-the-Blank':
+      'Some blanks are incorrect. Double-check your answers.',
+    'Fill-in-the-Blanks':
+      'Some blanks are incorrect. Double-check your answers.',
+    'Match Question':
+      'Some pairs are not matched correctly. Review your connections.',
+    Matching: 'Some pairs are not matched correctly. Review your connections.',
+    'True/False': 'Incorrect. Think about the statement more carefully.',
+    'True-False': 'Incorrect. Think about the statement more carefully.',
+  };
+
+  return isCorrect
+    ? correctMessages[questionType] || 'Correct!'
+    : incorrectMessages[questionType] || 'Incorrect. Try again!';
+};
+
+// Keep all your existing routes exactly as they are
 router.get('/questions', async (req, res) => {
   try {
     const { data, error } = await supabase
       .from('Questions')
-      .select('Q_id, topic, difficulty, level, questionText, xpGain');
+      .select('Q_id, topic, difficulty, level, questionText, xpGain, type');
 
     if (error) {
       console.error('Error fetching questions:', error.message);
@@ -24,7 +758,6 @@ router.get('/questions', async (req, res) => {
   }
 });
 
-// Return specific question by ID (ADD THIS NEW ROUTE)
 router.get('/questionsById/:id', async (req, res) => {
   const { id } = req.params;
 
@@ -51,18 +784,10 @@ router.get('/questionsById/:id', async (req, res) => {
   }
 });
 
-// Return all questions for given level: (works)
-router.get('/question/:level', async (req, res) => {
+// Keep all your other existing routes (level, topic, random, etc.) unchanged
+router.get('/question/:level', verifyToken, async (req, res) => {
   const { level } = req.params;
 
-  const authHeader = req.headers.authorization;
-  if (!authHeader || !authHeader.startsWith('Bearer ')) {
-    return res
-      .status(401)
-      .json({ error: 'You are unauthorized to make this request.' });
-  }
-
-  // Validate level parameter - must be a positive integer
   const levelNum = parseInt(level, 10);
   if (isNaN(levelNum) || levelNum <= 0 || !Number.isInteger(levelNum)) {
     return res.status(400).json({ error: 'Invalid level parameter' });
@@ -85,20 +810,12 @@ router.get('/question/:level', async (req, res) => {
   res.status(200).json({ questions: data });
 });
 
-// Return the answer to a specific question (works)
-router.get('/question/:id/answer', async (req, res) => {
+router.get('/question/:id/answer', verifyToken, async (req, res) => {
   const { id } = req.params;
-
-  const authHeader = req.headers.authorization;
-  if (!authHeader || !authHeader.startsWith('Bearer ')) {
-    return res
-      .status(401)
-      .json({ error: 'You are unauthorized to make this request.' });
-  }
 
   const { data, error } = await supabase
     .from('Answers')
-    .select('*') // Ask group what we want to display, just answer or all details?
+    .select('*')
     .eq('question_id', id)
     .eq('isCorrect', true);
 
@@ -114,16 +831,13 @@ router.get('/question/:id/answer', async (req, res) => {
   res.status(200).json({ answer: data });
 });
 
-// Return all questions for a specific topic: (works)
 router.get('/questions/topic', async (req, res) => {
   const { topic } = req.query;
 
-  // Check if topic parameter is missing (undefined or null)
   if (topic === undefined || topic === null) {
     return res.status(400).json({ error: 'Missing topic parameter' });
   }
 
-  // If topic is empty string, return empty array
   if (topic === '') {
     return res.status(200).json({ questions: [] });
   }
@@ -141,7 +855,6 @@ router.get('/questions/topic', async (req, res) => {
   res.status(200).json({ questions: data });
 });
 
-// Return questions filtered by level and topic: (works)
 router.get('/questions/level/topic', async (req, res) => {
   const { level, topic } = req.query;
 
@@ -185,7 +898,6 @@ router.get('/questions/level/topic', async (req, res) => {
   res.status(200).json({ questions: data });
 });
 
-// Get all topics
 router.get('/topics', async (req, res) => {
   try {
     const { data, error } = await supabase.from('Topics').select('*');
@@ -202,7 +914,6 @@ router.get('/topics', async (req, res) => {
   }
 });
 
-// Get random questions for a specific level
 router.get('/questions/random', async (req, res) => {
   try {
     const level = req.query.level;
@@ -210,14 +921,12 @@ router.get('/questions/random', async (req, res) => {
       return res.status(400).json({ error: 'level is required' });
     }
 
-    // Fetch 15 random questions for this level
     const { data: questions, error: qError } = await supabase
       .from('Questions')
       .select('*')
       .eq('level', level);
 
     if (qError) {
-      //console.log(qError);
       return res
         .status(500)
         .json({ error: 'Failed to fetch questions', details: qError.message });
@@ -229,11 +938,9 @@ router.get('/questions/random', async (req, res) => {
         .json({ error: 'No questions found for this level' });
     }
 
-    //shuffle and pick 15
     const shuffled = questions.sort(() => 0.5 - Math.random());
     const selected = shuffled.slice(0, 5);
 
-    //fetch the answers for the above questions
     const questionIds = selected.map((q) => q.Q_id);
     const { data: answers, error: aError } = await supabase
       .from('Answers')
@@ -244,7 +951,6 @@ router.get('/questions/random', async (req, res) => {
       return res.status(500).json({ error: 'Failed to fetch answers' });
     }
 
-    // Map answers to respective questions in the selected array
     selected.forEach((q) => {
       q.answers = answers.filter((a) => a.question_id === q.Q_id);
     });
@@ -256,81 +962,359 @@ router.get('/questions/random', async (req, res) => {
   }
 });
 
-// Submit and validate answer for a specific question
 router.post('/question/:id/submit', async (req, res) => {
   const { id } = req.params;
-  const { studentAnswer, userId } = req.body;
+  const { studentAnswer, userId, questionType, timeSpent, gameMode } = req.body;
 
   try {
-    // Fetch the correct answer from database
-    const { data: correctAnswerData, error: answerError } = await supabase
-      .from('Answers')
-      .select('answer_text')
-      .eq('question_id', id)
-      .eq('isCorrect', true)
-      .single();
-
-    if (answerError || !correctAnswerData) {
-      return res
-        .status(404)
-        .json({ error: 'Question or correct answer not found' });
+    // Validate required fields
+    if (!id) {
+      return res.status(400).json({
+        success: false,
+        error: 'Question ID is required',
+      });
     }
 
-    const correctAnswer = correctAnswerData.answerText;
-    const isCorrect = backendMathValidator.validateAnswer(
-      studentAnswer,
-      correctAnswer,
-    );
+    if (!userId) {
+      return res.status(400).json({
+        success: false,
+        error: 'User ID is required',
+      });
+    }
 
-    // If correct and userId provided, award XP
-    let updatedUser = null;
-    if (isCorrect && userId) {
-      // Fetch question XP value
-      const { data: questionData, error: questionError } = await supabase
-        .from('Questions')
-        .select('xpGain')
-        .eq('Q_id', id)
+    if (studentAnswer === undefined || studentAnswer === null) {
+      return res.status(400).json({
+        success: false,
+        error: 'Student answer is required',
+      });
+    }
+
+    const { data: questionData, error: questionError } = await supabase
+      .from('Questions')
+      .select(
+        `
+        type,
+        xpGain,
+        questionText,
+        topic,
+        topic_id,
+        Topics!inner(name)
+      `,
+      )
+      .eq('Q_id', id)
+      .single();
+
+    if (questionError || !questionData) {
+      return res.status(404).json({
+        success: false,
+        error: 'Question not found',
+      });
+    }
+
+    const actualQuestionType = questionType || questionData.type;
+    const topicName = questionData.Topics?.name || questionData.topic;
+    let isCorrect = false;
+
+    // Handle match questions with enhanced validation
+    if (
+      actualQuestionType === 'Match Question' ||
+      actualQuestionType === 'Matching'
+    ) {
+      isCorrect = await validateMatchQuestion(studentAnswer, id);
+    } else if (actualQuestionType === 'Open Response') {
+      // Handle Open Response questions with multiple correct answers
+      const { data: correctAnswersData, error: answerError } = await supabase
+        .from('Answers')
+        .select('*')
+        .eq('question_id', id)
+        .eq('isCorrect', true);
+
+      if (
+        answerError ||
+        !correctAnswersData ||
+        correctAnswersData.length === 0
+      ) {
+        return res.status(404).json({
+          success: false,
+          error: 'Correct answer not found',
+          debug: { answerError, question_id: id },
+        });
+      }
+
+      // Check student answer against all correct answers
+      for (const correctAnswerData of correctAnswersData) {
+        const correctAnswer =
+          correctAnswerData.answer_text || correctAnswerData.answerText;
+        if (validateOpenResponse(studentAnswer, correctAnswer)) {
+          isCorrect = true;
+          break; // Exit loop once we find a match
+        }
+      }
+    } else {
+      // Handle other question types with existing validation (single correct answer)
+      const { data: correctAnswerData, error: answerError } = await supabase
+        .from('Answers')
+        .select('*')
+        .eq('question_id', id)
+        .eq('isCorrect', true)
         .single();
 
-      if (!questionError && questionData) {
-        // Update user XP
-        const { data: currentUser, error: userError } = await supabase
+      if (answerError || !correctAnswerData) {
+        return res.status(404).json({
+          success: false,
+          error: 'Correct answer not found',
+          debug: { answerError, question_id: id },
+        });
+      }
+
+      const correctAnswer =
+        correctAnswerData.answer_text || correctAnswerData.answerText;
+      isCorrect = validateAnswerByType(
+        actualQuestionType,
+        studentAnswer,
+        correctAnswer,
+      );
+    }
+
+    // Award XP if correct
+    let updatedUser = null;
+    let xpAwarded = 0;
+
+    if (isCorrect && userId) {
+      const { data: currentUser, error: userError } = await supabase
+        .from('Users')
+        .select('xp')
+        .eq('id', userId)
+        .single();
+
+      if (!userError && currentUser) {
+        xpAwarded = questionData.xpGain || 10;
+        const newXp = (currentUser.xp || 0) + xpAwarded;
+
+        const { data: updated, error: updateError } = await supabase
           .from('Users')
-          .select('xp')
+          .update({ xp: newXp })
           .eq('id', userId)
+          .select('id, xp')
           .single();
 
-        if (!userError && currentUser) {
-          const newXp = (currentUser.xp || 0) + questionData.xpGain;
-
-          const { data: updated, error: updateError } = await supabase
-            .from('Users')
-            .update({ xp: newXp })
-            .eq('id', userId)
-            .select('id, xp')
-            .single();
-
-          if (!updateError) {
-            updatedUser = updated;
-          }
+        if (!updateError) {
+          updatedUser = updated;
         }
       }
     }
 
-    res.status(200).json({
-      isCorrect,
-      studentAnswer,
-      correctAnswer,
-      message: isCorrect ? 'Correct! Well done!' : 'Incorrect. Try again!',
-      xpAwarded:
-        isCorrect && updatedUser
-          ? updatedUser.xp - (updatedUser.xp - (questionData?.xpGain || 0))
-          : 0,
-      updatedUser,
-    });
+    // Check for achievement unlocks
+    let unlockedAchievements = [];
+
+    if (userId) {
+      try {
+        console.log('🎯 Starting achievement checks for user:', userId);
+
+        // Use dynamic import to avoid circular dependency issues
+        const achievementModule = await import('./achievementRoutes.js');
+        const {
+          checkQuestionAchievements,
+          checkFastSolveAchievements,
+          checkLeaderboardAchievements,
+          checkBadgeCollectorAchievement,
+          checkTopicMasteryAchievements,
+          checkStreakAchievements,
+        } = achievementModule;
+
+        // Import streak calculator
+        const { updateUserStreak } = await import(
+          './utils/streakCalculator.js'
+        );
+
+        if (isCorrect) {
+          // Check question achievements
+          try {
+            console.log(
+              `🎯 ACHIEVEMENT DEBUG - Checking question achievements for user ${userId}, gameMode: ${
+                gameMode || 'practice'
+              }`,
+            );
+            const questionAchievements = await checkQuestionAchievements(
+              userId,
+              isCorrect,
+              gameMode || 'practice',
+            );
+
+            console.log(
+              `🎯 ACHIEVEMENT DEBUG - checkQuestionAchievements returned:`,
+              {
+                type: typeof questionAchievements,
+                isArray: Array.isArray(questionAchievements),
+                length: questionAchievements?.length,
+                achievements: questionAchievements,
+              },
+            );
+
+            if (questionAchievements && questionAchievements.length > 0) {
+              unlockedAchievements.push(...questionAchievements);
+              console.log(
+                '� Question achievements unlocked:',
+                questionAchievements.length,
+              );
+              console.log(
+                '🏆 Achievement details:',
+                questionAchievements.map((a) => ({ name: a.name, id: a.id })),
+              );
+            } else {
+              console.log('🤷 No question achievements unlocked this time');
+            }
+          } catch (qError) {
+            console.error('❌ Question achievement error:', qError.message);
+            console.error('❌ Stack trace:', qError.stack);
+          }
+
+          // Check Fast Solve achievements
+          if (timeSpent && typeof timeSpent === 'number') {
+            try {
+              const fastSolveAchievements = await checkFastSolveAchievements(
+                userId,
+                timeSpent,
+                isCorrect,
+              );
+              if (fastSolveAchievements && fastSolveAchievements.length > 0) {
+                unlockedAchievements.push(...fastSolveAchievements);
+                console.log(
+                  '🎯 Fast solve achievements unlocked:',
+                  fastSolveAchievements.length,
+                );
+              }
+            } catch (fastSolveError) {
+              console.error(
+                'Fast solve achievement error:',
+                fastSolveError.message,
+              );
+            }
+          }
+
+          // Check Topic Mastery Achievements
+          if (topicName) {
+            try {
+              const topicAchievements = await checkTopicMasteryAchievements(
+                userId,
+                topicName,
+                isCorrect,
+              );
+              if (topicAchievements && topicAchievements.length > 0) {
+                unlockedAchievements.push(...topicAchievements);
+                console.log(
+                  '🎯 Topic achievements unlocked:',
+                  topicAchievements.length,
+                );
+              }
+            } catch (topicError) {
+              console.error('Topic achievement error:', topicError.message);
+            }
+          }
+        }
+
+        // Always check Badge Collector achievements to ensure count accuracy
+        try {
+          const badgeCollectorAchievements =
+            await checkBadgeCollectorAchievement(userId);
+          if (
+            badgeCollectorAchievements &&
+            badgeCollectorAchievements.length > 0
+          ) {
+            unlockedAchievements.push(...badgeCollectorAchievements);
+            console.log(
+              '🎯 Badge collector achievements unlocked:',
+              badgeCollectorAchievements.length,
+            );
+          }
+        } catch (badgeError) {
+          console.error(
+            'Badge collector achievement error:',
+            badgeError.message,
+          );
+        }
+
+        // 🔥 Update daily streak and check streak achievements
+        try {
+          console.log('🔍 Updating user streak...');
+          const streakResult = await updateUserStreak(userId);
+          console.log('✅ Streak update result:', streakResult);
+
+          if (streakResult.success && streakResult.currentStreak > 0) {
+            const streakAchievements = await checkStreakAchievements(
+              userId,
+              streakResult.currentStreak,
+            );
+            if (streakAchievements && streakAchievements.length > 0) {
+              unlockedAchievements.push(...streakAchievements);
+              console.log(
+                '🔥 Streak achievements unlocked:',
+                streakAchievements.length,
+              );
+            }
+          } else {
+            console.log(
+              '⚠️ Streak update failed or no streak to check:',
+              streakResult.message,
+            );
+          }
+        } catch (streakError) {
+          console.error('Streak achievement error:', streakError.message);
+        }
+
+        // Check leaderboard achievements if user gained XP
+        if (updatedUser && xpAwarded > 0) {
+          try {
+            const leaderboardAchievements =
+              await checkLeaderboardAchievements(userId);
+            if (leaderboardAchievements && leaderboardAchievements.length > 0) {
+              unlockedAchievements.push(...leaderboardAchievements);
+              console.log(
+                '🎯 Leaderboard achievements unlocked:',
+                leaderboardAchievements.length,
+              );
+            }
+          } catch (leaderboardError) {
+            console.error(
+              'Leaderboard achievement error:',
+              leaderboardError.message,
+            );
+          }
+        }
+      } catch (achievementError) {
+        console.error('❌ Error checking achievements:', achievementError);
+        // Don't fail the whole request if achievements fail
+      }
+    }
+
+    console.log('🏆 Final unlocked achievements:', unlockedAchievements);
+
+    // Generate feedback message
+    const feedbackMessage = getFeedbackMessage(actualQuestionType, isCorrect);
+
+    // Use the exact response format your frontend expects
+    const responseData = {
+      success: true,
+      data: {
+        isCorrect,
+        studentAnswer,
+        message: feedbackMessage,
+        xpAwarded,
+        newXP: updatedUser?.xp,
+        updatedUser,
+        questionType: actualQuestionType,
+        unlockedAchievements: unlockedAchievements || [],
+      },
+    };
+
+    res.status(200).json(responseData);
   } catch (error) {
     console.error('Error submitting answer:', error);
-    res.status(500).json({ error: 'Failed to submit answer' });
+    res.status(500).json({
+      success: false,
+      error: 'Failed to submit answer',
+      details: error.message,
+    });
   }
 });
 

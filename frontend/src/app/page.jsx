@@ -3,8 +3,83 @@ import LandingHeader from '@/app/ui/landing-header';
 import { ChevronDown } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+import { useEffect, useState } from 'react';
 import LandingFooter from './ui/landing-footer';
+
 export default function Home() {
+  const [isAppInstalled, setIsAppInstalled] = useState(false);
+  const [isChecking, setIsChecking] = useState(true);
+  const router = useRouter();
+
+  useEffect(() => {
+    console.log('Home page useEffect running');
+
+    const checkIfRunningAsPWA = () => {
+      console.log('Checking if running as PWA from home page...');
+
+      // Only check for standalone display mode (actually running as PWA)
+      if (
+        window.matchMedia &&
+        window.matchMedia('(display-mode: standalone)').matches
+      ) {
+        console.log(
+          'Detected standalone mode - should redirect to login-landing',
+        );
+        return true;
+      }
+
+      // Check for iOS standalone mode (running as PWA)
+      if (navigator.standalone === true) {
+        console.log(
+          'Detected iOS standalone mode - should redirect to login-landing',
+        );
+        return true;
+      }
+
+      console.log('Not running as PWA - staying on landing page');
+      return false;
+    };
+
+    const runningAsPWA = checkIfRunningAsPWA();
+    console.log('PWA detection result:', runningAsPWA);
+    setIsAppInstalled(runningAsPWA);
+
+    // Only redirect if actually running as PWA (not just installed)
+    if (runningAsPWA) {
+      console.log('Redirecting to /login-landing...');
+      // Use window.location.replace for immediate redirect without history entry
+      window.location.replace('/login-landing');
+      return; // Don't set isChecking to false if redirecting
+    }
+
+    console.log('Not redirecting, setting isChecking to false');
+    setIsChecking(false);
+  }, [router]);
+
+  // Show loading or nothing while checking installation status
+  if (isChecking) {
+    return (
+      <main className="flex flex-col items-center justify-center min-h-screen">
+        <div className="text-center">
+          <Image
+            src="/ELO-Learning-Mascot.png"
+            width={100}
+            height={100}
+            alt="ELO Learning Mascot"
+            priority
+            className="mx-auto mb-4"
+          />
+          <div className="animate-pulse text-[#BD86F8]">Loading...</div>
+        </div>
+      </main>
+    );
+  }
+
+  // If app is installed, this component shouldn't render (redirect happens above)
+  if (isAppInstalled) {
+    return null;
+  }
   const scrollToNextSection = () => {
     const nextSection = document.querySelector('[data-section="features"]');
     if (nextSection) {

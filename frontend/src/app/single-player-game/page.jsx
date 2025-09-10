@@ -1,12 +1,22 @@
-import { getCookie } from '@/app/lib/authCookie';
 import QuestionsTracker from '@/app/ui/questions/questions-tracker';
+import { authOptions } from '@/lib/auth';
 import { fetchRandomQuestions } from '@/services/api';
+import { resetXPCalculationState } from '@/utils/gameSession';
+import { getServerSession } from 'next-auth/next';
 import { redirect } from 'next/navigation';
-export default async function SinglePlayerGame() {
-  const authCookie = await getCookie();
-  const level = authCookie.user.currentLevel;
-  const questions = await fetchRandomQuestions(level);
 
+export default async function SinglePlayerGame() {
+  const session = await getServerSession(authOptions);
+
+  if (!session?.user) {
+    redirect('/api/auth/signin');
+  }
+
+  // Reset XP calculation state for new game
+  // This will be executed on the client side through the QuestionsTracker component
+
+  const level = session.user.currentLevel || 1; // Default to level 1 if not set
+  const questions = await fetchRandomQuestions(level);
   const submitCallback = async () => {
     'use server';
     redirect('/end-screen?mode=single-player');
@@ -20,6 +30,7 @@ export default async function SinglePlayerGame() {
         submitCallback={submitCallback}
         lives={5}
         mode="single-player"
+        resetXPState={true} // Flag to indicate this is a new game
       />
     </div>
   );

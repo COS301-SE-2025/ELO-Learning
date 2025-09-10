@@ -1,4 +1,5 @@
 import AchievementNotificationManager from '@/app/ui/achievements/achievement-notification-manager';
+import AchievementSessionManager from '@/app/ui/achievements/achievement-session-manager';
 import ErrorBoundary from '@/components/ErrorBoundary';
 import { Toaster } from 'react-hot-toast';
 import { Geist, Geist_Mono } from 'next/font/google';
@@ -59,6 +60,7 @@ export default function RootLayout({ children }) {
         <ErrorBoundary>
           <Providers>
             <PWALifecycle />
+            <AchievementSessionManager />
             <Toaster position="top-right" />
             {children}
 

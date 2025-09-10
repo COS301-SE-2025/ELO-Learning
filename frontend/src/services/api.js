@@ -4,10 +4,18 @@ import { CACHE_DURATIONS, performanceCache } from '../utils/performanceCache';
 
 // Environment-aware base URL with CI support
 const getBaseURL = () => {
+  // Use a dedicated test/CI API URL if provided
   if (process.env.NODE_ENV === 'test' || process.env.CI) {
-    return 'http://localhost:3001'; // Test server port
+    return (
+      process.env.NEXT_PUBLIC_API_TEST_URL ||
+      process.env.NEXT_PUBLIC_API_URL ||
+      'https://api.your-production-domain.com'
+    );
   }
-  return process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
+  // Default to production API URL
+  return (
+    process.env.NEXT_PUBLIC_API_URL || 'https://api.your-production-domain.com'
+  );
 };
 
 const BASE_URL = getBaseURL();
@@ -16,10 +24,11 @@ const isServer = typeof window === 'undefined';
 // ✅ Test-aware axios instance
 const axiosInstance = axios.create({
   baseURL: BASE_URL,
+  withCredentials: true,
   headers: {
     'Content-Type': 'application/json',
   },
-  timeout: process.env.NODE_ENV === 'test' ? 5000 : 10000,
+  timeout: process.env.NODE_ENV === 'test' ? 5000 : 30000, // Increased timeout for production
 });
 
 //  Mock data for tests (prevents API failures)
@@ -308,6 +317,7 @@ export async function loginUser(email, password) {
           },
           elo_rating: 5.0,
           rank: 'Bronze',
+          baseLineTest: true,
         },
       };
     }
@@ -327,6 +337,7 @@ export async function registerUser(
   avatar,
   elo_rating,
   rank,
+  baseLineTest,
 ) {
   try {
     console.log('🚀 Starting registration...');
@@ -377,6 +388,7 @@ export async function registerUser(
           avatar,
           elo_rating,
           rank,
+          baseLineTest,
         },
       };
     }
@@ -564,8 +576,21 @@ export async function submitSinglePlayerAttempt(data) {
 }
 
 export async function submitMultiplayerResult(data) {
-  const res = await axiosInstance.post('/multiplayer', data, {});
-  return res.data;
+  try {
+    const res = await axiosInstance.post('/multiplayer', data, {
+      timeout: 30000, // Extended timeout for multiplayer
+      retries: 2, // Allow retries
+    });
+    return res.data;
+  } catch (error) {
+    console.error('Error submitting multiplayer result:', error);
+    // Return a valid fallback object instead of throwing
+    return {
+      players: [],
+      error: true,
+      message: error.message || 'Failed to submit multiplayer results',
+    };
+  }
 }
 
 export async function sendPasswordResetEmail(email) {
@@ -860,5 +885,103 @@ export async function submitQuestionAnswer({
       };
     }
     throw error;
+  }
+}
+
+//Basline assessment endpoints
+export async function fetchAllBaselineQuestions() {
+  try {
+    const res = await axiosInstance.get('/questions/random', {
+      params: {
+        level: 5, // Start with level 5 for baseline
+        count: 10, // Get 10 questions
+      },
+    });
+
+    if (!res.data || !res.data.questions) {
+      throw new Error('No questions received from server');
+    }
+
+    return res.data.questions;
+  } catch (err) {
+    console.error('fetchBaselineQuestions error:', err);
+    throw new Error(
+      'Failed to fetch baseline questions: ' +
+        (err.response?.data?.message || err.message),
+    );
+  }
+}
+
+export async function fetchNextRandomBaselineQuestion(level) {
+  try {
+    const res = await axiosInstance.get('/questions/random', {
+      params: {
+        level: level || 5, // Default to level 5 if not provided
+        count: 1, // Get a single question
+      },
+    });
+
+    if (!res.data || !res.data.questions) {
+      throw new Error('No questions received from server');
+    }
+
+    return res.data.questions[0];
+  } catch (err) {
+    console.error('fetchNextRandomBaselineQuestion error:', err);
+    throw new Error(
+      'Failed to fetch next random baseline question: ' +
+        (err.response?.data?.message || err.message),
+    );
+  }
+}
+
+export async function skipBaselineTest(userId) {
+  if (!userId) throw new Error('Missing userId');
+  try {
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL;
+    const res = await axios.post(`${apiUrl}/baseline/skip`, {
+      user_id: userId,
+    });
+    return res.data; // { success: true }
+  } catch (err) {
+    console.error('Failed to skip baseline test:', err);
+    throw err;
+  }
+}
+
+// Submit baseline result
+export async function submitBaselineResult(userId, finalLevel) {
+  const res = await fetch('/baseline/complete', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ user_id: userId, finalLevel }),
+  });
+  const data = await res.json();
+  return data;
+}
+
+export async function fetchBaselineQuestion(level) {
+  try {
+    const res = await axiosInstance.get(`/baseline/questions/${level}`);
+    return res.data;
+  } catch (err) {
+    console.error('Failed to fetch baseline question:', err);
+    throw new Error(
+      'Failed to fetch baseline question: ' +
+        (err.response?.data?.message || err.message),
+    );
+  }
+}
+
+export async function updateUserElo(userId, finalElo) {
+  try {
+    const res = await axiosInstance.post('/baseline/complete', {
+      user_id: userId,
+      finalElo,
+    });
+    return res.data;
+  } catch (err) {
+    console.error('Failed to update user level:', err);
+    throw err;
   }
 }

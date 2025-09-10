@@ -1,20 +1,29 @@
 // utils/achievementNotifications.js
 // Centralized helper for showing achievement notifications with better error handling
 
+import achievementTracker from './achievementTracker';
+
 /**
  * Shows achievement notifications using the global notification system
  * @param {Array} achievements - Array of achievement objects to display
  * @param {number} maxRetries - Maximum number of retry attempts (default: 5)
  * @param {number} initialDelay - Initial delay in ms before first attempt (default: 1000)
+ * @param {string} userId - User ID for context (optional)
  * @returns {Promise} - Resolves when notifications are shown, rejects on failure
  */
 export function showAchievementNotifications(
   achievements,
   maxRetries = 5,
   initialDelay = 1000,
+  userId = null,
 ) {
   if (!achievements || achievements.length === 0) {
     return Promise.resolve();
+  }
+
+  // If userId is provided, set it in the achievement tracker
+  if (userId) {
+    achievementTracker.setCurrentUser(userId);
   }
 
   return new Promise((resolve, reject) => {
@@ -115,10 +124,15 @@ export function showAchievementNotifications(
  * Shows a single achievement notification
  * @param {Object} achievement - Single achievement object to display
  * @param {number} maxRetries - Maximum number of retry attempts (default: 3)
+ * @param {string} userId - User ID for context (optional)
  * @returns {Promise} - Resolves when notification is shown, rejects on failure
  */
-export function showSingleAchievementNotification(achievement, maxRetries = 3) {
-  return showAchievementNotifications([achievement], maxRetries);
+export function showSingleAchievementNotification(
+  achievement,
+  maxRetries = 3,
+  userId = null,
+) {
+  return showAchievementNotifications([achievement], maxRetries, 1000, userId);
 }
 
 /**
@@ -171,14 +185,21 @@ export function waitForAchievementSystem(timeout = 5000) {
  * This is the recommended function to use for most cases
  * @param {Array} achievements - Array of achievement objects to display
  * @param {number} timeout - Maximum wait time in milliseconds (default: 3000)
+ * @param {string} userId - User ID for context (optional)
  * @returns {Promise} - Resolves when notifications are shown
  */
 export async function showAchievementNotificationsWhenReady(
   achievements,
   timeout = 3000,
+  userId = null,
 ) {
   if (!achievements || achievements.length === 0) {
     return Promise.resolve();
+  }
+
+  // If userId is provided, set it in the achievement tracker
+  if (userId) {
+    achievementTracker.setCurrentUser(userId);
   }
 
   try {
@@ -187,10 +208,10 @@ export async function showAchievementNotificationsWhenReady(
 
     if (isReady) {
       // System is ready, show notifications immediately
-      return await showAchievementNotifications(achievements, 3, 0);
+      return await showAchievementNotifications(achievements, 3, 0, userId);
     } else {
       // System not ready after timeout, try anyway with retries
-      return await showAchievementNotifications(achievements, 5, 500);
+      return await showAchievementNotifications(achievements, 5, 500, userId);
     }
   } catch (error) {
     console.error('Error in showAchievementNotificationsWhenReady:', error);

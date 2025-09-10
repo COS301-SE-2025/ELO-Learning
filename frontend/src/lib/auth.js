@@ -45,11 +45,6 @@ export const authOptions = {
       },
       async authorize(credentials) {
         try {
-          console.log(
-            '🔐 Attempting credentials login for:',
-            credentials.email,
-          );
-
           const response = await fetch(
             `${process.env.NEXT_PUBLIC_API_URL}/login`,
             {
@@ -65,13 +60,8 @@ export const authOptions = {
           );
 
           const data = await response.json();
-          console.log('🔐 Backend response:', {
-            success: response.ok,
-            status: response.status,
-          });
 
           if (response.ok && data.user) {
-            console.log('✅ Login successful for user:', data.user.username);
             return {
               id: data.user.id,
               email: data.user.email,
@@ -86,9 +76,9 @@ export const authOptions = {
               backendToken: data.token,
               elo_rating: data.user.elo_rating,
               rank: data.user.rank,
+              baseLineTest: data.user.baseLineTest,
             };
           } else {
-            console.log('❌ Login failed:', data.error || 'Unknown error');
             return null;
           }
         } catch (error) {
@@ -121,6 +111,7 @@ export const authOptions = {
           user.backendToken = response.token; // This was missing!
           user.elo_rating = response.user.elo_rating;
           user.rank = response.user.rank;
+          user.baseLineTest = response.user.baseLineTest;
 
           return true;
         } catch (error) {
@@ -137,14 +128,6 @@ export const authOptions = {
         token.accessToken = account.access_token;
       }
 
-      console.log('JWT callback:', {
-        user,
-        account,
-        token,
-        trigger,
-        session,
-      });
-
       if (trigger === 'update' && session?.user) {
         // Update token with user data from session
         token.id = session.user.id;
@@ -158,6 +141,7 @@ export const authOptions = {
         token.avatar = session.user.avatar;
         token.elo_rating = session.user.elo_rating;
         token.rank = session.user.rank;
+        token.baseLineTest = session.user.baseLineTest;
       }
 
       // Persist user data in the token right after signin
@@ -176,6 +160,7 @@ export const authOptions = {
         token.backendToken = user.backendToken;
         token.elo_rating = user.elo_rating;
         token.rank = user.rank;
+        token.baseLineTest = user.baseLineTest;
       }
 
       return token;
@@ -183,12 +168,6 @@ export const authOptions = {
     async session({ session, token, trigger, newSession }) {
       // Send properties to the client, getting data from the token
       session.accessToken = token.accessToken;
-      console.log('Session callback:', {
-        user: session.user,
-        token,
-        trigger,
-        newSession,
-      });
 
       // Pass user data from token to session
       if (token) {
@@ -205,6 +184,7 @@ export const authOptions = {
         session.backendToken = token.backendToken;
         session.user.elo_rating = token.elo_rating;
         session.user.rank = token.rank;
+        session.user.baseLineTest = token.baseLineTest;
       }
 
       return session;

@@ -1,9 +1,9 @@
 'use client';
 import { useSocket } from '@/socket';
+import { initializeAchievementTracking } from '@/utils/gameplayAchievementHandler';
 import { CircleSmall } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
-import useAchievementChecker from '@/hooks/useAchievementChecker';
 
 export default function Page() {
   const { socket, session, status, isConnected } = useSocket();
@@ -13,16 +13,12 @@ export default function Page() {
   const [gameId, setGameId] = useState(null);
   const router = useRouter();
 
-  // ACHIEVEMENT CHECKING
-  useAchievementChecker({
-    checkOnMount: true,
-    debug: false, // Set to true if you want to see achievement logs
-  });
-
-  // Update connection color based on socket status
+  // Initialize achievement tracking when user logs in (no notifications)
   useEffect(() => {
-    setColor(isConnected ? '#40E001' : '#FF6666');
-  }, [isConnected]);
+    if (status === 'authenticated' && session?.user?.id) {
+      initializeAchievementTracking(session.user.id);
+    }
+  }, [status, session?.user?.id]);
 
   useEffect(() => {
     if (status === 'loading') return; // Wait for session to load
@@ -33,10 +29,14 @@ export default function Page() {
 
     function onConnect() {
       console.log('🔌 Socket connected');
+      // Force state update on connection
+      setColor('#40E001');
     }
 
     function onDisconnect() {
       console.log('🔌 Socket disconnected');
+      // Force state update on disconnection
+      setColor('#FF6666');
     }
 
     function matchFound(data) {
@@ -51,6 +51,11 @@ export default function Page() {
       socket.on('connect', onConnect);
       socket.on('disconnect', onDisconnect);
       socket.on('startGame', matchFound);
+
+      // Check if socket is already connected when component mounts
+      if (socket.connected) {
+        onConnect();
+      }
     }
 
     return () => {
@@ -128,7 +133,6 @@ export default function Page() {
             <div className="bg-[#1D1A34] p-6 rounded-lg max-w-md w-full">
               <div className="space-y-3">
                 <div className="flex justify-between items-center text-xl">
-                  {/* <span className="font-medium text-black">Username:</span> */}
                   <span>{opponent.username}</span>
                   <span className="text-[#FF6E99] font-bold">
                     Rank: {opponent.rank}

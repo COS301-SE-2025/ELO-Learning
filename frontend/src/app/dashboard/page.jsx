@@ -1,10 +1,11 @@
 'use client';
 import { fetchUsersByRank } from '@/services/api';
+import { initializeAchievementTracking } from '@/utils/gameplayAchievementHandler';
 import { useSession } from 'next-auth/react';
 import { useEffect, useMemo, useState } from 'react';
 import LeaderboardTable from '../ui/leaderboard-table';
 import { NotificationSettings } from '@/components/NotificationSettings';
-import useAchievementChecker from '@/hooks/useAchievementChecker';
+import BaselineTestPopup from '../ui/pop-up/baseline-test';
 
 export default function Page() {
   const [users, setUsers] = useState([]);
@@ -12,17 +13,18 @@ export default function Page() {
   const [error, setError] = useState(null);
   const [sortType, setSortType] = useState('xp');
   const { data: session, status, update: updateSession } = useSession();
+  const [showPopup, setShowPopup] = useState(false);
 
-  // ACHIEVEMENT CHECKING
-  useAchievementChecker({
-    checkOnMount: true,
-    debug: false, // Set to true if you want to see achievement logs
-  });
+  // Initialize achievement tracking when user logs in (no notifications)
+  useEffect(() => {
+    if (status === 'authenticated' && session?.user?.id) {
+      initializeAchievementTracking(session.user.id);
+    }
+  }, [status, session?.user?.id]);
 
   // Function to update session with leaderboard data
   const updateSessionWithLeaderboardData = async (leaderboardData) => {
     try {
-      // You can customize this based on what data you want to add to the session
       await updateSession({
         ...session,
         leaderboardData: leaderboardData,
@@ -49,7 +51,7 @@ export default function Page() {
     let mounted = true;
     let timeoutId;
 
-    async function loadUsers() {
+    async function loadDashboard() {
       try {
         setLoading(true);
         setError(null);
@@ -66,7 +68,7 @@ export default function Page() {
         // Use setTimeout to defer sorting and avoid blocking the UI
         timeoutId = setTimeout(async () => {
           if (mounted) {
-            const sortedData = sortUsers([...data], sortType); // Clone array before sorting
+            const sortedData = sortUsers([...data], sortType);
             setUsers(sortedData);
             setLoading(false);
 
@@ -83,24 +85,36 @@ export default function Page() {
       }
     }
 
-    if (status === 'loading') return; // Don't load users while session is loading
-    loadUsers();
+    async function checkBaselineTest() {
+      if (!session?.user?.id) return;
 
-    // Cleanup function
+      try {
+        if (session.user.baseLineTest === false) {
+          setShowPopup(true);
+        }
+      } catch (error) {
+        console.error('Failed to fetch baseline test:', error);
+      }
+    }
+
+    if (status === 'loading') return;
+
+    if (status === 'authenticated') {
+      checkBaselineTest();
+      loadDashboard();
+    }
+
     return () => {
       mounted = false;
-      if (timeoutId) {
-        clearTimeout(timeoutId);
-      }
+      if (timeoutId) clearTimeout(timeoutId);
     };
-  }, [session?.user?.rank, sortType]); // Removed updateSessionWithLeaderboardData from deps
+  }, [session?.user?.rank, sortType]);
 
-  // Auto-refresh leaderboard every 2 minutes to get fresh data
+  // Auto-refresh leaderboard every 2 minutes
   useEffect(() => {
     const interval = setInterval(async () => {
       console.log('🔄 Auto-refreshing leaderboard data...');
       try {
-        // Fixed: Use fetchUsersByRank instead of fetchAllUsers
         if (session?.user?.rank != null) {
           const data = await fetchUsersByRank(session.user.rank);
           const sortedData = sortUsers([...data], sortType);
@@ -115,23 +129,17 @@ export default function Page() {
     return () => clearInterval(interval);
   }, [session?.user?.rank, sortType]);
 
-  // Memoize the loading component to prevent unnecessary re-renders
   const LoadingComponent = useMemo(
     () => (
       <div className="flex flex-col items-center justify-center min-h-screen">
         <div className="flex flex-row items-center justify-center gap-5">
-          <div
-            className="animate-bounce rounded-full h-5 w-5 bg-[#FF6E99] mb-4"
-            style={{ animationDelay: '0ms' }}
-          ></div>
-          <div
-            className="animate-bounce rounded-full h-5 w-5 bg-[#FF6E99] mb-4"
-            style={{ animationDelay: '150ms' }}
-          ></div>
-          <div
-            className="animate-bounce rounded-full h-5 w-5 bg-[#FF6E99] mb-4"
-            style={{ animationDelay: '300ms' }}
-          ></div>
+          {[0, 150, 300].map((delay) => (
+            <div
+              key={delay}
+              className="animate-bounce rounded-full h-5 w-5 bg-[#FF6E99] mb-4"
+              style={{ animationDelay: `${delay}ms` }}
+            ></div>
+          ))}
         </div>
         <div className="text-lg font-bold text-center">
           Loading leaderboard...
@@ -158,32 +166,40 @@ export default function Page() {
     );
   }
 
-  // Handler for dropdown change
   const handleSortTypeChange = (type) => {
     setSortType(type);
   };
 
   return (
-    <div>
-      <h1 className="text-3xl text-center py-10 md:py-5 mt-10 md:mt-0">
-        Leaderboard
-      </h1>
-      {session?.user?.rank != null ? (
-        <h2 className="text-center text-2xl font-bold pb-5">
-          Rank: <span className="text-[#FF6E99]">{session.user.rank}</span>
-        </h2>
-      ) : (
-        <p className="text-center text-md pb-5 text-[#FF6E99]">
-          Answer some questions to get ranked!
-        </p>
-      )}
-      {session?.user?.rank != null && (
-        <LeaderboardTable
-          users={users}
-          sortType={sortType}
-          onSortTypeChange={handleSortTypeChange}
+    <>
+      {showPopup && (
+        <BaselineTestPopup
+          user_id={session?.user?.id}
+          onClose={() => setShowPopup(false)}
         />
       )}
-    </div>
+
+      <div>
+        <h1 className="text-3xl text-center py-10 md:py-5 mt-10 md:mt-0">
+          Leaderboard
+        </h1>
+        {session?.user?.rank != null ? (
+          <h2 className="text-center text-2xl font-bold pb-5">
+            Rank: <span className="text-[#FF6E99]">{session.user.rank}</span>
+          </h2>
+        ) : (
+          <p className="text-center text-md pb-5 text-[#FF6E99]">
+            Answer some questions to get ranked!
+          </p>
+        )}
+        {session?.user?.rank != null && (
+          <LeaderboardTable
+            users={users}
+            sortType={sortType}
+            onSortTypeChange={handleSortTypeChange}
+          />
+        )}
+      </div>
+    </>
   );
 }

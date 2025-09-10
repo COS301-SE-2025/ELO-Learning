@@ -24,17 +24,13 @@ export function AvatarProvider({ children }) {
 
   // Update avatar when session changes
   useEffect(() => {
-    console.log('Session changed:', session);
     if (session?.user?.avatar) {
-      console.log('Loading avatar from session:', session.user.avatar);
       setAvatar(session.user.avatar);
     }
   }, [session]);
 
   useEffect(() => {
-    console.log('Session changed:', session);
     if (session?.user?.avatar) {
-      console.log('Loading avatar from session:', session.user.avatar);
       setAvatar(session.user.avatar);
     }
   }, []);
@@ -45,7 +41,6 @@ export function AvatarProvider({ children }) {
     localStorage.setItem('userAvatar', JSON.stringify(newAvatar));
 
     const res = await updateUserAvatar(userID, newAvatar);
-    console.log('Updating session with new avatar');
     update({
       user: {
         ...session.user,

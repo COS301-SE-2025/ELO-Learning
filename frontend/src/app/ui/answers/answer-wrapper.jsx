@@ -22,18 +22,18 @@ export default function AnswerWrapper({
   const validationInProgress = useRef(false);
 
   // Debug logging to see what question type we're handling
-  console.log('Question type:', question.type);
-  console.log('All available answers:', currAnswers);
+  // console.log('Question type:', question.type);
+  // console.log('All available answers:', currAnswers);
 
   // NEW: Validate answer format for specific question types
   const validateAnswerFormat = (studentAnswer, questionType, questionText) => {
     const cleanAnswer = studentAnswer.trim();
 
-    console.log('🔍 Validating answer format:', {
-      studentAnswer,
-      questionType,
-      questionText: questionText?.substring(0, 50),
-    });
+    // console.log('🔍 Validating answer format:', {
+    //   studentAnswer,
+    //   questionType,
+    //   questionText: questionText?.substring(0, 50),
+    // });
 
     // For Expression Builder questions expecting equations
     if (questionType === 'Expression Builder') {
@@ -45,16 +45,16 @@ export default function AnswerWrapper({
         const isJustNumbers = /^\d+(\s+\d+)*$/.test(cleanAnswer);
 
         if (isJustNumbers || (!hasVariables && !hasOperators)) {
-          console.log(
-            '❌ Expression Builder expects equation format, got just numbers:',
-            cleanAnswer,
-          );
+          // console.log(
+          //   '❌ Expression Builder expects equation format, got just numbers:',
+          //   cleanAnswer,
+          // );
           return false;
         }
 
         // Must have = sign for equations
         if (!cleanAnswer.includes('=')) {
-          console.log('❌ Equation expected but no = sign found:', cleanAnswer);
+          // console.log('❌ Equation expected but no = sign found:', cleanAnswer);
           return false;
         }
       }
@@ -68,10 +68,10 @@ export default function AnswerWrapper({
         const hasX = /x/.test(cleanAnswer);
 
         if (!hasY || !hasX) {
-          console.log(
-            '❌ Line equation expected y and x variables:',
-            cleanAnswer,
-          );
+          // console.log(
+          //   '❌ Line equation expected y and x variables:',
+          //   cleanAnswer,
+          // );
           return false;
         }
       }
@@ -84,10 +84,10 @@ export default function AnswerWrapper({
         /^[0-9+\-*/().x\s=]+$/.test(cleanAnswer) ||
         /^\d+(\.\d+)?$/.test(cleanAnswer);
       if (!isValidMathInput) {
-        console.log(
-          '❌ Math Input expects numerical format, got:',
-          cleanAnswer,
-        );
+        // console.log(
+        //   '❌ Math Input expects numerical format, got:',
+        //   cleanAnswer,
+        // );
         return false;
       }
 
@@ -95,10 +95,10 @@ export default function AnswerWrapper({
       if (questionText.toLowerCase().includes('evaluate')) {
         const isNumber = /^\d+(\.\d+)?$/.test(cleanAnswer);
         if (!isNumber) {
-          console.log(
-            '❌ Evaluation question expects numerical answer:',
-            cleanAnswer,
-          );
+          // console.log(
+          //   '❌ Evaluation question expects numerical answer:',
+          //   cleanAnswer,
+          // );
           return false;
         }
       }
@@ -107,7 +107,7 @@ export default function AnswerWrapper({
     // For Open Response - more lenient but still check for basic validity
     if (questionType === 'Open Response') {
       if (cleanAnswer.length === 0) {
-        console.log('❌ Open Response cannot be empty');
+        // console.log('❌ Open Response cannot be empty');
         return false;
       }
     }
@@ -150,11 +150,11 @@ export default function AnswerWrapper({
           return;
         }
 
-        console.log('Checking student answer against all correct answers:', {
-          student: studentAnswer,
-          correctAnswers: correctAnswers,
-          questionText: question.questionText,
-        });
+        // console.log('Checking student answer against all correct answers:', {
+        //   student: studentAnswer,
+        //   correctAnswers: correctAnswers,
+        //   questionText: question.questionText,
+        // });
 
         // STEP 1: Check if answer format makes sense for question type
         const isValidFormat = validateAnswerFormat(
@@ -164,9 +164,9 @@ export default function AnswerWrapper({
         );
 
         if (!isValidFormat) {
-          console.log(
-            '❌ Answer format validation failed - marking as incorrect',
-          );
+          // console.log(
+          //   '❌ Answer format validation failed - marking as incorrect',
+          // );
           setIsAnswerCorrect(false);
           return;
         }

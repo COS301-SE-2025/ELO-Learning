@@ -1,16 +1,17 @@
 import express from 'express';
 import { supabase } from '../database/supabaseClient.js';
 import {
+  checkBadgeCollectorAchievement,
   checkEloAchievements,
   checkFastSolveAchievements,
   checkLeaderboardAchievements,
   checkQuestionAchievements,
+  checkStreakAchievements,
 } from './achievementRoutes.js';
-import {
-  calculateExpectedRating,
-  updateEloRating,
-  updateSinglePlayerElo,
-} from './utils/eloCalculator.js';
+import { checkAllProgressAchievements } from './progressAchievements.js';
+import { updateSinglePlayerEloPair } from './utils/eloCalculator.js';
+import { formatAchievementsForResponse } from './utils/gameplayAchievementNotifier.js';
+import { updateUserStreak } from './utils/streakCalculator.js';
 import { checkAndUpdateRankAndLevel } from './utils/userProgression.js';
 import pushNotificationService from './services/pushNotificationService.js';
 import { calculateSinglePlayerXP } from './utils/xpCalculator.js';
@@ -47,6 +48,9 @@ router.post('/singleplayer', async (req, res) => {
       rank: currentRank,
     } = userData;
 
+    // Store session start ELO for progress achievement checking
+    const sessionStartElo = currentElo;
+
     const { data: levelData, error: levelError } = await supabase
       .from('Levels')
       .select('minXP')
@@ -80,29 +84,16 @@ router.post('/singleplayer', async (req, res) => {
     const newXP = currentXP + xpEarned;
 
     //ELO Calculation for player
-    const newElo = updateSinglePlayerElo({
+    const {
+      newPlayerElo: newElo,
+      newQuestionElo,
+      playerEloChange: eloChange,
+      questionEloChange,
+    } = updateSinglePlayerEloPair({
       playerRating: currentElo,
-      questionRating: questionData.elo_rating ?? 5.0,
+      questionRating: questionElo,
       isCorrect,
     });
-
-    const eloChange = parseFloat((newElo - currentElo).toFixed(2));
-
-    //Elo calculation for question (treated as opponent)
-    const expectedForQuestion = calculateExpectedRating(
-      questionElo,
-      currentElo,
-    );
-    const actualForQuestion = isCorrect ? 1 : 0;
-    const newQuestionElo = updateEloRating({
-      rating: questionElo,
-      expected: expectedForQuestion,
-      actual: actualForQuestion,
-    }).toFixed(2);
-
-    const questionEloChange = parseFloat(
-      (newQuestionElo - questionElo).toFixed(2),
-    );
 
     //Update user level and rank
     const { newLevel, newRank } = await checkAndUpdateRankAndLevel({
@@ -147,6 +138,9 @@ router.post('/singleplayer', async (req, res) => {
     ]);
 
     // 🎯 Check for achievements BEFORE updating user record
+    // In your singlePlayerRoutes.js - REPLACE the achievement section
+
+    // 🎯 Check for achievements BEFORE updating user record
     let unlockedAchievements = [];
 
     try {
@@ -166,13 +160,13 @@ router.post('/singleplayer', async (req, res) => {
       );
       unlockedAchievements.push(...questionAchievements);
 
-      // 🆕 Check ELO-based achievements (NEW!)
+      // Check ELO-based achievements
       console.log('🔍 Calling checkEloAchievements...');
       const eloAchievements = await checkEloAchievements(user_id, newElo);
       console.log('✅ checkEloAchievements completed:', eloAchievements);
       unlockedAchievements.push(...eloAchievements);
 
-      // 🆕 Check fast solve achievements (NEW!)
+      // Check fast solve achievements
       console.log('🔍 Calling checkFastSolveAchievements...');
       const fastSolveAchievements = await checkFastSolveAchievements(
         user_id,
@@ -185,7 +179,7 @@ router.post('/singleplayer', async (req, res) => {
       );
       unlockedAchievements.push(...fastSolveAchievements);
 
-      // 🆕 Check leaderboard position achievements (NEW!)
+      // Check leaderboard position achievements
       console.log('🔍 Calling checkLeaderboardAchievements...');
       const leaderboardAchievements =
         await checkLeaderboardAchievements(user_id);
@@ -194,6 +188,58 @@ router.post('/singleplayer', async (req, res) => {
         leaderboardAchievements,
       );
       unlockedAchievements.push(...leaderboardAchievements);
+
+      // 🆕 Check progress achievements (Personal Best, Comeback, Consecutive Improvements)
+      console.log('🔍 Calling checkAllProgressAchievements...');
+      console.log(
+        `Parameters: user_id=${user_id}, newElo=${newElo}, sessionStartElo=${sessionStartElo}, eloChange=${eloChange}`,
+      );
+
+      const progressAchievements = await checkAllProgressAchievements(
+        user_id, // Regular user_id, same as all other achievement functions
+        newElo, // New ELO after this session
+        sessionStartElo, // ELO at the start of this session (captured above)
+        eloChange, // ELO change amount (positive/negative)
+      );
+
+      console.log(
+        '✅ checkAllProgressAchievements completed:',
+        progressAchievements,
+      );
+      unlockedAchievements.push(...progressAchievements);
+
+      // 🏆 Always check Badge Collector achievement to ensure count is accurate
+      console.log('🔍 Calling checkBadgeCollectorAchievement...');
+      const badgeCollectorAchievements =
+        await checkBadgeCollectorAchievement(user_id);
+      console.log(
+        '✅ checkBadgeCollectorAchievement completed:',
+        badgeCollectorAchievements,
+      );
+      unlockedAchievements.push(...badgeCollectorAchievements);
+
+      // 🔥 Update daily streak and check streak achievements
+      console.log('🔍 Calling updateUserStreak...');
+      const streakResult = await updateUserStreak(user_id);
+      console.log('✅ updateUserStreak completed:', streakResult);
+
+      if (streakResult.success && streakResult.currentStreak > 0) {
+        console.log('🔍 Calling checkStreakAchievements...');
+        const streakAchievements = await checkStreakAchievements(
+          user_id,
+          streakResult.currentStreak,
+        );
+        console.log(
+          '✅ checkStreakAchievements completed:',
+          streakAchievements,
+        );
+        unlockedAchievements.push(...streakAchievements);
+      } else {
+        console.log(
+          '⚠️ Streak update failed or no streak to check:',
+          streakResult.message,
+        );
+      }
 
       // NOTE: Single player mode should NOT trigger match achievements
       // Match achievements are only for multiplayer games
@@ -207,6 +253,7 @@ router.post('/singleplayer', async (req, res) => {
       // Don't fail the whole request if achievements fail
     }
 
+    // Update user data in database
     await supabase
       .from('Users')
       .update({
@@ -217,16 +264,31 @@ router.post('/singleplayer', async (req, res) => {
       })
       .eq('id', user_id);
 
-    //Update question ELO
+    // Update question ELO
     await supabase
       .from('Questions')
       .update({ elo_rating: newQuestionElo })
       .eq('Q_id', question_id);
 
+    // 🎯 Format achievements for API response
+    let achievementResponse = null;
+    if (unlockedAchievements.length > 0) {
+      try {
+        achievementResponse = formatAchievementsForResponse(
+          unlockedAchievements,
+          user_id,
+          true,
+        );
+      } catch (error) {
+        console.error('❌ Error formatting achievements:', error);
+      }
+    }
+
     return res.status(200).json({
       xpEarned,
       eloChange,
       questionEloChange,
+      previousElo: sessionStartElo,
       newElo,
       newQuestionElo,
       leveledUp: newLevel > currentLevel,
@@ -236,6 +298,8 @@ router.post('/singleplayer', async (req, res) => {
       totalXP: newXP,
       newLevel,
       unlockedAchievements: unlockedAchievements, // 🎯 Include achievements in response
+      achievements: achievementResponse?.achievements || [], // 🎯 Formatted achievements for frontend notifications
+      achievementSummary: achievementResponse?.achievementSummary || null,
     });
   } catch (err) {
     console.error('Error in /singleplayer:', err);

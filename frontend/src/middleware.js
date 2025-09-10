@@ -26,22 +26,42 @@ export function middleware(request) {
 
   // If no authentication found, redirect to login
   if (!sessionToken && !customToken) {
-    // Safe URL construction with fallback
+    // Safe URL construction with comprehensive validation
     try {
-      if (request.url && typeof request.url === 'string') {
-        return NextResponse.redirect(new URL('/login-landing', request.url));
-      } else {
-        // Fallback for when request.url is invalid
-        const baseUrl =
-          process.env.NEXTAUTH_URL ||
-          process.env.NEXT_PUBLIC_FRONTEND_URL ||
-          'http://localhost:8080';
+      // Validate request.url more thoroughly
+      let baseUrl;
+      
+      if (request.url && typeof request.url === 'string' && request.url.startsWith('http')) {
+        try {
+          // Test if URL is valid by constructing it
+          new URL(request.url);
+          baseUrl = request.url;
+        } catch (urlError) {
+          console.warn('Invalid request.url in middleware:', request.url);
+          baseUrl = null;
+        }
+      }
+      
+      // Fallback to environment variables
+      if (!baseUrl) {
+        baseUrl = process.env.NEXTAUTH_URL || 
+                  process.env.NEXT_PUBLIC_FRONTEND_URL || 
+                  'http://localhost:8080';
+      }
+      
+      // Ensure baseUrl is valid before constructing redirect URL
+      if (typeof baseUrl === 'string' && (baseUrl.startsWith('http://') || baseUrl.startsWith('https://'))) {
         return NextResponse.redirect(new URL('/login-landing', baseUrl));
+      } else {
+        throw new Error(`Invalid baseUrl: ${baseUrl}`);
       }
     } catch (error) {
       console.error('Middleware redirect error:', error);
-      // Emergency fallback - direct redirect
-      return NextResponse.redirect('/login-landing');
+      // Emergency fallback using NextResponse.rewrite for relative redirect
+      const response = NextResponse.next();
+      response.headers.set('Location', '/login-landing');
+      response.status = 302;
+      return response;
     }
   }
 

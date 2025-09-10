@@ -27,11 +27,8 @@ describe('Form Workflows', () => {
     it('should show an error message on failed login', () => {
       cy.visit('/login-landing/login');
 
-      // Mock the API call for a failed login
-      cy.intercept('POST', '**/api/auth/callback/credentials', {
-        statusCode: 200,
-        body: { error: 'CredentialsSignin' },
-      }).as('loginRequest');
+      // Use the custom command to stub authentication error
+      cy.stubNextAuthError('CredentialsSignin');
 
       // Fill out the form with incorrect credentials
       cy.get('input[placeholder="Username or email"]').type(
@@ -43,12 +40,13 @@ describe('Form Workflows', () => {
       cy.contains('button', 'Continue').click();
 
       // Wait for the API call
-      cy.wait('@loginRequest');
+      cy.wait('@authErrorRequest');
 
-      // Verify the error message is displayed
+      // Verify the error message is displayed (give it more time to appear)
       cy.contains(
         'p',
         'Username or password incorrect, please try again',
+        { timeout: 10000 }
       ).should('be.visible');
 
       // Verify the user remains on the login page

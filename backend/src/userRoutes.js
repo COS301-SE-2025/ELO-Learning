@@ -452,6 +452,92 @@ router.get('/verify-reset-token/:token', async (req, res) => {
 });
 
 // --- FRIEND REQUEST ENDPOINTS ---
+// --- COMMUNITY ENDPOINTS ---
+
+// GET /user/:id/community
+// Returns { friends, institution, locations }
+router.get('/user/:id/community', verifyToken, async (req, res) => {
+  const { id } = req.params;
+  try {
+    // Get institution and locations from Users table
+    const { data: user, error: userError } = await supabase
+      .from('Users')
+      .select('institution, locations')
+      .eq('id', id)
+      .single();
+    if (userError || !user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    // Get all friend requests (pending + accepted)
+    const { data: friendRows, error: friendError } = await supabase
+      .from('friends')
+      .select('user_id, friend_id, status')
+      .or(`user_id.eq.${id},friend_id.eq.${id}`)
+      .in('status', ['pending', 'accepted']);
+    if (friendError) {
+      return res.status(500).json({ error: 'Failed to fetch friends' });
+    }
+
+    // Get emails for each friend
+    const friendIds = [
+      ...new Set(
+        friendRows.map((f) =>
+          f.user_id === Number(id) ? f.friend_id : f.user_id,
+        ),
+      ),
+    ];
+    let friends = [];
+    if (friendIds.length > 0) {
+      const { data: friendUsers, error: emailError } = await supabase
+        .from('Users')
+        .select('id, email')
+        .in('id', friendIds);
+      if (!emailError && friendUsers) {
+        friends = friendRows.map((f) => {
+          const friendId = f.user_id === Number(id) ? f.friend_id : f.user_id;
+          const friendUser = friendUsers.find((u) => u.id === friendId);
+          return {
+            email: friendUser?.email || 'unknown',
+            status: f.status,
+          };
+        });
+      }
+    }
+
+    res.status(200).json({
+      friends,
+      institution: user.institution || '',
+      locations: user.locations || [],
+    });
+  } catch (err) {
+    res
+      .status(500)
+      .json({ error: 'Failed to fetch community data', details: err.message });
+  }
+});
+
+// PUT /user/:id/community
+// Updates institution and locations for user
+router.put('/user/:id/community', verifyToken, async (req, res) => {
+  const { id } = req.params;
+  const { institution, locations } = req.body;
+  try {
+    // Update institution and locations in Users table
+    const { error: updateError } = await supabase
+      .from('Users')
+      .update({ institution, locations })
+      .eq('id', id);
+    if (updateError) {
+      return res.status(500).json({ error: 'Failed to update community data' });
+    }
+    res.status(200).json({ message: 'Community data updated' });
+  } catch (err) {
+    res
+      .status(500)
+      .json({ error: 'Failed to update community data', details: err.message });
+  }
+});
 
 // Send a friend request
 router.post('/user/:id/friend-request', verifyToken, async (req, res) => {

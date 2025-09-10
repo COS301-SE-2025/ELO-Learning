@@ -1,5 +1,6 @@
 'use client';
 import { useState, useEffect } from 'react';
+import { useSession } from 'next-auth/react';
 import {
   getRegistration,
   setRegistration,
@@ -20,36 +21,81 @@ const pageBgClass =
 const containerClass = 'w-full max-w-xl space-y-6';
 
 export default function CommunitySettingsPage() {
+  const { data: session } = useSession();
+  const userId = session?.user?.id;
   // Simulate fetching user data (replace with real API calls)
-  const [friends, setFriends] = useState([]);
+  // Friends now have email and status
+  const [friends, setFriends] = useState([]); // [{email, status}]
   const [friendInput, setFriendInput] = useState('');
   const [institution, setInstitution] = useState('');
   const [locations, setLocations] = useState([]);
   const [locationInput, setLocationInput] = useState('');
   const [error, setError] = useState('');
 
+  // Fetch full community data from backend
   useEffect(() => {
-    // Fetch initial data (replace with real API calls)
-    const reg = getRegistration();
-    setFriends(reg.friends || []);
-    setInstitution(reg.institution || '');
-    setLocations(reg.locations || []);
-  }, []);
+    async function fetchCommunity() {
+      if (!userId) return;
+      try {
+        const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL || '';
+        const res = await fetch(`${API_BASE}/user/${userId}/community`);
+        const data = await res.json();
+        if (res.ok) {
+          setFriends(data.friends || []);
+          setInstitution(data.institution || '');
+          setLocations(data.locations || []);
+        } else {
+          setError(data.error || 'Failed to fetch community data.');
+        }
+      } catch (err) {
+        setError('Failed to fetch community data.');
+      }
+    }
+    fetchCommunity();
+  }, [userId]);
 
-  // Add friend
-  const handleAddFriend = () => {
+  // Add friend (send request to backend)
+  const handleAddFriend = async () => {
     if (friendInput.trim() && /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(friendInput)) {
-      setFriends([...friends, friendInput.trim()]);
-      setFriendInput('');
-      setError('');
+      if (!userId) {
+        setError('User not authenticated.');
+        return;
+      }
+      try {
+        const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL || '';
+        // Get JWT token from session
+        const token = session?.user?.accessToken || session?.accessToken;
+        const res = await fetch(`${API_BASE}/user/${userId}/friend-request`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            ...(token ? { Authorization: `Bearer ${token}` } : {}),
+          },
+          body: JSON.stringify({ friend_email: friendInput.trim() }),
+        });
+        const result = await res.json();
+        if (res.status === 201) {
+          setFriends([
+            ...friends,
+            { email: friendInput.trim(), status: 'pending' },
+          ]);
+          setFriendInput('');
+          setError('');
+        } else if (result.error) {
+          setError(result.error);
+        }
+      } catch (err) {
+        setError('Failed to send friend request.');
+      }
     } else {
       setError('Please enter a valid email address.');
     }
   };
 
-  // Remove friend
+  // Remove friend (optional: send delete to backend)
   const handleRemoveFriend = (email) => {
-    setFriends(friends.filter((f) => f !== email));
+    setFriends(friends.filter((f) => f.email !== email));
+    // Optionally send delete to backend
   };
 
   // Add location (max 3)
@@ -68,10 +114,28 @@ export default function CommunitySettingsPage() {
     setLocations(locations.filter((l) => l !== loc));
   };
 
-  // Save changes
-  const handleSave = () => {
-    setRegistration({ friends, institution, locations });
-    setError('Saved!');
+  // Save changes to backend
+  const handleSave = async () => {
+    if (!userId) {
+      setError('User not authenticated.');
+      return;
+    }
+    try {
+      const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL || '';
+      const res = await fetch(`${API_BASE}/user/${userId}/community`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ institution, locations }),
+      });
+      if (res.ok) {
+        setError('Saved!');
+      } else {
+        const result = await res.json();
+        setError(result.error || 'Failed to save.');
+      }
+    } catch (err) {
+      setError('Failed to save changes.');
+    }
   };
 
   return (
@@ -103,16 +167,25 @@ export default function CommunitySettingsPage() {
             </button>
           </div>
           <ul className="mt-2">
-            {friends.map((email, idx) => (
+            {friends.map((f, idx) => (
               <li
                 key={idx}
                 className="flex items-center gap-2 text-base md:text-lg"
               >
-                {email}
+                {f.email}
+                <span
+                  className={
+                    f.status === 'pending'
+                      ? 'text-yellow-500'
+                      : 'text-green-500'
+                  }
+                >
+                  {f.status === 'pending' ? 'Pending' : 'Accepted'}
+                </span>
                 <button
                   type="button"
                   className={removeBtnClass}
-                  onClick={() => handleRemoveFriend(email)}
+                  onClick={() => handleRemoveFriend(f.email)}
                 >
                   Remove
                 </button>

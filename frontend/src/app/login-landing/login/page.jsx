@@ -16,10 +16,12 @@ export default function Page() {
   const handleSubmit = async () => {
     setError('');
 
+    // Safe callback URL construction
+    const baseUrl = process.env.NEXT_PUBLIC_FRONTEND_URL || process.env.NEXTAUTH_URL || 'http://localhost:8080';
+    const callbackUrl = `${baseUrl}/dashboard`;
+
     const result = await signIn('credentials', {
-      callbackUrl: `${
-        process.env.NEXT_PUBLIC_FRONTEND_URL || 'http://localhost:8080'
-      }/dashboard`,
+      callbackUrl,
       email,
       password,
       redirect: false,
@@ -116,10 +118,12 @@ export default function Page() {
             const { cache } = await import('../../../utils/cache');
             cache.clear();
 
+            // Safe callback URL construction
+            const baseUrl = process.env.NEXT_PUBLIC_FRONTEND_URL || process.env.NEXTAUTH_URL || 'http://localhost:8080';
+            const callbackUrl = `${baseUrl}/dashboard`;
+
             signIn('google', {
-              callbackUrl: `${
-                process.env.NEXT_PUBLIC_FRONTEND_URL || 'http://localhost:8080'
-              }/dashboard`,
+              callbackUrl,
             });
           }}
         >

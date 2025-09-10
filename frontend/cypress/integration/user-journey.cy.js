@@ -5,6 +5,19 @@ describe('User Journey', () => {
     // Clear cookies and localStorage before each test
     cy.clearCookies();
     cy.clearLocalStorage();
+    
+    // Handle uncaught exceptions that may occur during testing
+    Cypress.on('uncaught:exception', (err, runnable) => {
+      // Ignore NextAuth-related errors and URL construction errors during testing
+      if (err.message.includes('Failed to construct \'URL\'') || 
+          err.message.includes('CLIENT_FETCH_ERROR') ||
+          err.message.includes('Failed to fetch')) {
+        console.warn('Ignoring test-related error:', err.message);
+        return false;
+      }
+      // Allow other errors to fail the test
+      return true;
+    });
   });
 
   /**

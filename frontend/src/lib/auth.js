@@ -4,8 +4,13 @@ import GoogleProvider from 'next-auth/providers/google';
 // Create server-safe OAuth handler (no caching)
 async function handleOAuthUserServer(email, name, image, provider) {
   try {
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL;
+    if (!apiUrl) {
+      throw new Error('NEXT_PUBLIC_API_URL is not configured');
+    }
+
     const response = await fetch(
-      `${process.env.NEXT_PUBLIC_API_URL}/oauth/user`,
+      `${apiUrl}/oauth/user`,
       {
         method: 'POST',
         headers: {
@@ -45,8 +50,14 @@ export const authOptions = {
       },
       async authorize(credentials) {
         try {
+          const apiUrl = process.env.NEXT_PUBLIC_API_URL;
+          if (!apiUrl) {
+            console.error('NEXT_PUBLIC_API_URL is not configured');
+            return null;
+          }
+
           const response = await fetch(
-            `${process.env.NEXT_PUBLIC_API_URL}/login`,
+            `${apiUrl}/login`,
             {
               method: 'POST',
               headers: {

@@ -26,7 +26,20 @@ export function middleware(request) {
 
   // If no authentication found, redirect to login
   if (!sessionToken && !customToken) {
-    return NextResponse.redirect(new URL('/login-landing', request.url));
+    // Safe URL construction with fallback
+    try {
+      if (request.url && typeof request.url === 'string') {
+        return NextResponse.redirect(new URL('/login-landing', request.url));
+      } else {
+        // Fallback for when request.url is invalid
+        const baseUrl = process.env.NEXTAUTH_URL || process.env.NEXT_PUBLIC_FRONTEND_URL || 'http://localhost:8080';
+        return NextResponse.redirect(new URL('/login-landing', baseUrl));
+      }
+    } catch (error) {
+      console.error('Middleware redirect error:', error);
+      // Emergency fallback - direct redirect
+      return NextResponse.redirect('/login-landing');
+    }
   }
 
   // Allow request to proceed

@@ -231,9 +231,8 @@ Request Body:
 
 ```json
 {
-  "player1_id": 7,
-  "player2_id": 14,
-  "question_id": 22,
+  "player1_id": 40,
+  "player2_id": 48,
   "score1": 1,
   "xpTotal": 80
 }

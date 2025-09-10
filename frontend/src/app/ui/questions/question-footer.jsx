@@ -10,6 +10,7 @@ export default function QuestionFooter({
           type="button"
           disabled={isDisabled || isSubmitting}
           onClick={submitAnswer}
+          data-cy="submit-answer"
           className={`w-full md:m-auto ${
             isDisabled || isSubmitting ? 'disabled_button' : 'main-button'
           }`}

@@ -4,35 +4,46 @@
 
 import MathInputTemplate from '@/app/ui/math-keyboard/math-input-template';
 import ProgressBar from '@/app/ui/progress-bar';
+import { showAchievementNotificationsWhenReady } from '@/utils/achievementNotifications';
 import { submitQuestionAnswer } from '@/utils/api';
+import { showAchievementWithFallback } from '@/utils/fallbackAchievementNotifications';
 import { Heart, X } from 'lucide-react';
+import { useSession } from 'next-auth/react';
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { useEffect, useState } from 'react';
 
 // Import all question type components
+import ExpressionBuilderTemplate from '@/app/ui/question-types/expression-builder';
+import MatchQuestionTemplate from '@/app/ui/question-types/match-question';
 import MultipleChoiceTemplate from '@/app/ui/question-types/multiple-choice';
 import OpenResponseTemplate from '@/app/ui/question-types/open-response';
-import ExpressionBuilderTemplate from '@/app/ui/question-types/expression-builder';
-import FillInBlankTemplate from '@/app/ui/question-types/fill-in-blank';
+import TrueFalseTemplate from '@/app/ui/question-types/true-false';
 
-export default function UniversalQuestionWrapper({ questions }) {
-  // ✅ Safe array handling
+export default function UniversalQuestionWrapper({ questions, numLives = 5 }) {
+  const { data: session } = useSession();
   const allQuestions = questions || [];
   const totalSteps = allQuestions.length;
 
-  // ✅ Safe initialization
+  console.log(
+    '🔥 UniversalQuestionWrapper - Received questions:',
+    allQuestions,
+  );
+  console.log('🔥 UniversalQuestionWrapper - Total questions:', totalSteps);
+
+  //  Safe initialization
   const [currQuestion, setCurrQuestion] = useState(allQuestions[0] || null);
   const [currAnswers, setCurrAnswers] = useState(currQuestion?.answers || []);
   const [currentStep, setCurrentStep] = useState(1);
   const [isDisabled, setIsDisabled] = useState(true);
 
-  // 🔍 Debug logging
+  //  Debug logging
   console.log('UniversalQuestionWrapper - currQuestion:', currQuestion);
   console.log(
     'UniversalQuestionWrapper - currQuestion.type:',
     currQuestion?.type,
   );
+  console.log('UniversalQuestionWrapper - currAnswers:', currAnswers);
 
   // Universal answer state - can handle any answer type
   const [answer, setAnswer] = useState(null);
@@ -44,7 +55,7 @@ export default function UniversalQuestionWrapper({ questions }) {
   const [feedbackMessage, setFeedbackMessage] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // ✅ Handle case where no questions are available
+  //  Handle case where no questions are available
   if (!allQuestions || allQuestions.length === 0) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -65,7 +76,7 @@ export default function UniversalQuestionWrapper({ questions }) {
     );
   }
 
-  // ✅ Handle case where currQuestion is null
+  //  Handle case where currQuestion is null
   if (!currQuestion) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -78,7 +89,7 @@ export default function UniversalQuestionWrapper({ questions }) {
 
   // Dynamic validation based on question type
   useEffect(() => {
-    // ✅ Safe access to question type
+    //  Safe access to question type
     if (!currQuestion || !currQuestion.type) {
       setIsDisabled(true);
       return;
@@ -100,10 +111,19 @@ export default function UniversalQuestionWrapper({ questions }) {
         isValid = answer && answer.length > 0; // Has at least some tiles
         break;
       case 'Fill-in-the-Blank':
+      case 'Fill-in-the-Blanks':
         isValid =
           answer &&
           Object.keys(answer).length > 0 &&
           Object.values(answer).every((val) => val && val.trim());
+        break;
+      case 'Match Question':
+      case 'Matching':
+        isValid = answer && Object.keys(answer).length > 0;
+        break;
+      case 'True/False':
+      case 'True-False':
+        isValid = answer !== null && (answer === 'True' || answer === 'False');
         break;
       default:
         isValid = answer !== null;
@@ -117,16 +137,87 @@ export default function UniversalQuestionWrapper({ questions }) {
     setShowFeedback(false);
 
     try {
-      const result = await submitQuestionAnswer(
-        currQuestion.Q_id,
-        answer,
-        'current-user-id',
-        currQuestion.type,
-      );
+      // Get authenticated user ID with fallback to session
+      const user = JSON.parse(localStorage.getItem('user') || '{}');
+      let userId = user.id;
+
+      // Fallback to NextAuth session if no localStorage user
+      if (!userId && session?.user?.id) {
+        userId = session.user.id;
+        console.log('🔍 Using userId from NextAuth session:', userId);
+      }
+
+      if (!userId) {
+        console.error('❌ No authenticated user found');
+        setFeedbackMessage('Please log in to continue');
+        setShowFeedback(true);
+        return;
+      }
+
+      const result = await submitQuestionAnswer({
+        questionId: currQuestion.Q_id,
+        userId: userId,
+        userAnswer: answer,
+        questionType: currQuestion.type,
+        gameMode: 'practice',
+      });
+
+      console.log('🔍 REAL GAME DEBUG - Full API response:', result);
+      console.log('🔍 REAL GAME DEBUG - Result success:', result.success);
+      console.log('🔍 REAL GAME DEBUG - Result data:', result.data);
 
       if (result.success) {
         setFeedbackMessage(result.data.message);
         setShowFeedback(true);
+
+        console.log(
+          '🔍 REAL GAME DEBUG - Checking for achievements in result.data...',
+        );
+        console.log(
+          '🔍 REAL GAME DEBUG - unlockedAchievements exists:',
+          !!result.data.unlockedAchievements,
+        );
+        console.log(
+          '🔍 REAL GAME DEBUG - unlockedAchievements type:',
+          typeof result.data.unlockedAchievements,
+        );
+        console.log(
+          '🔍 REAL GAME DEBUG - unlockedAchievements value:',
+          result.data.unlockedAchievements,
+        );
+
+        // 🎉 Handle achievement unlocks!
+        if (
+          result.data.unlockedAchievements &&
+          result.data.unlockedAchievements.length > 0
+        ) {
+          console.log(
+            '🏆 Achievements unlocked:',
+            result.data.unlockedAchievements,
+          );
+
+          // Try the main achievement system first, then fallback
+          Promise.race([
+            showAchievementNotificationsWhenReady(
+              result.data.unlockedAchievements,
+            ),
+            new Promise((_, reject) =>
+              setTimeout(() => reject(new Error('Timeout')), 3000),
+            ),
+          ])
+            .then(() => {
+              console.log(
+                '✅ Achievement notifications displayed successfully',
+              );
+            })
+            .catch((error) => {
+              console.error('❌ Main achievement system failed:', error);
+              console.log('🔄 Using fallback notification system...');
+              showAchievementWithFallback(result.data.unlockedAchievements);
+            });
+        } else {
+          console.log('🤷 No achievements unlocked this time');
+        }
 
         if (result.data.isCorrect && result.data.xpAwarded > 0) {
           console.log(`Awarded ${result.data.xpAwarded} XP!`);
@@ -218,7 +309,26 @@ export default function UniversalQuestionWrapper({ questions }) {
         return <ExpressionBuilderTemplate {...commonProps} />;
 
       case 'Fill-in-the-Blank':
-        return <FillInBlankTemplate {...commonProps} />;
+      case 'Fill-in-the-Blanks':
+        return (
+          <div className="text-center p-8">
+            <p className="text-yellow-600 font-medium">
+              Fill-in-the-blank questions are not yet implemented.
+            </p>
+          </div>
+        );
+
+      case 'Match Question':
+      case 'Matching':
+        console.log(
+          '🔥 UniversalQuestionWrapper - Rendering MatchQuestionTemplate!',
+          currQuestion,
+        );
+        return <MatchQuestionTemplate {...commonProps} />;
+
+      case 'True/False':
+      case 'True-False':
+        return <TrueFalseTemplate {...commonProps} />;
 
       default:
         return (
@@ -246,24 +356,15 @@ export default function UniversalQuestionWrapper({ questions }) {
 
           <div className="flex items-center gap-2">
             <Heart size={24} fill="#FF6E99" stroke="#FF6E99" />
-            <span className="font-semibold text-lg">5</span>
+            <span className="font-semibold text-lg">{numLives}</span>
           </div>
         </div>
       </div>
 
       {/* Main Content */}
-      <div className="space-y-8 pb-35 md:pb-50 pt-24 max-w-4xl mx-auto px-4">
+      <div className="pb-35 md:pb-50 pt-24">
         {/* Question Section */}
-        <div className="p-8">
-          <div className="flex items-center gap-3 mb-6">
-            <span className="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm font-semibold">
-              {currQuestion?.type || 'Loading...'}
-            </span>
-            <span className="px-3 py-1 bg-purple-100 text-purple-800 rounded-full text-sm font-semibold">
-              Question {currentStep} of {totalSteps}
-            </span>
-          </div>
-
+        <div className="">
           <h2 className="text-2xl font-bold text-center leading-relaxed">
             {currQuestion?.questionText || 'Loading question...'}
           </h2>

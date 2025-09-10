@@ -1,9 +1,9 @@
 // ui/answers/expression-builder.jsx
 'use client';
 
-import { useState, useEffect } from 'react';
-import { ChevronDown, ChevronUp } from 'lucide-react';
 import 'katex/dist/katex.min.css';
+import { ChevronDown, ChevronUp } from 'lucide-react';
+import { useEffect, useState } from 'react';
 import { InlineMath } from 'react-katex';
 
 export default function ExpressionBuilderTemplate({
@@ -94,29 +94,35 @@ export default function ExpressionBuilderTemplate({
 
   // Convert expression to LaTeX format for proper rendering
   const convertToLatex = (expression) => {
-    // Simple approach - just replace basic operators, keep parentheses as-is
     return expression
       .replace(/×/g, ' \\times ')
       .replace(/÷/g, ' \\div ')
-      .replace(/√/g, '\\sqrt')
+      .replace(/\^/g, '^')
+      .replace(/sqrt/g, '\\sqrt')
       .replace(/π/g, '\\pi')
+      .replace(/θ/g, '\\theta')
       .replace(/∞/g, '\\infty')
-      .replace(/±/g, '\\pm');
+      .replace(/±/g, '\\pm')
+      .replace(/°/g, '^\\circ')
+      .replace(/sin/g, '\\sin')
+      .replace(/cos/g, '\\cos')
+      .replace(/tan/g, '\\tan')
+      .replace(/sec/g, '\\sec')
+      .replace(/csc/g, '\\csc')
+      .replace(/cot/g, '\\cot')
+      .replace(/log/g, '\\log')
+      .replace(/ln/g, '\\ln')
+      .replace(/\|x\|/g, '|x|')
+      .replace(/a\/b/g, '\\frac{a}{b}')
+      .replace(/a₁/g, 'a_1');
   };
 
   return (
-    <div className="w-full space-y-6">
-      <div className="text-center">
-        <p className="text-gray-600 mb-4">
-          Tap tiles below to build your mathematical expression
-        </p>
-      </div>
-
+    <div className="w-full space-y-6 mb-35">
       {/* Expression Display Area - Match App Background */}
-      <div className="bg-gray-800 border-2 border-gray-600 rounded-lg p-4 min-h-[100px] flex flex-wrap items-center gap-2">
+      <div className="border border-[#696969] rounded-lg p-4 min-h-[100px] flex flex-wrap items-center gap-2">
         {selectedTiles.length === 0 ? (
-          <div className="w-full text-center text-gray-400 py-8">
-            <div className="text-4xl mb-2">🧩</div>
+          <div className="w-full text-sm py-2">
             <p>Start building your expression by tapping tiles below</p>
           </div>
         ) : (
@@ -139,9 +145,9 @@ export default function ExpressionBuilderTemplate({
 
       {/* Expression Preview - Match App Background with LaTeX */}
       {selectedTiles.length > 0 && (
-        <div className="bg-gray-800 border border-gray-600 rounded-lg p-4">
-          <div className="text-sm text-gray-400 mb-2">Preview:</div>
-          <div className="text-xl text-white">
+        <div className="border border-[#696969] rounded-lg p-4">
+          <div className="text-sm mb-2">Preview:</div>
+          <div className="text-xl">
             <InlineMath
               math={convertToLatex(
                 selectedTiles.map((tile) => tile.label).join(' '),
@@ -156,7 +162,7 @@ export default function ExpressionBuilderTemplate({
         <button
           onClick={clearAll}
           disabled={selectedTiles.length === 0}
-          className="px-4 py-2 bg-red-500 border-2 border-red-700 text-white rounded-lg disabled:bg-gray-500 disabled:border-gray-700 disabled:cursor-not-allowed hover:bg-red-600 transition-colors"
+          className="px-4 py-2 bg-[#ff6e99] text-white rounded-lg disabled:bg-gray-500 disabled:border-gray-700 disabled:cursor-not-allowed hover:bg-red-600 transition-colors"
         >
           Clear All
         </button>
@@ -318,7 +324,7 @@ export default function ExpressionBuilderTemplate({
 
       {/* Helper Text - Matching Math Input Style */}
       <div
-        className="text-xs bg-gray-800 border border-gray-600 p-3 rounded-lg cursor-pointer select-none"
+        className="text-xs border border-[#696969] p-3 rounded-lg cursor-pointer select-none"
         onClick={() => setShowHelper((prev) => !prev)}
       >
         <div className="flex items-center justify-between text-white">
@@ -331,9 +337,12 @@ export default function ExpressionBuilderTemplate({
           <div className="space-y-1 mt-2 text-gray-300">
             <p>• Tap tiles to add them to your expression</p>
             <p>• Click on tiles in your expression to remove them</p>
-            <p>• Build expressions like: x + 2 × 3 = 11</p>
-            <p>• Use parentheses for grouping: (x + 2) × 3</p>
-            <p>• For factorization: (x + 2)(x + 3)</p>
+            <p>• Build expressions like: x² + 5x + 6</p>
+            <p>• Use parentheses for grouping: (x + 2)(x + 3)</p>
+            <p>• For identities: sin²θ + cos²θ = 1</p>
+            <p>• For sequences: aₙ = a₁ + (n-1)d</p>
+            <p>• For functions: f(x) = 2x + 5</p>
+            <p>• For geometry: A = πr²</p>
           </div>
         )}
       </div>

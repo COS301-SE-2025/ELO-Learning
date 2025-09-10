@@ -9,21 +9,18 @@ async function handleOAuthUserServer(email, name, image, provider) {
       throw new Error('NEXT_PUBLIC_API_URL is not configured');
     }
 
-    const response = await fetch(
-      `${apiUrl}/oauth/user`,
-      {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          email,
-          name,
-          image,
-          provider,
-        }),
+    const response = await fetch(`${apiUrl}/oauth/user`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
       },
-    );
+      body: JSON.stringify({
+        email,
+        name,
+        image,
+        provider,
+      }),
+    });
 
     if (!response.ok) {
       throw new Error('OAuth user creation failed');
@@ -56,19 +53,16 @@ export const authOptions = {
             return null;
           }
 
-          const response = await fetch(
-            `${apiUrl}/login`,
-            {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/json',
-              },
-              body: JSON.stringify({
-                email: credentials.email,
-                password: credentials.password,
-              }),
+          const response = await fetch(`${apiUrl}/login`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
             },
-          );
+            body: JSON.stringify({
+              email: credentials.email,
+              password: credentials.password,
+            }),
+          });
 
           const data = await response.json();
 

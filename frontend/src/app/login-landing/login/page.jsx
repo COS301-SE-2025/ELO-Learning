@@ -17,7 +17,10 @@ export default function Page() {
     setError('');
 
     // Safe callback URL construction
-    const baseUrl = process.env.NEXT_PUBLIC_FRONTEND_URL || process.env.NEXTAUTH_URL || 'http://localhost:8080';
+    const baseUrl =
+      process.env.NEXT_PUBLIC_FRONTEND_URL ||
+      process.env.NEXTAUTH_URL ||
+      'http://localhost:8080';
     const callbackUrl = `${baseUrl}/dashboard`;
 
     const result = await signIn('credentials', {
@@ -119,7 +122,10 @@ export default function Page() {
             cache.clear();
 
             // Safe callback URL construction
-            const baseUrl = process.env.NEXT_PUBLIC_FRONTEND_URL || process.env.NEXTAUTH_URL || 'http://localhost:8080';
+            const baseUrl =
+              process.env.NEXT_PUBLIC_FRONTEND_URL ||
+              process.env.NEXTAUTH_URL ||
+              'http://localhost:8080';
             const callbackUrl = `${baseUrl}/dashboard`;
 
             signIn('google', {

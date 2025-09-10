@@ -32,7 +32,10 @@ export function middleware(request) {
         return NextResponse.redirect(new URL('/login-landing', request.url));
       } else {
         // Fallback for when request.url is invalid
-        const baseUrl = process.env.NEXTAUTH_URL || process.env.NEXT_PUBLIC_FRONTEND_URL || 'http://localhost:8080';
+        const baseUrl =
+          process.env.NEXTAUTH_URL ||
+          process.env.NEXT_PUBLIC_FRONTEND_URL ||
+          'http://localhost:8080';
         return NextResponse.redirect(new URL('/login-landing', baseUrl));
       }
     } catch (error) {

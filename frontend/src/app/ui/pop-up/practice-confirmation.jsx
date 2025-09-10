@@ -50,7 +50,7 @@ export default function PracticeConfirmationPopup({
   // Handle starting the practice session
   const handleStartSession = async () => {
     if (loading) return;
-    
+
     if (!topicId) {
       console.error('No topicId provided to PracticeConfirmationPopup');
       setError('Invalid topic selected. Please try again.');

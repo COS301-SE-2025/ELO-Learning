@@ -15,21 +15,21 @@ export default function Page() {
 
   const handleContinue = async (e) => {
     e.preventDefault();
-    
+
     // Prevent double submission
     if (isLoading) {
       return;
     }
-    
+
     const gradeNumber = parseInt(grade);
     if (!grade || isNaN(gradeNumber) || gradeNumber < 1 || gradeNumber > 12) {
       setError('Please enter a valid grade (1-12).');
       return;
     }
-    
+
     setError('');
     setIsLoading(true);
-    
+
     try {
       setRegistration({ grade: gradeNumber });
       window.location.href = '/login-landing/signup/email';
@@ -67,8 +67,8 @@ export default function Page() {
               />
               {error && <p className="text-red-500">{error}</p>}
               <div className="break_small"></div>
-              <button 
-                className="main-button px-2 py-8" 
+              <button
+                className="main-button px-2 py-8"
                 type="submit"
                 disabled={isLoading}
               >

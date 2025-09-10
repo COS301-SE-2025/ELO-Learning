@@ -32,12 +32,12 @@ export default function Page() {
 
   const handleContinue = async (e) => {
     e.preventDefault();
-    
+
     // Prevent double submission
     if (loading) {
       return;
     }
-    
+
     if (!password || !confirm) {
       setError('Please fill in both password fields.');
       return;

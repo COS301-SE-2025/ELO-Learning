@@ -46,7 +46,7 @@ export function AvatarCreator() {
   const handleSave = async () => {
     // Keep the original simple logic, just make it async for SafeButton
     await updateAvatar(session.user.id, currentAvatar);
-    
+
     // Navigate back to profile
     router.push('/profile');
   };
@@ -150,8 +150,8 @@ export function AvatarCreator() {
           </div>
           {/* Save Button at the bottom of the builder section */}
           <div className="w-full flex justify-center p-6">
-            <SafeButton 
-              onClick={handleSave} 
+            <SafeButton
+              onClick={handleSave}
               className="main-button"
               loadingText="Saving Avatar..."
             >

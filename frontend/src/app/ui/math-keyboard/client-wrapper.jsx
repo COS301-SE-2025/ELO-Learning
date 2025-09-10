@@ -81,7 +81,7 @@ export default function MathKeyboardWrapper({ questions }) {
     if (showFeedback) {
       return;
     }
-    
+
     setShowFeedback(false);
 
     try {

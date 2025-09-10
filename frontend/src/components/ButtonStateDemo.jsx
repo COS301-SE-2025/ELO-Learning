@@ -8,11 +8,14 @@ export const ButtonStateDemo = () => {
   const [results, setResults] = useState([]);
 
   const addResult = (message) => {
-    setResults(prev => [...prev, `${new Date().toLocaleTimeString()}: ${message}`]);
+    setResults((prev) => [
+      ...prev,
+      `${new Date().toLocaleTimeString()}: ${message}`,
+    ]);
   };
 
   const simulateAsyncAction = async (delay = 1000, shouldFail = false) => {
-    await new Promise(resolve => setTimeout(resolve, delay));
+    await new Promise((resolve) => setTimeout(resolve, delay));
     if (shouldFail) {
       throw new Error('Simulated error');
     }
@@ -54,7 +57,7 @@ export const ButtonStateDemo = () => {
   return (
     <div className="p-6 max-w-md mx-auto bg-white rounded-lg shadow-lg">
       <h2 className="text-2xl font-bold mb-4">Button State Demo</h2>
-      
+
       <div className="space-y-3 mb-6">
         <SafeButton
           onClick={handleRapidClickTest}
@@ -104,7 +107,10 @@ export const ButtonStateDemo = () => {
         ) : (
           <div className="space-y-1">
             {results.map((result, index) => (
-              <div key={index} className="text-sm font-mono bg-white p-2 rounded border">
+              <div
+                key={index}
+                className="text-sm font-mono bg-white p-2 rounded border"
+              >
                 {result}
               </div>
             ))}
@@ -113,9 +119,14 @@ export const ButtonStateDemo = () => {
       </div>
 
       <div className="mt-4 text-sm text-gray-600">
-        <p><strong>Test Instructions:</strong></p>
+        <p>
+          <strong>Test Instructions:</strong>
+        </p>
         <ul className="list-disc list-inside space-y-1">
-          <li><strong>Rapid Click Test:</strong> Click the orange button multiple times quickly - should execute only once</li>
+          <li>
+            <strong>Rapid Click Test:</strong> Click the orange button multiple
+            times quickly - should execute only once
+          </li>
           <li>Click buttons once - they should respond immediately</li>
           <li>Buttons should show loading state instantly</li>
           <li>No multiple clicks needed for response</li>

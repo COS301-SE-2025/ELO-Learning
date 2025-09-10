@@ -19,20 +19,20 @@ export default function Page() {
 
   const handleContinue = async (e) => {
     e.preventDefault();
-    
+
     // Prevent double submission
     if (isLoading) {
       return;
     }
-    
+
     if (!validateEmail(email)) {
       setError('Please enter a valid email address.');
       return;
     }
-    
+
     setError('');
     setIsLoading(true);
-    
+
     try {
       setRegistration({ email });
       window.location.href = '/login-landing/signup/password';
@@ -67,8 +67,8 @@ export default function Page() {
               />
               {error && <p className="text-red-500">{error}</p>}
               <div className="break_small"></div>
-              <button 
-                className="main-button px-2 py-8" 
+              <button
+                className="main-button px-2 py-8"
                 type="submit"
                 disabled={isLoading}
               >

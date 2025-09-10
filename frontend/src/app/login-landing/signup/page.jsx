@@ -16,20 +16,20 @@ export default function Page() {
 
   const handleContinue = async (e) => {
     e.preventDefault();
-    
+
     // Prevent double submission
     if (isLoading) {
       return;
     }
-    
+
     if (!name.trim() || !surname.trim()) {
       setError('Please enter both name and surname.');
       return;
     }
-    
+
     setError('');
     setIsLoading(true);
-    
+
     try {
       setRegistration({
         name,
@@ -78,8 +78,8 @@ export default function Page() {
               />
               {error && <p className="text-red-500">{error}</p>}
               <div className="break_small"></div>
-              <button 
-                className="main-button px-2 py-8" 
+              <button
+                className="main-button px-2 py-8"
                 type="submit"
                 disabled={isLoading}
               >

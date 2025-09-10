@@ -27,7 +27,7 @@ export default function CachingExample() {
 
     setLoading(true);
     setError(''); // Clear any previous errors
-    
+
     try {
       const newXP = xp + 100; // Award 100 XP
 
@@ -104,7 +104,7 @@ export default function CachingExample() {
               {error}
             </div>
           )}
-          
+
           <button
             onClick={handleUpdateXP}
             disabled={loading}

@@ -183,7 +183,7 @@ export default function SimpleQuestionWrapper({ questions }) {
     if (showFeedback) {
       return;
     }
-    
+
     // Deduct life if answer is wrong
     if (!isAnswerCorrect) {
       setNumLives((prev) => {

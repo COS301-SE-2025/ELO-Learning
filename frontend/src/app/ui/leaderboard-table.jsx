@@ -42,7 +42,7 @@ const UserRow = memo(function UserRow({
     <tr
       key={user.id}
       ref={isCurrent ? userRowRef : null}
-      className={isCurrent ? 'bg-[#343232] font-bold' : ''}
+      className={isCurrent ? 'bg-[var(--vector-violet-light)] font-bold' : ''}
     >
       <td className="p-2">{index + 1}</td>
       <td className="p-2">
@@ -80,7 +80,7 @@ function DropdownSort({ sortType, onSortTypeChange }) {
   return (
     <div className="relative inline-block text-left w-full" ref={ref}>
       <button
-        className="flex items-center gap-1 font-bold px-2 py-1 rounded cursor-pointer hover:bg-[#232222] focus:outline-none w-full justify-end"
+        className="flex items-center gap-1 font-bold px-2 py-1 rounded cursor-pointer hover:bg-[var(--radical-rose)] focus:outline-none w-full justify-end"
         onClick={() => setOpen((v) => !v)}
         aria-haspopup="listbox"
         aria-expanded={open}
@@ -104,7 +104,7 @@ function DropdownSort({ sortType, onSortTypeChange }) {
       </button>
       {open && (
         <ul
-          className="absolute right-0 z-20 mt-1 w-24 bg-[#232222] border border-[#444] rounded-lg shadow-lg py-1"
+          className="absolute right-0 z-20 mt-1 w-24 bg-[var(--color-background)] border border-[#444] rounded-lg shadow-lg py-1"
           style={{ minWidth: '80px' }}
           role="listbox"
         >
@@ -113,8 +113,8 @@ function DropdownSort({ sortType, onSortTypeChange }) {
               key={opt.value}
               className={`px-4 py-2 flex items-center gap-2 cursor-pointer select-none ${
                 sortType === opt.value
-                  ? 'bg-[#FF6E99] text-white font-bold'
-                  : 'hover:bg-[#343232] text-white'
+                  ? 'bg-[var(--radical-rose)] text-[var(--color-foreground)] font-bold'
+                  : 'hover:bg-[var(--color-background)] text-[var(--color-foreground)]'
               }`}
               onClick={() => {
                 onSortTypeChange?.(opt.value);
@@ -198,7 +198,7 @@ const LeaderboardTable = memo(function LeaderboardTable({
 
   return (
     <div
-      className="border rounded-lg p-4 mx-4 md:mx-0"
+      className="border rounded-lg p-4 mx-4 mb-15 md:mx-0"
       style={{ maxHeight: '100%', overflowY: 'auto' }}
     >
       <table className="table-auto w-full text-center">

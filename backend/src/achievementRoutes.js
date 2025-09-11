@@ -1903,8 +1903,8 @@ router.get('/users/:userId/streak', async (req, res) => {
   try {
     const { userId } = req.params;
 
-    // Import streak calculator functions
-    const { getUserStreakInfo } = await import('./utils/streakCalculator.js');
+    // Import streak calculator functions - FIXED PATH
+    const { getUserStreakInfo } = await import('../utils/streakCalculator.js');
 
     const streakInfo = await getUserStreakInfo(userId);
 
@@ -1929,8 +1929,8 @@ router.post('/users/:userId/streak/update', async (req, res) => {
   try {
     const { userId } = req.params;
 
-    // Import streak calculator functions
-    const { updateUserStreak } = await import('./utils/streakCalculator.js');
+    // Import streak calculator functions - FIXED PATH
+    const { updateUserStreak } = await import('../utils/streakCalculator.js');
 
     const streakResult = await updateUserStreak(userId);
 
@@ -1961,30 +1961,6 @@ router.post('/users/:userId/streak/update', async (req, res) => {
     res.status(500).json({
       success: false,
       error: 'Failed to update user streak',
-    });
-  }
-});
-
-router.get('/streaks/leaderboard', async (req, res) => {
-  try {
-    const { limit = 10 } = req.query;
-
-    // Import streak calculator functions
-    const { getStreakLeaderboard } = await import(
-      './utils/streakCalculator.js'
-    );
-
-    const leaderboard = await getStreakLeaderboard(parseInt(limit));
-
-    res.json({
-      success: true,
-      leaderboard,
-    });
-  } catch (error) {
-    console.error('Error getting streak leaderboard:', error);
-    res.status(500).json({
-      success: false,
-      error: 'Failed to get streak leaderboard',
     });
   }
 });

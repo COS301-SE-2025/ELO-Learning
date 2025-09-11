@@ -327,14 +327,14 @@ export default function ExpressionBuilderTemplate({
         className="text-xs border border-[#696969] p-3 rounded-lg cursor-pointer select-none"
         onClick={() => setShowHelper((prev) => !prev)}
       >
-        <div className="flex items-center justify-between text-white">
+        <div className="flex items-center justify-between text-[var(--color-foreground)]">
           <strong>Struggling? View some tips here</strong>
           <span className="ml-2">
             {showHelper ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
           </span>
         </div>
         {showHelper && (
-          <div className="space-y-1 mt-2 text-gray-300">
+          <div className="space-y-1 mt-2 text-[var(--color-foreground)]">
             <p>• Tap tiles to add them to your expression</p>
             <p>• Click on tiles in your expression to remove them</p>
             <p>• Build expressions like: x² + 5x + 6</p>

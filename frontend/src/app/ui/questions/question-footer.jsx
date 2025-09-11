@@ -4,7 +4,7 @@ export default function QuestionFooter({
   submitAnswer,
 }) {
   return (
-    <div className="flex fixed bottom-0 left-0 w-full z-10 px-4 py-4 bg-[#201F1F]">
+    <div className="flex fixed bottom-0 left-0 w-full z-10 px-4 py-4 bg-[var(--color-background)]">
       <div className="flex flex-col justify-center md:m-auto max-w-2xl mx-auto">
         <button
           type="button"

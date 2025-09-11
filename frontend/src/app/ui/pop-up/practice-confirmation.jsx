@@ -132,7 +132,7 @@ export default function PracticeConfirmationPopup({
 
         <div className="flex gap-4">
           <button
-            className="flex-1 py-2 font-bold rounded-lg bg-[var(--vector-violet)] text-white hover:bg-[var(--blueprint-blue)] disabled:opacity-50 transition-colors focus:outline-none focus:ring-2 focus:ring-[var(--blueprint-blue)] focus:ring-offset-2"
+            className="main-button flex-1 py-2 font-bold rounded-lg bg-[var(--vector-violet)] text-white hover:bg-[var(--blueprint-blue)] disabled:opacity-50 transition-colors focus:outline-none focus:ring-2 focus:ring-[var(--blueprint-blue)] focus:ring-offset-2"
             onClick={handleStartSession}
             disabled={loading}
             autoFocus
@@ -141,7 +141,7 @@ export default function PracticeConfirmationPopup({
             {loading ? 'Starting Session...' : 'Start Session'}
           </button>
           <button
-            className="flex-1 py-2 font-bold rounded-lg bg-[var(--grey)] hover:bg-[var(--vector-violet-light)] disabled:opacity-50 transition-colors focus:outline-none focus:ring-2 focus:ring-[var(--vector-violet-light)] focus:ring-offset-2"
+            className="secondary-button flex-1 py-2 font-bold rounded-lg bg-[var(--grey)] hover:bg-[var(--vector-violet-light)] disabled:opacity-50 transition-colors focus:outline-none focus:ring-2 focus:ring-[var(--vector-violet-light)] focus:ring-offset-2"
             onClick={handleCancel}
             disabled={loading}
           >

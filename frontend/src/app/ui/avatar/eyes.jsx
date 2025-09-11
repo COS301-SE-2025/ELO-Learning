@@ -47,7 +47,7 @@ export function EyeSelector({ selectedEyes, onEyesChange }) {
   return (
     <div className="space-y-4">
       <h3 className="text-lg font-semibold text-white">Eyes</h3>
-      <div className="grid grid-cols-3 md:grid-cols-4 gap-3 max-h-96 overflow-y-auto">
+      <div className="grid grid-cols-3 md:grid-cols-4 gap-3">
         {eyes.map((eye) => (
           <button
             key={eye.id}

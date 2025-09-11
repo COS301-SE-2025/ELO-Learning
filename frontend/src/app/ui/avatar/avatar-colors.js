@@ -33,7 +33,7 @@ export const avatarColors = [
   '#98fb98',
   '#4ecdc4',
   '#20b2aa',
-]
+];
 
 // Gradient definitions for backgrounds
 export const gradients = [
@@ -49,10 +49,10 @@ export const gradients = [
   { colors: ['#ff6e99', '#421e68', '#7d32ce'] },
   { colors: ['#421e68', '#7d32ce', '#c794ff', '#4d5ded', '#ff6e99'] },
   { colors: ['#ff6e99', '#4d5ded', '#c794ff', '#7d32ce', '#421e68'] },
-]
+];
 
 // Default colors for various avatar components
 export const defaultColors = {
   avatar: avatarColors[4], // '#ff6e99'
   background: '#421e68',
-}
+};

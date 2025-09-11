@@ -47,7 +47,7 @@ export function MouthSelector({ selectedMouth, onMouthChange }) {
   return (
     <div className="space-y-4">
       <h3 className="text-lg font-semibold text-white">Mouth</h3>
-      <div className="grid grid-cols-3 md:grid-cols-4 gap-3 max-h-96 overflow-y-auto">
+      <div className="grid grid-cols-3 md:grid-cols-4 gap-3">
         {mouths.map((mouth) => (
           <button
             key={mouth.id}

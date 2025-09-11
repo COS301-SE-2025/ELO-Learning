@@ -23,7 +23,7 @@ export function BodyShapeSelector({ selectedShape, onShapeChange }) {
   return (
     <div className="space-y-4">
       <h3 className="text-lg font-semibold text-white">Body Shape</h3>
-      <div className="grid grid-cols-3 gap-3 max-h-96 overflow-y-auto">
+      <div className="grid grid-cols-3 gap-3">
         {shapes.map((shape) => (
           <button
             key={shape.id}

@@ -149,10 +149,10 @@ export function AvatarCreator() {
       <div className="flex fixed bottom-0 left-0 w-full z-10 px-4 py-4 bg-[var(--color-background)]">
         <div className="flex flex-col justify-center md:m-auto max-w-2xl mx-auto">
           <SafeButton
-              onClick={handleSave}
-              className="w-full md:m-auto main-button"
-              loadingText="Saving Avatar..."
-            >
+            onClick={handleSave}
+            className="w-full md:m-auto main-button"
+            loadingText="Saving Avatar..."
+          >
             Save Avatar
           </SafeButton>
         </div>

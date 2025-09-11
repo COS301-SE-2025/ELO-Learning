@@ -5,7 +5,7 @@ export default function MultipleChoiceTemplate({
 }) {
   return (
     <div
-      className="flex flex-col gap-10 md:gap-2 items-center"
+      className="flex flex-col gap-10 md:gap-2 items-center md:mb-40"
       data-cy="answer-options-container"
     >
       {answers &&

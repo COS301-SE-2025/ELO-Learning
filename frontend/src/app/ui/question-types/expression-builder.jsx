@@ -160,7 +160,7 @@ export default function ExpressionBuilderTemplate({
       {/* Expression Display Area - Match App Background */}
       <div className="border border-[#696969] rounded-lg p-4 min-h-[100px] flex flex-wrap items-center gap-2">
         {selectedTiles.length === 0 ? (
-          <div className="w-full text-center text-gray-400 py-8">
+          <div className="w-full text-center text-[var(--color-foreground)] py-8">
             <p>Start building your expression by tapping tiles below</p>
           </div>
         ) : (
@@ -184,8 +184,10 @@ export default function ExpressionBuilderTemplate({
       {/* Expression Preview - Match App Background with LaTeX */}
       {selectedTiles.length > 0 && (
         <div className="border border-[#696969] rounded-lg p-4">
-          <div className="text-sm text-gray-400 mb-2">Preview:</div>
-          <div className="text-xl text-white">
+          <div className="text-sm text-[var(--color-foreground)] mb-2">
+            Preview:
+          </div>
+          <div className="text-xl text-[var(--color-foreground)]">
             <InlineMath
               math={convertToLatex(
                 selectedTiles.map((tile) => tile.label).join(' '),
@@ -461,14 +463,16 @@ export default function ExpressionBuilderTemplate({
         className="text-xs border border-[#696969] p-3 rounded-lg cursor-pointer select-none"
         onClick={() => setShowHelper((prev) => !prev)}
       >
-        <div className="flex items-center justify-between text-white">
-          <strong>Struggling? View some tips here</strong>
+        <div className="flex items-center justify-between text-[var(--color-foreground)]">
+          <strong className="text-[var(--color-foreground)]">
+            Struggling? View some tips here
+          </strong>
           <span className="ml-2">
             {showHelper ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
           </span>
         </div>
         {showHelper && (
-          <div className="space-y-1 mt-2 text-gray-300">
+          <div className="space-y-1 mt-2 text-[var(--color-foreground)]">
             <p>• Tap tiles to add them to your expression</p>
             <p>• Click on tiles in your expression to remove them</p>
             <p>• Build expressions like: x² + 5x + 6</p>

@@ -20,7 +20,7 @@ describe('StreakDisplay Component (Profile Page)', () => {
   it('should not render when user is not authenticated', () => {
     mockUseSession.mockReturnValue({
       data: null,
-      status: 'unauthenticated'
+      status: 'unauthenticated',
     });
 
     const { container } = render(<StreakDisplay />);
@@ -30,14 +30,14 @@ describe('StreakDisplay Component (Profile Page)', () => {
   it('should show loading state initially', () => {
     mockUseSession.mockReturnValue({
       data: { user: { id: 'test-user' } },
-      status: 'authenticated'
+      status: 'authenticated',
     });
 
     mockFetchUserStreakInfo.mockReturnValue(new Promise(() => {})); // Never resolves
     mockUpdateUserStreak.mockReturnValue(new Promise(() => {}));
 
     render(<StreakDisplay />);
-    
+
     // Check for loading animation class since we don't have a specific test ID
     expect(document.querySelector('.animate-pulse')).toBeInTheDocument();
   });
@@ -45,12 +45,12 @@ describe('StreakDisplay Component (Profile Page)', () => {
   it('should display streak data correctly', async () => {
     mockUseSession.mockReturnValue({
       data: { user: { id: 'test-user' } },
-      status: 'authenticated'
+      status: 'authenticated',
     });
 
     mockUpdateUserStreak.mockResolvedValue({
       success: true,
-      unlocked_achievements: []
+      unlocked_achievements: [],
     });
 
     mockFetchUserStreakInfo.mockResolvedValue({
@@ -58,8 +58,8 @@ describe('StreakDisplay Component (Profile Page)', () => {
       streak_data: {
         current_streak: 5,
         longest_streak: 10,
-        last_activity: '2025-09-11'
-      }
+        last_activity: '2025-09-11',
+      },
     });
 
     render(<StreakDisplay />);
@@ -77,12 +77,12 @@ describe('StreakDisplay Component (Profile Page)', () => {
   it('should show motivational message for new personal best', async () => {
     mockUseSession.mockReturnValue({
       data: { user: { id: 'test-user' } },
-      status: 'authenticated'
+      status: 'authenticated',
     });
 
     mockUpdateUserStreak.mockResolvedValue({
       success: true,
-      unlocked_achievements: []
+      unlocked_achievements: [],
     });
 
     mockFetchUserStreakInfo.mockResolvedValue({
@@ -90,26 +90,28 @@ describe('StreakDisplay Component (Profile Page)', () => {
       streak_data: {
         current_streak: 10,
         longest_streak: 10,
-        last_activity: '2025-09-11'
-      }
+        last_activity: '2025-09-11',
+      },
     });
 
     render(<StreakDisplay />);
 
     await waitFor(() => {
-      expect(screen.getByText('🎉 New personal best! Keep it going!')).toBeInTheDocument();
+      expect(
+        screen.getByText('🎉 New personal best! Keep it going!'),
+      ).toBeInTheDocument();
     });
   });
 
   it('should show start streak message when streak is 0', async () => {
     mockUseSession.mockReturnValue({
       data: { user: { id: 'test-user' } },
-      status: 'authenticated'
+      status: 'authenticated',
     });
 
     mockUpdateUserStreak.mockResolvedValue({
       success: true,
-      unlocked_achievements: []
+      unlocked_achievements: [],
     });
 
     mockFetchUserStreakInfo.mockResolvedValue({
@@ -117,21 +119,23 @@ describe('StreakDisplay Component (Profile Page)', () => {
       streak_data: {
         current_streak: 0,
         longest_streak: 5,
-        last_activity: null
-      }
+        last_activity: null,
+      },
     });
 
     render(<StreakDisplay />);
 
     await waitFor(() => {
-      expect(screen.getByText('🎯 Start your learning streak today!')).toBeInTheDocument();
+      expect(
+        screen.getByText('🎯 Start your learning streak today!'),
+      ).toBeInTheDocument();
     });
   });
 
   it('should handle API errors gracefully', async () => {
     mockUseSession.mockReturnValue({
       data: { user: { id: 'test-user' } },
-      status: 'authenticated'
+      status: 'authenticated',
     });
 
     mockUpdateUserStreak.mockRejectedValue(new Error('Update failed'));
@@ -140,19 +144,21 @@ describe('StreakDisplay Component (Profile Page)', () => {
     render(<StreakDisplay />);
 
     await waitFor(() => {
-      expect(screen.getByText('Unable to load streak data')).toBeInTheDocument();
+      expect(
+        screen.getByText('Unable to load streak data'),
+      ).toBeInTheDocument();
     });
   });
 
   it('should call updateUserStreak on mount for daily login tracking', async () => {
     mockUseSession.mockReturnValue({
       data: { user: { id: 'test-user' } },
-      status: 'authenticated'
+      status: 'authenticated',
     });
 
     mockUpdateUserStreak.mockResolvedValue({
       success: true,
-      unlocked_achievements: []
+      unlocked_achievements: [],
     });
 
     mockFetchUserStreakInfo.mockResolvedValue({
@@ -160,8 +166,8 @@ describe('StreakDisplay Component (Profile Page)', () => {
       streak_data: {
         current_streak: 1,
         longest_streak: 1,
-        last_activity: '2025-09-11'
-      }
+        last_activity: '2025-09-11',
+      },
     });
 
     render(<StreakDisplay />);

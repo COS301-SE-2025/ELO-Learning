@@ -19,7 +19,7 @@ export default function StreakDisplay({ onError }) {
   useEffect(() => {
     async function loadAndUpdateStreak() {
       if (status === 'loading') return;
-      
+
       if (status !== 'authenticated' || !session?.user?.id) {
         setLoading(false);
         return;
@@ -35,13 +35,21 @@ export default function StreakDisplay({ onError }) {
           setIsUpdatingStreak(true);
           const updateResponse = await updateUserStreak(session.user.id);
           console.log('🔥 Streak update result:', updateResponse);
-          
+
           // If streak was updated and achievements were unlocked, show them
-          if (updateResponse.success && updateResponse.unlocked_achievements?.length > 0) {
-            console.log('🏆 Streak achievements unlocked:', updateResponse.unlocked_achievements);
+          if (
+            updateResponse.success &&
+            updateResponse.unlocked_achievements?.length > 0
+          ) {
+            console.log(
+              '🏆 Streak achievements unlocked:',
+              updateResponse.unlocked_achievements,
+            );
             // Let the achievement system handle showing these if available
             if (window.showMultipleAchievements) {
-              window.showMultipleAchievements(updateResponse.unlocked_achievements);
+              window.showMultipleAchievements(
+                updateResponse.unlocked_achievements,
+              );
             }
           }
         } catch (updateError) {
@@ -52,7 +60,7 @@ export default function StreakDisplay({ onError }) {
 
         // Then fetch the current streak data to display
         const response = await fetchUserStreakInfo(session.user.id);
-        
+
         if (response.success) {
           setStreakData(response.streak_data);
         } else {
@@ -101,7 +109,9 @@ export default function StreakDisplay({ onError }) {
     return (
       <div className="bg-[#2A2A2A] rounded-lg p-4 mb-6 border border-red-500/20">
         <div className="flex items-center justify-center">
-          <span className="text-red-400 text-sm">Unable to load streak data</span>
+          <span className="text-red-400 text-sm">
+            Unable to load streak data
+          </span>
         </div>
       </div>
     );

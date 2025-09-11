@@ -8,16 +8,18 @@ const __dirname = dirname(__filename);
 async function testStreakImport() {
   try {
     console.log('🧪 Testing streak calculator import...');
-    
+
     // Test the import path from achievementRoutes.js perspective (src/ directory)
-    const { getUserStreakInfo, updateUserStreak } = await import('./src/utils/streakCalculator.js');
-    
+    const { getUserStreakInfo, updateUserStreak } = await import(
+      './src/utils/streakCalculator.js'
+    );
+
     console.log('✅ Import successful!');
     console.log('Functions available:', {
       getUserStreakInfo: typeof getUserStreakInfo,
       updateUserStreak: typeof updateUserStreak,
     });
-    
+
     return true;
   } catch (error) {
     console.error('❌ Import failed:', error.message);

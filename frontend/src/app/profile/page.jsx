@@ -17,7 +17,7 @@ import StreakDisplay from '../ui/streak-display';
 // Safe wrapper for StreakDisplay with error handling
 function SafeStreakDisplay() {
   const [hasError, setHasError] = useState(false);
-  
+
   if (hasError) {
     return (
       <div className="bg-[#2A2A2A] rounded-lg p-4 mb-6 border border-gray-700/20">

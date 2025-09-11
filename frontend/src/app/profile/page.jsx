@@ -6,8 +6,7 @@ import { useSession } from 'next-auth/react';
 import Link from 'next/link';
 import { useEffect } from 'react';
 import { useAvatar } from '../context/avatar-context';
-import { gradients } from '../ui/avatar/avatar-colors';
-import { AvatarColors } from '../ui/avatar/color';
+import { avatarColors, gradients } from '../ui/avatar/avatar-colors';
 import Achievements from '../ui/profile/achievements';
 import MatchStats from '../ui/profile/match-stats';
 import UserInfo from '../ui/profile/user-info';
@@ -35,7 +34,7 @@ export default function Page() {
     let style = { backgroundColor: '#421e68' };
     if (backgroundType && backgroundType.startsWith('solid-')) {
       const idx = parseInt(backgroundType.split('-')[1], 10);
-      style = { backgroundColor: AvatarColors[idx] || '#421e68' };
+      style = { backgroundColor: avatarColors[idx] || '#421e68' };
     } else if (backgroundType && backgroundType.startsWith('gradient-')) {
       const idx = parseInt(backgroundType.split('-')[1], 10);
       const g = gradients[idx];

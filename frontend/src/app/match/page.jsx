@@ -149,9 +149,7 @@ export default function Page() {
           <div className="flex flex-col items-center gap-10">
             <button
               className={`${
-                isQueueing || !isConnected
-                  ? 'disabled_button'
-                  : 'main-button-landing'
+                isQueueing || !isConnected ? 'disabled_button' : 'main-button'
               } uppercase`}
               onClick={startQueue}
               disabled={isQueueing || !isConnected}

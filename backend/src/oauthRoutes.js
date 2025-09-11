@@ -102,8 +102,8 @@ router.post('/oauth/user', async (req, res) => {
           avatar: {
             eyes: 'Eye 1',
             mouth: 'Mouth 1',
-            bodyShape: 'Circle',
-            background: 'solid-pink',
+            bodyShape: 'Square',
+            background: 'solid-3',
           },
           elo_rating: 5.0,
           rank: 'Bronze',

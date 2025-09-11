@@ -342,9 +342,12 @@ export default function AnswerWrapper({
                   }`}
                 >
                   {option.answer_text === 'True' ? (
-                    <Check size={24} className="text-white" />
+                    <Check
+                      size={24}
+                      className="text-[var(--color-foreground)]"
+                    />
                   ) : (
-                    <X size={24} className="text-white" />
+                    <X size={24} className="text-[var(--white)]" />
                   )}
                   <span>{option.answer_text}</span>
                 </button>

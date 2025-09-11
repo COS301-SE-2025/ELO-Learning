@@ -58,7 +58,7 @@ export function MouthSelector({ selectedMouth, onMouthChange }) {
                 : 'border-gray-600 bg-gray-700 hover:border-[#4d5ded]'
             }`}
           >
-            <div className="h-20 w-15 md:w-30 md:h-30 relative mb-2 flex items-center justify-center">
+            <div className="w-full h-20 relative mb-2 flex items-center justify-center">
               <Image
                 src={mouth.src}
                 alt={mouth.name}

@@ -1,28 +1,30 @@
 'use client';
 
-import Image from 'next/image';
+import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { useAvatar } from '../../context/avatar-context';
 import Back from '../back';
+import {
+  BackgroundIcon,
+  BodyIcon,
+  ColorIcon,
+  EyesIcon,
+  MouthIcon,
+} from './avatar-icons';
 import { AvatarPreview } from './avatar-preview';
 import { BackgroundSelector } from './background';
 import { BodyShapeSelector } from './body-shape';
 import { ColorSelector } from './color';
 import { EyeSelector } from './eyes';
 import { MouthSelector } from './mouth';
-import { useSession } from 'next-auth/react';
 
 const TABS = [
-  { id: 'body', name: 'Body', icon: '/avatar-icons/Body.svg' },
-  { id: 'color', name: 'Color', icon: '/avatar-icons/Colour.svg' },
-  { id: 'eyes', name: 'Eyes', icon: '/avatar-icons/Eyes.svg' },
-  { id: 'mouth', name: 'Mouth', icon: '/avatar-icons/Mouth.svg' },
-  {
-    id: 'background',
-    name: 'Background',
-    icon: '/avatar-icons/Background.svg',
-  },
+  { id: 'body', name: 'Body', IconComponent: BodyIcon },
+  { id: 'color', name: 'Color', IconComponent: ColorIcon },
+  { id: 'eyes', name: 'Eyes', IconComponent: EyesIcon },
+  { id: 'mouth', name: 'Mouth', IconComponent: MouthIcon },
+  { id: 'background', name: 'Background', IconComponent: BackgroundIcon },
 ];
 
 export function AvatarCreator() {
@@ -124,13 +126,7 @@ export function AvatarCreator() {
                   }`}
                 >
                   <div className="w-10 h-10 mb-1">
-                    <Image
-                      src={tab.icon}
-                      alt={tab.name}
-                      width={45}
-                      height={45}
-                      className="w-full h-full object-contain filter brightness-0 invert opacity-50"
-                    />
+                    <tab.IconComponent className="w-full h-full object-contain" />
                   </div>
                 </button>
               ))}

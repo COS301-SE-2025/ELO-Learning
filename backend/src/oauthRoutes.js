@@ -1,16 +1,16 @@
 // oauthRoutes.js
-import express from 'express';
-import jwt from 'jsonwebtoken';
-import { supabase } from '../database/supabaseClient.js';
+import express from 'express'
+import jwt from 'jsonwebtoken'
+import { supabase } from '../database/supabaseClient.js'
 
-const router = express.Router();
+const router = express.Router()
 
 // Handle OAuth user creation/retrieval
 router.post('/oauth/user', async (req, res) => {
-  const { email, name, image, provider } = req.body;
+  const { email, name, image, provider } = req.body
 
   if (!email || !name) {
-    return res.status(400).json({ error: 'Email and name are required' });
+    return res.status(400).json({ error: 'Email and name are required' })
   }
 
   try {
@@ -21,11 +21,11 @@ router.post('/oauth/user', async (req, res) => {
         'id,name,surname,username,email,currentLevel,joinDate,xp,avatar,elo_rating,rank',
       )
       .eq('email', email)
-      .maybeSingle();
+      .maybeSingle()
 
     if (fetchError) {
-      console.error('Error checking existing user:', fetchError.message);
-      return res.status(500).json({ error: 'Internal server error' });
+      console.error('Error checking existing user:', fetchError.message)
+      return res.status(500).json({ error: 'Internal server error' })
     }
 
     if (existingUser) {
@@ -34,7 +34,7 @@ router.post('/oauth/user', async (req, res) => {
         { id: existingUser.id, email: existingUser.email },
         process.env.JWT_SECRET,
         { expiresIn: '1h' },
-      );
+      )
 
       return res.status(200).json({
         message: 'User found',
@@ -52,37 +52,37 @@ router.post('/oauth/user', async (req, res) => {
           elo_rating: existingUser.elo_rating,
           rank: existingUser.rank,
         },
-      });
+      })
     }
 
     // User doesn't exist, create new OAuth user
 
     // Parse name into first and last name
-    const nameParts = name.trim().split(' ');
-    const firstName = nameParts[0] || name;
-    const lastName = nameParts.length > 1 ? nameParts.slice(1).join(' ') : '';
+    const nameParts = name.trim().split(' ')
+    const firstName = nameParts[0] || name
+    const lastName = nameParts.length > 1 ? nameParts.slice(1).join(' ') : ''
 
     // Generate username from email (fallback if name parsing fails)
     const baseUsername =
-      name.replace(/\s+/g, '').toLowerCase() || email.split('@')[0];
-    let username = baseUsername;
+      name.replace(/\s+/g, '').toLowerCase() || email.split('@')[0]
+    let username = baseUsername
 
     // Check if username is already taken and make it unique if needed
-    let usernameExists = true;
-    let counter = 1;
+    let usernameExists = true
+    let counter = 1
 
     while (usernameExists) {
       const { data: usernameCheck } = await supabase
         .from('Users')
         .select('id')
         .eq('username', username)
-        .maybeSingle();
+        .maybeSingle()
 
       if (!usernameCheck) {
-        usernameExists = false;
+        usernameExists = false
       } else {
-        username = `${baseUsername}${counter}`;
-        counter++;
+        username = `${baseUsername}${counter}`
+        counter++
       }
     }
 
@@ -102,19 +102,19 @@ router.post('/oauth/user', async (req, res) => {
           avatar: {
             eyes: 'Eye 1',
             mouth: 'Mouth 1',
-            bodyShape: 'Circle',
-            background: 'solid-pink',
+            bodyShape: 'Square',
+            background: 'solid-3',
           },
           elo_rating: 5.0,
           rank: 'Bronze',
         },
       ])
       .select()
-      .single();
+      .single()
 
     if (createError) {
-      console.error('Error creating OAuth user:', createError.message);
-      return res.status(500).json({ error: 'Failed to create user' });
+      console.error('Error creating OAuth user:', createError.message)
+      return res.status(500).json({ error: 'Failed to create user' })
     }
 
     // Generate JWT token for the new user
@@ -122,7 +122,7 @@ router.post('/oauth/user', async (req, res) => {
       { id: newUser.id, email: newUser.email },
       process.env.JWT_SECRET,
       { expiresIn: '1h' },
-    );
+    )
 
     res.status(201).json({
       message: 'OAuth user created successfully',
@@ -140,11 +140,11 @@ router.post('/oauth/user', async (req, res) => {
         elo_rating: newUser.elo_rating,
         rank: newUser.rank,
       },
-    });
+    })
   } catch (error) {
-    console.error('Error in OAuth user handling:', error);
-    res.status(500).json({ error: 'Internal server error' });
+    console.error('Error in OAuth user handling:', error)
+    res.status(500).json({ error: 'Internal server error' })
   }
-});
+})
 
-export default router;
+export default router

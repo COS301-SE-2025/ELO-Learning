@@ -1,6 +1,7 @@
 'use client';
 
 import Image from 'next/image';
+import { defaultColors } from './avatar-colors';
 
 export const BodyShapes = {
   CIRCLE: 'Circle',
@@ -58,7 +59,7 @@ export function AvatarBodyShape({ shape, color, className = '' }) {
     ? shape
     : BodyShapes.CIRCLE;
   const shapeSrc = `/shapes/${validShapeType}.svg`;
-  const previewColor = color || '#FF6E99';
+  const previewColor = color || defaultColors.avatar;
 
   return (
     <div className={`relative ${className}`}>

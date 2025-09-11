@@ -23,9 +23,48 @@ import { calculateMultiplayerXP } from './utils/xpCalculator.js';
 
 const router = express.Router();
 
+// NEW: track in-progress processing by fingerprint so concurrent requests can await the same result
+const processingMap = new Map();
+
 // Apply idempotency middleware directly to the route
 router.post('/multiplayer', idempotencyMiddleware, async (req, res) => {
   const startTime = Date.now();
+
+  // If we have a fingerprint, use it to prevent concurrent processing of the same match.
+  const fingerprint = req.matchFingerprint;
+
+  // If another request is already processing this fingerprint, await its result and return it.
+  if (fingerprint && processingMap.has(fingerprint)) {
+    console.log(
+      `🔁 IDEMPOTENCY: Duplicate request detected for fingerprint ${fingerprint}, awaiting existing processing...`,
+    );
+    try {
+      const existingPromise = processingMap.get(fingerprint);
+      const existingResult = await existingPromise;
+      console.log(
+        `🔁 IDEMPOTENCY: Returning existing cached result for fingerprint ${fingerprint}`,
+      );
+      return res.status(200).json(existingResult);
+    } catch (err) {
+      console.error(
+        `❌ IDEMPOTENCY: Error while awaiting existing processing for ${fingerprint}:`,
+        err,
+      );
+      return res.status(500).json({ error: 'Server error' });
+    }
+  }
+
+  // Create a deferred promise for this fingerprint so duplicates can await it.
+  let resolveProcessing;
+  let rejectProcessing;
+  if (fingerprint) {
+    const processingPromise = new Promise((resolve, reject) => {
+      resolveProcessing = resolve;
+      rejectProcessing = reject;
+    });
+    processingMap.set(fingerprint, processingPromise);
+  }
+
   try {
     console.log('Using multiplayer route... --------------------');
     console.log('Received multiplayer request:', req.body);
@@ -577,7 +616,7 @@ router.post('/multiplayer', idempotencyMiddleware, async (req, res) => {
           newElo: newElo1,
           currentLevel: newLevel1,
           currentRank: newRank1,
-          achievements: player1AchievementResponse?.achievements || [], // 🎯 Player 1 achievements
+          achievements: player1AchievementResponse?.achievements || [],
           achievementSummary:
             player1AchievementResponse?.achievementSummary || null,
         },
@@ -589,16 +628,28 @@ router.post('/multiplayer', idempotencyMiddleware, async (req, res) => {
           newElo: newElo2,
           currentLevel: newLevel2,
           currentRank: newRank2,
-          achievements: player2AchievementResponse?.achievements || [], // 🎯 Player 2 achievements
+          achievements: player2AchievementResponse?.achievements || [],
           achievementSummary:
             player2AchievementResponse?.achievementSummary || null,
         },
       ],
-      unlockedAchievements: unlockedAchievements, // 🎯 Include match achievements (legacy)
+      unlockedAchievements: unlockedAchievements,
     };
 
     // Cache the successful response for idempotency
     cacheSuccessfulResponse(req, finalResponse);
+
+    // Resolve any waiting duplicate requests with the same final response
+    if (fingerprint && resolveProcessing) {
+      try {
+        resolveProcessing(finalResponse);
+      } catch (e) {
+        console.error(
+          `❌ Error resolving processing promise for fingerprint ${fingerprint}:`,
+          e,
+        );
+      }
+    }
 
     const processingTime = Date.now() - startTime;
     console.log(
@@ -612,10 +663,27 @@ router.post('/multiplayer', idempotencyMiddleware, async (req, res) => {
 
     return res.status(200).json(finalResponse);
   } catch (err) {
+    // Reject waiting duplicates so they know processing failed
+    if (fingerprint && rejectProcessing) {
+      try {
+        rejectProcessing(err);
+      } catch (e) {
+        console.error(
+          `❌ Error rejecting processing promise for fingerprint ${fingerprint}:`,
+          e,
+        );
+      }
+    }
+
     const processingTime = Date.now() - startTime;
     console.error(`❌ MULTIPLAYER: Error after ${processingTime}ms:`, err);
     console.error('❌ Error stack:', err.stack);
     res.status(500).json({ error: 'Server error' });
+  } finally {
+    // Clean up in-progress tracking
+    if (fingerprint) {
+      processingMap.delete(fingerprint);
+    }
   }
 });
 

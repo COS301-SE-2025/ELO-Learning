@@ -36,6 +36,7 @@ app.use(
   cors({
     origin: process.env.NEXT_PUBLIC_FRONTEND_URL || 'http://localhost:8080',
     credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'],
   }),
 );
 app.use(express.json());

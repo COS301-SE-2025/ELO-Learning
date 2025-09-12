@@ -1,3 +1,64 @@
+// Update community data for a user (PUT)
+// Update community data for a user (PUT)
+// (Removed duplicate signature)
+export async function updateCommunityData(
+  userId,
+  institution,
+  locations,
+  token,
+) {
+  const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL || '';
+  token = token || '';
+  try {
+    const payload = {
+      academic_institution: institution,
+      location: locations,
+    };
+    const res = await axiosInstance.put(
+      `${API_BASE}/user/${userId}/community`,
+      payload,
+      {
+        headers: {
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+      },
+    );
+    return res.data;
+  } catch (error) {
+    // Log full error details for debugging
+    if (error.response) {
+      console.error(
+        '❌ Failed to update community data:',
+        error.response.data,
+        error.response.status,
+        error.response.headers,
+      );
+      return {
+        error:
+          error.response.data?.error ||
+          error.response.data?.message ||
+          'Failed to update community data',
+        details: error.response.data,
+      };
+    } else {
+      console.error('❌ Failed to update community data:', error.message);
+      return { error: error.message || 'Failed to update community data' };
+    }
+  }
+}
+
+// Send a friend request (POST)
+export async function sendFriendRequest(userId, friend_email) {
+  try {
+    const res = await axiosInstance.post(`/user/${userId}/friend-request`, {
+      friend_email,
+    });
+    return res.data;
+  } catch (error) {
+    console.error('❌ Failed to send friend request:', error);
+    throw error;
+  }
+}
 export async function fetchCommunityData(userId) {
   try {
     const res = await axiosInstance.get(`/user/${userId}/community`);

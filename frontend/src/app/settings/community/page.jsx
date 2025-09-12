@@ -5,7 +5,11 @@ import {
   getRegistration,
   setRegistration,
 } from '../../login-landing/signup/registrationUtils';
-import { fetchCommunityData } from '../../../services/api';
+import {
+  fetchCommunityData,
+  updateCommunityData,
+  sendFriendRequest,
+} from '../../../services/api';
 import { registerFCMToken } from '../../../services/firebase';
 
 // Color scheme and button classes from login-landing
@@ -58,19 +62,8 @@ export default function CommunitySettingsPage() {
         return;
       }
       try {
-        const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL || '';
-        // Get JWT token from session
-        const token = session?.user?.accessToken || session?.accessToken;
-        const res = await fetch(`${API_BASE}/user/${userId}/friend-request`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            ...(token ? { Authorization: `Bearer ${token}` } : {}),
-          },
-          body: JSON.stringify({ friend_email: friendInput.trim() }),
-        });
-        const result = await res.json();
-        if (res.status === 201) {
+        const result = await sendFriendRequest(userId, friendInput.trim());
+        if (result && result.message === 'Friend request sent') {
           setFriends([
             ...friends,
             { email: friendInput.trim(), status: 'pending' },
@@ -116,25 +109,33 @@ export default function CommunitySettingsPage() {
       setError('User not authenticated.');
       return;
     }
+    // Validate institution and locations before sending
+    if (!institution || institution.trim() === '') {
+      setError('Please enter your academic institution.');
+      return;
+    }
+    if (!locations || !Array.isArray(locations) || locations.length === 0) {
+      setError('Please add at least one location.');
+      return;
+    }
     try {
-      const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL || '';
+      // Get JWT token from session
       const token = session?.user?.accessToken || session?.accessToken;
-      const res = await fetch(`${API_BASE}/user/${userId}/community`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          ...(token ? { Authorization: `Bearer ${token}` } : {}),
-        },
-        body: JSON.stringify({ institution, locations }),
-      });
-      if (res.ok) {
+      const result = await updateCommunityData(
+        userId,
+        institution.trim(),
+        locations,
+        token,
+      );
+      if (result && result.message === 'Community data updated') {
         setError('Saved!');
+      } else if (result && result.error) {
+        setError('Failed to save.');
       } else {
-        const result = await res.json();
-        setError(result.error || 'Failed to save.');
+        setError('Failed to save.');
       }
     } catch (err) {
-      setError('Failed to save changes.');
+      setError(err?.message || 'Failed to save changes.');
     }
   };
 

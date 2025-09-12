@@ -698,8 +698,11 @@ router.get('/user/:id/community', verifyToken, async (req, res) => {
 // PUT /user/:id/community
 // Updates institution and locations for user
 router.put('/user/:id/community', verifyToken, async (req, res) => {
+  // Debug log to guarantee payload
+  console.log('[COMMUNITY PUT] Received payload:', req.body);
   const { id } = req.params;
-  const { institution, locations } = req.body;
+  // Use correct field names from frontend and DB
+  const { academic_institution, location } = req.body;
   try {
     // Update institution and locations in Users table
     const { data: userExists, error: userError } = await supabase
@@ -721,16 +724,16 @@ router.put('/user/:id/community', verifyToken, async (req, res) => {
 
     const { data, error: updateError } = await supabase
       .from('Users')
-      .update({ institution, locations })
+      .update({ academic_institution, location })
       .eq('id', id)
       .select()
       .single();
     if (updateError) {
       console.error(
-        `[COMMUNITY PUT] Failed to update institution/locations for user id=${id}. Error:`,
+        `[COMMUNITY PUT] Failed to update academic_institution/location for user id=${id}. Error:`,
         updateError,
         'Payload:',
-        { institution, locations },
+        { academic_institution, location },
       );
       return res.status(500).json({
         error: 'Failed to update community data',

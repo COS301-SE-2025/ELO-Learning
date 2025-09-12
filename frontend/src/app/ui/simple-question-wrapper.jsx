@@ -179,6 +179,11 @@ export default function SimpleQuestionWrapper({ questions }) {
   };
 
   const submitAnswer = () => {
+    // Prevent double submission
+    if (showFeedback) {
+      return;
+    }
+
     // Deduct life if answer is wrong
     if (!isAnswerCorrect) {
       setNumLives((prev) => {

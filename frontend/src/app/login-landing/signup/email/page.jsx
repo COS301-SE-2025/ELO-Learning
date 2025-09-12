@@ -1,9 +1,9 @@
 'use client';
-import { useState } from 'react';
 import ProgressBar from '@/app/ui/progress-bar';
-import Link from 'next/link';
 import { X } from 'lucide-react';
-import { setRegistration, getRegistration } from '../registrationUtils';
+import Link from 'next/link';
+import { useState } from 'react';
+import { getRegistration, setRegistration } from '../registrationUtils';
 
 const currentStep = 5;
 const totalSteps = 6;
@@ -15,15 +15,31 @@ function validateEmail(email) {
 export default function Page() {
   const [email, setEmail] = useState(getRegistration().email || '');
   const [error, setError] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
 
-  const handleContinue = (e) => {
+  const handleContinue = async (e) => {
     e.preventDefault();
+
+    // Prevent double submission
+    if (isLoading) {
+      return;
+    }
+
     if (!validateEmail(email)) {
       setError('Please enter a valid email address.');
       return;
     }
-    setRegistration({ email });
-    window.location.href = '/login-landing/signup/password';
+
+    setError('');
+    setIsLoading(true);
+
+    try {
+      setRegistration({ email });
+      window.location.href = '/login-landing/signup/password';
+    } catch (error) {
+      setError('An error occurred. Please try again.');
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -40,7 +56,7 @@ export default function Page() {
         <div>
           <p className="text-lg text-center font-bold">What is your email?</p>
           <form onSubmit={handleContinue}>
-            <div className="flex flex-col items-center w-full">
+            <div className="flex flex-col items-center w-full md:px-20 px-3">
               <input
                 type="email"
                 placeholder="Email"
@@ -51,8 +67,12 @@ export default function Page() {
               />
               {error && <p className="text-red-500">{error}</p>}
               <div className="break_small"></div>
-              <button className="main-button px-2 py-8" type="submit">
-                Continue
+              <button
+                className="signup-button px-2 py-8"
+                type="submit"
+                disabled={isLoading}
+              >
+                {isLoading ? 'Validating Email...' : 'Continue'}
               </button>
             </div>
           </form>

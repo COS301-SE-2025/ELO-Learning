@@ -22,14 +22,8 @@
         ],
         "url": {
           "raw": "{{base_url}}/users/{{user_id}}/streak",
-          "host": [
-            "{{base_url}}"
-          ],
-          "path": [
-            "users",
-            "{{user_id}}",
-            "streak"
-          ]
+          "host": ["{{base_url}}"],
+          "path": ["users", "{{user_id}}", "streak"]
         },
         "description": "Get current streak data for a user. Should return 200 with streak data if import fix worked, or 500 if still broken."
       },
@@ -52,15 +46,8 @@
         ],
         "url": {
           "raw": "{{base_url}}/users/{{user_id}}/streak/update",
-          "host": [
-            "{{base_url}}"
-          ],
-          "path": [
-            "users",
-            "{{user_id}}",
-            "streak",
-            "update"
-          ]
+          "host": ["{{base_url}}"],
+          "path": ["users", "{{user_id}}", "streak", "update"]
         },
         "description": "Update user streak and check for achievements. Should return 200 with updated streak data if import fix worked, or 500 if still broken."
       },
@@ -78,14 +65,8 @@
         ],
         "url": {
           "raw": "{{base_url}}/users/{{user_id}}/streak",
-          "host": [
-            "{{base_url}}"
-          ],
-          "path": [
-            "users",
-            "{{user_id}}",
-            "streak"
-          ]
+          "host": ["{{base_url}}"],
+          "path": ["users", "{{user_id}}", "streak"]
         },
         "description": "Test without authorization - should return 401 if endpoints are working, or 500 if import path is broken."
       },
@@ -103,15 +84,8 @@
         ],
         "url": {
           "raw": "{{base_url}}/users/{{user_id}}/streak/update",
-          "host": [
-            "{{base_url}}"
-          ],
-          "path": [
-            "users",
-            "{{user_id}}",
-            "streak",
-            "update"
-          ]
+          "host": ["{{base_url}}"],
+          "path": ["users", "{{user_id}}", "streak", "update"]
         },
         "description": "Test POST without authorization - should return 401 if endpoints are working, or 500 if import path is broken."
       },

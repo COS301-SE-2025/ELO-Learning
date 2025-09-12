@@ -627,8 +627,10 @@ export async function checkStreakAchievements(userId, currentStreak) {
     }
 
     // 🆕 NEW AUTOMATIC PATTERN: Use triggerAchievementProgress like other achievement categories
-    console.log(`� Using automatic streak progress pattern with triggerAchievementProgress...`);
-    
+    console.log(
+      `� Using automatic streak progress pattern with triggerAchievementProgress...`,
+    );
+
     const result = await triggerAchievementProgress(
       userId,
       'Daily Streak',
@@ -636,7 +638,9 @@ export async function checkStreakAchievements(userId, currentStreak) {
     );
 
     console.log(
-      `🏆 Automatic streak achievement check completed: ${result.unlockedAchievements?.length || 0} achievements unlocked`,
+      `🏆 Automatic streak achievement check completed: ${
+        result.unlockedAchievements?.length || 0
+      } achievements unlocked`,
     );
 
     return result.unlockedAchievements || [];
@@ -1815,7 +1819,9 @@ router.post('/users/:userId/streak/update', async (req, res) => {
     if (streakResult.success) {
       // ALWAYS check for streak achievements with the current streak value
       // This ensures achievement progress is always synchronized with actual streak
-      console.log(`🔥 Auto-updating streak achievements for user ${userId} with streak ${streakResult.currentStreak}`);
+      console.log(
+        `🔥 Auto-updating streak achievements for user ${userId} with streak ${streakResult.currentStreak}`,
+      );
       const streakAchievements = await checkStreakAchievements(
         userId,
         streakResult.currentStreak,
@@ -1835,9 +1841,11 @@ router.post('/users/:userId/streak/update', async (req, res) => {
       // to ensure progress records are synchronized
       const { getUserStreakInfo } = await import('./utils/streakCalculator.js');
       const currentStreakInfo = await getUserStreakInfo(userId);
-      
+
       if (currentStreakInfo.success && currentStreakInfo.currentStreak > 0) {
-        console.log(`🔥 Auto-syncing streak achievements for user ${userId} with current streak ${currentStreakInfo.currentStreak}`);
+        console.log(
+          `🔥 Auto-syncing streak achievements for user ${userId} with current streak ${currentStreakInfo.currentStreak}`,
+        );
         const streakAchievements = await checkStreakAchievements(
           userId,
           currentStreakInfo.currentStreak,

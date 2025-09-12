@@ -167,8 +167,17 @@ export default function AnalysisFeedbackPage() {
           <main className="flex-1">
             {/* Accuracy Graph */}
             <section className="mb-6">
-              <h2 className="text-lg font-semibold mb-2">Accuracy Over Time</h2>
-              <div className="h-64 border rounded p-4 bg-white">
+              <h2 className="text-lg font-semibold mb-2 text-white text-center">
+                Accuracy Over Time
+              </h2>
+              <div
+                className="h-64 rounded-xl p-4"
+                style={{
+                  background: 'var(--color-background)', // match page bg
+                  border: '1px solid rgba(255,255,255,0.12)', // white-ish border
+                  boxShadow: '0 6px 18px rgba(0,0,0,0.08)',
+                }}
+              >
                 {loading ? (
                   <div className="flex items-center justify-center h-full">
                     <span className="text-sm text-gray-500">Loading...</span>
@@ -189,42 +198,69 @@ export default function AnalysisFeedbackPage() {
                       data={accuracyData}
                       margin={{ top: 0, right: 0, left: 48, bottom: 28 }}
                     >
-                      <CartesianGrid strokeDasharray="3 3" />
+                      <CartesianGrid
+                        strokeDasharray="3 3"
+                        stroke="rgba(255,255,255,0.06)"
+                      />
                       <XAxis
                         dataKey="date"
                         tickFormatter={formatDate}
+                        stroke="rgba(255,255,255,0.85)"
+                        tick={{ fill: '#ffffffcc', fontSize: 12 }}
                         label={{
                           value: 'day',
                           position: 'bottom',
                           offset: 0,
                           dy: 8,
-                          style: { fontSize: 14, fontWeight: '700' },
+                          style: {
+                            fontSize: 14,
+                            fontWeight: '700',
+                            fill: '#fff',
+                          },
                         }}
                         padding={{ left: 10, right: 10 }}
                       />
                       <YAxis
                         domain={[0, 100]}
                         tickFormatter={yTickFormatter}
+                        stroke="rgba(255,255,255,0.85)"
+                        tick={{ fill: '#ffffffcc', fontSize: 12 }}
                         label={{
                           value: 'accuracy',
                           angle: -90,
                           position: 'left',
                           offset: 0,
                           dx: -12,
-                          style: { fontSize: 14, fontWeight: '700' },
+                          style: {
+                            fontSize: 14,
+                            fontWeight: '700',
+                            fill: '#fff',
+                          },
                         }}
                       />
                       <Tooltip
                         labelFormatter={formatDate}
                         formatter={tooltipFormatter}
+                        contentStyle={{
+                          background: 'rgba(255,255,255,0.06)',
+                          border: 'none',
+                          color: '#fff',
+                          borderRadius: 8,
+                        }}
+                        labelStyle={{ color: '#fff', fontWeight: 600 }}
+                        itemStyle={{ color: '#fff' }}
                       />
-                      <Legend verticalAlign="top" align="center" />
+                      <Legend
+                        wrapperStyle={{ color: '#fff' }}
+                        verticalAlign="top"
+                        align="center"
+                      />
                       <Line
                         type="monotone"
                         dataKey="accuracy"
-                        stroke="#4f46e5"
-                        strokeWidth={2}
-                        dot={{ r: 4 }}
+                        stroke="#FF6E99"
+                        strokeWidth={3}
+                        dot={{ r: 4, stroke: '#fff', strokeWidth: 1 }}
                         isAnimationActive={false}
                       />
                     </LineChart>

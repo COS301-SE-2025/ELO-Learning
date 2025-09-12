@@ -4,47 +4,13 @@ import { initializeAchievementTracking } from '@/utils/gameplayAchievementHandle
 import { Cog } from 'lucide-react';
 import { useSession } from 'next-auth/react';
 import Link from 'next/link';
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import { useAvatar } from '../context/avatar-context';
 import { avatarColors, gradients } from '../ui/avatar/avatar-colors';
 import Achievements from '../ui/profile/achievements';
 import MatchStats from '../ui/profile/match-stats';
 import UserInfo from '../ui/profile/user-info';
 import UsernameBlock from '../ui/profile/username-block';
-import StreakDisplay from '../ui/streak-display';
-
-// Safe wrapper for StreakDisplay with error handling
-function SafeStreakDisplay() {
-  const [hasError, setHasError] = useState(false);
-
-  if (hasError) {
-    return (
-      <div className="bg-[#2A2A2A] rounded-lg p-4 mb-6 border border-gray-700/20">
-        <div className="flex items-center justify-center py-2">
-          <span className="text-gray-400 text-sm">
-            🔥 Streak data temporarily unavailable
-          </span>
-        </div>
-      </div>
-    );
-  }
-
-  try {
-    return <StreakDisplay onError={() => setHasError(true)} />;
-  } catch (error) {
-    console.error('StreakDisplay render error:', error);
-    setHasError(true);
-    return (
-      <div className="bg-[#2A2A2A] rounded-lg p-4 mb-6 border border-gray-700/20">
-        <div className="flex items-center justify-center py-2">
-          <span className="text-gray-400 text-sm">
-            🔥 Streak data temporarily unavailable
-          </span>
-        </div>
-      </div>
-    );
-  }
-}
 
 export default function Page() {
   const { data: session, status } = useSession();
@@ -125,7 +91,6 @@ export default function Page() {
             xp={user.xp || 0}
             ranking={user.rank || 'Unranked'}
           />
-          <SafeStreakDisplay />
           <MatchStats />
           <Achievements />
         </div>

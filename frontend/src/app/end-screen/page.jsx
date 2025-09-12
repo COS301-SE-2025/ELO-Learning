@@ -192,7 +192,8 @@ function EndScreen() {
                 className="main-button mt-10 uppercase"
                 onClick={() => {
                   localStorage.removeItem('baselineQuestionsObj');
-                  router.push('/dashboard');
+                  localStorage.removeItem('baselineFinalElo');
+                  router.push('/dashboard?baseline_completed=true');
                 }}
               >
                 Start Your Learning Journey

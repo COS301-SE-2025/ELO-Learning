@@ -1,7 +1,8 @@
 'use client';
-import { fetchUsersByRank } from '@/services/api';
+import { fetchUsersByRank, fetchUserById } from '@/services/api';
 import { useSession } from 'next-auth/react';
 import { useEffect, useMemo, useState } from 'react';
+import { useSearchParams } from 'next/navigation';
 import LeaderboardTable from '../ui/leaderboard-table';
 import BaselineTestPopup from '../ui/pop-up/baseline-test';
 
@@ -15,6 +16,7 @@ export default function Page() {
   const [sortType, setSortType] = useState('xp');
   const { data: session, status, update: updateSession } = useSession();
   const [showPopup, setShowPopup] = useState(false);
+  const searchParams = useSearchParams();
 
   // ACHIEVEMENT CHECKING
   useAchievementChecker({
@@ -52,6 +54,32 @@ export default function Page() {
     let mounted = true;
     let timeoutId;
 
+    // Check if user is returning from baseline test completion
+    const refreshFromBaseline = async () => {
+      const baselineCompleted = searchParams.get('baseline_completed');
+      if (baselineCompleted === 'true' && session?.user?.id) {
+        console.log('🔄 User returned from baseline test, refreshing user data...');
+        try {
+          // Fetch fresh user data from database
+          const freshUserData = await fetchUserById(session.user.id);
+          
+          // Update session with fresh data
+          await updateSession({
+            user: {
+              ...session.user,
+              baseLineTest: freshUserData.baseLineTest,
+              currentLevel: freshUserData.currentLevel,
+              elo_rating: freshUserData.elo_rating,
+            },
+          });
+          
+          console.log('✅ Session refreshed after baseline completion');
+        } catch (error) {
+          console.error('❌ Failed to refresh user data:', error);
+        }
+      }
+    };
+
     async function loadDashboard() {
       try {
         setLoading(true);
@@ -87,23 +115,44 @@ export default function Page() {
     }
 
     if (status === 'loading') return; // Don't load users while session is loading
+    
     async function checkBaselineTest() {
       if (!session?.user?.id) return; // user not loaded yet
 
       try {
-        // Fetch current user info including baseLineTest
-        // const userData = await fetchUserById(session.user.id);
-        if (session.user.baseLineTest === false) {
-          setShowPopup(true);
+        console.log('🔍 Checking baseline test status...', {
+          baseLineTest: session.user.baseLineTest,
+          joinDate: session.user.joinDate
+        });
+
+        // Only show popup for newly registered users (within 24 hours) who haven't taken the baseline test
+        if (session.user.baseLineTest === false && session.user.joinDate) {
+          const joinDate = new Date(session.user.joinDate);
+          const now = new Date();
+          const hoursSinceJoin = (now - joinDate) / (1000 * 60 * 60); // Convert to hours
+          
+          console.log('⏰ Hours since join:', hoursSinceJoin);
+          
+          // Only show popup if user joined within the last 24 hours
+          if (hoursSinceJoin <= 24) {
+            console.log('📋 Showing baseline test popup for new user');
+            setShowPopup(true);
+          } else {
+            console.log('⏰ User joined more than 24 hours ago, no popup');
+          }
+        } else {
+          console.log('✅ User has taken baseline test or no join date');
         }
       } catch (error) {
-        console.error('Failed to fetch baseline test:', error);
+        console.error('Failed to check baseline test status:', error);
       }
     }
 
     if (status === 'authenticated') {
-      checkBaselineTest();
-      loadDashboard();
+      refreshFromBaseline().then(() => {
+        checkBaselineTest();
+        loadDashboard();
+      });
     }
 
     //cleanup
@@ -111,7 +160,7 @@ export default function Page() {
       mounted = false;
       if (timeoutId) clearTimeout(timeoutId);
     };
-  }, [session?.user?.rank, sortType]); // Removed updateSessionWithLeaderboardData from deps
+  }, [session?.user?.rank, session?.user?.baseLineTest, sortType]); // Added baseLineTest to dependencies
 
   // Auto-refresh leaderboard every 2 minutes to get fresh data
   useEffect(() => {

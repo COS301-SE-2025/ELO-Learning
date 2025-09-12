@@ -7,6 +7,7 @@ import { useAvatar } from '../context/avatar-context';
 import { gradients } from '../ui/avatar/avatar-colors';
 import { AvatarColors } from '../ui/avatar/color';
 import Achievements from '../ui/profile/achievements';
+import BaselineTestOption from '../ui/profile/baseline-test-option';
 import MatchStats from '../ui/profile/match-stats';
 import UserInfo from '../ui/profile/user-info';
 import UsernameBlock from '../ui/profile/username-block';
@@ -28,6 +29,14 @@ export default function Page() {
   if (!session?.user) return <div>No user data available.</div>;
 
   const user = session.user;
+  
+  console.log('🔍 Profile page user data:', {
+    id: user.id,
+    username: user.username,
+    baseLineTest: user.baseLineTest,
+    currentLevel: user.currentLevel,
+    elo_rating: user.elo_rating
+  });
 
   const getBackgroundStyle = (backgroundType) => {
     let style = { backgroundColor: '#421e68' };
@@ -87,6 +96,10 @@ export default function Page() {
         <div className="flex flex-col space-y-4 pb-24">
           {' '}
           {/* Increased from pb-8 to pb-24 */}
+          
+          {/* Baseline Test Option - Show only if user hasn't taken it */}
+          <BaselineTestOption userHasTakenBaseline={user.baseLineTest} />
+          
           <UserInfo
             elo={user.elo_rating || 0}
             xp={user.xp || 0}

@@ -9,7 +9,7 @@ import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 
-export default function QuestionsTracker({ questions, userId }) {
+export default function QuestionsTracker({ questions, userId, onComplete }) {
   const router = useRouter();
   //Normal JS variables
   const allQuestions = questions || [];
@@ -87,20 +87,50 @@ export default function QuestionsTracker({ questions, userId }) {
       setLoadingNextQuestion(false); // Hide loading
       try {
         // Update user's ELO rating and baseline test status
-        await updateUserElo(userId, nextLevel);
-        update({
-          user: {
-            ...session.user,
-            baseLineTest: true, // Update ELO rating in session
-            level: nextLevel, // Update level in session
-          },
+        console.log('🎯 Baseline test completed! Updating user ELO...', {
+          userId,
+          finalLevel: nextLevel
         });
+        
+        const response = await updateUserElo(userId, nextLevel);
+        console.log('✅ User ELO updated successfully:', response);
+        
+        // Update session with the returned user data
+        if (response.user) {
+          await update({
+            user: {
+              ...session.user,
+              ...response.user, // Use complete updated user data from backend
+            },
+          });
+          console.log('✅ Session updated with backend response');
+        } else {
+          // Fallback: manually update the fields
+          await update({
+            user: {
+              ...session.user,
+              baseLineTest: true,
+              currentLevel: nextLevel,
+              elo_rating: nextLevel,
+            },
+          });
+          console.log('✅ Session updated with fallback data');
+        }
 
-        // Redirect to end screen with baseline mode and elo rating
-        router.push(`/end-screen?mode=baseline&elo=${nextLevel}`);
+        // Call the parent's completion handler if provided
+        if (onComplete) {
+          onComplete(nextLevel, response);
+        } else {
+          // Fallback: redirect directly (for backward compatibility)
+          router.push(`/end-screen?mode=baseline&elo=${nextLevel}`);
+        }
       } catch (error) {
         console.error('Failed to complete baseline test:', error);
-        router.push(`/dashboard?error=baseline-completion-failed`);
+        if (onComplete) {
+          onComplete(nextLevel, null); // Call completion even on error
+        } else {
+          router.push(`/dashboard?error=baseline-completion-failed`);
+        }
       }
       return;
     }

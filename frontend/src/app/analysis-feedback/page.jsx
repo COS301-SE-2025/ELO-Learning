@@ -1,36 +1,153 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { useSession } from 'next-auth/react';
 import NavLinks from '../ui/nav-links';
 import NavBar from '../ui/nav-bar';
+import { fetchUserAccuracy } from '@/services/api';
+import {
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  Legend,
+  ResponsiveContainer,
+} from 'recharts';
 
 export default function AnalysisFeedbackPage() {
   const router = useRouter();
-  const [feedback, setFeedback] = useState('');
-  const [status, setStatus] = useState(null);
+  const { data: session, status } = useSession();
+  const [accuracyData, setAccuracyData] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
-  const submitFeedback = async (e) => {
-    e.preventDefault();
-    setStatus('sending');
+  // Helper: normalize / format incoming accuracy items
+  function normalizeAndSortAccuracy(raw) {
+    if (!Array.isArray(raw)) return [];
 
-    try {
-      // Placeholder: adapt endpoint when backend exists
-      await fetch('/api/feedback', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ feedback, timestamp: Date.now() }),
-      });
-      setStatus('sent');
-      setFeedback('');
-    } catch (err) {
-      console.error('Feedback submit error:', err);
-      setStatus('error');
+    const normalized = raw
+      .map((item) => {
+        // Accept multiple possible field names
+        const rawDate =
+          item.date || item.attemptDate || item.timestamp || item.day || null;
+
+        // Accept backend's accuracy_percentage and also derive from correct/total attempts
+        let rawAcc =
+          item.accuracy ??
+          item.accuracy_pct ??
+          item.percentage ??
+          item.accuracy_percentage ??
+          item.value ??
+          item.score ??
+          null;
+
+        // If explicit accuracy not provided, try compute from attempts
+        if (
+          rawAcc === null &&
+          item.correct_attempts != null &&
+          item.total_attempts != null
+        ) {
+          const total = Number(item.total_attempts);
+          const correct = Number(item.correct_attempts);
+          if (Number.isFinite(total) && total > 0 && Number.isFinite(correct)) {
+            rawAcc = (correct / total) * 100;
+          } else {
+            rawAcc = 0;
+          }
+        }
+
+        if (rawAcc === null || rawDate === null) return null;
+
+        if (typeof rawAcc === 'string') {
+          const parsed = parseFloat(rawAcc.replace('%', '').trim());
+          if (!Number.isFinite(parsed)) return null;
+          rawAcc = parsed;
+        }
+
+        // If value looks like 0..1 convert to 0..100
+        if (typeof rawAcc === 'number' && rawAcc <= 1 && rawAcc >= 0) {
+          rawAcc = rawAcc * 100;
+        }
+
+        const parsedDate = new Date(rawDate);
+        if (isNaN(parsedDate.getTime())) return null;
+
+        // Use ISO date for stable X-axis labels
+        const date = parsedDate.toISOString().split('T')[0];
+
+        return {
+          date,
+          accuracy: Math.max(0, Math.min(100, Number(rawAcc))),
+        };
+      })
+      .filter(Boolean)
+      .sort((a, b) => new Date(a.date) - new Date(b.date));
+
+    return normalized;
+  }
+
+  useEffect(() => {
+    async function loadData() {
+      setLoading(true);
+      setError(null);
+
+      // Wait until auth status resolves
+      if (status === 'loading') return;
+
+      try {
+        if (status !== 'authenticated' || !session?.user?.id) {
+          // Not authenticated -> nothing to load
+          setAccuracyData([]);
+          setLoading(false);
+          return;
+        }
+
+        const userId = session.user.id;
+        const res = await fetchUserAccuracy(userId);
+
+        // Accept either an array response or { accuracy: [...] }
+        const dataArray = Array.isArray(res) ? res : res?.accuracy || [];
+
+        // Normalize, convert fractions to percentages, sort by date
+        const normalized = normalizeAndSortAccuracy(dataArray);
+
+        setAccuracyData(normalized);
+      } catch (err) {
+        console.error('Error fetching accuracy data:', err);
+        setError('Failed to load accuracy data.');
+        setAccuracyData([]);
+      } finally {
+        setLoading(false);
+      }
     }
-  };
+
+    loadData();
+  }, [status, session?.user?.id]);
+
+  // Helper: format ISO date -> "11 Sep 2025"
+  function formatDate(dateStr) {
+    try {
+      // If already a Date object, use it; otherwise construct Date from string
+      const d = dateStr instanceof Date ? dateStr : new Date(dateStr);
+      if (isNaN(d.getTime())) return dateStr;
+      return d.toLocaleDateString('en-GB', {
+        day: '2-digit',
+        month: 'short',
+      });
+    } catch (e) {
+      return dateStr;
+    }
+  }
+
+  // Small formatters
+  const yTickFormatter = (val) => `${Math.round(val)}%`;
+  const tooltipFormatter = (value) =>
+    value !== undefined && value !== null ? `${Math.round(value)}%` : value;
 
   return (
-    // add bottom padding so fixed footer/nav doesn't overlap content on small screens
     <div className="max-w-7xl mx-auto p-6 pb-20">
       <div className="flex gap-6">
         <aside className="hidden md:block md:w-56">
@@ -45,44 +162,73 @@ export default function AnalysisFeedbackPage() {
             ← Back
           </button>
 
-          <h1 className="text-2xl font-bold mb-4">Match Analysis & Feedback</h1>
+          <h1 className="text-2xl font-bold mb-4">Match Analysis</h1>
 
+          {/* Accuracy Graph */}
           <section className="mb-6">
-            <h2 className="text-lg font-semibold mb-2">
-              Analysis (placeholder)
-            </h2>
-            <p className="text-sm text-gray-600 mb-3">
-              Summary, charts and per-question stats will appear here. Replace
-              this area with real charts/components when ready.
-            </p>
-            <div className="h-40 border border-dashed rounded p-4 flex items-center justify-center text-gray-400">
-              Analysis widgets placeholder
+            <h2 className="text-lg font-semibold mb-2">Accuracy Over Time</h2>
+
+            <div className="h-64 border rounded p-4 bg-white">
+              {loading ? (
+                <div className="flex items-center justify-center h-full">
+                  <span className="text-sm text-gray-500">Loading...</span>
+                </div>
+              ) : error ? (
+                <div className="flex items-center justify-center h-full">
+                  <span className="text-sm text-red-500">{error}</span>
+                </div>
+              ) : accuracyData.length === 0 ? (
+                <div className="flex items-center justify-center h-full">
+                  <span className="text-sm text-gray-500">
+                    No accuracy data yet.
+                  </span>
+                </div>
+              ) : (
+                <ResponsiveContainer width="100%" height="100%">
+                  <LineChart
+                    data={accuracyData}
+                    margin={{ top: 0, right: 0, left: 48, bottom: 28 }}
+                  >
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis
+                      dataKey="date"
+                      tickFormatter={formatDate}
+                      label={{
+                        value: 'day',
+                        position: 'bottom', // place the label below the axis so it's not clipped
+                        offset: 0,
+                        dy: 8, // nudge label downward slightly
+                      }}
+                      padding={{ left: 10, right: 10 }}
+                    />
+                    <YAxis
+                      domain={[0, 100]}
+                      tickFormatter={yTickFormatter}
+                      label={{
+                        value: 'accuracy',
+                        angle: -90,
+                        position: 'left', // place label outside axis
+                        offset: 0,
+                        dx: -12, // move label further left from the ticks
+                      }}
+                    />
+                    <Tooltip
+                      labelFormatter={formatDate}
+                      formatter={tooltipFormatter}
+                    />
+                    <Legend verticalAlign="top" align="center" />
+                    <Line
+                      type="monotone"
+                      dataKey="accuracy"
+                      stroke="#4f46e5"
+                      strokeWidth={2}
+                      dot={{ r: 4 }}
+                      isAnimationActive={false}
+                    />
+                  </LineChart>
+                </ResponsiveContainer>
+              )}
             </div>
-          </section>
-
-          <section className="mb-6">
-            <h2 className="text-lg font-semibold mb-2">Share feedback</h2>
-            <form onSubmit={submitFeedback} className="flex flex-col gap-3">
-              <textarea
-                value={feedback}
-                onChange={(e) => setFeedback(e.target.value)}
-                placeholder="Tell us what you noticed, what was confusing or suggestions..."
-                className="w-full p-3 border rounded min-h-[120px]"
-              />
-              <div className="flex items-center gap-3">
-                <button
-                  type="submit"
-                  disabled={!feedback || status === 'sending'}
-                  className="primary-button"
-                >
-                  {status === 'sending' ? 'Sending...' : 'Send feedback'}
-                </button>
-                <span className="text-sm text-gray-600">
-                  {status === 'sent' && 'Thanks — feedback sent.'}
-                  {status === 'error' && 'Error sending feedback.'}
-                </span>
-              </div>
-            </form>
           </section>
         </main>
       </div>

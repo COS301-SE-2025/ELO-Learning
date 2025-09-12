@@ -985,3 +985,23 @@ export async function updateUserElo(userId, finalElo) {
     throw err;
   }
 }
+
+//Analysis endpoints
+// Analysis endpoints
+export async function fetchUserAccuracy(userId) {
+  try {
+    const res = await axiosInstance.get(`/accuracy/${userId}`);
+
+    if (!res.data || !res.data.success) {
+      throw new Error('Failed to fetch accuracy data');
+    }
+
+    return res.data.accuracy; // returns an array of accuracy by day
+  } catch (err) {
+    console.error('fetchUserAccuracy error:', err);
+    throw new Error(
+      'Failed to fetch user accuracy: ' +
+        (err.response?.data?.error || err.message),
+    );
+  }
+}

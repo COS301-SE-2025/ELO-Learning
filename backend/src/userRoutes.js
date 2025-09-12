@@ -677,6 +677,7 @@ router.get('/user/:id/community', verifyToken, async (req, res) => {
             surname: friendUser?.surname || '',
             email: friendUser?.email || 'unknown',
             status: f.status,
+            request_id: f.id, // Add the row ID for friend relationship
           };
         });
       }

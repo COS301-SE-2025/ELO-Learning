@@ -1,3 +1,36 @@
+/**
+ * Remove a friend for a user (delete or reject relationship)
+ * @param {string|number} userId - User ID
+ * @param {string} friendEmail - Friend's email to remove
+ * @param {string} token - JWT token
+ * @returns {Promise<object>} API response
+ */
+export async function removeFriend(userId, friendEmail, token) {
+  try {
+    // Fetch community data to get friend object
+    const community = await fetchCommunityData(userId);
+    const friendObj = (community.friends || []).find(
+      (f) => f.email === friendEmail,
+    );
+    if (!friendObj || !friendObj.request_id) {
+      throw new Error('Friend not found');
+    }
+    // Send reject request to backend using the correct request_id
+    const res = await axiosInstance.post(
+      `/user/${userId}/friend-reject`,
+      { request_id: friendObj.request_id },
+      {
+        headers: {
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+      },
+    );
+    return res.data;
+  } catch (error) {
+    console.error('❌ Failed to remove friend:', error);
+    return { error: error.message || 'Failed to remove friend' };
+  }
+}
 // Update community data for a user (PUT)
 // Update community data for a user (PUT)
 // (Removed duplicate signature)
@@ -66,6 +99,38 @@ export async function fetchCommunityData(userId) {
   } catch (error) {
     console.error('❌ Failed to fetch community data:', error);
     throw error;
+  }
+}
+/**
+ * Remove a location for a user and update community data
+ * @param {string|number} userId - User ID
+ * @param {string} locationToRemove - City to remove
+ * @param {string} token - JWT token
+ * @returns {Promise<object>} Updated community data response
+ */
+export async function removeLocation(userId, locationToRemove, token) {
+  try {
+    // Fetch current community data
+    const community = await fetchCommunityData(userId);
+    const currentLocations = Array.isArray(community.location)
+      ? community.location
+      : typeof community.location === 'string' && community.location.length > 0
+        ? community.location.split(',').map((city) => city.trim())
+        : [];
+    // Remove the specified location
+    const updatedLocations = currentLocations.filter(
+      (city) => city !== locationToRemove,
+    );
+    // Update community data
+    return await updateCommunityData(
+      userId,
+      community.academic_institution,
+      updatedLocations,
+      token,
+    );
+  } catch (error) {
+    console.error('❌ Failed to remove location:', error);
+    return { error: error.message || 'Failed to remove location' };
   }
 }
 import axios from 'axios';

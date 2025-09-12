@@ -100,10 +100,26 @@ export default function CommunitySettingsPage() {
     }
   };
 
-  // Remove friend (optional: send delete to backend)
-  const handleRemoveFriend = (email) => {
-    setFriends(friends.filter((f) => f.email !== email));
-    // Optionally send delete to backend
+  // Remove friend (calls backend and updates state)
+  const handleRemoveFriend = async (email) => {
+    if (!userId) {
+      setError('User not authenticated.');
+      return;
+    }
+    try {
+      const token = session?.user?.accessToken || session?.accessToken;
+      const result = await removeFriend(userId, email, token);
+      if (result && result.message === 'Friend request rejected') {
+        setFriends(friends.filter((f) => f.email !== email));
+        setError('');
+      } else if (result && result.error) {
+        setError(result.error);
+      } else {
+        setError('Failed to remove friend.');
+      }
+    } catch (err) {
+      setError('Failed to remove friend.');
+    }
   };
 
   // Add location (max 3)

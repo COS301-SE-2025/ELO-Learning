@@ -9,8 +9,13 @@ import jwt from 'jsonwebtoken';
  */
 export function verifyToken(req, res, next) {
   const authHeader = req.headers.authorization;
+  console.log(
+    `[AUTH] verifyToken middleware entered. Authorization header:`,
+    authHeader,
+  );
 
   if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    console.warn(`[AUTH] No valid token provided. Header:`, authHeader);
     return res.status(401).json({
       error: 'Access denied. No valid token provided.',
     });
@@ -21,6 +26,7 @@ export function verifyToken(req, res, next) {
   try {
     // Verify the JWT token
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    console.log(`[AUTH] JWT verified. Decoded:`, decoded);
 
     // Add user info to request object for use in route handlers
     req.user = {
@@ -31,15 +37,17 @@ export function verifyToken(req, res, next) {
     next();
   } catch (error) {
     if (error.name === 'TokenExpiredError') {
+      console.warn(`[AUTH] Token expired. Error:`, error);
       return res.status(401).json({
         error: 'Token has expired. Please log in again.',
       });
     } else if (error.name === 'JsonWebTokenError') {
+      console.warn(`[AUTH] Invalid token. Error:`, error);
       return res.status(401).json({
         error: 'Invalid token.',
       });
     } else {
-      console.error('Token verification error:', error);
+      console.error('[AUTH] Token verification error:', error);
       return res.status(500).json({
         error: 'Internal server error during authentication.',
       });

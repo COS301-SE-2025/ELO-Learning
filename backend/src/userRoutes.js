@@ -610,28 +610,43 @@ router.get('/verify-reset-token/:token', async (req, res) => {
 // Returns { friends, institution, locations }
 router.get('/user/:id/community', verifyToken, async (req, res) => {
   const { id } = req.params;
+  console.log(`[COMMUNITY] Route entered for user id=${id}`);
   try {
-    // Get institution and locations from Users table
+    // Get academic_institution and location(s) from Users table
     const { data: user, error: userError } = await supabase
       .from('Users')
-      .select('institution, locations')
+      .select('academic_institution, location')
       .eq('id', id)
       .single();
     if (userError || !user) {
-      return res.status(404).json({ error: 'User not found' });
+      console.error(
+        `[COMMUNITY] User lookup failed for id=${id}. Error:`,
+        userError,
+        'User:',
+        user,
+      );
+      return res
+        .status(404)
+        .json({ error: 'User not found', details: { userError, user } });
     }
 
-    // Get all friend requests (pending + accepted)
+    // Get all friend requests (pending + accepted) for this user
     const { data: friendRows, error: friendError } = await supabase
       .from('friends')
       .select('user_id, friend_id, status')
       .or(`user_id.eq.${id},friend_id.eq.${id}`)
       .in('status', ['pending', 'accepted']);
     if (friendError) {
-      return res.status(500).json({ error: 'Failed to fetch friends' });
+      console.error(
+        `[COMMUNITY] Failed to fetch friends for user id=${id}. Error:`,
+        friendError,
+      );
+      return res
+        .status(500)
+        .json({ error: 'Failed to fetch friends', details: friendError });
     }
 
-    // Get emails for each friend
+    // Get the friend IDs (other user in each relationship)
     const friendIds = [
       ...new Set(
         friendRows.map((f) =>
@@ -641,15 +656,25 @@ router.get('/user/:id/community', verifyToken, async (req, res) => {
     ];
     let friends = [];
     if (friendIds.length > 0) {
-      const { data: friendUsers, error: emailError } = await supabase
+      // Fetch names, surnames, emails for each friend
+      const { data: friendUsers, error: friendUserError } = await supabase
         .from('Users')
-        .select('id, email')
+        .select('id, name, surname, email')
         .in('id', friendIds);
-      if (!emailError && friendUsers) {
+      if (friendUserError) {
+        console.error(
+          `[COMMUNITY] Failed to fetch friend details for ids=${friendIds}. Error:`,
+          friendUserError,
+        );
+      }
+      if (!friendUserError && friendUsers) {
         friends = friendRows.map((f) => {
           const friendId = f.user_id === Number(id) ? f.friend_id : f.user_id;
           const friendUser = friendUsers.find((u) => u.id === friendId);
           return {
+            id: friendUser?.id || friendId,
+            name: friendUser?.name || '',
+            surname: friendUser?.surname || '',
             email: friendUser?.email || 'unknown',
             status: f.status,
           };
@@ -659,10 +684,11 @@ router.get('/user/:id/community', verifyToken, async (req, res) => {
 
     res.status(200).json({
       friends,
-      institution: user.institution || '',
-      locations: user.locations || [],
+      academic_institution: user.academic_institution || '',
+      location: user.location || [],
     });
   } catch (err) {
+    console.error(`[COMMUNITY] Unexpected error for user id=${id}:`, err);
     res
       .status(500)
       .json({ error: 'Failed to fetch community data', details: err.message });
@@ -676,15 +702,44 @@ router.put('/user/:id/community', verifyToken, async (req, res) => {
   const { institution, locations } = req.body;
   try {
     // Update institution and locations in Users table
-    const { error: updateError } = await supabase
+    const { data: userExists, error: userError } = await supabase
+      .from('Users')
+      .select('id')
+      .eq('id', id)
+      .single();
+    if (userError || !userExists) {
+      console.error(
+        `[COMMUNITY PUT] User not found for id=${id}. Error:`,
+        userError,
+        'User:',
+        userExists,
+      );
+      return res
+        .status(404)
+        .json({ error: 'User not found', details: { userError, userExists } });
+    }
+
+    const { data, error: updateError } = await supabase
       .from('Users')
       .update({ institution, locations })
-      .eq('id', id);
+      .eq('id', id)
+      .select()
+      .single();
     if (updateError) {
-      return res.status(500).json({ error: 'Failed to update community data' });
+      console.error(
+        `[COMMUNITY PUT] Failed to update institution/locations for user id=${id}. Error:`,
+        updateError,
+        'Payload:',
+        { institution, locations },
+      );
+      return res.status(500).json({
+        error: 'Failed to update community data',
+        details: updateError,
+      });
     }
-    res.status(200).json({ message: 'Community data updated' });
+    res.status(200).json({ message: 'Community data updated', user: data });
   } catch (err) {
+    console.error(`[COMMUNITY PUT] Unexpected error for user id=${id}:`, err);
     res
       .status(500)
       .json({ error: 'Failed to update community data', details: err.message });
@@ -700,6 +755,7 @@ router.post('/user/:id/friend-request', verifyToken, async (req, res) => {
     console.log(
       `[FRIEND REQUEST] Sender ID: ${id}, Friend Email: ${friend_email}`,
     );
+
     // Find friend by email
     const { data: friend, error: friendError } = await supabase
       .from('Users')
@@ -708,10 +764,14 @@ router.post('/user/:id/friend-request', verifyToken, async (req, res) => {
       .single();
     if (friendError || !friend) {
       console.error(
-        `[FRIEND REQUEST] Friend lookup failed. Error: ${friendError?.message}, Data:`,
+        `[FRIEND REQUEST] Friend lookup failed for email=${friend_email}. Error:`,
+        friendError,
+        'Friend:',
         friend,
       );
-      return res.status(404).json({ error: 'Friend not found' });
+      return res
+        .status(404)
+        .json({ error: 'Friend not found', details: { friendError, friend } });
     }
     console.log(`[FRIEND REQUEST] Found friend:`, friend);
 
@@ -725,18 +785,25 @@ router.post('/user/:id/friend-request', verifyToken, async (req, res) => {
       .maybeSingle(); // <-- returns null if not found
 
     if (existingError) {
-      console.error('[FRIEND REQUEST] Lookup failed:', existingError);
-      return res
-        .status(500)
-        .json({ error: 'Error checking existing requests' });
+      console.error(
+        `[FRIEND REQUEST] Lookup for existing request failed for user_id=${id}, friend_id=${friend.id}. Error:`,
+        existingError,
+      );
+      return res.status(500).json({
+        error: 'Error checking existing requests',
+        details: existingError,
+      });
     }
 
     if (existingRequest) {
       console.log(
-        '[FRIEND REQUEST] Duplicate request blocked:',
+        `[FRIEND REQUEST] Duplicate request blocked:`,
         existingRequest,
       );
-      return res.status(400).json({ error: 'Friend request already sent' });
+      return res.status(400).json({
+        error: 'Friend request already sent',
+        details: existingRequest,
+      });
     }
 
     // Insert friend request
@@ -756,20 +823,31 @@ router.post('/user/:id/friend-request', verifyToken, async (req, res) => {
       .select()
       .single();
     if (reqError) {
-      console.error(`[FRIEND REQUEST] Insert failed. Full Supabase response:`, {
-        data: request,
-        error: reqError,
-      });
+      console.error(
+        `[FRIEND REQUEST] Insert failed for payload:`,
+        friendRequestPayload,
+        'Error:',
+        reqError,
+        'Data:',
+        request,
+      );
       return res.status(500).json({
         error: 'Failed to send friend request',
-        details: { data: request, error: reqError },
+        details: {
+          data: request,
+          error: reqError,
+          payload: friendRequestPayload,
+        },
       });
     }
     console.log(`[FRIEND REQUEST] Success. Request:`, request);
     // TODO: Trigger push notification to friend
     res.status(201).json({ message: 'Friend request sent', request });
   } catch (err) {
-    console.error('[FRIEND REQUEST] Unexpected error:', err);
+    console.error(
+      `[FRIEND REQUEST] Unexpected error for sender id=${id}, friend_email=${req.body?.friend_email}:`,
+      err,
+    );
     res
       .status(500)
       .json({ error: 'Internal server error', details: err.message });

@@ -5,6 +5,7 @@ import {
   getRegistration,
   setRegistration,
 } from '../../login-landing/signup/registrationUtils';
+import { fetchCommunityData } from '../../../services/api';
 import { registerFCMToken } from '../../../services/firebase';
 
 // Color scheme and button classes from login-landing
@@ -23,8 +24,6 @@ const containerClass = 'w-full max-w-xl space-y-6';
 export default function CommunitySettingsPage() {
   const { data: session } = useSession();
   const userId = session?.user?.id;
-  // Simulate fetching user data (replace with real API calls)
-  // Friends now have email and status
   const [friends, setFriends] = useState([]); // [{email, status}]
   const [friendInput, setFriendInput] = useState('');
   const [institution, setInstitution] = useState('');
@@ -32,27 +31,24 @@ export default function CommunitySettingsPage() {
   const [locationInput, setLocationInput] = useState('');
   const [error, setError] = useState('');
 
-  // Fetch full community data from backend
   useEffect(() => {
     async function fetchCommunity() {
       if (!userId) return;
       try {
-        const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL || '';
-        const res = await fetch(`${API_BASE}/user/${userId}/community`);
-        const data = await res.json();
-        if (res.ok) {
-          setFriends(data.friends || []);
-          setInstitution(data.institution || '');
-          setLocations(data.locations || []);
-        } else {
-          setError(data.error || 'Failed to fetch community data.');
-        }
+        const data = await fetchCommunityData(userId);
+        const filteredFriends = (data.friends || []).filter(
+          (f) => f.status === 'pending' || f.status === 'accepted',
+        );
+        setFriends(filteredFriends);
+        setInstitution(data.academic_institution || '');
+        setLocations(Array.isArray(data.location) ? data.location : []);
+        setError('');
       } catch (err) {
-        setError('Failed to fetch community data.');
+        setError('Failed to fetch community data');
       }
     }
     fetchCommunity();
-  }, [userId]);
+  }, [userId, session]);
 
   // Add friend (send request to backend)
   const handleAddFriend = async () => {
@@ -122,9 +118,13 @@ export default function CommunitySettingsPage() {
     }
     try {
       const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL || '';
+      const token = session?.user?.accessToken || session?.accessToken;
       const res = await fetch(`${API_BASE}/user/${userId}/community`, {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
         body: JSON.stringify({ institution, locations }),
       });
       if (res.ok) {

@@ -1,3 +1,12 @@
+export async function fetchCommunityData(userId) {
+  try {
+    const res = await axiosInstance.get(`/user/${userId}/community`);
+    return res.data;
+  } catch (error) {
+    console.error('❌ Failed to fetch community data:', error);
+    throw error;
+  }
+}
 import axios from 'axios';
 import { getSession } from 'next-auth/react';
 import { CACHE_DURATIONS, performanceCache } from '../utils/performanceCache';

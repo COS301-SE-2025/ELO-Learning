@@ -168,7 +168,7 @@ export default function Page() {
         <div>
           <p className="text-lg text-center font-bold">Choose a password</p>
           <form onSubmit={handleContinue}>
-            <div className="flex flex-col items-center w-full px-4 md:px-0">
+            <div className="flex flex-col items-center w-full px-4 md:px-12">
               <div className="relative w-[90vw] md:w-[500px]">
                 <input
                   type={showPassword ? 'text' : 'password'}
@@ -214,7 +214,7 @@ export default function Page() {
               )}
               <div className="break_small"></div>
               <button
-                className="main-button px-2 py-8"
+                className="signup-button  px-2 py-8"
                 type="submit"
                 disabled={loading}
               >

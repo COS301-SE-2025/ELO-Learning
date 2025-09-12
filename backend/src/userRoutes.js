@@ -682,10 +682,32 @@ router.get('/user/:id/community', verifyToken, async (req, res) => {
       }
     }
 
+    console.log('[COMMUNITY GET] user.location value:', user.location);
+    // Robust normalization for location field
+    let normalizedLocation = [];
+    if (Array.isArray(user.location)) {
+      normalizedLocation = user.location;
+    } else if (
+      typeof user.location === 'string' &&
+      user.location.trim().startsWith('[') &&
+      user.location.trim().endsWith(']')
+    ) {
+      // Stringified array, e.g., '["Pretoria"]'
+      try {
+        const parsed = JSON.parse(user.location);
+        if (Array.isArray(parsed)) {
+          normalizedLocation = parsed;
+        }
+      } catch (e) {
+        normalizedLocation = [];
+      }
+    } else if (typeof user.location === 'string' && user.location.length > 0) {
+      normalizedLocation = user.location.split(',').map((city) => city.trim());
+    }
     res.status(200).json({
       friends,
       academic_institution: user.academic_institution || '',
-      location: user.location || [],
+      location: normalizedLocation,
     });
   } catch (err) {
     console.error(`[COMMUNITY] Unexpected error for user id=${id}:`, err);

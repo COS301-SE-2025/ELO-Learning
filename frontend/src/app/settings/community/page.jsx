@@ -45,7 +45,26 @@ export default function CommunitySettingsPage() {
         );
         setFriends(filteredFriends);
         setInstitution(data.academic_institution || '');
-        setLocations(Array.isArray(data.location) ? data.location : []);
+        // Normalize location to always be an array, including stringified arrays
+        if (Array.isArray(data.location)) {
+          setLocations(data.location);
+        } else if (
+          typeof data.location === 'string' &&
+          data.location.length > 0
+        ) {
+          try {
+            const parsed = JSON.parse(data.location);
+            if (Array.isArray(parsed)) {
+              setLocations(parsed);
+            } else {
+              setLocations([data.location]);
+            }
+          } catch {
+            setLocations([data.location]);
+          }
+        } else {
+          setLocations([]);
+        }
         setError('');
       } catch (err) {
         setError('Failed to fetch community data');
@@ -228,21 +247,25 @@ export default function CommunitySettingsPage() {
             </button>
           </div>
           <ul className="mt-2">
-            {locations.map((loc, idx) => (
-              <li
-                key={idx}
-                className="flex items-center gap-2 text-base md:text-lg"
-              >
-                {loc}
-                <button
-                  type="button"
-                  className={removeBtnClass}
-                  onClick={() => handleRemoveLocation(loc)}
+            {Array.isArray(locations) && locations.length > 0 ? (
+              locations.map((loc, idx) => (
+                <li
+                  key={idx}
+                  className="flex items-center gap-2 text-base md:text-lg"
                 >
-                  Remove
-                </button>
-              </li>
-            ))}
+                  {loc}
+                  <button
+                    type="button"
+                    className={removeBtnClass}
+                    onClick={() => handleRemoveLocation(loc)}
+                  >
+                    Remove
+                  </button>
+                </li>
+              ))
+            ) : (
+              <li className="text-gray-500">No cities set</li>
+            )}
           </ul>
         </div>
         {error && <p className="text-red-500 mt-2">{error}</p>}

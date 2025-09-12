@@ -99,7 +99,7 @@ router.post('/baseline/confirm', async (req, res) => {
 
   try {
     console.log('🔄 Updating base_line_test to true for user:', user_id);
-    
+
     // Update the baseLineTest flag to true
     const { data, error } = await supabase
       .from('Users')
@@ -110,11 +110,13 @@ router.post('/baseline/confirm', async (req, res) => {
 
     if (error) {
       console.error('❌ Database error updating base_line_test:', error);
-      return res.status(500).json({ error: 'Database update failed', details: error.message });
+      return res
+        .status(500)
+        .json({ error: 'Database update failed', details: error.message });
     }
 
     console.log('✅ Successfully updated base_line_test for user:', user_id);
-    
+
     // Return the updated user data with proper field name conversion
     const updatedUser = {
       id: data.id,
@@ -130,7 +132,7 @@ router.post('/baseline/confirm', async (req, res) => {
       rank: data.rank,
       baseLineTest: data.base_line_test, // Convert snake_case to camelCase
     };
-    
+
     return res.status(200).json({ success: true, user: updatedUser });
   } catch (err) {
     console.error('Server error:', err);
@@ -199,7 +201,7 @@ router.post('/baseline/complete', async (req, res) => {
 
     if (error)
       return res.status(500).json({ error: 'Failed to update user ELO' });
-    
+
     // Return the updated user data with proper field name conversion
     const updatedUser = {
       id: data.id,
@@ -215,7 +217,7 @@ router.post('/baseline/complete', async (req, res) => {
       rank: data.rank,
       baseLineTest: data.base_line_test, // Convert snake_case to camelCase
     };
-    
+
     res.json({ success: true, elo_rating: finalElo, user: updatedUser });
   } catch (err) {
     console.error('Server error:', err);

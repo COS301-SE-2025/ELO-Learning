@@ -56,7 +56,7 @@ export default function Page() {
         <div>
           <p className="text-lg text-center font-bold">What is your email?</p>
           <form onSubmit={handleContinue}>
-            <div className="flex flex-col items-center w-full">
+            <div className="flex flex-col items-center w-full md:px-20 px-3">
               <input
                 type="email"
                 placeholder="Email"
@@ -68,7 +68,7 @@ export default function Page() {
               {error && <p className="text-red-500">{error}</p>}
               <div className="break_small"></div>
               <button
-                className="main-button px-2 py-8"
+                className="signup-button px-2 py-8"
                 type="submit"
                 disabled={isLoading}
               >

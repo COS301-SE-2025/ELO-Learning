@@ -67,7 +67,7 @@ export default function Page() {
               <div className="break_small"></div>
               <Link
                 href="/login-landing/login"
-                className="main-button px-2 py-8 text-center"
+                className="signup-button px-2 py-8 text-center"
               >
                 Back to Login
               </Link>
@@ -92,7 +92,7 @@ export default function Page() {
                 )}
                 <div className="break_small"></div>
                 <button
-                  className="main-button px-2 py-8"
+                  className="signup-button px-2 py-8"
                   type="submit"
                   disabled={loading}
                 >

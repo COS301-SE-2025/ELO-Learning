@@ -111,7 +111,7 @@ export default function Page() {
             )}
             <SafeButton
               onClick={handleSubmit}
-              className="main-button px-2 py-8"
+              className="signup-button px-2 py-8"
               loadingText="Signing In..."
             >
               Continue

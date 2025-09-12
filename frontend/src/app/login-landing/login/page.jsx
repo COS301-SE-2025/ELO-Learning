@@ -1,4 +1,5 @@
 'use client';
+import { SafeButton } from '@/components/SafeButton';
 import { Eye, EyeOff, X } from 'lucide-react';
 import { signIn } from 'next-auth/react';
 import Link from 'next/link';
@@ -9,20 +10,31 @@ export default function Page() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const router = useRouter();
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+  const handleSubmit = async () => {
     setError('');
-    setIsLoading(true);
+
+    // More robust callback URL construction for test environment
+    let baseUrl;
+
+    if (typeof window !== 'undefined') {
+      // In browser environment (including Cypress)
+      baseUrl = window.location.origin;
+    } else {
+      // Fallback for server-side
+      baseUrl =
+        process.env.NEXT_PUBLIC_FRONTEND_URL ||
+        process.env.NEXTAUTH_URL ||
+        'http://localhost:8080';
+    }
+
+    const callbackUrl = `${baseUrl}/dashboard`;
 
     try {
       const result = await signIn('credentials', {
-        callbackUrl: `${
-          process.env.NEXT_PUBLIC_FRONTEND_URL || 'http://localhost:8080'
-        }/dashboard`,
+        callbackUrl,
         email,
         password,
         redirect: false,
@@ -30,6 +42,7 @@ export default function Page() {
 
       if (result?.error) {
         setError('Username or password incorrect, please try again');
+        return; // Don't throw error, just return
       } else {
         // Clear any existing cache before redirecting
         const { cache } = await import('../../../utils/cache');
@@ -39,11 +52,9 @@ export default function Page() {
         router.push('/dashboard');
         console.log('Login successful:', result);
       }
-    } catch (err) {
-      console.error('Login failed:', err);
-      setError('Username or password incorrect, please try again');
-    } finally {
-      setIsLoading(false);
+    } catch (error) {
+      console.error('Login error:', error);
+      setError('An error occurred during login. Please try again.');
     }
   };
 
@@ -63,7 +74,7 @@ export default function Page() {
           </p>
         </div>
         {/* A form to input a name and email */}
-        <form onSubmit={handleSubmit}>
+        <form>
           <div className="flex flex-col items-center w-full px-4 md:px-0">
             <div className="relative w-[90vw] md:w-[500px]">
               <input
@@ -98,13 +109,13 @@ export default function Page() {
                 {error}
               </p>
             )}
-            <button
-              type="submit"
+            <SafeButton
+              onClick={handleSubmit}
               className="main-button px-2 py-8"
-              disabled={isLoading}
+              loadingText="Signing In..."
             >
-              {isLoading ? 'Loading...' : 'Continue'}
-            </button>
+              Continue
+            </SafeButton>
           </div>
         </form>
         <div>
@@ -124,10 +135,15 @@ export default function Page() {
             const { cache } = await import('../../../utils/cache');
             cache.clear();
 
+            // Safe callback URL construction
+            const baseUrl =
+              process.env.NEXT_PUBLIC_FRONTEND_URL ||
+              process.env.NEXTAUTH_URL ||
+              'http://localhost:8080';
+            const callbackUrl = `${baseUrl}/dashboard`;
+
             signIn('google', {
-              callbackUrl: `${
-                process.env.NEXT_PUBLIC_FRONTEND_URL || 'http://localhost:8080'
-              }/dashboard`,
+              callbackUrl,
             });
           }}
         >

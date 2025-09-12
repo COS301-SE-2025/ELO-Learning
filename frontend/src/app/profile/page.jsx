@@ -29,13 +29,13 @@ export default function Page() {
   if (!session?.user) return <div>No user data available.</div>;
 
   const user = session.user;
-  
+
   console.log('🔍 Profile page user data:', {
     id: user.id,
     username: user.username,
     baseLineTest: user.baseLineTest,
     currentLevel: user.currentLevel,
-    elo_rating: user.elo_rating
+    elo_rating: user.elo_rating,
   });
 
   const getBackgroundStyle = (backgroundType) => {
@@ -96,10 +96,8 @@ export default function Page() {
         <div className="flex flex-col space-y-4 pb-24">
           {' '}
           {/* Increased from pb-8 to pb-24 */}
-          
           {/* Baseline Test Option - Show only if user hasn't taken it */}
           <BaselineTestOption userHasTakenBaseline={user.baseLineTest} />
-          
           <UserInfo
             elo={user.elo_rating || 0}
             xp={user.xp || 0}

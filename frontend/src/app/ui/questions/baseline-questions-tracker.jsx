@@ -89,12 +89,12 @@ export default function QuestionsTracker({ questions, userId, onComplete }) {
         // Update user's ELO rating and baseline test status
         console.log('🎯 Baseline test completed! Updating user ELO...', {
           userId,
-          finalLevel: nextLevel
+          finalLevel: nextLevel,
         });
-        
+
         const response = await updateUserElo(userId, nextLevel);
         console.log('✅ User ELO updated successfully:', response);
-        
+
         // Update session with the returned user data
         if (response.user) {
           await update({

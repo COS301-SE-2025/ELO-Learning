@@ -59,13 +59,13 @@ export default function BaselineTracker({ questions, userId, onComplete }) {
       if (currentStep >= totalSteps) {
         console.log('🎯 Baseline test completed! Updating user ELO...', {
           userId,
-          finalLevel: nextLevel
+          finalLevel: nextLevel,
         });
-        
+
         try {
           const response = await updateUserElo(userId, nextLevel);
           console.log('✅ User ELO updated successfully:', response);
-          
+
           // Pass the response (including updated user data) to the completion handler
           onComplete(nextLevel, response);
         } catch (error) {
@@ -73,7 +73,7 @@ export default function BaselineTracker({ questions, userId, onComplete }) {
           // Still call onComplete even if update fails
           onComplete(nextLevel, null);
         }
-        
+
         return;
       }
 

@@ -58,11 +58,13 @@ export default function Page() {
     const refreshFromBaseline = async () => {
       const baselineCompleted = searchParams.get('baseline_completed');
       if (baselineCompleted === 'true' && session?.user?.id) {
-        console.log('🔄 User returned from baseline test, refreshing user data...');
+        console.log(
+          '🔄 User returned from baseline test, refreshing user data...',
+        );
         try {
           // Fetch fresh user data from database
           const freshUserData = await fetchUserById(session.user.id);
-          
+
           // Update session with fresh data
           await updateSession({
             user: {
@@ -72,7 +74,7 @@ export default function Page() {
               elo_rating: freshUserData.elo_rating,
             },
           });
-          
+
           console.log('✅ Session refreshed after baseline completion');
         } catch (error) {
           console.error('❌ Failed to refresh user data:', error);
@@ -115,14 +117,14 @@ export default function Page() {
     }
 
     if (status === 'loading') return; // Don't load users while session is loading
-    
+
     async function checkBaselineTest() {
       if (!session?.user?.id) return; // user not loaded yet
 
       try {
         console.log('🔍 Checking baseline test status...', {
           baseLineTest: session.user.baseLineTest,
-          joinDate: session.user.joinDate
+          joinDate: session.user.joinDate,
         });
 
         // Only show popup for newly registered users (within 24 hours) who haven't taken the baseline test
@@ -130,9 +132,9 @@ export default function Page() {
           const joinDate = new Date(session.user.joinDate);
           const now = new Date();
           const hoursSinceJoin = (now - joinDate) / (1000 * 60 * 60); // Convert to hours
-          
+
           console.log('⏰ Hours since join:', hoursSinceJoin);
-          
+
           // Only show popup if user joined within the last 24 hours
           if (hoursSinceJoin <= 24) {
             console.log('📋 Showing baseline test popup for new user');

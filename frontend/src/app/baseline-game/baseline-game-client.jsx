@@ -13,11 +13,11 @@ export default function BaselineGameClient({ questions }) {
     try {
       console.log('🎯 Baseline test completed with ELO:', finalElo);
       console.log('🎯 Backend response:', backendResponse);
-      
+
       // Update session to reflect baseline test completion
       if (session?.user) {
         console.log('🔄 Updating session after baseline completion...');
-        
+
         // Use the updated user data from the backend if available
         if (backendResponse?.user) {
           await updateSession({
@@ -43,7 +43,7 @@ export default function BaselineGameClient({ questions }) {
 
       // Save the final ELO rating to localStorage for the end screen
       localStorage.setItem('baselineFinalElo', finalElo.toString());
-      
+
       console.log('🚀 Redirecting to end screen...');
       // Redirect to end screen with baseline mode
       router.push(`/end-screen?mode=baseline&elo=${finalElo}`);

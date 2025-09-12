@@ -938,11 +938,11 @@ export async function fetchNextRandomBaselineQuestion(level) {
 export async function confirmBaselineTest(userId) {
   try {
     console.log('🎯 Calling confirmBaselineTest for user:', userId);
-    
+
     const res = await axiosInstance.post('/baseline/confirm', {
       user_id: userId,
     });
-    
+
     console.log('✅ confirmBaselineTest response:', res.data);
     return res.data;
   } catch (err) {
@@ -950,7 +950,7 @@ export async function confirmBaselineTest(userId) {
       error: err.message,
       status: err.response?.status,
       data: err.response?.data,
-      userId: userId
+      userId: userId,
     });
     throw err;
   }

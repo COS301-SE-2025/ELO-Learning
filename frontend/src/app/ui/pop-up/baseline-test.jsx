@@ -20,7 +20,7 @@ export default function BaselineTestPopup({ user_id, onClose }) {
       console.error('No user_id provided to BaselineTestPopup');
       return;
     }
-    
+
     setLoading(true);
     try {
       // Set baseLineTest to true since user confirmed they want to take the test

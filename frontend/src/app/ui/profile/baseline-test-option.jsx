@@ -9,7 +9,10 @@ export default function BaselineTestOption({ userHasTakenBaseline }) {
   const { data: session, update: updateSession } = useSession();
   const [loading, setLoading] = useState(false);
 
-  console.log('🔍 BaselineTestOption rendered with userHasTakenBaseline:', userHasTakenBaseline);
+  console.log(
+    '🔍 BaselineTestOption rendered with userHasTakenBaseline:',
+    userHasTakenBaseline,
+  );
 
   // Don't show this component if user has already taken the baseline test
   if (userHasTakenBaseline) {
@@ -26,7 +29,7 @@ export default function BaselineTestOption({ userHasTakenBaseline }) {
       if (session?.user?.id) {
         const response = await confirmBaselineTest(session.user.id);
         console.log('✅ confirmBaselineTest response:', response);
-        
+
         // Update session with the returned user data
         if (response.user) {
           await updateSession({
@@ -70,7 +73,9 @@ export default function BaselineTestOption({ userHasTakenBaseline }) {
             Baseline Test Not Completed
           </h3>
           <p className="text-sm text-[var(--text-secondary)] mb-3">
-            You haven't taken the baseline test yet. This will help us assess your current skill level and provide better question recommendations.
+            You haven't taken the baseline test yet. This will help us assess
+            your current skill level and provide better question
+            recommendations.
           </p>
           <button
             onClick={handleTakeBaselineTest}

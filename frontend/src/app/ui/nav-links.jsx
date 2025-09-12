@@ -1,7 +1,7 @@
 'use client';
 
 import clsx from 'clsx';
-import { Calculator, House, Sword, Swords, User, BarChart } from 'lucide-react';
+import { Calculator, House, Sword, Swords, User } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 
@@ -10,7 +10,6 @@ const links = [
   { name: 'Practice', href: '/practice', icon: Calculator },
   { name: 'Multiplayer', href: '/match', icon: Swords },
   { name: 'Singleplayer', href: '/single-player', icon: Sword },
-  { name: 'Analysis', href: '/analysis-feedback', icon: BarChart }, // added analysis link
   { name: 'Profile', href: '/profile', icon: User },
 ];
 

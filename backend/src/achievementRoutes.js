@@ -436,6 +436,9 @@ export async function triggerAchievementProgress(
         if (conditionType === 'Badges Collected') {
           // For Badge Collector, set to total count rather than increment
           newValue = increment; // increment is actually the total count for Badge Collector
+        } else if (conditionType === 'Daily Streak') {
+          // For Daily Streak, keep the highest streak achieved (don't let it go backwards)
+          newValue = Math.max(currentValue, increment); // Keep max of current progress vs current streak
         } else {
           // For normal achievements, increment the current value
           newValue = currentValue + increment;
@@ -623,145 +626,20 @@ export async function checkStreakAchievements(userId, currentStreak) {
       return [];
     }
 
-    // Get all Daily Streak achievements to check multiple milestones
-    const { data: streakAchievements, error: achievementsError } =
-      await supabase
-        .from('Achievements')
-        .select('id, name, description, condition_value')
-        .eq('condition_type', 'Daily Streak')
-        .order('condition_value', { ascending: true });
-
-    if (achievementsError) {
-      console.error(
-        'Error fetching streak achievements:',
-        achievementsError.message,
-      );
-      return [];
-    }
-
-    if (!streakAchievements || streakAchievements.length === 0) {
-      console.log('No streak achievements found in database');
-      return [];
-    }
-
-    console.log(
-      `📋 Found ${streakAchievements.length} streak achievements to check`,
+    // 🆕 NEW AUTOMATIC PATTERN: Use triggerAchievementProgress like other achievement categories
+    console.log(`� Using automatic streak progress pattern with triggerAchievementProgress...`);
+    
+    const result = await triggerAchievementProgress(
+      userId,
+      'Daily Streak',
+      currentStreak, // Set progress to current streak value
     );
 
-    // Get user's already unlocked achievements to avoid duplicates
-    const { data: userAchievements, error: userError } = await supabase
-      .from('UserAchievements')
-      .select('achievement_id')
-      .eq('user_id', userId)
-      .in(
-        'achievement_id',
-        streakAchievements.map((a) => a.id),
-      );
-
-    if (userError) {
-      console.error('Error fetching user achievements:', userError.message);
-      return [];
-    }
-
-    const unlockedIds = (userAchievements || []).map((ua) => ua.achievement_id);
-    const newlyUnlockedAchievements = [];
-
-    // Check each streak achievement
-    for (const achievement of streakAchievements) {
-      // Skip if already unlocked
-      if (unlockedIds.includes(achievement.id)) {
-        console.log(`⏭️ Skipping ${achievement.name} - already unlocked`);
-        continue;
-      }
-
-      // Check if user's current streak meets the requirement
-      if (currentStreak >= achievement.condition_value) {
-        console.log(
-          `🎯 User qualifies for ${achievement.name} (${currentStreak} >= ${achievement.condition_value})`,
-        );
-
-        try {
-          // Update achievement progress to the current streak value
-          const { error: upsertError } = await supabase
-            .from('AchievementProgress')
-            .upsert(
-              {
-                user_id: userId,
-                achievement_id: achievement.id,
-                current_value: currentStreak, // Set to current streak, not increment
-                updated_at: new Date().toISOString(),
-              },
-              {
-                onConflict: 'user_id,achievement_id',
-                ignoreDuplicates: false,
-              },
-            );
-
-          if (upsertError) {
-            console.error(
-              `Error updating progress for streak achievement ${achievement.id}:`,
-              upsertError.message,
-            );
-            continue;
-          }
-
-          // Unlock the achievement
-          const { error: unlockError } = await supabase
-            .from('UserAchievements')
-            .insert({
-              user_id: userId,
-              achievement_id: achievement.id,
-              unlocked_at: new Date().toISOString(),
-            });
-
-          // Handle duplicate key errors gracefully (achievement already unlocked by another request)
-          if (!unlockError || unlockError.code === '23505') {
-            // Success or duplicate key constraint violation (already unlocked)
-            if (unlockError && unlockError.code === '23505') {
-              console.log(
-                `🔄 Streak achievement ${achievement.id} already unlocked (duplicate key handled gracefully)`,
-              );
-              continue; // Skip this achievement, don't add to results
-            }
-
-            // Get full achievement details for response (only if not a duplicate error)
-            const { data: fullAchievement, error: detailsError } =
-              await supabase
-                .from('Achievements')
-                .select('*, AchievementCategories(name)')
-                .eq('id', achievement.id)
-                .single();
-
-            if (!detailsError && fullAchievement) {
-              newlyUnlockedAchievements.push(fullAchievement);
-              console.log(
-                `🏆 Unlocked streak achievement: ${achievement.name}`,
-              );
-            }
-          } else {
-            console.error(
-              `Error unlocking streak achievement ${achievement.id}:`,
-              unlockError.message,
-            );
-            continue;
-          }
-        } catch (error) {
-          console.error(
-            `Error processing streak achievement ${achievement.id}:`,
-            error,
-          );
-        }
-      } else {
-        console.log(
-          `📊 ${achievement.name}: ${currentStreak}/${achievement.condition_value} days`,
-        );
-      }
-    }
-
     console.log(
-      `🏆 Unlocked ${newlyUnlockedAchievements.length} new streak achievements`,
+      `🏆 Automatic streak achievement check completed: ${result.unlockedAchievements?.length || 0} achievements unlocked`,
     );
-    return newlyUnlockedAchievements;
+
+    return result.unlockedAchievements || [];
   } catch (error) {
     console.error('Error in checkStreakAchievements:', error);
     return [];
@@ -1904,7 +1782,7 @@ router.get('/users/:userId/streak', async (req, res) => {
     const { userId } = req.params;
 
     // Import streak calculator functions - FIXED PATH
-    const { getUserStreakInfo } = await import('../utils/streakCalculator.js');
+    const { getUserStreakInfo } = await import('./utils/streakCalculator.js');
 
     const streakInfo = await getUserStreakInfo(userId);
 
@@ -1930,12 +1808,14 @@ router.post('/users/:userId/streak/update', async (req, res) => {
     const { userId } = req.params;
 
     // Import streak calculator functions - FIXED PATH
-    const { updateUserStreak } = await import('../utils/streakCalculator.js');
+    const { updateUserStreak } = await import('./utils/streakCalculator.js');
 
     const streakResult = await updateUserStreak(userId);
 
     if (streakResult.success) {
-      // Check for streak achievements
+      // ALWAYS check for streak achievements with the current streak value
+      // This ensures achievement progress is always synchronized with actual streak
+      console.log(`🔥 Auto-updating streak achievements for user ${userId} with streak ${streakResult.currentStreak}`);
       const streakAchievements = await checkStreakAchievements(
         userId,
         streakResult.currentStreak,
@@ -1951,10 +1831,33 @@ router.post('/users/:userId/streak/update', async (req, res) => {
         unlocked_achievements: streakAchievements,
       });
     } else {
-      res.status(400).json({
-        success: false,
-        error: streakResult.message,
-      });
+      // Even if streak update "failed" (e.g., already updated today), still check achievements
+      // to ensure progress records are synchronized
+      const { getUserStreakInfo } = await import('./utils/streakCalculator.js');
+      const currentStreakInfo = await getUserStreakInfo(userId);
+      
+      if (currentStreakInfo.success && currentStreakInfo.currentStreak > 0) {
+        console.log(`🔥 Auto-syncing streak achievements for user ${userId} with current streak ${currentStreakInfo.currentStreak}`);
+        const streakAchievements = await checkStreakAchievements(
+          userId,
+          currentStreakInfo.currentStreak,
+        );
+
+        res.json({
+          success: true,
+          message: streakResult.message + ' (achievements synchronized)',
+          streak_data: {
+            current_streak: currentStreakInfo.currentStreak,
+            longest_streak: currentStreakInfo.longestStreak,
+          },
+          unlocked_achievements: streakAchievements,
+        });
+      } else {
+        res.status(400).json({
+          success: false,
+          error: streakResult.message,
+        });
+      }
     }
   } catch (error) {
     console.error('Error updating user streak:', error);

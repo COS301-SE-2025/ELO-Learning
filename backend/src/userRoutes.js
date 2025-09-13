@@ -43,7 +43,23 @@ router.get('/user/:id', verifyToken, async (req, res) => {
     return res.status(500).json({ error: 'Failed to fetch user' });
   }
 
-  res.status(200).json(data);
+  // Convert snake_case to camelCase for frontend consistency
+  const userData = {
+    id: data.id,
+    name: data.name,
+    surname: data.surname,
+    username: data.username,
+    email: data.email,
+    currentLevel: data.currentLevel,
+    joinDate: data.joinDate,
+    xp: data.xp,
+    avatar: data.avatar,
+    elo_rating: data.elo_rating,
+    rank: data.rank,
+    baseLineTest: data.base_line_test, // Convert snake_case to camelCase
+  };
+
+  res.status(200).json(userData);
 });
 
 router.get('/users/rank/:rank', async (req, res) => {
@@ -259,7 +275,7 @@ router.post('/register', async (req, res) => {
         currentLevel: safeCurrentLevel,
         joinDate: safeJoinDate,
         xp: safeXP,
-        baseLineTest: startBase,
+        base_line_test: startBase, // Use snake_case for database
         avatar: DEFAULT_AVATAR,
         elo_rating: eloRating,
         rank: defaultRank,

@@ -279,8 +279,8 @@ router.post('/register', async (req, res) => {
   const DEFAULT_AVATAR = {
     eyes: 'Eye 1',
     mouth: 'Mouth 1',
-    bodyShape: 'Circle',
-    background: 'solid-pink',
+    bodyShape: 'Square',
+    background: 'solid-3', // Blue background to match frontend default
   };
   const eloRating = 100;
   const defaultRank = 'Iron';

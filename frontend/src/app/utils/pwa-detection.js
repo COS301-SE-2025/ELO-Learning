@@ -44,7 +44,7 @@ export const PWADetection = {
       }
     }
 
-    // Method 3: Check localStorage tracking
+    // Method 3: Check localStorage tracking (most reliable)
     const installationTracked = localStorage.getItem('pwa-installed');
     if (installationTracked === 'true') {
       return true;
@@ -55,20 +55,19 @@ export const PWADetection = {
       'beforeinstallprompt-received',
     );
     if (promptReceived === 'true') {
-      // If we received the prompt this session, app is not installed
+      // If we received the prompt this session, app is definitely not installed
       return false;
     }
 
-    // Method 5: For mobile devices, assume installed if no install prompt after reasonable time
-    const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
-    const hasVisitedBefore = localStorage.getItem('has-visited-before');
-
-    if (isMobile && hasVisitedBefore) {
-      // On mobile, if user has visited before and no install prompt in this session,
-      // it's likely the app is installed
-      return true;
+    // Method 5: Check if we've seen an install prompt before in localStorage
+    const hasSeenPrompt = localStorage.getItem('has-seen-install-prompt');
+    if (hasSeenPrompt === 'true') {
+      // If we've seen a prompt before but no longer seeing it and not explicitly installed,
+      // assume it's not installed
+      return false;
     }
 
+    // Default: assume not installed unless we have explicit evidence
     return false;
   },
 
@@ -87,6 +86,7 @@ export const PWADetection = {
    */
   trackInstallPromptReceived: () => {
     sessionStorage.setItem('beforeinstallprompt-received', 'true');
+    localStorage.setItem('has-seen-install-prompt', 'true');
   },
 
   /**
@@ -101,6 +101,7 @@ export const PWADetection = {
    */
   resetInstallationTracking: () => {
     localStorage.removeItem('pwa-installed');
+    localStorage.removeItem('has-seen-install-prompt');
     sessionStorage.removeItem('beforeinstallprompt-received');
   },
 
@@ -117,6 +118,55 @@ export const PWADetection = {
       buttonText: isInstalled || isRunningAsPWA ? 'Open App' : 'Install App',
       shortButtonText: isInstalled || isRunningAsPWA ? 'Open' : 'Install',
       action: isInstalled || isRunningAsPWA ? 'open' : 'install',
+    };
+  },
+
+  /**
+   * Debug method to check all installation indicators
+   */
+  debugInstallationStatus: async () => {
+    const isRunningAsPWA = PWADetection.isRunningAsPWA();
+    const installationTracked = localStorage.getItem('pwa-installed');
+    const promptReceived = sessionStorage.getItem(
+      'beforeinstallprompt-received',
+    );
+    const hasSeenPrompt = localStorage.getItem('has-seen-install-prompt');
+    const hasVisitedBefore = localStorage.getItem('has-visited-before');
+
+    let relatedApps = null;
+    if ('getInstalledRelatedApps' in navigator) {
+      try {
+        relatedApps = await navigator.getInstalledRelatedApps();
+      } catch (error) {
+        relatedApps = 'Error: ' + error.message;
+      }
+    }
+
+    const finalResult = await PWADetection.isPWAInstalled();
+
+    console.log('PWA Installation Debug Status:', {
+      isRunningAsPWA,
+      installationTracked,
+      promptReceived,
+      hasSeenPrompt,
+      hasVisitedBefore,
+      relatedApps,
+      finalResult,
+      userAgent: navigator.userAgent,
+      displayMode: window.matchMedia('(display-mode: standalone)').matches
+        ? 'standalone'
+        : 'browser',
+      navigatorStandalone: navigator.standalone,
+    });
+
+    return {
+      isRunningAsPWA,
+      installationTracked,
+      promptReceived,
+      hasSeenPrompt,
+      hasVisitedBefore,
+      relatedApps,
+      finalResult,
     };
   },
 };

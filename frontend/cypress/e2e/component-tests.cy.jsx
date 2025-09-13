@@ -472,7 +472,7 @@ describe('Component Tests with Real Selectors', () => {
       cy.visit('/login-landing/login');
       cy.get('input[placeholder="Username or email"]').should('be.visible');
       cy.get('input[placeholder="Password"]').should('be.visible');
-      cy.get('button[type="submit"]').should('be.visible');
+      cy.contains('button', 'Continue').should('be.visible');
     });
 
     it('should render the signup form correctly', () => {

@@ -17,6 +17,21 @@ export default function Page() {
   const { data: session, status } = useSession();
   const { avatar } = useAvatar();
   const [streakData, setStreakData] = useState(null);
+  const [refreshKey, setRefreshKey] = useState(0);
+
+  // Listen for ELO updates
+  useEffect(() => {
+    const handleEloUpdate = () => {
+      console.log('Profile: ELO update event received, refreshing...');
+      setRefreshKey((prev) => prev + 1);
+    };
+
+    window.addEventListener('eloUpdated', handleEloUpdate);
+
+    return () => {
+      window.removeEventListener('eloUpdated', handleEloUpdate);
+    };
+  }, []);
 
   // Initialize achievement tracking when user logs in (no notifications)
   useEffect(() => {
@@ -43,7 +58,7 @@ export default function Page() {
     }
 
     loadStreakData();
-  }, [session?.user?.id, status]);
+  }, [session?.user?.id, status, refreshKey]); // Add refreshKey to re-fetch when ELO updates
 
   if (status === 'loading') return <div>Loading...</div>;
   if (status === 'unauthenticated')
@@ -109,7 +124,7 @@ export default function Page() {
 
         <div className="flex flex-col space-y-4 pb-24">
           <UserInfo
-            elo={user.elo_rating || 0}
+            elo={user.elo_rating || user.eloRating || 0}
             xp={user.xp || 0}
             ranking={user.rank || 'Unranked'}
             streak={streakData?.current_streak || 0}

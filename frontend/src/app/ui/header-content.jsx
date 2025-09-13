@@ -11,6 +11,35 @@ import { memo, useEffect, useMemo, useState } from 'react';
 const HeaderContent = memo(function HeaderContent() {
   const { data: session, status } = useSession(); // ← SIMPLIFIED: Just use NextAuth
   const [streakData, setStreakData] = useState(null);
+  const [refreshKey, setRefreshKey] = useState(0); // Add refresh trigger
+
+  // Listen for storage events to refresh data when other tabs/windows update
+  useEffect(() => {
+    const handleStorageChange = () => {
+      setRefreshKey((prev) => prev + 1);
+    };
+
+    const handleEloUpdate = () => {
+      console.log('Header: ELO update event received, refreshing...');
+      setRefreshKey((prev) => prev + 1);
+    };
+
+    window.addEventListener('storage', handleStorageChange);
+    window.addEventListener('eloUpdated', handleEloUpdate);
+
+    // Also listen for focus events to refresh when returning to the tab
+    const handleFocus = () => {
+      setRefreshKey((prev) => prev + 1);
+    };
+
+    window.addEventListener('focus', handleFocus);
+
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+      window.removeEventListener('eloUpdated', handleEloUpdate);
+      window.removeEventListener('focus', handleFocus);
+    };
+  }, []);
 
   // Memoize user data processing
   const userData = useMemo(() => {
@@ -26,9 +55,9 @@ const HeaderContent = memo(function HeaderContent() {
         'User',
       xp: Math.round(session.user.xp || 0),
       rank: session.user.rank,
-      elo_rating: session.user.elo_rating,
+      elo_rating: session.user.elo_rating || session.user.eloRating || 0, // Handle both variants
     };
-  }, [session, status]);
+  }, [session, status, refreshKey]); // Add refreshKey to trigger re-calculation
 
   // Fetch streak data when user is authenticated
   useEffect(() => {

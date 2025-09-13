@@ -35,4 +35,25 @@ router.get('/accuracy/:userId', async (req, res) => {
   }
 });
 
+router.get('/elo-summary/:userId', async (req, res) => {
+  const { userId } = req.params;
+  const { start, end } = req.query;
+
+  try {
+    const { data, error } = await supabase.rpc(
+      'get_user_elo_summary_over_time',
+      {
+        uid: parseInt(userId),
+        start_date: new Date(start),
+        end_date: new Date(end),
+      },
+    );
+    if (error) throw error;
+    res.json({ success: true, eloSummary: data });
+  } catch (err) {
+    console.error('Error fetching ELO summary over time:', err);
+    res.status(500).json({ success: false, message: 'Internal server error' });
+  }
+});
+
 export default router;

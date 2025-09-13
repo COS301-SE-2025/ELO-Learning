@@ -179,7 +179,7 @@ export default function Page() {
       )}
 
       <div>
-        <h1 className="text-3xl text-center md:py-5 mt-10 md:mt-0">
+        <h1 className="text-3xl text-center md:py-5 mt-20 md:mt-0">
           Leaderboard
         </h1>
         {session?.user?.rank != null ? (

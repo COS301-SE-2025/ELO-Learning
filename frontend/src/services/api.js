@@ -318,6 +318,7 @@ export async function loginUser(email, password) {
           elo_rating: 5.0,
           rank: 'Bronze',
           baseLineTest: true,
+          daily_streak: 0,
         },
       };
     }
@@ -338,6 +339,7 @@ export async function registerUser(
   elo_rating,
   rank,
   baseLineTest,
+  daily_streak,
 ) {
   try {
     console.log('🚀 Starting registration...');
@@ -389,6 +391,7 @@ export async function registerUser(
           elo_rating,
           rank,
           baseLineTest,
+          daily_streak: 0,
         },
       };
     }

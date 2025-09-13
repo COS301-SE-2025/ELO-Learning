@@ -77,7 +77,7 @@ export default function QuestionTemplate({ question, calculation }) {
   return (
     <div data-cy="question-container">
       <div
-        className="text-center text-xl font-bold my-15 mx-10 md:m-10"
+        className="text-center text-xl font-bold my-15 mx-10 md:m-10 md:mt-20"
         data-cy="question"
       >
         {formattedQuestion.map((part, index) => {

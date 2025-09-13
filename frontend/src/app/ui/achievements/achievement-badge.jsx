@@ -91,7 +91,7 @@ export default function AchievementBadge({
       <div className="mt-1 text-center">
         <p
           className={`text-xs font-medium ${
-            unlocked ? 'text-white' : 'text-gray-500'
+            unlocked ? 'text-[var(--color-foreground)]' : 'text-gray-500'
           }`}
         >
           {achievement.name}

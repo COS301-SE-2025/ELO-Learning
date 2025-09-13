@@ -1,13 +1,13 @@
 'use client';
 import ClickableAvatar from '@/app/ui/profile/clickable-avatar';
+import { fetchUserStreakInfo } from '@/services/api';
 import { initializeAchievementTracking } from '@/utils/gameplayAchievementHandler';
 import { Cog } from 'lucide-react';
 import { useSession } from 'next-auth/react';
 import Link from 'next/link';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useAvatar } from '../context/avatar-context';
-import { gradients } from '../ui/avatar/avatar-colors';
-import { AvatarColors } from '../ui/avatar/color';
+import { avatarColors, gradients } from '../ui/avatar/avatar-colors';
 import Achievements from '../ui/profile/achievements';
 import MatchStats from '../ui/profile/match-stats';
 import UserInfo from '../ui/profile/user-info';
@@ -16,6 +16,7 @@ import UsernameBlock from '../ui/profile/username-block';
 export default function Page() {
   const { data: session, status } = useSession();
   const { avatar } = useAvatar();
+  const [streakData, setStreakData] = useState(null);
 
   // Initialize achievement tracking when user logs in (no notifications)
   useEffect(() => {
@@ -23,6 +24,26 @@ export default function Page() {
       initializeAchievementTracking(session.user.id);
     }
   }, [status, session?.user?.id]);
+
+  // Fetch streak data when user is authenticated
+  useEffect(() => {
+    async function loadStreakData() {
+      if (status === 'authenticated' && session?.user?.id) {
+        try {
+          const response = await fetchUserStreakInfo(session.user.id);
+          if (response.success) {
+            setStreakData(response.streak_data);
+          }
+        } catch (error) {
+          console.warn('Failed to load streak data for profile:', error);
+          // Set default streak data to prevent UI issues
+          setStreakData({ current_streak: 0 });
+        }
+      }
+    }
+
+    loadStreakData();
+  }, [session?.user?.id, status]);
 
   if (status === 'loading') return <div>Loading...</div>;
   if (status === 'unauthenticated')
@@ -35,7 +56,7 @@ export default function Page() {
     let style = { backgroundColor: '#421e68' };
     if (backgroundType && backgroundType.startsWith('solid-')) {
       const idx = parseInt(backgroundType.split('-')[1], 10);
-      style = { backgroundColor: AvatarColors[idx] || '#421e68' };
+      style = { backgroundColor: avatarColors[idx] || '#421e68' };
     } else if (backgroundType && backgroundType.startsWith('gradient-')) {
       const idx = parseInt(backgroundType.split('-')[1], 10);
       const g = gradients[idx];
@@ -91,6 +112,7 @@ export default function Page() {
             elo={user.elo_rating || 0}
             xp={user.xp || 0}
             ranking={user.rank || 'Unranked'}
+            streak={streakData?.current_streak || 0}
           />
           <MatchStats />
           <Achievements />

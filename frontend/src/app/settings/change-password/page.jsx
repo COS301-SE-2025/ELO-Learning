@@ -26,6 +26,11 @@ export default function Page() {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
+    // Prevent double submission
+    if (loading) {
+      return;
+    }
+
     if (!currentPassword || !newPassword || !confirmPassword) {
       setError('Please fill in all password fields.');
       return;

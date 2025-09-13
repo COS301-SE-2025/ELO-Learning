@@ -1,9 +1,9 @@
 'use client';
-import { useState } from 'react';
 import ProgressBar from '@/app/ui/progress-bar';
-import Link from 'next/link';
 import { X } from 'lucide-react';
-import { setRegistration, getRegistration } from '../registrationUtils';
+import Link from 'next/link';
+import { useState } from 'react';
+import { getRegistration, setRegistration } from '../registrationUtils';
 
 const currentStep = 4;
 const totalSteps = 6;
@@ -11,15 +11,32 @@ const totalSteps = 6;
 export default function Page() {
   const [grade, setGrade] = useState(getRegistration().grade || '');
   const [error, setError] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
 
-  const handleContinue = (e) => {
+  const handleContinue = async (e) => {
     e.preventDefault();
-    if (!grade.trim()) {
-      setError('Please enter your grade or year.');
+
+    // Prevent double submission
+    if (isLoading) {
       return;
     }
-    setRegistration({ grade });
-    window.location.href = '/login-landing/signup/email';
+
+    const gradeNumber = parseInt(grade);
+    if (!grade || isNaN(gradeNumber) || gradeNumber < 1 || gradeNumber > 12) {
+      setError('Please enter a valid grade (1-12).');
+      return;
+    }
+
+    setError('');
+    setIsLoading(true);
+
+    try {
+      setRegistration({ grade: gradeNumber });
+      window.location.href = '/login-landing/signup/email';
+    } catch (error) {
+      setError('An error occurred. Please try again.');
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -39,7 +56,7 @@ export default function Page() {
             year.
           </p>
           <form onSubmit={handleContinue}>
-            <div className="flex flex-col items-center w-full">
+            <div className="flex flex-col items-center w-full md:px-20 px-3">
               <input
                 type="text"
                 placeholder="Grade"
@@ -50,8 +67,12 @@ export default function Page() {
               />
               {error && <p className="text-red-500">{error}</p>}
               <div className="break_small"></div>
-              <button className="main-button px-2 py-8" type="submit">
-                Continue
+              <button
+                className="signup-button px-2 py-8"
+                type="submit"
+                disabled={isLoading}
+              >
+                {isLoading ? 'Processing...' : 'Continue'}
               </button>
             </div>
           </form>

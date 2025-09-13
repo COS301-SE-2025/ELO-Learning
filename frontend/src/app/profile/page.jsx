@@ -12,9 +12,11 @@ import MatchStats from '../ui/profile/match-stats';
 import UserInfo from '../ui/profile/user-info';
 import UsernameBlock from '../ui/profile/username-block';
 import useAchievementChecker from '@/hooks/useAchievementChecker';
+import { fetchUserById } from '@/services/api';
+import { useEffect } from 'react';
 
-export default function Page() {
-  const { data: session, status } = useSession();
+export default function Profile() {
+  const { data: session, status, update: updateSession } = useSession();
   const { avatar } = useAvatar();
 
   // ACHIEVEMENT CHECKING
@@ -22,6 +24,52 @@ export default function Page() {
     checkOnMount: true,
     debug: false, // Set to true if you want to see achievement logs
   });
+
+  // Refresh user data when profile page loads (in case session is stale)
+  useEffect(() => {
+    const refreshUserData = async () => {
+      if (session?.user?.id) {
+        try {
+          console.log('🔄 Refreshing user data on profile page load...');
+          const freshUserData = await fetchUserById(session.user.id);
+          
+          // Check if data has changed
+          const hasChanged = 
+            freshUserData.baseLineTest !== session.user.baseLineTest ||
+            freshUserData.currentLevel !== session.user.currentLevel ||
+            freshUserData.elo_rating !== session.user.elo_rating;
+          
+          if (hasChanged) {
+            console.log('🔄 User data changed, updating session...', {
+              oldBaseLineTest: session.user.baseLineTest,
+              newBaseLineTest: freshUserData.baseLineTest,
+              oldCurrentLevel: session.user.currentLevel,
+              newCurrentLevel: freshUserData.currentLevel,
+            });
+            
+            await updateSession({
+              user: {
+                ...session.user,
+                baseLineTest: freshUserData.baseLineTest,
+                currentLevel: freshUserData.currentLevel,
+                elo_rating: freshUserData.elo_rating,
+                xp: freshUserData.xp,
+                rank: freshUserData.rank,
+              },
+            });
+            
+            console.log('✅ Profile session updated successfully');
+          } else {
+            console.log('✅ User data is up to date');
+          }
+        } catch (error) {
+          console.error('❌ Failed to refresh user data on profile:', error);
+        }
+      }
+    };
+
+    refreshUserData();
+  }, [session?.user?.id, updateSession]);
 
   if (status === 'loading') return <div>Loading...</div>;
   if (status === 'unauthenticated')

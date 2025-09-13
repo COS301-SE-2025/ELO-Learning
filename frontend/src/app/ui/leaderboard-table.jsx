@@ -61,7 +61,7 @@ const UserRow = memo(function UserRow({
 });
 
 // Custom dropdown component for XP/ELO sort
-function DropdownSort({ sortType, onSortTypeChange }) {
+function DropdownSort({ sortType, onSortTypeChange, onOpenChange }) {
   const [open, setOpen] = useState(false);
   const options = [
     { value: 'xp', label: 'XP' },
@@ -71,17 +71,27 @@ function DropdownSort({ sortType, onSortTypeChange }) {
   const ref = useRef();
   useEffect(() => {
     function handleClick(e) {
-      if (ref.current && !ref.current.contains(e.target)) setOpen(false);
+      if (ref.current && !ref.current.contains(e.target)) {
+        setOpen(false);
+        onOpenChange?.(false);
+      }
     }
     if (open) document.addEventListener('mousedown', handleClick);
     return () => document.removeEventListener('mousedown', handleClick);
-  }, [open]);
+  }, [open, onOpenChange]);
+
+  useEffect(() => {
+    onOpenChange?.(open);
+  }, [open, onOpenChange]);
 
   return (
     <div className="relative inline-block text-left w-full" ref={ref}>
       <button
         className="flex items-center gap-1 font-bold px-2 py-1 rounded cursor-pointer hover:bg-[var(--radical-rose)] focus:outline-none w-full justify-end"
-        onClick={() => setOpen((v) => !v)}
+        onClick={() => {
+          setOpen((v) => !v);
+          onOpenChange?.(!open);
+        }}
         aria-haspopup="listbox"
         aria-expanded={open}
         tabIndex={0}
@@ -104,7 +114,7 @@ function DropdownSort({ sortType, onSortTypeChange }) {
       </button>
       {open && (
         <ul
-          className="absolute right-0 z-20 mt-1 w-24 bg-[var(--color-background)] border border-[#444] rounded-lg shadow-lg py-1"
+          className="absolute right-0 z-[99] mt-1 w-24 bg-[var(--color-background)] border border-[#444] rounded-lg shadow-lg py-1"
           style={{ minWidth: '80px' }}
           role="listbox"
         >
@@ -119,6 +129,7 @@ function DropdownSort({ sortType, onSortTypeChange }) {
               onClick={() => {
                 onSortTypeChange?.(opt.value);
                 setOpen(false);
+                onOpenChange?.(false);
               }}
               role="option"
               aria-selected={sortType === opt.value}
@@ -154,6 +165,7 @@ const LeaderboardTable = memo(function LeaderboardTable({
 }) {
   const { data: session } = useSession();
   const [currentUser, setCurrentUser] = useState(null);
+  const [dropdownOpen, setDropdownOpen] = useState(false);
   const currentUserRowRef = useRef(null);
 
   // Memoize current user to avoid unnecessary updates
@@ -199,7 +211,11 @@ const LeaderboardTable = memo(function LeaderboardTable({
   return (
     <div
       className="border rounded-lg p-4 mx-4 mb-15 md:mx-0"
-      style={{ maxHeight: '100%', overflowY: 'auto' }}
+      style={{
+        maxHeight: '100%',
+        overflowY: dropdownOpen ? 'visible' : 'auto',
+        overflow: dropdownOpen ? 'visible' : undefined,
+      }}
     >
       <table className="table-auto w-full text-center">
         <thead>
@@ -211,6 +227,7 @@ const LeaderboardTable = memo(function LeaderboardTable({
               <DropdownSort
                 sortType={sortType}
                 onSortTypeChange={onSortTypeChange}
+                onOpenChange={setDropdownOpen}
               />
             </th>
           </tr>

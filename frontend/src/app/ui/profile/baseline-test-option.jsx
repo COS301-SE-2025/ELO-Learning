@@ -16,11 +16,11 @@ export default function BaselineTestOption({ userHasTakenBaseline }) {
 
   // Don't show this component if user has already taken the baseline test
   if (userHasTakenBaseline) {
-    console.log('✅ User has taken baseline test, hiding component');
+    console.log(' User has taken baseline test, hiding component');
     return null;
   }
 
-  console.log('📋 Showing baseline test option for user');
+  console.log('Showing baseline test option for user');
 
   const handleTakeBaselineTest = async () => {
     setLoading(true);
@@ -28,7 +28,7 @@ export default function BaselineTestOption({ userHasTakenBaseline }) {
       // Confirm baseline test participation (sets baseLineTest to true in DB)
       if (session?.user?.id) {
         const response = await confirmBaselineTest(session.user.id);
-        console.log('✅ confirmBaselineTest response:', response);
+        console.log('confirmBaselineTest response:', response);
 
         // Update session with the returned user data
         if (response.user) {
@@ -38,7 +38,7 @@ export default function BaselineTestOption({ userHasTakenBaseline }) {
               ...response.user, // Use the complete updated user data from backend
             },
           });
-          console.log('✅ Session updated with backend response');
+          console.log('Session updated with backend response');
         } else {
           // Fallback: just update baseLineTest field
           await updateSession({
@@ -47,7 +47,7 @@ export default function BaselineTestOption({ userHasTakenBaseline }) {
               base_line_test: true,
             },
           });
-          console.log('✅ Session updated with fallback baseLineTest');
+          console.log('Session updated with fallback baseLineTest');
         }
       }
 
@@ -63,19 +63,19 @@ export default function BaselineTestOption({ userHasTakenBaseline }) {
   };
 
   return (
-    <div className="bg-[var(--background)] border border-[var(--radical-rose)] rounded-lg p-4 mb-4 shadow-sm">
-      <div className="flex items-start gap-3">
-        <div className="flex-shrink-0 w-6 h-6 rounded-full bg-[var(--radical-rose)] flex items-center justify-center mt-1">
-          <span className="text-white text-sm font-bold">!</span>
-        </div>
-        <div className="flex-1">
-          <h3 className="font-semibold text-[var(--radical-rose)] mb-1">
+    <div className="mx-4 bg-[var(--background)] border border-[var(--radical-rose)] rounded-lg p-4 mb-4 shadow-sm">
+      <div className="flex flex-col items-center text-center gap-3">
+        <div className="flex items-center gap-2">
+          <div className="flex-shrink-0 w-6 h-6 rounded-full bg-[var(--radical-rose)] flex items-center justify-center">
+            <span className="text-white text-sm font-bold">!</span>
+          </div>
+          <h3 className="font-bold text-lg text-[var(--radical-rose)]">
             Baseline Test Not Completed
           </h3>
+        </div>
+        <div className="flex-1">
           <p className="text-sm text-[var(--text-secondary)] mb-3">
-            You haven't taken the baseline test yet. This will help us assess
-            your current skill level and provide better question
-            recommendations.
+            You haven't taken the baseline test yet. Tap here to take it now.
           </p>
           <button
             onClick={handleTakeBaselineTest}

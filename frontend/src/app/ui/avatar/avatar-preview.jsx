@@ -5,6 +5,7 @@ import { AvatarBodyShape } from './body-shape';
 import { AvatarEyes } from './eyes';
 import { AvatarGlasses } from './glasses';
 import { AvatarHat } from './hats';
+import { AvatarMoustache } from './moustache';
 import { AvatarMouth } from './mouth';
 
 export function AvatarPreview({ avatar, className = '' }) {
@@ -47,6 +48,14 @@ export function AvatarPreview({ avatar, className = '' }) {
           {/* Mouth - Middle layer */}
           <div className="absolute inset-0">
             <AvatarMouth mouthType={avatar.mouth} className="w-full h-full" />
+          </div>
+
+          {/* Moustache - Above mouth layer */}
+          <div className="absolute inset-0">
+            <AvatarMoustache
+              moustacheType={avatar.moustache}
+              className="w-full h-full"
+            />
           </div>
 
           {/* Glasses - Upper middle layer */}

@@ -13,6 +13,7 @@ import {
   EyesIcon,
   GlassesIcon,
   HatIcon,
+  MoustacheIcon,
   MouthIcon,
 } from './avatar-icons';
 import { AvatarPreview } from './avatar-preview';
@@ -22,6 +23,7 @@ import { ColorSelector } from './color';
 import { EyeSelector } from './eyes';
 import { GlassesSelector } from './glasses';
 import { HatSelector } from './hats';
+import { MoustacheSelector } from './moustache';
 import { MouthSelector } from './mouth';
 
 const TABS = [
@@ -29,6 +31,7 @@ const TABS = [
   { id: 'color', name: 'Color', IconComponent: ColorIcon },
   { id: 'eyes', name: 'Eyes', IconComponent: EyesIcon },
   { id: 'mouth', name: 'Mouth', IconComponent: MouthIcon },
+  { id: 'moustache', name: 'Moustache', IconComponent: MoustacheIcon },
   { id: 'glasses', name: 'Glasses', IconComponent: GlassesIcon },
   { id: 'hats', name: 'Hats', IconComponent: HatIcon },
   { id: 'background', name: 'Background', IconComponent: BackgroundIcon },
@@ -92,6 +95,13 @@ export function AvatarCreator() {
           <MouthSelector
             selectedMouth={currentAvatar.mouth}
             onMouthChange={(mouth) => handleAvatarUpdate({ mouth })}
+          />
+        );
+      case 'moustache':
+        return (
+          <MoustacheSelector
+            selectedMoustache={currentAvatar.moustache}
+            onMoustacheChange={(moustache) => handleAvatarUpdate({ moustache })}
           />
         );
       case 'glasses':

@@ -8,6 +8,7 @@ import { BodyShapes } from '../ui/avatar/body-shape';
 import { EyeTypes } from '../ui/avatar/eyes';
 import { GlassesTypes } from '../ui/avatar/glasses';
 import { HatTypes } from '../ui/avatar/hats';
+import { MoustacheTypes } from '../ui/avatar/moustache';
 import { MouthTypes } from '../ui/avatar/mouth';
 
 const AvatarContext = createContext();
@@ -17,6 +18,7 @@ const DEFAULT_AVATAR = {
   color: defaultColors.avatar,
   eyes: EyeTypes.EYE_1,
   mouth: MouthTypes.MOUTH_1,
+  moustache: MoustacheTypes.NOTHING,
   glasses: GlassesTypes.NOTHING,
   hat: HatTypes.NOTHING,
   background: 'solid-3', // This corresponds to the blue color #4d5ded (index 3 in avatarColors)

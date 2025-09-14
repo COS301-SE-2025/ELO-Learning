@@ -32,13 +32,13 @@ export default function Profile() {
         try {
           console.log('🔄 Refreshing user data on profile page load...');
           const freshUserData = await fetchUserById(session.user.id);
-          
+
           // Check if data has changed
-          const hasChanged = 
+          const hasChanged =
             freshUserData.baseLineTest !== session.user.baseLineTest ||
             freshUserData.currentLevel !== session.user.currentLevel ||
             freshUserData.elo_rating !== session.user.elo_rating;
-          
+
           if (hasChanged) {
             console.log('🔄 User data changed, updating session...', {
               oldBaseLineTest: session.user.baseLineTest,
@@ -46,7 +46,7 @@ export default function Profile() {
               oldCurrentLevel: session.user.currentLevel,
               newCurrentLevel: freshUserData.currentLevel,
             });
-            
+
             await updateSession({
               user: {
                 ...session.user,
@@ -57,7 +57,7 @@ export default function Profile() {
                 rank: freshUserData.rank,
               },
             });
-            
+
             console.log('✅ Profile session updated successfully');
           } else {
             console.log('✅ User data is up to date');

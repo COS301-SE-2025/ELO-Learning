@@ -114,7 +114,6 @@ export default function Page() {
       }
     }
 
-
     async function checkBaselineTest() {
       if (!session?.user?.id) return;
 

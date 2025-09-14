@@ -6,6 +6,7 @@ import { createContext, useContext, useEffect, useState } from 'react';
 import { defaultColors } from '../ui/avatar/avatar-colors';
 import { BodyShapes } from '../ui/avatar/body-shape';
 import { EyeTypes } from '../ui/avatar/eyes';
+import { GlassesTypes } from '../ui/avatar/glasses';
 import { HatTypes } from '../ui/avatar/hats';
 import { MouthTypes } from '../ui/avatar/mouth';
 
@@ -16,6 +17,7 @@ const DEFAULT_AVATAR = {
   color: defaultColors.avatar,
   eyes: EyeTypes.EYE_1,
   mouth: MouthTypes.MOUTH_1,
+  glasses: GlassesTypes.NOTHING,
   hat: HatTypes.NOTHING,
   background: 'solid-3', // This corresponds to the blue color #4d5ded (index 3 in avatarColors)
 };

@@ -166,3 +166,36 @@ export const HatIcon = ({ className = '' }) => (
     />
   </svg>
 );
+
+export const GlassesIcon = ({ className = '' }) => (
+  <svg viewBox="0 0 1000 1000" className={className}>
+    <circle
+      fill="none"
+      stroke="var(--color-foreground)"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth="50"
+      cx="297.63"
+      cy="490.66"
+      r="137.26"
+    />
+    <circle
+      fill="none"
+      stroke="var(--color-foreground)"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth="50"
+      cx="702.37"
+      cy="490.66"
+      r="137.26"
+    />
+    <path
+      fill="none"
+      stroke="var(--color-foreground)"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth="50"
+      d="M434.89,490.66h0c39.84-24.9,90.39-24.9,130.22,0h0"
+    />
+  </svg>
+);

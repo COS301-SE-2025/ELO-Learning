@@ -9,6 +9,7 @@ export const GlassesTypes = {
   GLASSES_3: 'Glasses 3',
   GLASSES_4: 'Glasses 4',
   GLASSES_5: 'Glasses 5',
+  GLASSES_5: 'Glasses 6',
   GLASSES_7: 'Glasses 7',
   GLASSES_8: 'Glasses 8',
 };

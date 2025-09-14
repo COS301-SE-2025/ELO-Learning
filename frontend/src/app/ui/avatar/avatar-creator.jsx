@@ -1,11 +1,13 @@
 'use client';
 
 import { SafeButton } from '@/components/SafeButton';
+import { Shuffle } from 'lucide-react';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { useAvatar } from '../../context/avatar-context';
 import Back from '../back';
+import { avatarColors } from './avatar-colors';
 import {
   BackgroundIcon,
   BodyIcon,
@@ -18,13 +20,13 @@ import {
 } from './avatar-icons';
 import { AvatarPreview } from './avatar-preview';
 import { BackgroundSelector } from './background';
-import { BodyShapeSelector } from './body-shape';
+import { BodyShapeSelector, BodyShapes } from './body-shape';
 import { ColorSelector } from './color';
-import { EyeSelector } from './eyes';
-import { GlassesSelector } from './glasses';
-import { HatSelector } from './hats';
-import { MoustacheSelector } from './moustache';
-import { MouthSelector } from './mouth';
+import { EyeSelector, EyeTypes } from './eyes';
+import { GlassesSelector, GlassesTypes } from './glasses';
+import { HatSelector, HatTypes } from './hats';
+import { MoustacheSelector, MoustacheTypes } from './moustache';
+import { MouthSelector, MouthTypes } from './mouth';
 
 const TABS = [
   { id: 'body', name: 'Body', IconComponent: BodyIcon },
@@ -60,6 +62,41 @@ export function AvatarCreator() {
 
     // Navigate back to profile
     router.push('/profile');
+  };
+
+  const handleRandomize = () => {
+    // Get random selections from each category
+    const bodyShapes = Object.values(BodyShapes);
+    const eyeTypes = Object.values(EyeTypes);
+    const mouthTypes = Object.values(MouthTypes);
+    const moustacheTypes = Object.values(MoustacheTypes);
+    const glassesTypes = Object.values(GlassesTypes);
+    const hatTypes = Object.values(HatTypes);
+    const colors = avatarColors; // Use the full avatarColors array instead of defaultColors
+
+    // Background options (solid colors)
+    const backgroundOptions = [];
+    for (let i = 0; i < 8; i++) {
+      backgroundOptions.push(`solid-${i}`);
+    }
+    for (let i = 0; i < 4; i++) {
+      backgroundOptions.push(`gradient-${i}`);
+    }
+
+    const randomAvatar = {
+      bodyShape: bodyShapes[Math.floor(Math.random() * bodyShapes.length)],
+      color: colors[Math.floor(Math.random() * colors.length)],
+      eyes: eyeTypes[Math.floor(Math.random() * eyeTypes.length)],
+      mouth: mouthTypes[Math.floor(Math.random() * mouthTypes.length)],
+      moustache:
+        moustacheTypes[Math.floor(Math.random() * moustacheTypes.length)],
+      glasses: glassesTypes[Math.floor(Math.random() * glassesTypes.length)],
+      hat: hatTypes[Math.floor(Math.random() * hatTypes.length)],
+      background:
+        backgroundOptions[Math.floor(Math.random() * backgroundOptions.length)],
+    };
+
+    setCurrentAvatar(randomAvatar);
   };
 
   const renderTabContent = () => {
@@ -143,7 +180,19 @@ export function AvatarCreator() {
       <div className="md:h-[80vh] flex flex-col lg:flex-row mb-10 md:mb-10">
         {/* Avatar Preview - Left side on desktop, top on mobile */}
         <div className="lg:w-1/2 p-6 flex">
-          <div className="w-full mx-auto rounded-2xl overflow-hidden flex items-center justify-center">
+          <div className="w-full mx-auto rounded-2xl overflow-hidden flex flex-col items-center justify-center relative">
+            {/* Randomize Button - positioned at top */}
+            <div className="absolute top-4 right-4 z-10">
+              <button
+                onClick={handleRandomize}
+                className="px-4 py-2 mix-blend-color-dodge hover:mix-blend-normal transition-all"
+              >
+                <Shuffle
+                  size={40}
+                  className="text-white drop-shadow-lg hover:text-gray-200 transition-colors"
+                />
+              </button>
+            </div>
             <AvatarPreview avatar={currentAvatar} />
           </div>
         </div>
@@ -185,12 +234,12 @@ export function AvatarCreator() {
           </div>
         </div>
       </div>
-      {/* Floating Save Button Footer */}
+      {/* Floating Save Button */}
       <div className="flex fixed bottom-0 left-0 w-full z-10 px-4 py-4 bg-[var(--color-background)]">
-        <div className="flex flex-col justify-center md:m-auto max-w-2xl mx-auto">
+        <div className="flex justify-center items-center mx-auto">
           <SafeButton
             onClick={handleSave}
-            className="w-full md:m-auto main-button"
+            className="main-button px-8"
             loadingText="Saving Avatar..."
           >
             Save Avatar

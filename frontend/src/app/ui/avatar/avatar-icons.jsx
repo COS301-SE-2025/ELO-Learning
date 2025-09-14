@@ -145,3 +145,24 @@ export const BackgroundIcon = ({ className = '' }) => (
     />
   </svg>
 );
+
+export const HatIcon = ({ className = '' }) => (
+  <svg viewBox="0 0 1000 1000" className={className}>
+    <path
+      fill="none"
+      stroke="var(--color-foreground)"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth="50"
+      d="M772.9,570.36c61.85,21.15,99.68,49.49,99.68,80.65,0,65.42-166.81,118.46-372.58,118.46s-372.58-53.03-372.58-118.46c0-31.92,39.71-60.89,104.28-82.19"
+    />
+    <path
+      fill="none"
+      stroke="var(--color-foreground)"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth="50"
+      d="M768.3,651h0c-177.22,34.33-359.38,34.33-536.59,0h0v-146.78c0-144.45,112.17-264.62,256.36-273.28,4.33-.26,8.33-.4,11.94-.4s7.61.14,11.94.4c144.19,8.66,256.36,128.83,256.36,273.28v146.78Z"
+    />
+  </svg>
+);

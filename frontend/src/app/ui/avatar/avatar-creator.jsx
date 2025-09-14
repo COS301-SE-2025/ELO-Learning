@@ -11,6 +11,7 @@ import {
   BodyIcon,
   ColorIcon,
   EyesIcon,
+  HatIcon,
   MouthIcon,
 } from './avatar-icons';
 import { AvatarPreview } from './avatar-preview';
@@ -18,6 +19,7 @@ import { BackgroundSelector } from './background';
 import { BodyShapeSelector } from './body-shape';
 import { ColorSelector } from './color';
 import { EyeSelector } from './eyes';
+import { HatSelector } from './hats';
 import { MouthSelector } from './mouth';
 
 const TABS = [
@@ -25,6 +27,7 @@ const TABS = [
   { id: 'color', name: 'Color', IconComponent: ColorIcon },
   { id: 'eyes', name: 'Eyes', IconComponent: EyesIcon },
   { id: 'mouth', name: 'Mouth', IconComponent: MouthIcon },
+  { id: 'hats', name: 'Hats', IconComponent: HatIcon },
   { id: 'background', name: 'Background', IconComponent: BackgroundIcon },
 ];
 
@@ -88,6 +91,13 @@ export function AvatarCreator() {
             onMouthChange={(mouth) => handleAvatarUpdate({ mouth })}
           />
         );
+      case 'hats':
+        return (
+          <HatSelector
+            selectedHat={currentAvatar.hat}
+            onHatChange={(hat) => handleAvatarUpdate({ hat })}
+          />
+        );
       case 'background':
         return (
           <BackgroundSelector
@@ -121,22 +131,32 @@ export function AvatarCreator() {
         {/* Customization Panel - removed save button from here */}
         <div className="lg:w-1/2 m-6 border rounded-lg border-[#696969]">
           {/* Tab Navigation */}
-          <div className="flex justify-center p-6 border-b border-[#696969]">
-            {TABS.map((tab) => (
-              <button
-                key={tab.id}
-                onClick={() => setActiveTab(tab.id)}
-                className={`flex-1 flex flex-col items-center p-3 rounded-lg transition-all ${
-                  activeTab === tab.id
-                    ? 'bg-[#4d5ded] text-white'
-                    : 'text-gray-400 hover:text-white hover:bg-gray-700'
-                }`}
+          <div className="p-6 border-b border-[#696969]">
+            <div
+              className="overflow-x-auto"
+              style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+            >
+              <div
+                className="flex min-w-max space-x-2 px-2"
+                style={{ WebkitScrollbar: { display: 'none' } }}
               >
-                <div className="w-10 h-10 mb-1">
-                  <tab.IconComponent className="w-full h-full object-contain" />
-                </div>
-              </button>
-            ))}
+                {TABS.map((tab) => (
+                  <button
+                    key={tab.id}
+                    onClick={() => setActiveTab(tab.id)}
+                    className={`flex flex-col items-center p-3 rounded-lg transition-all min-w-[70px] flex-shrink-0 ${
+                      activeTab === tab.id
+                        ? 'bg-[#4d5ded] text-white'
+                        : 'text-gray-400 hover:text-white hover:bg-gray-700'
+                    }`}
+                  >
+                    <div className="w-8 h-8 mb-1">
+                      <tab.IconComponent className="w-full h-full object-contain" />
+                    </div>
+                  </button>
+                ))}
+              </div>
+            </div>
           </div>
 
           {/* Tab Content */}

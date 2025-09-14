@@ -22,6 +22,7 @@ export default function TotalXPMP({ onLoadComplete, onResults }) {
         currentLevel: results.currentLevel,
         rank: results.currentRank,
         eloRating: results.newElo,
+        elo_rating: results.newElo, // Add both variants for compatibility
       };
 
       // Update NextAuth session
@@ -34,6 +35,17 @@ export default function TotalXPMP({ onLoadComplete, onResults }) {
             ...latestUserData,
           },
         });
+
+        // Give the session update time to propagate
+        await new Promise((resolve) => setTimeout(resolve, 100));
+        console.log('NextAuth session updated successfully');
+
+        // Dispatch a custom event to notify other components
+        window.dispatchEvent(
+          new CustomEvent('eloUpdated', {
+            detail: { newElo: results.newElo, userId: user_id },
+          }),
+        );
       }
 
       // Update cache

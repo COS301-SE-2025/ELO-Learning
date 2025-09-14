@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<svg id="Layer_2" data-name="Layer 2" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 1000">
+<svg id="Layer_2" data-name="Layer 2" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 1500">
   <defs>
     <style>
       .cls-1, .cls-2 {
@@ -20,16 +20,16 @@
   </defs>
   <g>
     <g>
-      <ellipse class="cls-1" cx="603.13" cy="426.12" rx="84.37" ry="109.88"/>
-      <ellipse cx="565.07" cy="371.99" rx="27.8" ry="34.88"/>
-      <circle class="cls-2" cx="557.61" cy="357.9" r="12.34"/>
+      <ellipse class="cls-1" cx="602.89" cy="922.15" rx="84.37" ry="109.88"/>
+      <ellipse cx="564.82" cy="868.02" rx="27.8" ry="34.88"/>
+      <circle class="cls-2" cx="557.36" cy="853.93" r="12.34"/>
     </g>
     <g>
-      <ellipse class="cls-1" cx="397.36" cy="426.12" rx="84.37" ry="109.88"/>
-      <ellipse cx="359.29" cy="480.26" rx="27.8" ry="34.88"/>
-      <circle class="cls-2" cx="351.83" cy="494.34" r="12.34"/>
+      <ellipse class="cls-1" cx="397.11" cy="922.15" rx="84.37" ry="109.88"/>
+      <ellipse cx="359.05" cy="976.29" rx="27.8" ry="34.88"/>
+      <circle class="cls-2" cx="351.59" cy="990.37" r="12.34"/>
     </g>
   </g>
-  <path class="cls-3" d="M460.12,287.3c-4.58-4.95-24.74-25.63-57.61-28.07-40.05-2.97-66.32,23.58-69.9,27.32"/>
-  <path class="cls-3" d="M666.89,287.3c-4.58-4.95-24.74-25.63-57.61-28.07-40.05-2.97-66.32,23.58-69.9,27.32"/>
+  <path class="cls-3" d="M459.87,783.33c-4.58-4.95-24.74-25.63-57.61-28.07-40.05-2.97-66.32,23.58-69.9,27.32"/>
+  <path class="cls-3" d="M666.64,783.33c-4.58-4.95-24.74-25.63-57.61-28.07-40.05-2.97-66.32,23.58-69.9,27.32"/>
 </svg>

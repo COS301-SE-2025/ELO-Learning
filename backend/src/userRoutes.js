@@ -26,11 +26,11 @@ router.get('/users', async (req, res) => {
 router.get('/user/:id', verifyToken, async (req, res) => {
   const { id } = req.params;
 
-  // Fetch user from Supabase
+  // Fetch user from Supabase with progress tracking fields
   const { data, error } = await supabase
     .from('Users')
     .select(
-      'id,name,surname,username,email,currentLevel,joinDate,xp,avatar,elo_rating,rank,base_line_test',
+      'id,name,surname,username,email,currentLevel,joinDate,xp,avatar,elo_rating,rank,base_line_test,best_elo_rating,last_session_elo,consecutive_improvements,last_elo_drop',
     )
     .eq('id', id)
     .single();
@@ -62,21 +62,44 @@ router.get('/user/:id', verifyToken, async (req, res) => {
   res.status(200).json(userData);
 });
 
-router.get('/users/rank/:rank', async (req, res) => {
-  const { rank } = req.params;
-  // Fetch users by rank from Supabase
-  const { data, error } = await supabase
-    .from('Users')
-    .select('id,username,xp,avatar,elo_rating,rank')
-    .eq('rank', rank);
-  if (error) {
-    console.error('Error fetching users by rank:', error.message);
-    return res.status(500).json({ error: 'Failed to fetch users by rank' });
+// Debug endpoint for progress tracking (no auth required)
+router.get('/users/:id/debug', async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    // Fetch user progress data for debugging
+    const { data, error } = await supabase
+      .from('Users')
+      .select(
+        'id,elo_rating,best_elo_rating,last_session_elo,consecutive_improvements,last_elo_drop',
+      )
+      .eq('id', id)
+      .single();
+
+    if (error) {
+      if (error.code === 'PGRST116') {
+        return res.status(404).json({ error: "User doesn't exist" });
+      }
+      console.error('Error fetching user debug data:', error.message);
+      return res.status(500).json({ error: 'Failed to fetch user debug data' });
+    }
+
+    res.status(200).json({
+      ...data,
+      debug_info: {
+        progress_fields_status: {
+          best_elo_rating: data.best_elo_rating !== null ? 'SET' : 'NULL',
+          last_session_elo: data.last_session_elo !== null ? 'SET' : 'NULL',
+          consecutive_improvements:
+            data.consecutive_improvements !== null ? 'SET' : 'NULL',
+          last_elo_drop: data.last_elo_drop !== null ? 'SET' : 'NULL',
+        },
+      },
+    });
+  } catch (error) {
+    console.error('Debug endpoint error:', error);
+    res.status(500).json({ error: 'Debug endpoint failed' });
   }
-  if (data.length === 0) {
-    return res.status(404).json({ error: 'No users found with that rank' });
-  }
-  res.status(200).json(data);
 });
 
 router.get('/users/rank/:rank', async (req, res) => {
@@ -255,8 +278,8 @@ router.post('/register', async (req, res) => {
   const DEFAULT_AVATAR = {
     eyes: 'Eye 1',
     mouth: 'Mouth 1',
-    bodyShape: 'Circle',
-    background: 'solid-pink',
+    bodyShape: 'Square',
+    background: 'solid-3', // Blue background to match frontend default
   };
   const eloRating = 100;
   const defaultRank = 'Iron';

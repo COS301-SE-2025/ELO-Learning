@@ -1,29 +1,29 @@
 'use client';
 import ClickableAvatar from '@/app/ui/profile/clickable-avatar';
+import { initializeAchievementTracking } from '@/utils/gameplayAchievementHandler';
 import { Cog } from 'lucide-react';
 import { useSession } from 'next-auth/react';
 import Link from 'next/link';
+import { useEffect } from 'react';
 import { useAvatar } from '../context/avatar-context';
-import { gradients } from '../ui/avatar/avatar-colors';
-import { AvatarColors } from '../ui/avatar/color';
+import { avatarColors, gradients } from '../ui/avatar/avatar-colors';
 import Achievements from '../ui/profile/achievements';
 import BaselineTestOption from '../ui/profile/baseline-test-option';
 import MatchStats from '../ui/profile/match-stats';
 import UserInfo from '../ui/profile/user-info';
 import UsernameBlock from '../ui/profile/username-block';
-import useAchievementChecker from '@/hooks/useAchievementChecker';
 import { fetchUserById } from '@/services/api';
-import { useEffect } from 'react';
 
 export default function Profile() {
   const { data: session, status, update: updateSession } = useSession();
   const { avatar } = useAvatar();
 
-  // ACHIEVEMENT CHECKING
-  useAchievementChecker({
-    checkOnMount: true,
-    debug: false, // Set to true if you want to see achievement logs
-  });
+  // Initialize achievement tracking when user logs in (no notifications)
+  useEffect(() => {
+    if (status === 'authenticated' && session?.user?.id) {
+      initializeAchievementTracking(session.user.id);
+    }
+  }, [status, session?.user?.id]);
 
   // Refresh user data when profile page loads (in case session is stale)
   useEffect(() => {
@@ -90,7 +90,7 @@ export default function Profile() {
     let style = { backgroundColor: '#421e68' };
     if (backgroundType && backgroundType.startsWith('solid-')) {
       const idx = parseInt(backgroundType.split('-')[1], 10);
-      style = { backgroundColor: AvatarColors[idx] || '#421e68' };
+      style = { backgroundColor: avatarColors[idx] || '#421e68' };
     } else if (backgroundType && backgroundType.startsWith('gradient-')) {
       const idx = parseInt(backgroundType.split('-')[1], 10);
       const g = gradients[idx];
@@ -142,8 +142,6 @@ export default function Profile() {
         />
 
         <div className="flex flex-col space-y-4 pb-24">
-          {' '}
-          {/* Increased from pb-8 to pb-24 */}
           {/* Baseline Test Option - Show only if user hasn't taken it */}
           <BaselineTestOption userHasTakenBaseline={user.baseLineTest} />
           <UserInfo

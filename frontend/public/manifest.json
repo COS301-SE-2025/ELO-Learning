@@ -11,6 +11,12 @@
   "lang": "en",
   "dir": "ltr",
   "scope": "/",
+  "related_applications": [
+    {
+      "platform": "webapp",
+      "url": "/manifest.json"
+    }
+  ],
   "icons": [
     {
       "src": "/icons/icon-72x72.png",

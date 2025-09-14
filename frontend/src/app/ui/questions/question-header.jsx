@@ -33,7 +33,7 @@ export default function QuestionHeader({ currentStep, totalSteps, numLives }) {
     console.log('🚪 Game ended - cleaned up session data');
   };
   return (
-    <div className="fixed top-0 left-0 w-full z-20 bg-[#201F1F] p-5">
+    <div className="fixed top-0 left-0 w-full z-20 bg-[var(--color-background)] p-5">
       <div className="flex flex-row items-center justify-between w-full py-2 gap-2">
         <Link href="/dashboard" onClick={handleClose}>
           <X size={24} />

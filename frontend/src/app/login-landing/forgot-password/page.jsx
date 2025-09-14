@@ -18,6 +18,11 @@ export default function Page() {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
+    // Prevent double submission
+    if (loading) {
+      return;
+    }
+
     if (!email) {
       setError('Please enter your email address.');
       return;
@@ -62,7 +67,7 @@ export default function Page() {
               <div className="break_small"></div>
               <Link
                 href="/login-landing/login"
-                className="main-button px-2 py-8 text-center"
+                className="signup-button px-2 py-8 text-center"
               >
                 Back to Login
               </Link>
@@ -87,11 +92,11 @@ export default function Page() {
                 )}
                 <div className="break_small"></div>
                 <button
-                  className="main-button px-2 py-8"
+                  className="signup-button px-2 py-8"
                   type="submit"
                   disabled={loading}
                 >
-                  {loading ? 'Sending...' : 'Send Reset Link'}
+                  {loading ? 'Sending Reset Link...' : 'Send Reset Link'}
                 </button>
               </div>
             </form>

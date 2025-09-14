@@ -1021,8 +1021,37 @@ router.post('/question/:id/submit', async (req, res) => {
       actualQuestionType === 'Matching'
     ) {
       isCorrect = await validateMatchQuestion(studentAnswer, id);
+    } else if (actualQuestionType === 'Open Response') {
+      // Handle Open Response questions with multiple correct answers
+      const { data: correctAnswersData, error: answerError } = await supabase
+        .from('Answers')
+        .select('*')
+        .eq('question_id', id)
+        .eq('isCorrect', true);
+
+      if (
+        answerError ||
+        !correctAnswersData ||
+        correctAnswersData.length === 0
+      ) {
+        return res.status(404).json({
+          success: false,
+          error: 'Correct answer not found',
+          debug: { answerError, question_id: id },
+        });
+      }
+
+      // Check student answer against all correct answers
+      for (const correctAnswerData of correctAnswersData) {
+        const correctAnswer =
+          correctAnswerData.answer_text || correctAnswerData.answerText;
+        if (validateOpenResponse(studentAnswer, correctAnswer)) {
+          isCorrect = true;
+          break; // Exit loop once we find a match
+        }
+      }
     } else {
-      // Handle other question types with existing validation
+      // Handle other question types with existing validation (single correct answer)
       const { data: correctAnswerData, error: answerError } = await supabase
         .from('Answers')
         .select('*')
@@ -1090,7 +1119,13 @@ router.post('/question/:id/submit', async (req, res) => {
           checkLeaderboardAchievements,
           checkBadgeCollectorAchievement,
           checkTopicMasteryAchievements,
+          checkStreakAchievements,
         } = achievementModule;
+
+        // Import streak calculator
+        const { updateUserStreak } = await import(
+          './utils/streakCalculator.js'
+        );
 
         if (isCorrect) {
           // Check question achievements
@@ -1178,27 +1213,53 @@ router.post('/question/:id/submit', async (req, res) => {
           }
         }
 
-        // Check Badge Collector achievements when new achievements are unlocked
-        if (unlockedAchievements.length > 0) {
-          try {
-            const badgeCollectorAchievements =
-              await checkBadgeCollectorAchievement(userId);
-            if (
-              badgeCollectorAchievements &&
-              badgeCollectorAchievements.length > 0
-            ) {
-              unlockedAchievements.push(...badgeCollectorAchievements);
-              console.log(
-                '🎯 Badge collector achievements unlocked:',
-                badgeCollectorAchievements.length,
-              );
-            }
-          } catch (badgeError) {
-            console.error(
-              'Badge collector achievement error:',
-              badgeError.message,
+        // Always check Badge Collector achievements to ensure count accuracy
+        try {
+          const badgeCollectorAchievements =
+            await checkBadgeCollectorAchievement(userId);
+          if (
+            badgeCollectorAchievements &&
+            badgeCollectorAchievements.length > 0
+          ) {
+            unlockedAchievements.push(...badgeCollectorAchievements);
+            console.log(
+              '🎯 Badge collector achievements unlocked:',
+              badgeCollectorAchievements.length,
             );
           }
+        } catch (badgeError) {
+          console.error(
+            'Badge collector achievement error:',
+            badgeError.message,
+          );
+        }
+
+        // 🔥 Update daily streak and check streak achievements
+        try {
+          console.log('🔍 Updating user streak...');
+          const streakResult = await updateUserStreak(userId);
+          console.log('✅ Streak update result:', streakResult);
+
+          if (streakResult.success && streakResult.currentStreak > 0) {
+            const streakAchievements = await checkStreakAchievements(
+              userId,
+              streakResult.currentStreak,
+            );
+            if (streakAchievements && streakAchievements.length > 0) {
+              unlockedAchievements.push(...streakAchievements);
+              console.log(
+                '🔥 Streak achievements unlocked:',
+                streakAchievements.length,
+              );
+            }
+          } else {
+            console.log(
+              '⚠️ Streak update failed or no streak to check:',
+              streakResult.message,
+            );
+          }
+        } catch (streakError) {
+          console.error('Streak achievement error:', streakError.message);
         }
 
         // Check leaderboard achievements if user gained XP

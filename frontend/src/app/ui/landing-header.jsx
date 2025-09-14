@@ -1,74 +1,142 @@
 'use client';
 import Image from 'next/image';
 import { useEffect, useState } from 'react';
+import { PWADetection } from '../utils/pwa-detection';
 
 export default function LandingHeader() {
   const [deferredPrompt, setDeferredPrompt] = useState(null);
   const [showInstallButton, setShowInstallButton] = useState(false);
-  const [isAppInstalled, setIsAppInstalled] = useState(false);
+  const [buttonState, setButtonState] = useState({
+    isInstalled: false,
+    isRunningAsPWA: false,
+    buttonText: 'Install App',
+    shortButtonText: 'Install',
+    action: 'install',
+  });
 
   useEffect(() => {
-    // PWA detection for button display
-    const checkIfRunningAsPWA = () => {
-      const isStandalone =
-        window.matchMedia &&
-        window.matchMedia('(display-mode: standalone)').matches;
-      const isIOSStandalone = navigator.standalone === true;
-
-      if (isStandalone || isIOSStandalone) {
-        setIsAppInstalled(true);
-        return true;
-      } else {
-        setIsAppInstalled(false);
-        return false;
-      }
-    };
+    let mounted = true;
 
     const handler = (e) => {
       e.preventDefault();
       setDeferredPrompt(e);
       setShowInstallButton(true);
+
+      // Track that the install prompt was received
+      PWADetection.trackInstallPromptReceived();
+
+      // If prompt fires, app is definitely not installed
+      if (mounted) {
+        setButtonState({
+          isInstalled: false,
+          isRunningAsPWA: false,
+          buttonText: 'Install App',
+          shortButtonText: 'Install',
+          action: 'install',
+        });
+      }
     };
 
     const appInstalledHandler = () => {
-      setIsAppInstalled(true);
       setShowInstallButton(false);
       setDeferredPrompt(null);
+      PWADetection.trackInstallation();
+
+      // Update button state to show "Open App"
+      if (mounted) {
+        setButtonState({
+          isInstalled: true,
+          isRunningAsPWA: false,
+          buttonText: 'Open App',
+          shortButtonText: 'Open',
+          action: 'open',
+        });
+        // Show the button again as "Open App"
+        setShowInstallButton(true);
+      }
     };
 
-    const currentlyInPWA = checkIfRunningAsPWA();
+    const updateButtonState = async () => {
+      if (!mounted) return;
 
-    if (!currentlyInPWA) {
-      window.addEventListener('beforeinstallprompt', handler);
-      window.addEventListener('appinstalled', appInstalledHandler);
+      const state = await PWADetection.getInstallButtonState();
+      setButtonState(state);
 
-      // Show install button after delay if no prompt received
-      setTimeout(() => {
-        const stillInBrowser =
-          !window.matchMedia ||
-          !window.matchMedia('(display-mode: standalone)').matches;
-        const stillNotIOS = navigator.standalone !== true;
-
-        if (stillInBrowser && stillNotIOS) {
+      // Only show install button if app is not installed AND not running as PWA
+      if (!state.isInstalled && !state.isRunningAsPWA) {
+        // For the install button to be shown, we need either:
+        // 1. A deferred prompt is available, OR
+        // 2. We haven't seen an install prompt yet (first time visitors)
+        const hasSeenPrompt = localStorage.getItem('has-seen-install-prompt');
+        if (deferredPrompt || !hasSeenPrompt) {
           setShowInstallButton(true);
+        } else {
+          setShowInstallButton(false);
         }
-      }, 1000);
-    }
+      } else {
+        // App is installed or running as PWA, show the button as "Open"
+        setShowInstallButton(true);
+      }
+    };
+
+    // Track this visit
+    PWADetection.trackVisit();
+
+    // Set up event listeners first
+    window.addEventListener('beforeinstallprompt', handler);
+    window.addEventListener('appinstalled', appInstalledHandler);
+
+    // Then check installation status
+    updateButtonState();
 
     return () => {
+      mounted = false;
       window.removeEventListener('beforeinstallprompt', handler);
       window.removeEventListener('appinstalled', appInstalledHandler);
     };
   }, []);
 
-  const handleInstall = async () => {
-    if (deferredPrompt) {
-      const result = await deferredPrompt.prompt();
-      setDeferredPrompt(null);
-      setShowInstallButton(false);
+  // Re-check button state when deferredPrompt changes
+  useEffect(() => {
+    const updateButtonState = async () => {
+      const state = await PWADetection.getInstallButtonState();
+      setButtonState(state);
 
-      if (result.outcome === 'accepted') {
-        setIsAppInstalled(true);
+      if (!state.isInstalled && !state.isRunningAsPWA) {
+        const hasSeenPrompt = localStorage.getItem('has-seen-install-prompt');
+        if (deferredPrompt || !hasSeenPrompt) {
+          setShowInstallButton(true);
+        } else {
+          setShowInstallButton(false);
+        }
+      } else {
+        setShowInstallButton(true);
+      }
+    };
+
+    updateButtonState();
+  }, [deferredPrompt]);
+
+  const handleInstall = async () => {
+    if (buttonState.action === 'open') {
+      handleOpenApp();
+      return;
+    }
+
+    if (deferredPrompt) {
+      try {
+        const result = await deferredPrompt.prompt();
+        setDeferredPrompt(null);
+        setShowInstallButton(false);
+
+        if (result.outcome === 'accepted') {
+          PWADetection.trackInstallation();
+          // Update button state
+          const newState = await PWADetection.getInstallButtonState();
+          setButtonState(newState);
+        }
+      } catch (error) {
+        console.log('Install prompt error:', error);
       }
     } else {
       alert(
@@ -78,7 +146,35 @@ export default function LandingHeader() {
   };
 
   const handleOpenApp = () => {
-    window.location.href = '/login-landing';
+    // Check if we're currently running as a PWA
+    if (PWADetection.isRunningAsPWA()) {
+      // Already in PWA mode, just navigate
+      window.location.href = '/login-landing';
+      return;
+    }
+
+    // If we're in the browser but app is installed, show instructions
+    const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+
+    if (isMobile) {
+      // Show instructions for mobile users to launch from home screen
+      const isIOS = /iPhone|iPad|iPod/i.test(navigator.userAgent);
+      const instructions = isIOS
+        ? 'To use the app, tap the ELO Learning icon on your home screen. This will launch the full app experience!'
+        : 'To use the app, tap the ELO Learning icon on your home screen or app drawer. This will launch the full app experience!';
+
+      if (
+        confirm(
+          instructions +
+            '\n\nWould you like to continue in the browser for now?',
+        )
+      ) {
+        window.location.href = '/login-landing';
+      }
+    } else {
+      // On desktop, try to open in app mode or navigate normally
+      window.location.href = '/login-landing';
+    }
   };
 
   return (
@@ -103,27 +199,18 @@ export default function LandingHeader() {
           />
         </div>
         <div>
-          {isAppInstalled ? (
-            // Show "Open App" when running as PWA
-            <button
-              className="header-button"
-              onClick={handleOpenApp}
-              title="Open ELO Learning App"
-            >
-              <span className="hidden sm:inline">Open App</span>
-              <span className="sm:hidden">Open</span>
-            </button>
-          ) : (
-            // Show "Install" when in browser mode
-            <button
-              className="header-button"
-              onClick={handleInstall}
-              title="Install ELO Learning App"
-            >
-              <span className="hidden sm:inline">Install App</span>
-              <span className="sm:hidden">Install</span>
-            </button>
-          )}
+          <button
+            className="header-button"
+            onClick={handleInstall}
+            title={
+              buttonState.action === 'open'
+                ? 'Open ELO Learning App'
+                : 'Install ELO Learning App'
+            }
+          >
+            <span className="hidden sm:inline">{buttonState.buttonText}</span>
+            <span className="sm:hidden">{buttonState.shortButtonText}</span>
+          </button>
         </div>
       </div>
     </>

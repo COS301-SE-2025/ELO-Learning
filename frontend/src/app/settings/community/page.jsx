@@ -1,21 +1,17 @@
 'use client';
-import { useState, useEffect } from 'react';
 import Back from '@/app/ui/back';
 import { useSession } from 'next-auth/react';
-import {
-  getRegistration,
-  setRegistration,
-} from '../../login-landing/signup/registrationUtils';
+import { useRouter } from 'next/navigation';
+import { useEffect, useState } from 'react';
 import {
   fetchCommunityData,
-  updateCommunityData,
   sendFriendRequest,
+  updateCommunityData,
 } from '../../../services/api';
-import { registerFCMToken } from '../../../services/firebase';
 
 // Color scheme and button classes from login-landing
 const cardClass =
-  'bg-elo-bg border border-gray-200 rounded-xl shadow-lg p-4 md:p-6 w-full';
+  'bg-elo-bg border border-gray-200 rounded-xl shadow-lg p-4 my-7 md:p-6 w-full';
 const headingClass = 'font-semibold mb-2 text-lg md:text-xl text-elo-primary';
 const inputClass =
   'input-field flex-1 px-3 py-2 rounded-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-elo-primary text-base md:text-lg';
@@ -27,6 +23,7 @@ const pageBgClass =
 const containerClass = 'w-full max-w-xl space-y-6';
 
 export default function CommunitySettingsPage() {
+  const router = useRouter();
   const { data: session } = useSession();
   const userId = session?.user?.id;
   const [friends, setFriends] = useState([]); // [{email, status}]
@@ -164,7 +161,8 @@ export default function CommunitySettingsPage() {
         token,
       );
       if (result && result.message === 'Community data updated') {
-        setError('Saved!');
+        setError('');
+        router.push('/profile');
       } else if (result && result.error) {
         setError('Failed to save.');
       } else {
@@ -176,116 +174,125 @@ export default function CommunitySettingsPage() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col justify-center items-center">
-      <div className="w-full flex flex-col">
-        <div className="whitespace-nowrap w-full">
-          <Back pagename="My Community" />
-        </div>
+    <div className="h-full flex flex-col">
+      <div>
+        <Back pagename="My Community" />
       </div>
-      <div className={containerClass}>
-        {/* Friends Section */}
-        <div className={cardClass}>
-          <h3 className={headingClass}>Friends</h3>
-          <div className="flex gap-2 mb-2 items-center">
-            <input
-              type="email"
-              placeholder="Enter friend's email"
-              className="flex-2 input-field px-3 py-2 rounded-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-elo-primary text-base md:text-lg"
-              value={friendInput}
-              onChange={(e) => setFriendInput(e.target.value)}
-            />
-            <button
-              type="button"
-              className="secondary-button flex-1 px-2 py-1 text-xs md:text-xs w-auto min-w-[40px] md:min-w-[60px] md:px-3 md:py-1"
-              onClick={handleAddFriend}
-            >
-              Add
-            </button>
-          </div>
-          <ul className="mt-2">
-            {friends.map((f, idx) => (
-              <li
-                key={idx}
-                className="flex items-center gap-2 text-base md:text-lg"
+      <div className="flex flex-col justify-center my-4 mx-7">
+        <div>
+          {/* Friends Section */}
+          <div className={cardClass}>
+            <h3 className={headingClass}>Friends</h3>
+            <div className="flex gap-2 mb-2 items-center">
+              <input
+                type="email"
+                placeholder="Enter friend's email"
+                className="flex-2 input-field px-3 py-2 rounded-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-elo-primary text-base md:text-lg"
+                value={friendInput}
+                onChange={(e) => setFriendInput(e.target.value)}
+              />
+              <button
+                type="button"
+                className="secondary-button flex-1 px-2 py-1 text-xs md:text-xs w-auto min-w-[40px] md:min-w-[60px] md:px-3 md:py-1"
+                onClick={handleAddFriend}
               >
-                {f.email}
-                <span
-                  className={
-                    f.status === 'pending'
-                      ? 'text-yellow-500'
-                      : 'text-green-500'
-                  }
-                >
-                  {f.status === 'pending' ? 'Pending' : 'Accepted'}
-                </span>
-                <button
-                  type="button"
-                  className={removeBtnClass}
-                  onClick={() => handleRemoveFriend(f.email)}
-                >
-                  Remove
-                </button>
-              </li>
-            ))}
-          </ul>
-        </div>
-        {/* Institution Section */}
-        <div className={cardClass}>
-          <h3 className={headingClass}>Academic Institution</h3>
-          <input
-            type="text"
-            placeholder="Enter or search for institution"
-            className={inputClass + ' w-full'}
-            value={institution}
-            onChange={(e) => setInstitution(e.target.value)}
-          />
-        </div>
-        {/* Locations Section */}
-        <div className={cardClass}>
-          <h3 className={headingClass}>Locations (up to 3)</h3>
-          <div className="flex gap-2 mb-2 items-center">
-            <input
-              type="text"
-              placeholder="Add suburb or city"
-              className="flex-2 input-field px-3 py-2 rounded-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-elo-primary text-base md:text-lg"
-              value={locationInput}
-              onChange={(e) => setLocationInput(e.target.value)}
-            />
-            <button
-              type="button"
-              className="secondary-button flex-1 px-2 py-1 text-xs md:text-xs w-auto min-w-[40px] md:min-w-[60px] md:px-3 md:py-1"
-              onClick={handleAddLocation}
-            >
-              Add
-            </button>
-          </div>
-          <ul className="mt-2">
-            {Array.isArray(locations) && locations.length > 0 ? (
-              locations.map((loc, idx) => (
+                Add
+              </button>
+            </div>
+            <ul className="mt-2">
+              {friends.map((f, idx) => (
                 <li
                   key={idx}
                   className="flex items-center gap-2 text-base md:text-lg"
                 >
-                  {loc}
+                  {f.email}
+                  <span
+                    className={
+                      f.status === 'pending'
+                        ? 'text-yellow-500'
+                        : 'text-green-500'
+                    }
+                  >
+                    {f.status === 'pending' ? 'Pending' : 'Accepted'}
+                  </span>
                   <button
                     type="button"
                     className={removeBtnClass}
-                    onClick={() => handleRemoveLocation(loc)}
+                    onClick={() => handleRemoveFriend(f.email)}
                   >
                     Remove
                   </button>
                 </li>
-              ))
-            ) : (
-              <li className="text-gray-500">No cities set</li>
-            )}
-          </ul>
+              ))}
+            </ul>
+          </div>
+          {/* Institution Section */}
+          <div className={cardClass}>
+            <h3 className={headingClass}>Academic Institution</h3>
+            <input
+              type="text"
+              placeholder="Enter or search for institution"
+              className={inputClass + ' w-full'}
+              value={institution}
+              onChange={(e) => setInstitution(e.target.value)}
+            />
+          </div>
+          {/* Locations Section */}
+          <div className={cardClass}>
+            <h3 className={headingClass}>Locations (up to 3)</h3>
+            <div className="flex gap-2 mb-2 items-center">
+              <input
+                type="text"
+                placeholder="Add suburb or city"
+                className="flex-2 input-field px-3 py-2 rounded-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-elo-primary text-base md:text-lg"
+                value={locationInput}
+                onChange={(e) => setLocationInput(e.target.value)}
+              />
+              <button
+                type="button"
+                className="secondary-button flex-1 px-2 py-1 text-xs md:text-xs w-auto min-w-[40px] md:min-w-[60px] md:px-3 md:py-1"
+                onClick={handleAddLocation}
+              >
+                Add
+              </button>
+            </div>
+            <ul className="mt-2">
+              {Array.isArray(locations) && locations.length > 0 ? (
+                locations.map((loc, idx) => (
+                  <li
+                    key={idx}
+                    className="flex items-center gap-2 text-base md:text-lg"
+                  >
+                    {loc}
+                    <button
+                      type="button"
+                      className={removeBtnClass}
+                      onClick={() => handleRemoveLocation(loc)}
+                    >
+                      Remove
+                    </button>
+                  </li>
+                ))
+              ) : (
+                <li className="text-gray-500">No cities set</li>
+              )}
+            </ul>
+          </div>
         </div>
         {error && <p className="text-red-500 mt-2">{error}</p>}
-        <div className="flex flex-col justify-center items-center mt-4">
-          <button type="button" className="main-button" onClick={handleSave}>
-            Save Changes
-          </button>
+        {/* Save Changes button fixed at bottom like QuestionFooter */}
+
+        <div className="flex align-center fixed bottom-0 left-0 w-full z-10 px-4 py-4">
+          <div className="flex flex-col justify-center md:m-auto max-w-2xl mx-auto w-full">
+            <button
+              type="button"
+              className="main-button w-full md:m-auto"
+              onClick={handleSave}
+              data-cy="save-changes"
+            >
+              Save Changes
+            </button>
+          </div>
         </div>
       </div>
     </div>

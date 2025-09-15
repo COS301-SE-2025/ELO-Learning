@@ -142,7 +142,7 @@ export default function NotificationsPage() {
       </div>
 
       {/* Pending Friend Requests Section */}
-      <div className="mb-6 flex flex-col items-center">
+      <div className="m-4 p-6 flex flex-col items-center bg-[var(--chalk-dust)] dark:bg-[var(--midnight-theorem)]">
         <h2 className="text-xl font-bold mb-2">Friend Requests</h2>
         {pendingError && (
           <p className="text-red-500 mb-2 text-center">{pendingError}</p>
@@ -157,26 +157,26 @@ export default function NotificationsPage() {
               incomingRequests.map((req) => (
                 <div
                   key={req.request_id}
-                  className={cardClass + ' flex flex-col gap-2'}
+                  className="flex flex-col gap-2 mx-5 w-full"
                 >
-                  <div className="flex items-center gap-4">
+                  <div className="">
                     <div className="flex flex-col flex-1 min-w-0">
                       <span className="font-semibold text-elo-primary truncate">
                         {req.sender_name} {req.sender_surname}
                       </span>
-                      <span className="text-xs text-elo-primary truncate">
+                      <span className="text-xs truncate">
                         {req.sender_email}
                       </span>
                     </div>
-                    <div className="flex gap-2 w-32">
+                    <div className="flex gap-2 w-[90%] my-5">
                       <button
-                        className={btnClass}
+                        className="main-button"
                         onClick={() => handleAccept(req.request_id)}
                       >
                         Accept
                       </button>
                       <button
-                        className={rejectBtnClass}
+                        className="secondary-button"
                         onClick={() => handleReject(req.request_id)}
                       >
                         Reject
@@ -190,7 +190,7 @@ export default function NotificationsPage() {
       </div>
 
       {/* Push Notifications Section - Only Enable Button */}
-      <div className="flex-1 p-6 max-w-2xl mx-auto w-full flex flex-col items-center justify-center">
+      <div className="p-6 max-w-2xl mx-auto w-full flex flex-col items-center justify-center">
         <NotificationSettings
           userId={session.user.id}
           accessToken={session.backendToken}

@@ -1,6 +1,6 @@
 // components/NotificationSettings.jsx
-import React, { useState, useEffect } from 'react';
-import { Toaster, toast } from 'react-hot-toast';
+import { useEffect, useState } from 'react';
+import { toast } from 'react-hot-toast';
 import { usePushNotifications } from '../hooks/usePushNotifications.jsx';
 
 const NotificationSettings = ({ userId, accessToken }) => {
@@ -78,8 +78,16 @@ const NotificationSettings = ({ userId, accessToken }) => {
   };
 
   const handleClearToken = async () => {
-    await clearToken();
-    alert('🔕 Push notifications disabled.');
+    try {
+      if (!fcmToken) {
+        alert('⚠️ No push notification token found.');
+        return;
+      }
+      await clearToken();
+      alert('🔕 Push notifications disabled.');
+    } catch (err) {
+      alert(`❌ Failed to disable push notifications. ${err?.message || err}`);
+    }
   };
 
   const getPermissionIcon = () => {
@@ -118,22 +126,16 @@ const NotificationSettings = ({ userId, accessToken }) => {
   const handleDisable = handleClearToken;
 
   return (
-    <div className={cardClass + ' flex flex-col gap-2 mx-auto mt-6'}>
-      <div className="flex items-center gap-4">
-        <div className="flex flex-col flex-1 min-w-0">
-          <span className="font-semibold text-elo-primary truncate text-lg">
-            Push Notifications
-          </span>
-        </div>
-        <div className="flex gap-2 w-32">
-          <button className={btnClass} onClick={handleEnable}>
-            Enable
-          </button>
-          <button className={disableBtnClass} onClick={handleDisable}>
-            Disable
-          </button>
-        </div>
-      </div>
+    <div className=" flex flex-col gap-2 mx-auto">
+      <h2 className="font-semibold text-elo-primary truncate text-lg text-center">
+        Push Notifications
+      </h2>
+      <button className="main-button" onClick={handleEnable}>
+        Enable
+      </button>
+      <button className="secondary-button" onClick={handleDisable}>
+        Disable
+      </button>
     </div>
   );
 };

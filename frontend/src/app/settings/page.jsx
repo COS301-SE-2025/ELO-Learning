@@ -13,7 +13,7 @@ export default function Page() {
   };
 
   return (
-    <div className="h-full flex flex-col">
+    <div className="flex flex-col">
       <div>
         <Back pagename="Settings" />
       </div>
@@ -23,10 +23,6 @@ export default function Page() {
           <div className="border border-[#696969] my-5 rounded-lg">
             <div className="flex flex-row justify-between p-3 border-b border-[#696969]">
               <div>Preferences</div>
-              <ChevronRight />
-            </div>
-            <div className="flex flex-row justify-between p-3 border-b border-[#696969]">
-              <div>Profile</div>
               <ChevronRight />
             </div>
             <Link href="/settings/change-password">
@@ -80,9 +76,9 @@ export default function Page() {
           </div>
         </div>
       </div>
-      <div className="flex flex-col items-center justify-center gap-7 mb-10 md:gap-2 md:w-[50%] md:m-auto">
-        <button className="secondary-button uppercase">Save Changes</button>
-        <button className="main-button uppercase">Discard Changes</button>
+      <div className="flex flex-col items-center justify-center gap-4 mb-10 md:gap-2 md:w-[50%] md:m-auto">
+        <button className="main-button uppercase">Save Changes</button>
+        <button className="secondary-button uppercase">Discard Changes</button>
       </div>
     </div>
   );

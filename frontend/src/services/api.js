@@ -581,7 +581,7 @@ export async function submitSinglePlayerAttempt(data) {
 export async function submitMultiplayerResult(data) {
   try {
     const res = await axiosInstance.post('/multiplayer', data, {
-      timeout: 30000, // Extended timeout for multiplayer
+      timeout: 60000, // Extended timeout for multiplayer
       retries: 2, // Allow retries
     });
     return res.data;

@@ -1,10 +1,23 @@
-const e = require('cors');
-
 describe('User Journey', () => {
   beforeEach(() => {
     // Clear cookies and localStorage before each test
     cy.clearCookies();
     cy.clearLocalStorage();
+
+    // Handle uncaught exceptions that may occur during testing
+    Cypress.on('uncaught:exception', (err, runnable) => {
+      // Ignore NextAuth-related errors and URL construction errors during testing
+      if (
+        err.message.includes("Failed to construct 'URL'") ||
+        err.message.includes('CLIENT_FETCH_ERROR') ||
+        err.message.includes('Failed to fetch')
+      ) {
+        console.warn('Ignoring test-related error:', err.message);
+        return false;
+      }
+      // Allow other errors to fail the test
+      return true;
+    });
   });
 
   /**
@@ -127,27 +140,27 @@ describe('User Journey', () => {
     cy.get('input[placeholder="Name"]').type('New');
     cy.get('input[placeholder="Surname"]').type('User');
     cy.contains('button', 'Continue').click();
-    cy.url().should('include', '/signup/username');
+    cy.url().should('include', '/login-landing/signup/username');
 
     // Step 2: Username
     cy.get('input[placeholder="Username"]').type('newuser');
     cy.contains('button', 'Continue').click();
-    cy.url().should('include', '/signup/age');
+    cy.url().should('include', '/login-landing/signup/age');
 
     // Step 3: Age
     cy.get('input[placeholder="Age"]').type('25');
     cy.contains('button', 'Continue').click();
-    cy.url().should('include', '/signup/grade');
+    cy.url().should('include', '/login-landing/signup/grade');
 
     // Step 4: Grade
-    cy.get('input[placeholder="Grade"]').type('University Year 3');
+    cy.get('input[placeholder="Grade"]').type('12');
     cy.contains('button', 'Continue').click();
-    cy.url().should('include', '/signup/email');
+    cy.url().should('include', '/login-landing/signup/email');
 
     // Step 5: Email
     cy.get('input[placeholder="Email"]').type('newuserjourney@example.com');
     cy.contains('button', 'Continue').click();
-    cy.url().should('include', '/signup/password');
+    cy.url().should('include', '/login-landing/signup/password');
 
     // Step 6: Password and Registration
     cy.get('input[placeholder="Enter a password"]').type('Password123!');

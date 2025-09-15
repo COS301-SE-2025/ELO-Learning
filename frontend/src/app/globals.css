@@ -188,6 +188,21 @@ textarea:focus-visible {
   color: var(--white);
   font-size: 16px;
   width: 500px;
+  padding: 3%;
+  margin: 1.5% 0%;
+  border: var(--main-button-stroke) 1px solid;
+  box-shadow: 2px 2px 0px 0px var(--main-button-stroke);
+  border-radius: 5px;
+  font-weight: 800;
+  letter-spacing: 3px;
+  transition: 0.3s ease-out;
+}
+
+.signup-button {
+  background-color: var(--main-button-color);
+  color: var(--white);
+  font-size: 16px;
+  width: 500px;
   padding: 1%;
   margin: 1.5% 0%;
   border: var(--main-button-stroke) 1px solid;
@@ -235,6 +250,13 @@ textarea:focus-visible {
   border: var(--blueprint-blue-light) 1px solid;
 }
 
+.signup-button:hover {
+  background-color: var(--blueprint-blue);
+  color: var(--white);
+  box-shadow: 2px 2px 0px 0px var(--blueprint-blue-light);
+  border: var(--blueprint-blue-light) 1px solid;
+}
+
 .main-button-landing:hover {
   background-color: var(--blueprint-blue);
   color: var(--white);
@@ -243,6 +265,10 @@ textarea:focus-visible {
 }
 
 .main-button:active {
+  transform: translateY(5px);
+}
+
+.signup-button:active {
   transform: translateY(5px);
 }
 
@@ -359,6 +385,13 @@ textarea:focus-visible {
   } */
 
   .main-button {
+    width: 90vw;
+    padding: 2.5%;
+    margin: 0% 0%;
+    letter-spacing: 1px;
+  }
+
+  .signup-button {
     width: 90vw;
     padding: 2.5%;
     margin: 0% 0%;

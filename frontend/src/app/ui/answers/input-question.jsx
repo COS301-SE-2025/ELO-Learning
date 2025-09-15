@@ -363,11 +363,11 @@ export default function MathInputTemplate({
             <div className="w-6 h-6 border-2 border-yellow-500 border-t-transparent rounded-full animate-spin"></div>
           ) : inputValue.trim() && localIsValidExpression ? (
             <div className="w-6 h-6 bg-green-500 rounded-full flex items-center justify-center">
-              <span className="text-white text-sm">✓</span>
+              <span className="text-[var(--color-foreground)] text-sm">✓</span>
             </div>
           ) : inputValue.trim() && !localIsValidExpression ? (
             <div className="w-6 h-6 bg-red-500 rounded-full flex items-center justify-center">
-              <span className="text-white text-sm">✗</span>
+              <span className="text-[var(--color-foreground)] text-sm">✗</span>
             </div>
           ) : null}
         </div>
@@ -379,7 +379,7 @@ export default function MathInputTemplate({
               <button
                 key={index}
                 onClick={() => handleSuggestionClick(suggestion)}
-                className="w-full px-4 py-2 text-left hover:bg-[#4D5DED] hover:text-white flex justify-between items-center border-b last:border-b-0"
+                className="w-full px-4 py-2 text-left hover:bg-[var(--blueprint-blue)] hover:text-[var(--color-foreground)] flex justify-between items-center border-b last:border-b-0"
               >
                 <div>
                   <span className="font-mono">{suggestion.completion}</span>
@@ -405,13 +405,13 @@ export default function MathInputTemplate({
       <div className="flex flex-row justify-between gap-2">
         <button
           onClick={clearInput}
-          className="px-4 py-2 bg-white text-black rounded-lg hover:bg-[#4D5DED] hover:text-white transition-colors"
+          className="px-4 py-2 bg-[var(--blueprint-blue-light)] text-black rounded-lg hover:bg-[var(--blueprint-blue)] hover:text-white transition-colors"
         >
           Clear
         </button>
         <button
           onClick={() => setShowHistory(!showHistory)}
-          className="px-4 py-2 bg-white text-black rounded-lg hover:bg-[#4D5DED] hover:text-white transition-colors"
+          className="px-4 py-2 bg-[var(--blueprint-blue-light)] text-black rounded-lg hover:bg-[var(--blueprint-blue)] hover:text-white transition-colors"
         >
           History
         </button>
@@ -432,7 +432,7 @@ export default function MathInputTemplate({
               <button
                 key={index}
                 onClick={() => insertSymbol(symbol)}
-                className="px-3 py-1 bg-white text-black rounded hover:bg-[#4D5DED] hover:text-white text-sm"
+                className="px-3 py-1 bg-[var(--vector-violet)] text-white rounded hover:bg-[#4D5DED] hover:text-white text-sm"
               >
                 {symbol}
               </button>

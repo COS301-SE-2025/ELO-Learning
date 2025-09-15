@@ -2,13 +2,44 @@
 'use client';
 
 import clsx from 'clsx';
-import { Gem, Trophy, Zap } from 'lucide-react';
+import { Flame, Gem, Trophy, Zap } from 'lucide-react';
 
+import { fetchUserStreakInfo } from '@/services/api';
 import { useSession } from 'next-auth/react'; // ← CHANGED: Use NextAuth directly
-import { memo, useMemo } from 'react';
+import { memo, useEffect, useMemo, useState } from 'react';
 
 const HeaderContent = memo(function HeaderContent() {
   const { data: session, status } = useSession(); // ← SIMPLIFIED: Just use NextAuth
+  const [streakData, setStreakData] = useState(null);
+  const [refreshKey, setRefreshKey] = useState(0); // Add refresh trigger
+
+  // Listen for storage events to refresh data when other tabs/windows update
+  useEffect(() => {
+    const handleStorageChange = () => {
+      setRefreshKey((prev) => prev + 1);
+    };
+
+    const handleEloUpdate = () => {
+      console.log('Header: ELO update event received, refreshing...');
+      setRefreshKey((prev) => prev + 1);
+    };
+
+    window.addEventListener('storage', handleStorageChange);
+    window.addEventListener('eloUpdated', handleEloUpdate);
+
+    // Also listen for focus events to refresh when returning to the tab
+    const handleFocus = () => {
+      setRefreshKey((prev) => prev + 1);
+    };
+
+    window.addEventListener('focus', handleFocus);
+
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+      window.removeEventListener('eloUpdated', handleEloUpdate);
+      window.removeEventListener('focus', handleFocus);
+    };
+  }, []);
 
   // Memoize user data processing
   const userData = useMemo(() => {
@@ -24,9 +55,29 @@ const HeaderContent = memo(function HeaderContent() {
         'User',
       xp: Math.round(session.user.xp || 0),
       rank: session.user.rank,
-      elo_rating: session.user.elo_rating,
+      elo_rating: session.user.elo_rating || session.user.eloRating || 0, // Handle both variants
     };
-  }, [session, status]);
+  }, [session, status, refreshKey]); // Add refreshKey to trigger re-calculation
+
+  // Fetch streak data when user is authenticated
+  useEffect(() => {
+    async function loadStreakData() {
+      if (status === 'authenticated' && session?.user?.id) {
+        try {
+          const response = await fetchUserStreakInfo(session.user.id);
+          if (response.success) {
+            setStreakData(response.streak_data);
+          }
+        } catch (error) {
+          console.warn('Failed to load streak data for header:', error);
+          // Set default streak data to prevent UI issues
+          setStreakData({ current_streak: 0 });
+        }
+      }
+    }
+
+    loadStreakData();
+  }, [session?.user?.id, status]);
 
   // Show loading state while session is being loaded
   if (status === 'loading') {
@@ -48,6 +99,10 @@ const HeaderContent = memo(function HeaderContent() {
           <div className="flex items-center gap-2">
             <Zap size={24} fill="#FFD000" stroke="#FFD000" />
             <div className="h-4 w-12 bg-gray-700 rounded animate-pulse"></div>
+          </div>
+          <div className="flex items-center gap-2">
+            <Flame size={24} fill="#FF4500" stroke="#FF4500" />
+            <div className="h-4 w-8 bg-gray-700 rounded animate-pulse"></div>
           </div>
         </div>
       </div>
@@ -81,6 +136,12 @@ const HeaderContent = memo(function HeaderContent() {
         <div className="flex items-center gap-2">
           <Zap size={24} fill="#FFD000" stroke="#FFD000" />
           <p>{userData.xp}xp</p>
+        </div>
+
+        {/* Daily Streak Display */}
+        <div className="flex items-center gap-2">
+          <Flame size={24} fill="#FF4500" stroke="#FF4500" />
+          <p>{streakData?.current_streak || 0}</p>
         </div>
       </div>
     </div>

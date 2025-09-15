@@ -32,6 +32,12 @@ export default function Page() {
 
   const handleContinue = async (e) => {
     e.preventDefault();
+
+    // Prevent double submission
+    if (loading) {
+      return;
+    }
+
     if (!password || !confirm) {
       setError('Please fill in both password fields.');
       return;
@@ -128,6 +134,26 @@ export default function Page() {
     setShowConfirmPassword(!showConfirmPassword);
   };
 
+  // Loading screen for registration
+  if (loading) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-screen">
+        <div className="flex flex-row items-center justify-center gap-5">
+          {[0, 150, 300].map((delay) => (
+            <div
+              key={delay}
+              className="animate-bounce rounded-full h-5 w-5 bg-[#FF6E99] mb-4"
+              style={{ animationDelay: `${delay}ms` }}
+            ></div>
+          ))}
+        </div>
+        <div className="text-lg font-bold text-center">
+          Registering your account, hang tight!
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="w-full min-h-screen flex flex-col justify-between p-3">
       <div>
@@ -142,7 +168,7 @@ export default function Page() {
         <div>
           <p className="text-lg text-center font-bold">Choose a password</p>
           <form onSubmit={handleContinue}>
-            <div className="flex flex-col items-center w-full px-4 md:px-0">
+            <div className="flex flex-col items-center w-full px-4 md:px-12">
               <div className="relative w-[90vw] md:w-[500px]">
                 <input
                   type={showPassword ? 'text' : 'password'}
@@ -188,7 +214,7 @@ export default function Page() {
               )}
               <div className="break_small"></div>
               <button
-                className="main-button px-2 py-8"
+                className="signup-button  px-2 py-8"
                 type="submit"
                 disabled={loading}
               >

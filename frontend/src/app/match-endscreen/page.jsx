@@ -1,17 +1,16 @@
 'use client';
 import Time from '@/app/ui/end-screen-ui/end-screen-total-time';
 import TotalXPMP from '@/app/ui/end-screen-ui/end-screen-totalxp-multiplayer';
-import EndELO from '../ui/end-screen-ui/end-screen-elo';
-import { updateUserXP } from '@/services/api';
+import { getSession, useSession } from 'next-auth/react';
 import Image from 'next/image';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { getSession } from 'next-auth/react';
 import { Suspense, useState } from 'react';
 import EndELOChange from '../ui/end-screen-ui/end-screen-elo-change';
 
 function MatchEndScreenContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
+  const { data: session, update: updateSession } = useSession();
   const result = searchParams.get('result');
   const [isWinner, setIsWinner] = useState(result === 'winner');
   const [isLoading, setIsLoading] = useState(false);
@@ -23,20 +22,29 @@ function MatchEndScreenContent() {
       setIsLoading(true);
 
       // Get session from Next.js auth
-      const session = await getSession();
+      const currentSession = await getSession();
 
-      if (!session || !session.user) {
+      if (!currentSession || !currentSession.user) {
         console.error('No authenticated session found');
         router.push('/dashboard');
         return;
       }
 
-      const userData = session.user;
+      const userData = currentSession.user;
 
       // Calculate XP earned using the same logic as TotalXP component
       const questions = JSON.parse(
         localStorage.getItem('questionsObj') || '[]',
       );
+
+      // Wait a bit to ensure session updates have propagated
+      // This gives time for the ELO/XP updates to be reflected in the session
+      console.log('Waiting for session updates to propagate...');
+      await new Promise((resolve) => setTimeout(resolve, 500));
+
+      // Force a session refresh to ensure we have the latest data
+      await updateSession();
+      console.log('Session refreshed, proceeding with navigation...');
 
       // Clear localStorage
       localStorage.removeItem('questionsObj');

@@ -1,7 +1,6 @@
 'use client';
 
-import { gradients } from './avatar-colors';
-import { AvatarColors } from './color';
+import { avatarColors, gradients } from './avatar-colors';
 
 export const BackgroundTypes = {
   SOLID_PINK: 'solid-pink',
@@ -16,8 +15,8 @@ export const BackgroundTypes = {
 
 export function BackgroundSelector({ selectedBackground, onBackgroundChange }) {
   const backgrounds = [
-    // Solid color options (use AvatarColors for consistency)
-    ...AvatarColors.map((color, i) => ({
+    // Solid color options (use avatarColors for consistency)
+    ...avatarColors.map((color, i) => ({
       id: `solid-${i}`,
       name: `Solid ${i + 1}`,
       style: { backgroundColor: color },
@@ -57,13 +56,13 @@ export function BackgroundSelector({ selectedBackground, onBackgroundChange }) {
 
 export function AvatarBackground({ backgroundType, className = '' }) {
   // Support new solid and gradient backgrounds
-  // If backgroundType starts with 'solid-', use AvatarColors
+  // If backgroundType starts with 'solid-', use avatarColors
   // If backgroundType starts with 'gradient-', use gradients
 
   let style = { backgroundColor: '#421e68' };
   if (backgroundType && backgroundType.startsWith('solid-')) {
     const idx = parseInt(backgroundType.split('-')[1], 10);
-    style = { backgroundColor: AvatarColors[idx] || '#421e68' };
+    style = { backgroundColor: avatarColors[idx] || '#421e68' };
   } else if (backgroundType && backgroundType.startsWith('gradient-')) {
     const idx = parseInt(backgroundType.split('-')[1], 10);
     const g = gradients[idx];

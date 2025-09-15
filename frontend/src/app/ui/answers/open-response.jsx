@@ -40,18 +40,18 @@ export default function OpenResponseTemplate({
           placeholder="Write your answer"
           className="w-full p-4 resize-none text-sm min-h-[200px]
                      focus:outline-none
-                     transition-all duration-200"
+                     transition-all duration-200 text-[var(--color-foreground)]"
           style={{
-            border: '1px solid #696969',
+            border: '1px solid var(--grey)',
             borderRadius: '5px',
             boxShadow: '0 0 0 1px rgba(255, 255, 255, 0.8)',
           }}
           onFocus={(e) => {
-            e.target.style.border = '1px solid #ff6e99';
+            e.target.style.border = '1px solid var(--radical-rose)';
             e.target.style.boxShadow = '0 0 0 1px rgba(125, 50, 206, 0.2)';
           }}
           onBlur={(e) => {
-            e.target.style.border = '1px solid #ffffff';
+            e.target.style.border = '1px solid var(--color-foreground)';
             e.target.style.boxShadow = '0 0 0 1px rgba(255, 255, 255, 0.8)';
           }}
           rows={8}

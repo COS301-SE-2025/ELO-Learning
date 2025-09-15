@@ -79,6 +79,13 @@ export default function TotalXP({ onLoadComplete }) {
             'Level:',
             latestUserData.currentLevel,
           );
+
+          // Dispatch a custom event to notify other components
+          window.dispatchEvent(
+            new CustomEvent('eloUpdated', {
+              detail: { userId: user_id, sessionUpdate: true },
+            }),
+          );
         }
 
         // Update cookie-based user data if it exists

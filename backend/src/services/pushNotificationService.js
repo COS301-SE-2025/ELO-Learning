@@ -7,7 +7,18 @@ initializeFirebase();
 
 class PushNotificationService {
   constructor() {
-    this.messaging = admin.messaging();
+    try {
+      this.messaging = admin.messaging();
+    } catch (error) {
+      this.messaging = {
+        send: async () => {
+          /* no-op or helpful error */
+        },
+        sendToDevice: async () => {
+          /* no-op or helpful error */
+        },
+      };
+    }
   }
 
   /**

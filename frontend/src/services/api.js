@@ -130,6 +130,88 @@ export async function fetchPendingFriendRequests(userId, token) {
     }
   }
 }
+
+/**
+ * Accept a friend request for a user
+ * @param {string|number} userId - User ID
+ * @param {string|number} requestId - Friend request ID
+ * @param {string} token - JWT token
+ * @returns {Promise<object>} API response
+ */
+export async function apiAcceptFriendRequest(userId, requestId, token) {
+  try {
+    const res = await axiosInstance.post(
+      `/user/${userId}/friend-accept`,
+      { request_id: requestId },
+      {
+        headers: {
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+      },
+    );
+    return res.data;
+  } catch (error) {
+    if (error.response) {
+      console.error(
+        '❌ Failed to accept friend request:',
+        error.response.data,
+        error.response.status,
+        error.response.headers,
+      );
+      return {
+        error:
+          error.response.data?.error ||
+          error.response.data?.message ||
+          'Failed to accept friend request',
+        details: error.response.data,
+      };
+    } else {
+      console.error('❌ Failed to accept friend request:', error.message);
+      return { error: error.message || 'Failed to accept friend request' };
+    }
+  }
+}
+
+/**
+ * Reject a friend request for a user
+ * @param {string|number} userId - User ID
+ * @param {string|number} requestId - Friend request ID
+ * @param {string} token - JWT token
+ * @returns {Promise<object>} API response
+ */
+export async function apiRejectFriendRequest(userId, requestId, token) {
+  try {
+    const res = await axiosInstance.post(
+      `/user/${userId}/friend-reject`,
+      { request_id: requestId },
+      {
+        headers: {
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+      },
+    );
+    return res.data;
+  } catch (error) {
+    if (error.response) {
+      console.error(
+        '❌ Failed to reject friend request:',
+        error.response.data,
+        error.response.status,
+        error.response.headers,
+      );
+      return {
+        error:
+          error.response.data?.error ||
+          error.response.data?.message ||
+          'Failed to reject friend request',
+        details: error.response.data,
+      };
+    } else {
+      console.error('❌ Failed to reject friend request:', error.message);
+      return { error: error.message || 'Failed to reject friend request' };
+    }
+  }
+}
 // Update community data for a user (PUT)
 // Update community data for a user (PUT)
 // (Removed duplicate signature)
@@ -139,22 +221,18 @@ export async function updateCommunityData(
   locations,
   token,
 ) {
-  const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL || '';
+  const API_BASE = getBaseURL();
   token = token || '';
   try {
     const payload = {
       academic_institution: institution,
       location: locations,
     };
-    const res = await axiosInstance.put(
-      `${API_BASE}/user/${userId}/community`,
-      payload,
-      {
-        headers: {
-          ...(token ? { Authorization: `Bearer ${token}` } : {}),
-        },
+    const res = await axiosInstance.put(`/user/${userId}/community`, payload, {
+      headers: {
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
       },
-    );
+    });
     return res.data;
   } catch (error) {
     // Log full error details for debugging

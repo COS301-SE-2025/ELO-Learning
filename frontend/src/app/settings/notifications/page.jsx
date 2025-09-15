@@ -15,64 +15,86 @@ export default function NotificationsPage() {
   const { data: session, status } = useSession();
   const [pendingError, setPendingError] = React.useState('');
   const [incomingRequests, setIncomingRequests] = React.useState([]);
-  React.useEffect(() => {
-    async function fetchIncoming() {
-      if (!session?.user?.id) return;
-      try {
-        const token =
-          session.backendToken ||
-          session.user.accessToken ||
-          session.accessToken;
-        const api = await import('../../../services/api');
-        const response = await api.fetchIncomingFriendRequests(
-          session.user.id,
-          token,
-        );
-        if (Array.isArray(response)) {
-          setIncomingRequests(response);
-          setPendingError('');
-        } else {
-          setIncomingRequests([]);
-          setPendingError(response.error || 'Failed to fetch friend requests');
-        }
-      } catch (err) {
-        setIncomingRequests([]);
-        setPendingError('Failed to fetch friend requests');
-      }
-    }
-    fetchIncoming();
-  }, [session]);
-
-  // --- Accept/Reject Handlers ---
-  const handleAccept = async (requestId) => {
+  // Move fetchIncoming outside useEffect so it can be called after accept/reject
+  const fetchIncoming = React.useCallback(async () => {
     if (!session?.user?.id) return;
     try {
       const token =
         session.backendToken || session.user.accessToken || session.accessToken;
       const api = await import('../../../services/api');
-      await apiAcceptFriendRequest(session.user.id, requestId, token);
-      // Remove accepted request from UI
-      setIncomingRequests((prev) =>
-        prev.filter((r) => r.request_id !== requestId),
+      const response = await api.fetchIncomingFriendRequests(
+        session.user.id,
+        token,
       );
+      if (Array.isArray(response)) {
+        setIncomingRequests(response);
+        setPendingError('');
+      } else {
+        setIncomingRequests([]);
+        setPendingError(response.error || 'Failed to fetch friend requests');
+      }
     } catch (err) {
-      setPendingError('Failed to accept friend request');
+      setIncomingRequests([]);
+      setPendingError('Failed to fetch friend requests');
+    }
+  }, [session]);
+
+  React.useEffect(() => {
+    fetchIncoming();
+  }, [session, fetchIncoming]);
+
+  // --- Accept/Reject Handlers ---
+  const handleAccept = async (requestId) => {
+    if (!session?.user?.id) {
+      setPendingError('User not authenticated.');
+      return;
+    }
+    try {
+      const token =
+        session?.user?.accessToken ||
+        session?.accessToken ||
+        session?.backendToken;
+      const api = await import('../../../services/api');
+      const result = await api.apiAcceptFriendRequest(
+        session.user.id,
+        requestId,
+        token,
+      );
+      if (result && result.status === 200) {
+        setPendingError('Accepted!');
+        await fetchIncoming(); // Force refresh
+      } else {
+        setPendingError('Failed to accept friend request.');
+      }
+    } catch (err) {
+      setPendingError(err?.message || 'Failed to accept friend request.');
     }
   };
 
   const handleReject = async (requestId) => {
-    if (!session?.user?.id) return;
+    if (!session?.user?.id) {
+      setPendingError('User not authenticated.');
+      return;
+    }
     try {
       const token =
-        session.backendToken || session.user.accessToken || session.accessToken;
+        session?.user?.accessToken ||
+        session?.accessToken ||
+        session?.backendToken;
       const api = await import('../../../services/api');
-      await apiRejectFriendRequest(session.user.id, requestId, token);
-      // Remove rejected request from UI
-      setIncomingRequests((prev) =>
-        prev.filter((r) => r.request_id !== requestId),
+      const result = await api.apiRejectFriendRequest(
+        session.user.id,
+        requestId,
+        token,
       );
+      if (result && result.status === 200) {
+        setPendingError('Rejected!');
+        await fetchIncoming(); // Force refresh
+      } else {
+        setPendingError('Failed to reject friend request.');
+      }
     } catch (err) {
-      setPendingError('Failed to reject friend request');
+      setPendingError(err?.message || 'Failed to reject friend request.');
     }
   };
 

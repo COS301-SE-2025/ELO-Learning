@@ -954,6 +954,22 @@ router.post('/user/:id/friend-request', verifyToken, async (req, res) => {
 router.post('/user/:id/friend-accept', verifyToken, async (req, res) => {
   const { id } = req.params; // acceptor's user ID
   const { request_id } = req.body; // unique id of the friend request row
+  console.log(`[FRIEND-ACCEPT] Payload:`, { id, request_id });
+  // Fetch the friend request row before update
+  const { data: requestRow, error: fetchError } = await supabase
+    .from('friends')
+    .select('*')
+    .eq('id', request_id)
+    .single();
+  console.log(`[FRIEND-ACCEPT] DB row before update:`, requestRow);
+  if (fetchError || !requestRow) {
+    console.error(
+      `[FRIEND-ACCEPT] Could not find friend request row for id=${request_id}`,
+    );
+    return res
+      .status(404)
+      .json({ error: 'Friend request not found', details: fetchError });
+  }
   // Only accept the request if the friend_id matches the acceptor's ID
   const { data, error } = await supabase
     .from('friends')
@@ -962,8 +978,12 @@ router.post('/user/:id/friend-accept', verifyToken, async (req, res) => {
     .eq('friend_id', id)
     .select()
     .single();
+  console.log(`[FRIEND-ACCEPT] DB row after update:`, data);
   if (error) {
-    return res.status(500).json({ error: 'Failed to accept friend request' });
+    console.error(`[FRIEND-ACCEPT] Update error:`, error);
+    return res
+      .status(500)
+      .json({ error: 'Failed to accept friend request', details: error });
   }
   res.status(200).json({ message: 'Friend request accepted', data });
 });

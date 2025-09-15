@@ -1,6 +1,8 @@
 'use client';
 
+import { useAvatarUnlockables } from '@/hooks/useAvatarUnlockables';
 import Image from 'next/image';
+import { LockIndicator, ProgressIndicator } from './lock-indicator';
 
 export const MouthTypes = {
   MOUTH_1: 'Mouth 1',
@@ -38,40 +40,79 @@ export const MouthTypes = {
 };
 
 export function MouthSelector({ selectedMouth, onMouthChange }) {
-  const mouths = Object.values(MouthTypes).map((mouthType) => ({
+  const { isItemUnlocked, getLockedItemInfo, loading } = useAvatarUnlockables();
+
+  const mouths = Object.entries(MouthTypes).map(([key, mouthType]) => ({
     id: mouthType,
     name: mouthType,
+    key: key, // MOUTH_1, MOUTH_2, etc.
     src: `/mouths/${mouthType}.svg`,
   }));
+
+  if (loading) {
+    return (
+      <div className="space-y-4">
+        <h3 className="text-lg font-semibold text-white">Mouth</h3>
+        <div className="text-gray-400">Loading mouth options...</div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-4">
       <h3 className="text-lg font-semibold text-white">Mouth</h3>
       <div className="grid grid-cols-3 md:grid-cols-4 gap-3">
-        {mouths.map((mouth) => (
-          <button
-            key={mouth.id}
-            onClick={() => onMouthChange(mouth.id)}
-            className={`p-3 rounded-lg border-2 transition-all aspect-square ${
-              selectedMouth === mouth.id
-                ? 'border-[#4d5ded] bg-[#201F1F] bg-opacity-20'
-                : 'border-gray-600 bg-gray-700 hover:border-[#4d5ded]'
-            }`}
-          >
-            <div className="w-full h-20 relative mb-2 flex items-center justify-center">
-              <Image
-                src={mouth.src}
-                alt={mouth.name}
-                fill
-                className="object-contain"
-                priority
+        {mouths.map((mouth) => {
+          const isUnlocked = isItemUnlocked(mouth.key);
+          const lockedInfo = getLockedItemInfo(mouth.key);
+
+          return (
+            <button
+              key={mouth.id}
+              onClick={() => isUnlocked && onMouthChange(mouth.id)}
+              disabled={!isUnlocked}
+              className={`p-3 rounded-lg border-2 transition-all aspect-square relative ${
+                selectedMouth === mouth.id && isUnlocked
+                  ? 'border-[#4d5ded] bg-[#201F1F] bg-opacity-20'
+                  : isUnlocked
+                    ? 'border-gray-600 bg-gray-700 hover:border-[#4d5ded] hover:cursor-pointer'
+                    : 'border-gray-700 bg-gray-800 cursor-not-allowed opacity-75'
+              }`}
+              title={
+                !isUnlocked
+                  ? `Unlock by completing: ${
+                      lockedInfo?.achievementName || 'Achievement'
+                    }`
+                  : mouth.name
+              }
+            >
+              <div className="w-full h-20 relative mb-2 flex items-center justify-center">
+                <Image
+                  src={mouth.src}
+                  alt={mouth.name}
+                  fill
+                  className={`object-contain transition-all ${
+                    !isUnlocked ? 'grayscale opacity-50' : ''
+                  }`}
+                  priority
+                />
+              </div>
+
+              {/* Lock overlay for locked items */}
+              <LockIndicator
+                isLocked={!isUnlocked}
+                achievement={lockedInfo}
+                progress={lockedInfo?.progressPercentage}
+                size="small"
               />
-            </div>
-            {/* <div className="text-xs font-medium text-white text-center">
-              {mouth.name}
-            </div> */}
-          </button>
-        ))}
+
+              {/* Progress indicator for partially completed achievements */}
+              {!isUnlocked && lockedInfo?.progressPercentage > 0 && (
+                <ProgressIndicator progress={lockedInfo.progressPercentage} />
+              )}
+            </button>
+          );
+        })}
       </div>
     </div>
   );

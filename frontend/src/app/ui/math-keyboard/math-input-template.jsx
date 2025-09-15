@@ -1,10 +1,12 @@
 'use client';
 
+import { useKeyboardManager } from '@/hooks/useKeyboardManager';
 import { validateAnswerSync } from '@/utils/answerValidator';
 import {
   getMathValidationMessage,
   isValidMathExpression,
 } from '@/utils/frontendMathValidator';
+import { QUESTION_TYPES } from '@/utils/questionTypeDetection';
 import 'katex/dist/katex.min.css';
 import { ChevronDown, ChevronUp } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
@@ -31,6 +33,9 @@ export default function MathInputTemplate({
   const [showHelper, setShowHelper] = useState(false);
 
   const inputRef = useRef(null);
+  
+  // Initialize keyboard manager for Math Input questions
+  const keyboard = useKeyboardManager(QUESTION_TYPES.MATH_INPUT);
 
   // Advanced math symbol categories
   const mathCategories = {
@@ -257,6 +262,26 @@ export default function MathInputTemplate({
   };
 
   const insertSymbol = (symbol, shouldMoveCursor = true) => {
+    // Use keyboard manager's insertTextAtCursor for mobile-friendly text insertion
+    if (keyboard.isMobile && keyboard.isCustomKeyboardActive) {
+      keyboard.insertTextAtCursor(symbol);
+      
+      // Update local state
+      const input = keyboard.inputRef.current || inputRef.current;
+      if (input) {
+        setInputValue(input.value);
+        setStudentAnswer(input.value);
+        setCursorPosition(input.selectionStart);
+      }
+      
+      // Add to history
+      if (!inputHistory.includes(symbol)) {
+        setInputHistory((prev) => [symbol, ...prev.slice(0, 9)]); // Keep last 10
+      }
+      return;
+    }
+
+    // Desktop/fallback behavior
     const input = inputRef.current;
     if (!input) return;
 
@@ -340,21 +365,23 @@ export default function MathInputTemplate({
       {/* Enhanced Input Field */}
       <div className="relative">
         <textarea
-          ref={inputRef}
-          value={inputValue}
-          onChange={handleInputChange}
-          onSelect={handleCursorPosition}
-          onKeyDown={handleKeyDown}
-          placeholder="Write your answer"
+          {...keyboard.getInputProps({
+            ref: inputRef,
+            value: inputValue,
+            onChange: handleInputChange,
+            onSelect: handleCursorPosition,
+            onKeyDown: handleKeyDown,
+            placeholder: "Write your answer",
+            className: `math-input w-full p-4 text-lg border rounded-lg resize-none min-h-[80px] font-mono ${
+              !localIsValidExpression
+                ? 'border-red-500 focus:border-red-600'
+                : isChecking
+                  ? 'border-yellow-500 focus:border-yellow-600'
+                  : 'border-gray-300 focus:border-blue-500'
+            }`,
+            rows: 2
+          })}
           style={{ border: '1px solid' }} // Force black text
-          className={`math-input w-full p-4 text-lg border rounded-lg resize-none min-h-[80px] font-mono ${
-            !localIsValidExpression
-              ? 'border-red-500 focus:border-red-600'
-              : isChecking
-                ? 'border-yellow-500 focus:border-yellow-600'
-                : 'border-gray-300 focus:border-blue-500'
-          }`}
-          rows={2}
         />
 
         {/* Validation indicator */}
@@ -441,48 +468,95 @@ export default function MathInputTemplate({
         </div>
       )}
 
-      {/* Tabbed Symbol Categories */}
-      <div className="w-full bg-[#421E68] rounded-lg overflow-hidden">
-        {/* Tab headers */}
-        <div className="flex bg-[#7D32CE]">
-          {Object.entries(mathCategories).map(([key, category]) => (
-            <button
-              key={key}
-              onClick={() => setActiveTab(key)}
-              className={`flex-1 px-3 py-3 text-sm font-medium transition-colors flex items-center justify-center gap-2 ${
-                activeTab === key
-                  ? 'bg-[#FF6E99] text-white'
-                  : ' hover:bg-[#4D5DED] hover:text-white'
-              }`}
-            >
-              <span className="text-lg">{category.icon}</span>
-              <span className="hidden sm:inline">{category.label}</span>
-            </button>
-          ))}
-        </div>
-
-        {/* Symbol grid */}
-        <div className="p-4">
-          <div
-            className={`grid gap-3 ${
-              activeTab === 'numbers'
-                ? 'grid-cols-5'
-                : 'grid-cols-3 sm:grid-cols-4 md:grid-cols-5'
-            }`}
-          >
-            {mathCategories[activeTab].symbols.map((item, index) => (
+      {/* Custom Keyboard - Only show on mobile when needed */}
+      {keyboard.shouldUseCustomKeyboard && (
+        <div className="w-full bg-[#421E68] rounded-lg overflow-hidden">
+          {/* Tab headers */}
+          <div className="flex bg-[#7D32CE]">
+            {Object.entries(mathCategories).map(([key, category]) => (
               <button
-                key={index}
-                onClick={() => insertSymbol(item.symbol)}
-                title={item.description}
-                className="h-12 w-full bg-white text-black rounded-md hover:bg-[#4D5DED] hover:text-white active:bg-[#FF6E99] transition-colors text-lg font-bold flex items-center justify-center"
+                key={key}
+                onClick={() => setActiveTab(key)}
+                className={`flex-1 px-3 py-3 text-sm font-medium transition-colors flex items-center justify-center gap-2 ${
+                  activeTab === key
+                    ? 'bg-[#FF6E99] text-white'
+                    : ' hover:bg-[#4D5DED] hover:text-white'
+                }`}
               >
-                {item.label}
+                <span className="text-lg">{category.icon}</span>
+                <span className="hidden sm:inline">{category.label}</span>
               </button>
             ))}
           </div>
+
+          {/* Symbol grid */}
+          <div className="p-4">
+            <div
+              className={`grid gap-3 ${
+                activeTab === 'numbers'
+                  ? 'grid-cols-5'
+                  : 'grid-cols-3 sm:grid-cols-4 md:grid-cols-5'
+              }`}
+            >
+              {mathCategories[activeTab].symbols.map((item, index) => (
+                <button
+                  key={index}
+                  onClick={() => insertSymbol(item.symbol)}
+                  title={item.description}
+                  className="h-12 w-full bg-white text-black rounded-md hover:bg-[#4D5DED] hover:text-white active:bg-[#FF6E99] transition-colors text-lg font-bold flex items-center justify-center"
+                >
+                  {item.label}
+                </button>
+              ))}
+            </div>
+          </div>
         </div>
-      </div>
+      )}
+
+      {/* Tabbed Symbol Categories - Legacy for desktop */}
+      {!keyboard.shouldUseCustomKeyboard && (
+        <div className="w-full bg-[#421E68] rounded-lg overflow-hidden">
+          {/* Tab headers */}
+          <div className="flex bg-[#7D32CE]">
+            {Object.entries(mathCategories).map(([key, category]) => (
+              <button
+                key={key}
+                onClick={() => setActiveTab(key)}
+                className={`flex-1 px-3 py-3 text-sm font-medium transition-colors flex items-center justify-center gap-2 ${
+                  activeTab === key
+                    ? 'bg-[#FF6E99] text-white'
+                    : ' hover:bg-[#4D5DED] hover:text-white'
+                }`}
+              >
+                <span className="text-lg">{category.icon}</span>
+                <span className="hidden sm:inline">{category.label}</span>
+              </button>
+            ))}
+          </div>
+
+          {/* Symbol grid */}
+          <div className="p-4">
+            <div
+              className={`grid gap-3 ${
+                activeTab === 'numbers'
+                  ? 'grid-cols-5'
+                  : 'grid-cols-3 sm:grid-cols-4 md:grid-cols-5'
+              }`}
+            >
+              {mathCategories[activeTab].symbols.map((item, index) => (
+                <button
+                  key={index}
+                  onClick={() => insertSymbol(item.symbol)}
+                  title={item.description}
+                  className="h-12 w-full bg-white text-black rounded-md hover:bg-[#4D5DED] hover:text-white active:bg-[#FF6E99] transition-colors text-lg font-bold flex items-center justify-center"
+                >
+                  {item.label}
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Live LaTeX Preview */}
       {inputValue.trim() && localIsValidExpression && (

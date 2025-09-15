@@ -1,6 +1,7 @@
 'use client';
 
 import Image from 'next/image';
+import { defaultColors } from './avatar-colors';
 
 export const BodyShapes = {
   CIRCLE: 'Circle',
@@ -22,7 +23,7 @@ export function BodyShapeSelector({ selectedShape, onShapeChange }) {
   return (
     <div className="space-y-4">
       <h3 className="text-lg font-semibold text-white">Body Shape</h3>
-      <div className="grid grid-cols-3 gap-3 max-h-96 overflow-y-auto">
+      <div className="grid grid-cols-3 gap-3">
         {shapes.map((shape) => (
           <button
             key={shape.id}
@@ -58,7 +59,7 @@ export function AvatarBodyShape({ shape, color, className = '' }) {
     ? shape
     : BodyShapes.CIRCLE;
   const shapeSrc = `/shapes/${validShapeType}.svg`;
-  const previewColor = color || '#FF6E99';
+  const previewColor = color || defaultColors.avatar;
 
   return (
     <div className={`relative ${className}`}>

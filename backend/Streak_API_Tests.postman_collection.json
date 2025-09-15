@@ -1,0 +1,112 @@
+{
+  "info": {
+    "name": "Streak API Testing",
+    "description": "Test collection for streak endpoints to verify import path fixes",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Get User Streak",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "Authorization",
+            "value": "Bearer {{jwt_token}}",
+            "description": "Replace {{jwt_token}} with your actual JWT token"
+          }
+        ],
+        "url": {
+          "raw": "{{base_url}}/users/{{user_id}}/streak",
+          "host": ["{{base_url}}"],
+          "path": ["users", "{{user_id}}", "streak"]
+        },
+        "description": "Get current streak data for a user. Should return 200 with streak data if import fix worked, or 500 if still broken."
+      },
+      "response": []
+    },
+    {
+      "name": "Update User Streak",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "Authorization",
+            "value": "Bearer {{jwt_token}}",
+            "description": "Replace {{jwt_token}} with your actual JWT token"
+          }
+        ],
+        "url": {
+          "raw": "{{base_url}}/users/{{user_id}}/streak/update",
+          "host": ["{{base_url}}"],
+          "path": ["users", "{{user_id}}", "streak", "update"]
+        },
+        "description": "Update user streak and check for achievements. Should return 200 with updated streak data if import fix worked, or 500 if still broken."
+      },
+      "response": []
+    },
+    {
+      "name": "Get User Streak (No Auth)",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{base_url}}/users/{{user_id}}/streak",
+          "host": ["{{base_url}}"],
+          "path": ["users", "{{user_id}}", "streak"]
+        },
+        "description": "Test without authorization - should return 401 if endpoints are working, or 500 if import path is broken."
+      },
+      "response": []
+    },
+    {
+      "name": "Update User Streak (No Auth)",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{base_url}}/users/{{user_id}}/streak/update",
+          "host": ["{{base_url}}"],
+          "path": ["users", "{{user_id}}", "streak", "update"]
+        },
+        "description": "Test POST without authorization - should return 401 if endpoints are working, or 500 if import path is broken."
+      },
+      "response": []
+    }
+  ],
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:3000",
+      "description": "Base URL for your backend server"
+    },
+    {
+      "key": "user_id",
+      "value": "237",
+      "description": "User ID to test with"
+    },
+    {
+      "key": "jwt_token",
+      "value": "your-jwt-token-here",
+      "description": "JWT token from your login session"
+    }
+  ]
+}

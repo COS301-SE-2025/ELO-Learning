@@ -51,6 +51,8 @@ export default function LandingHeader() {
           shortButtonText: 'Open',
           action: 'open',
         });
+        // Show the button again as "Open App"
+        setShowInstallButton(true);
       }
     };
 
@@ -60,8 +62,19 @@ export default function LandingHeader() {
       const state = await PWADetection.getInstallButtonState();
       setButtonState(state);
 
-      // Only show install button if app is not installed
+      // Only show install button if app is not installed AND not running as PWA
       if (!state.isInstalled && !state.isRunningAsPWA) {
+        // For the install button to be shown, we need either:
+        // 1. A deferred prompt is available, OR
+        // 2. We haven't seen an install prompt yet (first time visitors)
+        const hasSeenPrompt = localStorage.getItem('has-seen-install-prompt');
+        if (deferredPrompt || !hasSeenPrompt) {
+          setShowInstallButton(true);
+        } else {
+          setShowInstallButton(false);
+        }
+      } else {
+        // App is installed or running as PWA, show the button as "Open"
         setShowInstallButton(true);
       }
     };
@@ -82,6 +95,27 @@ export default function LandingHeader() {
       window.removeEventListener('appinstalled', appInstalledHandler);
     };
   }, []);
+
+  // Re-check button state when deferredPrompt changes
+  useEffect(() => {
+    const updateButtonState = async () => {
+      const state = await PWADetection.getInstallButtonState();
+      setButtonState(state);
+
+      if (!state.isInstalled && !state.isRunningAsPWA) {
+        const hasSeenPrompt = localStorage.getItem('has-seen-install-prompt');
+        if (deferredPrompt || !hasSeenPrompt) {
+          setShowInstallButton(true);
+        } else {
+          setShowInstallButton(false);
+        }
+      } else {
+        setShowInstallButton(true);
+      }
+    };
+
+    updateButtonState();
+  }, [deferredPrompt]);
 
   const handleInstall = async () => {
     if (buttonState.action === 'open') {

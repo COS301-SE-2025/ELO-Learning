@@ -1,5 +1,6 @@
 'use client';
 import EndELO from '@/app/ui/end-screen-ui/end-screen-elo';
+import PracticeXP from '@/app/ui/end-screen-ui/end-screen-practice-xp';
 import Score from '@/app/ui/end-screen-ui/end-screen-score';
 import Time from '@/app/ui/end-screen-ui/end-screen-total-time';
 import TotalXP from '@/app/ui/end-screen-ui/end-screen-total-xp';
@@ -17,6 +18,7 @@ function EndScreen() {
   const eloRating = searchParams.get('elo');
   const [isLoading, setIsLoading] = useState(false);
   const [xpReady, setXpReady] = useState(false);
+  const [practiceXpReady, setPracticeXpReady] = useState(false);
 
   const [mistakes, setMistakes] = useState(0);
   useEffect(() => {
@@ -155,6 +157,7 @@ function EndScreen() {
           {mode === 'practice' && (
             <div>
               <div className="flex flex-row items-center justify-center gap-8 my-7">
+                <PracticeXP onLoadComplete={() => setPracticeXpReady(true)} />
                 <Score />
                 <Time />
               </div>
@@ -221,8 +224,9 @@ function EndScreen() {
               <button
                 className="secondary-button w-full uppercase"
                 onClick={clearStorageAndRedirect}
+                disabled={!practiceXpReady}
               >
-                Finish session
+                {!practiceXpReady ? 'Calculating XP...' : 'Finish session'}
               </button>
             </div>
           )}

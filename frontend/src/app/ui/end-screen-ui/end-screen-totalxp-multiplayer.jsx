@@ -1,13 +1,15 @@
 'use client';
 
-import { submitMultiplayerResult, fetchUserById } from '@/services/api';
+import { submitMultiplayerResult } from '@/services/api';
+import { handleGameplayAchievements } from '@/utils/gameplayAchievementHandler';
 import { useSession } from 'next-auth/react';
 import { useEffect, useState } from 'react';
 //import { cache, CACHE_KEYS } from '@/utils/cache';
 
-export default function TotalXPMP({ onLoadComplete }) {
+export default function TotalXPMP({ onLoadComplete, onResults }) {
   const [xpEarned, setXPEarned] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [hasProcessed, setHasProcessed] = useState(false); // Prevent duplicate processing
   const { data: session, update: updateSession } = useSession();
 
   // Function to update user data after multiplayer results
@@ -73,8 +75,17 @@ export default function TotalXPMP({ onLoadComplete }) {
 
   useEffect(() => {
     const processMultiplayerResults = async () => {
+      // Prevent duplicate processing
+      if (hasProcessed) {
+        console.log(
+          '🔄 FRONTEND DEDUP: Multiplayer results already processed, skipping...',
+        );
+        return;
+      }
+
       try {
         setIsLoading(true);
+        setHasProcessed(true); // Mark as processing to prevent duplicates
 
         // Get match data from localStorage
         const matchData = JSON.parse(
@@ -82,6 +93,20 @@ export default function TotalXPMP({ onLoadComplete }) {
         );
         if (!matchData) {
           console.error('No multiplayer game data found');
+          if (onLoadComplete) onLoadComplete();
+          setIsLoading(false);
+          return;
+        }
+
+        // Check if results have already been processed (additional protection)
+        const resultsKey = `mp_results_${matchData.players[0]}_${matchData.players[1]}_${matchData.score1}`;
+        const existingResults = sessionStorage.getItem(resultsKey);
+        if (existingResults) {
+          console.log(
+            '🔄 FRONTEND DEDUP: Results found in session storage, using cached data...',
+          );
+          const cachedData = JSON.parse(existingResults);
+          setXPEarned(cachedData.xpEarned);
           if (onLoadComplete) onLoadComplete();
           setIsLoading(false);
           return;
@@ -126,6 +151,10 @@ export default function TotalXPMP({ onLoadComplete }) {
             )
           : 0;
 
+        console.log(
+          `🎯 FRONTEND: Submitting multiplayer results for match fingerprint: ${matchData.players[0]}-${matchData.players[1]}-${matchData.score1}-${matchData.totalXP}`,
+        );
+
         // Submit results for both players (but only process once per match)
         const response = await submitMultiplayerResult({
           player1_id: matchData.players[0],
@@ -147,7 +176,50 @@ export default function TotalXPMP({ onLoadComplete }) {
           const userResults = response.players?.find((p) => p.id === userId);
           if (userResults) {
             setXPEarned(userResults.xpEarned);
+
+            if (onResults) {
+              onResults({
+                newElo: userResults.newElo,
+                eloChange: userResults.eloChange,
+                currentRank: userResults.currentRank,
+              });
+            }
+
             await updateUserDataAfterMultiplayer(userId, userResults);
+
+            // Cache the results to prevent duplicate processing
+            sessionStorage.setItem(
+              resultsKey,
+              JSON.stringify({
+                xpEarned: userResults.xpEarned,
+                timestamp: Date.now(),
+              }),
+            );
+
+            // Handle achievements from API response for current user
+            if (
+              userResults.achievements &&
+              userResults.achievements.length > 0
+            ) {
+              try {
+                await handleGameplayAchievements(
+                  {
+                    achievements: userResults.achievements,
+                    achievementSummary: userResults.achievementSummary,
+                  },
+                  userId,
+                  true,
+                );
+                console.log(
+                  `🏆 Handled ${userResults.achievements.length} achievements for multiplayer match`,
+                );
+              } catch (achievementError) {
+                console.error(
+                  '🏆 Error handling multiplayer achievements:',
+                  achievementError,
+                );
+              }
+            }
           } else {
             // Fallback if user results not found
             console.warn('User results not found in API response');
@@ -161,6 +233,7 @@ export default function TotalXPMP({ onLoadComplete }) {
         if (onLoadComplete) onLoadComplete();
       } catch (error) {
         console.error('Error processing multiplayer results:', error);
+        setHasProcessed(false); // Reset on error to allow retry
       } finally {
         setIsLoading(false);
       }
@@ -169,7 +242,7 @@ export default function TotalXPMP({ onLoadComplete }) {
     // Add delay to ensure all data is ready
     const timer = setTimeout(processMultiplayerResults, 300);
     return () => clearTimeout(timer);
-  }, [session?.user?.id, onLoadComplete]);
+  }, [session?.user?.id, onLoadComplete, hasProcessed]); // Add hasProcessed to dependencies
 
   // Loading state
   if (isLoading || xpEarned === null) {
@@ -194,8 +267,8 @@ export default function TotalXPMP({ onLoadComplete }) {
   }
 
   return (
-    <div className="border-1 border-[#FF6E99] rounded-[10px] w-[90px]">
-      <div className="uppercase bg-[#FF6E99] p-2 rounded-t-[9px] text-[14px] font-bold text-center tracking-wide">
+    <div className="border-1 border-[#4D5DED] rounded-[10px] w-[90px]">
+      <div className="uppercase bg-[#4D5DED] p-2 rounded-t-[9px] text-[14px] font-bold text-center tracking-wide">
         XP
       </div>
       <div className="text-center text-[18px] font-bold py-3 px-5">

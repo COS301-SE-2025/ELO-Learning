@@ -1,5 +1,6 @@
 @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;700&display=swap');
 @import 'tailwindcss';
+@import '../styles/keyboard-management.css';
 @tailwind base;
 @tailwind components;
 @tailwind utilities;

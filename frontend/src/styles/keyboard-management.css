@@ -1,0 +1,174 @@
+/**
+ * Keyboard Management Styles
+ * Platform-specific styles for mobile keyboard behavior
+ */
+
+/* Base keyboard wrapper styles */
+.keyboard-wrapper {
+  position: relative;
+  width: 100%;
+}
+
+/* Mobile-specific styles */
+.mobile-keyboard {
+  /* Ensure proper touch behavior */
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  -khtml-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+}
+
+/* iOS-specific styles */
+.ios-keyboard {
+  /* Prevent zoom on input focus */
+  -webkit-text-size-adjust: 100%;
+}
+
+.ios-keyboard input,
+.ios-keyboard textarea {
+  /* Prevent zoom on iOS */
+  font-size: 16px !important;
+  
+  /* Remove iOS input styling */
+  -webkit-appearance: none;
+  appearance: none;
+  border-radius: 0;
+}
+
+/* Android-specific styles */
+.android-keyboard input[inputmode="none"],
+.android-keyboard textarea[inputmode="none"] {
+  /* Ensure cursor is still visible even with inputmode="none" */
+  caret-color: auto;
+}
+
+/* Custom keyboard active state */
+.custom-keyboard-active input,
+.custom-keyboard-active textarea {
+  /* Prevent text selection when custom keyboard is active */
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+  
+  /* Keep cursor visible */
+  caret-color: auto;
+}
+
+/* Native keyboard visible state */
+.native-keyboard-visible {
+  /* Styles when native keyboard is visible */
+  transition: padding-bottom 0.3s ease-in-out;
+}
+
+/* Question type specific styles - placeholders for future customization */
+
+/* Keyboard spacer */
+.keyboard-spacer {
+  width: 100%;
+  background: transparent;
+  pointer-events: none;
+  transition: height 0.3s ease-in-out;
+}
+
+/* Accessibility improvements */
+@media (prefers-reduced-motion: reduce) {
+  .keyboard-wrapper,
+  .native-keyboard-visible,
+  .keyboard-spacer {
+    transition: none !important;
+  }
+}
+
+/* Focus management for custom keyboards */
+.custom-keyboard-active input:focus,
+.custom-keyboard-active textarea:focus {
+  /* Maintain focus outline for accessibility */
+  outline: 2px solid #7D32CE;
+  outline-offset: 2px;
+}
+
+/* Prevent double-tap zoom on mobile */
+.mobile-keyboard * {
+  touch-action: manipulation;
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+  .custom-keyboard-active input:focus,
+  .custom-keyboard-active textarea:focus {
+    outline: 3px solid;
+  }
+}
+
+/* Dark mode support - placeholder for future dark mode styles */
+
+/* Landscape orientation adjustments */
+@media screen and (orientation: landscape) and (max-height: 500px) {
+  .mobile-keyboard {
+    /* Adjust for landscape mode on mobile */
+    min-height: auto;
+  }
+  
+  .keyboard-spacer {
+    /* Reduce spacer height in landscape */
+    height: auto !important;
+    min-height: 0 !important;
+  }
+}
+
+/* Tablet-specific adjustments */
+@media screen and (min-width: 768px) and (max-width: 1024px) {
+  .mobile-keyboard {
+    /* Optimize for tablet keyboards */
+    font-size: 16px;
+  }
+}
+
+/* Animation classes for smooth transitions */
+.keyboard-transition-enter {
+  opacity: 0;
+  transform: translateY(20px);
+}
+
+.keyboard-transition-enter-active {
+  opacity: 1;
+  transform: translateY(0);
+  transition: opacity 0.3s ease-in-out, transform 0.3s ease-in-out;
+}
+
+.keyboard-transition-exit {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.keyboard-transition-exit-active {
+  opacity: 0;
+  transform: translateY(20px);
+  transition: opacity 0.3s ease-in-out, transform 0.3s ease-in-out;
+}
+
+.keyboard-wrapper[data-keyboard-behavior="custom"] {
+  border-left: 3px solid #7D32CE;
+}
+
+.keyboard-wrapper[data-keyboard-behavior="native"] {
+  border-left: 3px solid #4CAF50;
+}
+
+/* Override for readonly inputs to maintain cursor */
+.custom-keyboard-active input[readonly],
+.custom-keyboard-active textarea[readonly] {
+  caret-color: auto !important;
+  cursor: text !important;
+  pointer-events: auto !important;
+}
+
+/* Ensure custom keyboard buttons are touch-friendly */
+.custom-keyboard-active button {
+  min-height: 44px; /* iOS minimum touch target */
+  min-width: 44px;
+  touch-action: manipulation;
+}

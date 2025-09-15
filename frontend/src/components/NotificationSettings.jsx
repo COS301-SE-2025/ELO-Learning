@@ -104,106 +104,36 @@ const NotificationSettings = ({ userId, accessToken }) => {
     }
   };
 
-  if (!isSupported) {
-    return (
-      <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
-        <div className="flex items-center">
-          <div className="text-yellow-600 text-xl mr-3">⚠️</div>
-          <div>
-            <h3 className="text-yellow-800 font-medium">
-              Push Notifications Not Supported
-            </h3>
-            <p className="text-yellow-700 text-sm mt-1">
-              Your browser does not support push notifications.
-            </p>
-          </div>
-        </div>
-      </div>
-    );
-  }
+  // Card and button styles from friend request section
+  // Use the same card and button classes as friend requests
+  const cardClass =
+    'bg-elo-bg border border-gray-200 rounded-xl shadow-lg p-4 md:p-6 w-full';
+  const btnClass =
+    'main-button-landing px-2 py-1 rounded-lg text-white bg-elo-primary hover:bg-elo-primary-dark transition w-full md:w-auto text-xs font-semibold';
+  const disableBtnClass =
+    'secondary-button px-2 py-1 rounded-lg text-white bg-elo-secondary hover:bg-elo-secondary-dark transition w-full md:w-auto text-xs font-semibold';
+
+  // Handlers for enable/disable
+  const handleEnable = handleRequestPermission;
+  const handleDisable = handleClearToken;
 
   return (
-    <div className="bg-white border border-gray-200 rounded-lg p-6 shadow-sm">
-      <div className="flex items-center justify-between mb-4">
-        <h3 className="text-lg font-semibold text-gray-900">
-          Push Notifications
-        </h3>
-        <div className="flex items-center space-x-2">
-          <span className="text-2xl">{getPermissionIcon()}</span>
-          <span className="text-sm text-gray-600">{getPermissionText()}</span>
+    <div className={cardClass + ' flex flex-col gap-2 mx-auto mt-6'}>
+      <div className="flex items-center gap-4">
+        <div className="flex flex-col flex-1 min-w-0">
+          <span className="font-semibold text-elo-primary truncate text-lg">
+            Push Notifications
+          </span>
+        </div>
+        <div className="flex gap-2 w-32">
+          <button className={btnClass} onClick={handleEnable}>
+            Enable
+          </button>
+          <button className={disableBtnClass} onClick={handleDisable}>
+            Disable
+          </button>
         </div>
       </div>
-
-      <div className="space-y-4">
-        {/* Permission Status */}
-        <div className="bg-gray-50 rounded-lg p-4">
-          <h4 className="font-medium text-gray-900 mb-2">Current Status</h4>
-          <div className="text-sm text-gray-600 space-y-1">
-            <p>
-              <strong>Permission:</strong> {getPermissionText()}
-            </p>
-            <p>
-              <strong>Token:</strong>{' '}
-              {fcmToken ? '✅ Registered' : '❌ Not Available'}
-            </p>
-          </div>
-        </div>
-
-        {/* Action Buttons */}
-        <div className="flex flex-wrap gap-3">
-          {notificationPermission !== 'granted' && (
-            <button
-              onClick={handleRequestPermission}
-              className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors"
-            >
-              🔔 Enable Notifications
-            </button>
-          )}
-
-          {notificationPermission === 'granted' && (
-            <>
-              <button
-                onClick={handleSendTest}
-                disabled={isSendingTest}
-                className="bg-green-600 hover:bg-green-700 disabled:bg-green-400 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors"
-              >
-                {isSendingTest ? '⏳ Sending...' : '🧪 Send Test'}
-              </button>
-
-              <button
-                onClick={handleClearToken}
-                className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors"
-              >
-                🔕 Disable Notifications
-              </button>
-            </>
-          )}
-        </div>
-
-        {/* Help Text */}
-        <div className="text-xs text-gray-500 bg-blue-50 p-3 rounded-lg">
-          <p>
-            <strong>💡 Tip:</strong> Push notifications will alert you about:
-          </p>
-          <ul className="mt-1 ml-4 list-disc space-y-1">
-            <li>Level ups and achievements</li>
-            <li>Game invitations from friends</li>
-            <li>Daily practice reminders</li>
-            <li>Important announcements</li>
-          </ul>
-        </div>
-
-        {/* Browser Compatibility Info */}
-        <div className="text-xs text-gray-400">
-          <p>
-            Notifications work best in Chrome, Firefox, Safari, and Edge. Make
-            sure to allow notifications when prompted by your browser.
-          </p>
-        </div>
-      </div>
-
-      {/* Toast container for notifications */}
-      <Toaster position="top-right" />
     </div>
   );
 };

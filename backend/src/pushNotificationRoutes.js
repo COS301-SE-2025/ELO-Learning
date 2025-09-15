@@ -9,8 +9,12 @@ const router = express.Router();
 import jwt from 'jsonwebtoken'; // Add this at the top
 
 const authenticateUser = async (req, res, next) => {
+  console.log('[AUTH] Headers:', req.headers);
+  const tokenRaw = req.headers.authorization;
+  console.log('[AUTH] Raw Authorization header:', tokenRaw);
   try {
     const token = req.headers.authorization?.replace('Bearer ', '');
+    console.log('[AUTH] Parsed token:', token);
     if (!token) {
       return res.status(401).json({ error: 'No authorization token provided' });
     }
@@ -19,18 +23,23 @@ const authenticateUser = async (req, res, next) => {
     const secret = process.env.JWT_SECRET; // Make sure to set this in your environment
     try {
       const decoded = jwt.verify(token, secret);
+      console.log('[AUTH] JWT decoded:', decoded);
       req.user = decoded; // Attach user info to request
       next();
     } catch (err) {
+      console.error('[AUTH] JWT verification failed:', err);
       return res.status(401).json({ error: 'Invalid or expired token' });
     }
   } catch (error) {
+    console.error('[AUTH] Unexpected error:', error);
     res.status(401).json({ error: 'Invalid token' });
   }
 };
 
 // Register/Update FCM token for a user
 router.post('/register-token', authenticateUser, async (req, res) => {
+  console.log('[REGISTER-TOKEN] Headers:', req.headers);
+  console.log('[REGISTER-TOKEN] Body:', req.body);
   try {
     const { userId, fcmToken } = req.body;
 

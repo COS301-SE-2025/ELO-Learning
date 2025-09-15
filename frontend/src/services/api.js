@@ -1,3 +1,65 @@
+// Fetch incoming friend requests for a user, including sender info
+export async function fetchIncomingFriendRequests(userId, token) {
+  try {
+    // Get incoming requests
+    const res = await axiosInstance.get(
+      `/user/${userId}/incoming-friend-requests`,
+      {
+        headers: {
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+      },
+    );
+    const requests = res.data.incomingRequests || [];
+    if (requests.length === 0) return [];
+    // Get sender IDs
+    const senderIds = requests.map((r) => r.user_id);
+    // Fetch sender info in one call
+    const senderRes = await axiosInstance.get(`/users`, {
+      headers: {
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      },
+    });
+    const allUsers = senderRes.data || [];
+    // Attach sender info to each request
+    return requests.map((r) => {
+      const sender = allUsers.find((u) => u.id === r.user_id);
+      return {
+        request_id: r.id,
+        sender_id: r.user_id,
+        sender_name: sender?.name || '',
+        sender_surname: sender?.surname || '',
+        sender_email: sender?.email || '',
+        status: r.status,
+        created_at: r.created_at,
+      };
+    });
+  } catch (error) {
+    if (error.response) {
+      console.error(
+        '❌ Failed to fetch incoming friend requests:',
+        error.response.data,
+        error.response.status,
+        error.response.headers,
+      );
+      return {
+        error:
+          error.response.data?.error ||
+          error.response.data?.message ||
+          'Failed to fetch incoming friend requests',
+        details: error.response.data,
+      };
+    } else {
+      console.error(
+        '❌ Failed to fetch incoming friend requests:',
+        error.message,
+      );
+      return {
+        error: error.message || 'Failed to fetch incoming friend requests',
+      };
+    }
+  }
+}
 /**
  * Remove a friend for a user (delete or reject relationship)
  * @param {string|number} userId - User ID
@@ -29,6 +91,43 @@ export async function removeFriend(userId, friendEmail, token) {
   } catch (error) {
     console.error('❌ Failed to remove friend:', error);
     return { error: error.message || 'Failed to remove friend' };
+  }
+}
+
+// Fetch pending friend requests for a user
+export async function fetchPendingFriendRequests(userId, token) {
+  try {
+    const res = await axiosInstance.get(
+      `/user/${userId}/pending-friend-requests`,
+      {
+        headers: {
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+      },
+    );
+    return res.data.pendingRequests;
+  } catch (error) {
+    if (error.response) {
+      console.error(
+        '❌ Failed to fetch pending friend requests:',
+        error.response.data,
+        error.response.status,
+        error.response.headers,
+      );
+      return {
+        error:
+          error.response.data?.error ||
+          error.response.data?.message ||
+          'Failed to fetch friend requests',
+        details: error.response.data,
+      };
+    } else {
+      console.error(
+        '❌ Failed to fetch pending friend requests:',
+        error.message,
+      );
+      return { error: error.message || 'Failed to fetch friend requests' };
+    }
   }
 }
 // Update community data for a user (PUT)

@@ -604,6 +604,73 @@ router.get('/verify-reset-token/:token', async (req, res) => {
 });
 
 // --- FRIEND REQUEST ENDPOINTS ---
+// GET /user/:id/pending-friend-requests
+// Returns all pending friend requests for the consulting user (where friend_id = id and status = 'pending')
+router.get(
+  '/user/:id/pending-friend-requests',
+  verifyToken,
+  async (req, res) => {
+    const { id } = req.params;
+    try {
+      // Find all pending requests where this user is the recipient
+      const { data: requests, error } = await supabase
+        .from('friends')
+        .select('id, user_id, friend_id, status, created_at')
+        .eq('friend_id', id)
+        .eq('status', 'pending');
+      if (error) {
+        console.error(
+          `[PENDING FRIEND REQUESTS] Error for user id=${id}:`,
+          error,
+        );
+        return res.status(500).json({
+          error: 'Failed to fetch pending friend requests',
+          details: error,
+        });
+      }
+      // Fetch sender info for each request
+      let senders = [];
+      if (requests.length > 0) {
+        const senderIds = requests.map((r) => r.user_id);
+        const { data: senderUsers, error: senderError } = await supabase
+          .from('Users')
+          .select('id, name, surname, email, avatar')
+          .in('id', senderIds);
+        if (senderError) {
+          console.error(
+            `[PENDING FRIEND REQUESTS] Failed to fetch sender info:`,
+            senderError,
+          );
+        }
+        senders = senderUsers || [];
+      }
+      // Attach sender info to each request
+      const pendingRequests = requests.map((r) => {
+        const sender = senders.find((u) => u.id === r.user_id);
+        return {
+          request_id: r.id,
+          sender_id: r.user_id,
+          sender_name: sender?.name || '',
+          sender_surname: sender?.surname || '',
+          sender_email: sender?.email || '',
+          sender_avatar: sender?.avatar || null,
+          status: r.status,
+          created_at: r.created_at,
+        };
+      });
+      res.status(200).json({ pendingRequests });
+    } catch (err) {
+      console.error(
+        `[PENDING FRIEND REQUESTS] Unexpected error for user id=${id}:`,
+        err,
+      );
+      res.status(500).json({
+        error: 'Failed to fetch pending friend requests',
+        details: err.message,
+      });
+    }
+  },
+);
 // --- COMMUNITY ENDPOINTS ---
 
 // GET /user/:id/community
@@ -633,7 +700,7 @@ router.get('/user/:id/community', verifyToken, async (req, res) => {
     // Get all friend requests (pending + accepted) for this user
     const { data: friendRows, error: friendError } = await supabase
       .from('friends')
-      .select('user_id, friend_id, status')
+      .select('id, user_id, friend_id, status')
       .or(`user_id.eq.${id},friend_id.eq.${id}`)
       .in('status', ['pending', 'accepted']);
     if (friendError) {
@@ -936,4 +1003,28 @@ router.get('/user/:id/friends', verifyToken, async (req, res) => {
   res.status(200).json({ friends: data });
 });
 
+router.get(
+  '/user/:id/incoming-friend-requests',
+  verifyToken,
+  async (req, res) => {
+    const { id } = req.params;
+    try {
+      const { data, error } = await supabase
+        .from('friends')
+        .select('id, user_id, friend_id, status, created_at')
+        .eq('friend_id', id)
+        .eq('status', 'pending');
+      if (error) {
+        console.error('Error fetching incoming friend requests:', error);
+        return res
+          .status(500)
+          .json({ error: 'Failed to fetch incoming friend requests' });
+      }
+      res.status(200).json({ incomingRequests: data });
+    } catch (err) {
+      console.error('Unexpected error fetching incoming friend requests:', err);
+      res.status(500).json({ error: 'Internal server error' });
+    }
+  },
+);
 export default router;

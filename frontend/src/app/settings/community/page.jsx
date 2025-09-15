@@ -1,5 +1,6 @@
 'use client';
 import { useState, useEffect } from 'react';
+import Back from '@/app/ui/back';
 import { useSession } from 'next-auth/react';
 import {
   getRegistration,
@@ -175,28 +176,27 @@ export default function CommunitySettingsPage() {
   };
 
   return (
-    <div className={pageBgClass}>
-      <h2 className="logo-text mb-6 text-center text-3xl md:text-4xl">
-        My Community
-      </h2>
+    <div className="min-h-screen flex flex-col justify-center items-center">
+      <div className="w-full flex flex-col">
+        <div className="whitespace-nowrap w-full">
+          <Back pagename="My Community" />
+        </div>
+      </div>
       <div className={containerClass}>
         {/* Friends Section */}
         <div className={cardClass}>
           <h3 className={headingClass}>Friends</h3>
-          <div className="flex flex-col md:flex-row gap-2 mb-2 items-center">
+          <div className="flex gap-2 mb-2 items-center">
             <input
               type="email"
               placeholder="Enter friend's email"
-              className={inputClass + ' flex-grow'}
+              className="flex-2 input-field px-3 py-2 rounded-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-elo-primary text-base md:text-lg"
               value={friendInput}
               onChange={(e) => setFriendInput(e.target.value)}
             />
             <button
               type="button"
-              className={
-                btnClass +
-                ' px-2 py-1 text-xs md:text-xs w-auto min-w-[40px] md:min-w-[60px] md:px-3 md:py-1'
-              }
+              className="secondary-button flex-1 px-2 py-1 text-xs md:text-xs w-auto min-w-[40px] md:min-w-[60px] md:px-3 md:py-1"
               onClick={handleAddFriend}
             >
               Add
@@ -243,20 +243,17 @@ export default function CommunitySettingsPage() {
         {/* Locations Section */}
         <div className={cardClass}>
           <h3 className={headingClass}>Locations (up to 3)</h3>
-          <div className="flex flex-col md:flex-row gap-2 mb-2 items-center">
+          <div className="flex gap-2 mb-2 items-center">
             <input
               type="text"
               placeholder="Add suburb or city"
-              className={inputClass + ' flex-grow'}
+              className="flex-2 input-field px-3 py-2 rounded-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-elo-primary text-base md:text-lg"
               value={locationInput}
               onChange={(e) => setLocationInput(e.target.value)}
             />
             <button
               type="button"
-              className={
-                btnClass +
-                ' px-2 py-1 text-xs md:text-xs w-auto min-w-[40px] md:min-w-[60px] md:px-3 md:py-1'
-              }
+              className="secondary-button flex-1 px-2 py-1 text-xs md:text-xs w-auto min-w-[40px] md:min-w-[60px] md:px-3 md:py-1"
               onClick={handleAddLocation}
             >
               Add
@@ -285,13 +282,11 @@ export default function CommunitySettingsPage() {
           </ul>
         </div>
         {error && <p className="text-red-500 mt-2">{error}</p>}
-        <button
-          type="button"
-          className={btnClass + ' mt-4'}
-          onClick={handleSave}
-        >
-          Save Changes
-        </button>
+        <div className="flex flex-col justify-center items-center mt-4">
+          <button type="button" className="main-button" onClick={handleSave}>
+            Save Changes
+          </button>
+        </div>
       </div>
     </div>
   );

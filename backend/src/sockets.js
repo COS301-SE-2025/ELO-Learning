@@ -464,15 +464,17 @@ export default (io, socket) => {
 
           // Calculate XP from correct answers
           parsedResults.forEach((question) => {
-            const questionXP = parseInt(question.question?.xpGain) || 0;
+            const questionXP = parseInt(
+              question.xpGain ?? question.question?.xpGain ?? 0,
+            );
             const wasCorrect = question?.isCorrect || false;
             const questionIndex = question.q_index || 'unknown';
-            
+
             console.log(`📝 Question ${questionIndex}:`);
             console.log(`   - Correct: ${wasCorrect ? '✅ YES' : '❌ NO'}`);
             console.log(`   - Possible XP: ${questionXP}`);
             console.log(`   - XP Gained: ${wasCorrect ? questionXP : 0}`);
-            
+
             if (wasCorrect && questionXP) {
               xpGain += questionXP;
               console.log(`   - Running total XP: ${xpGain}`);
@@ -504,8 +506,12 @@ export default (io, socket) => {
 
     // Compare players' performance
     console.log('🥇 MATCH COMPARISON:');
-    console.log(`   - Player 1 (${gameData.playerData[player1Id].username}) XP: ${player1Stats.xpGain}, Time: ${player1Stats.timeTaken}ms`);
-    console.log(`   - Player 2 (${gameData.playerData[player2Id].username}) XP: ${player2Stats.xpGain}, Time: ${player2Stats.timeTaken}ms`);
+    console.log(
+      `   - Player 1 (${gameData.playerData[player1Id].username}) XP: ${player1Stats.xpGain}, Time: ${player1Stats.timeTaken}ms`,
+    );
+    console.log(
+      `   - Player 2 (${gameData.playerData[player2Id].username}) XP: ${player2Stats.xpGain}, Time: ${player2Stats.timeTaken}ms`,
+    );
 
     // Determine winner based on time (faster wins)
     let score1;
@@ -623,6 +629,6 @@ export default (io, socket) => {
   socket.on('cancelQueue', cancelQueue);
   socket.on('startMatch', (data) => startMatch(data.game, data.level));
   socket.on('matchComplete', (data) => {
-    matchComplete(data.game, data.playerResults, data.socketId);
+    matchComplete(data.game, data.playerResults, socket.id);
   });
 };

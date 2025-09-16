@@ -131,13 +131,7 @@ export const useKeyboardManager = (
             'transparent',
             'important',
           );
-          input.style.setProperty('pointer-events', 'none', 'important');
-
-          // Critical: Re-enable pointer events only for the parent container
-          const parent = input.parentElement;
-          if (parent) {
-            parent.style.setProperty('pointer-events', 'auto', 'important');
-          }
+          // Removed pointer-events: none to allow click handling in component
 
           console.log('iOS aggressive keyboard prevention applied');
         }, 200); // Longer delay for iOS
@@ -169,10 +163,16 @@ export const useKeyboardManager = (
         input.contentEditable = 'true';
         input.removeAttribute('readonly');
         input.removeAttribute('inputmode');
+        input.removeAttribute('autocomplete');
+        input.removeAttribute('autocorrect');
+        input.removeAttribute('autocapitalize');
+        input.removeAttribute('spellcheck');
 
         // Restore iOS user selection
         input.style.removeProperty('-webkit-user-select');
         input.style.removeProperty('user-select');
+        input.style.removeProperty('-webkit-touch-callout');
+        input.style.removeProperty('-webkit-tap-highlight-color');
 
         console.log('iOS custom keyboard deactivated');
       } else {

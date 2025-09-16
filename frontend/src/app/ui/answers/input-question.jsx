@@ -496,7 +496,9 @@ export default function MathInputTemplate({
           // IMPROVED: iOS and Android keyboard prevention
           contentEditable={
             // For iOS: Always disable contentEditable when custom keyboard is active
-            keyboard.isIOS && keyboard.shouldUseCustomKeyboard && keyboard.isCustomKeyboardActive
+            keyboard.isIOS &&
+            keyboard.shouldUseCustomKeyboard &&
+            keyboard.isCustomKeyboardActive
               ? false
               : // For Android: More selective prevention
                 !keyboard.isAndroid ||
@@ -506,9 +508,9 @@ export default function MathInputTemplate({
           suppressContentEditableWarning={true}
           // iOS and Android-specific attributes for keyboard prevention
           inputMode={
-            ((keyboard.isIOS || keyboard.isAndroid) &&
+            (keyboard.isIOS || keyboard.isAndroid) &&
             keyboard.shouldUseCustomKeyboard &&
-            keyboard.isCustomKeyboardActive)
+            keyboard.isCustomKeyboardActive
               ? 'none'
               : undefined
           }
@@ -523,16 +525,15 @@ export default function MathInputTemplate({
               if (keyboard.isIOS) {
                 // Immediately blur to prevent keyboard, then handle custom keyboard
                 e.target.blur();
-                
+
                 setTimeout(() => {
                   // Re-focus without triggering keyboard
                   e.target.focus();
                   keyboard.activateCustomKeyboard();
-                  
+
                   // Show visual feedback
                   showCursorIndicator(e.target);
                 }, 10);
-                
               } else if (keyboard.isAndroid) {
                 // Use Android-specific focus handling
                 handleAndroidFocus(e, () => {
@@ -555,21 +556,21 @@ export default function MathInputTemplate({
             if (keyboard.isIOS && keyboard.shouldUseCustomKeyboard) {
               e.preventDefault();
               e.stopPropagation();
-              
+
               // Ensure the input stays focused but doesn't trigger keyboard
               if (!e.currentTarget.matches(':focus')) {
                 e.currentTarget.focus();
               }
-              
+
               // Show visual feedback that click was registered
               setTimeout(() => {
                 showCursorIndicator(e.currentTarget);
                 setTimeout(() => removeCursorIndicator(e.currentTarget), 2000);
               }, 50);
-              
+
               return false;
             }
-            
+
             // Less aggressive prevention for Android Chrome
             if (
               keyboard.isAndroid &&
@@ -607,9 +608,9 @@ export default function MathInputTemplate({
             backgroundColor: 'var(--color-background)',
             borderColor: 'var(--border)',
             caretColor: '#4D5DED',
-            ...(((keyboard.isIOS || keyboard.isAndroid) &&
+            ...((keyboard.isIOS || keyboard.isAndroid) &&
               keyboard.shouldUseCustomKeyboard &&
-              keyboard.isCustomKeyboardActive) && {
+              keyboard.isCustomKeyboardActive && {
                 WebkitAppearance: 'none',
                 appearance: 'none',
                 WebkitTouchCallout: 'none',

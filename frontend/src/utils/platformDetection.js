@@ -49,10 +49,13 @@ export const isAndroid = () => {
 };
 
 /**
- * Get platform-specific CSS classes for styling
+ * Get platform-specific CSS classes for styling with hydration safety
  * @returns {string} CSS class names for platform-specific styling
  */
 export const getPlatformClasses = () => {
+  // Return empty string during SSR to prevent hydration mismatch
+  if (typeof window === 'undefined') return '';
+  
   if (!isMobile()) return 'platform-desktop';
   
   if (isIOS()) return 'platform-mobile platform-ios';
@@ -110,19 +113,19 @@ export const getKeyboardBehavior = () => {
   
   return {
     ...platform,
-    // iOS-specific behavior
+    // iOS-specific behavior - use readonly for keyboard prevention
     needsInputFocusPrevention: platform.isIOS,
-    supportsReadOnlyPrevention: true,
-    requiresBlurOnCustomKeyboard: platform.isIOS,
+    supportsReadOnlyPrevention: platform.isIOS,
+    requiresBlurOnCustomKeyboard: false, // Changed: Don't blur for cursor positioning
     
-    // Android-specific behavior
+    // Android-specific behavior - use inputMode="none" only for clean prevention
     needsInputModePrevention: platform.isAndroid,
     supportsInputModeNone: platform.isAndroid,
     
     // General mobile behavior
     shouldPreventNativeKeyboard: platform.isMobile,
     needsViewportAdjustment: platform.isMobile,
-    requiresManualFocus: platform.isMobile
+    requiresManualFocus: false // Changed: Allow normal focus for cursor positioning
   };
 };
 
@@ -139,21 +142,28 @@ export const getInputAttributes = (preventNativeKeyboard = false) => {
   const behavior = getKeyboardBehavior();
   const attributes = {};
   
-  if (behavior.supportsReadOnlyPrevention) {
+  if (behavior.isIOS) {
     // Use readonly to prevent keyboard on iOS
     attributes.readOnly = true;
   }
   
-  if (behavior.supportsInputModeNone) {
-    // Use inputMode="none" for Android
+  if (behavior.isAndroid) {
+    // Use multiple methods for Android keyboard prevention
     attributes.inputMode = 'none';
+    attributes.readOnly = true; // Also use readonly for Android as backup
   }
   
-  // Prevent autocomplete and spellcheck
+  // Additional prevention attributes
   attributes.autoComplete = 'off';
   attributes.autoCorrect = 'off';
   attributes.autoCapitalize = 'off';
   attributes.spellCheck = false;
+  
+  // Prevent text selection and context menu
+  if (isMobile()) {
+    attributes.onContextMenu = (e) => e.preventDefault();
+    attributes.onSelect = (e) => e.preventDefault();
+  }
   
   return attributes;
 };

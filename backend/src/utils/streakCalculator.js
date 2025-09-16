@@ -78,7 +78,8 @@ export async function updateUserStreak(userId) {
         if (currentStreak > 0) {
           // Had a streak but missed days - reset to 0
           newStreak = 0;
-          message = 'Streak broken due to missed days. Your streak has been reset to 0.';
+          message =
+            'Streak broken due to missed days. Your streak has been reset to 0.';
         } else {
           // Already at 0, this activity starts new streak
           newStreak = 1;

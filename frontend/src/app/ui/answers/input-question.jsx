@@ -1,7 +1,7 @@
 'use client';
 
 import { useKeyboardManager } from '@/hooks/useKeyboardManager';
-import '@/styles/mobile-keyboard-prevention.css';
+
 import {
   attachNonPassiveTouchHandler,
   handleAndroidFocus,
@@ -553,7 +553,7 @@ export default function MathInputTemplate({
             }
           }}
           onKeyDown={handleKeyDown}
-          className={`math-input w-full p-4 text-lg border rounded-lg min-h-[80px] font-mono focus:outline-none focus:ring-2 whitespace-pre-wrap break-words text-white bg-background ${
+          className={`math-input w-full p-4 text-lg border rounded-lg min-h-[80px] font-mono focus:outline-none focus:ring-2 whitespace-pre-wrap break-words text-[var(--color-foreground)] bg-background ${
             !localIsValidExpression
               ? 'border-red-500 focus:border-red-600 focus:ring-red-200'
               : isChecking
@@ -566,16 +566,10 @@ export default function MathInputTemplate({
             minHeight: '80px',
             maxHeight: '200px',
             overflowY: 'auto',
-            // Force white text with higher specificity - React-proof
-            color: 'white !important',
-            backgroundColor: 'var(--background)',
+            color: 'var(--color-foreground)',
+            backgroundColor: 'var(--color-background)',
             borderColor: 'var(--border)',
-            // Additional overrides to prevent React from changing text color
-            WebkitTextFillColor: 'white',
-            textFillColor: 'white',
-            // Ensure caret is visible
             caretColor: '#4D5DED',
-            // IMPROVED: More selective Android-specific styles
             ...(keyboard.isAndroid &&
               keyboard.shouldUseCustomKeyboard &&
               keyboard.isCustomKeyboardActive && {
@@ -587,7 +581,6 @@ export default function MathInputTemplate({
                 userSelect: 'text',
                 caretColor: '#4D5DED',
               }),
-            // Ensure focusability is maintained
             cursor: 'text',
             pointerEvents: 'auto',
           }}
@@ -633,13 +626,13 @@ export default function MathInputTemplate({
       </div>
 
       {/* Validation Message */}
-      {validationMessage && showErrorMessage && !localIsValidExpression && (
+      {/* {validationMessage && showErrorMessage && !localIsValidExpression && (
         <div className="animate-fade-in">
           <p className="text-sm text-red-600 bg-red-50 p-3 rounded-lg border border-red-200">
             {validationMessage}
           </p>
         </div>
-      )}
+      )} */}
 
       {/* Action buttons */}
       <div className="flex flex-row justify-between gap-2">

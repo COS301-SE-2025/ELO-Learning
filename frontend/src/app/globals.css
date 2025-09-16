@@ -480,10 +480,6 @@ textarea:focus-visible {
 }
 
 /* Advanced Math Input Styles */
-.math-keyboard-tab-active {
-  /* background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white; */
-}
 
 .math-symbol-button {
   transition: all 0.2s ease;

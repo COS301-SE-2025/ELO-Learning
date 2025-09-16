@@ -16,7 +16,7 @@ function daysBetween(date1, date2) {
  */
 export async function updateUserStreak(userId) {
   try {
-    console.log(`🔥 Updating streak for user ${userId}`);
+    console.log(`Updating streak for user ${userId}`);
 
     // Get current streak data from database
     const { data: userData, error: userError } = await supabase
@@ -74,11 +74,18 @@ export async function updateUserStreak(userId) {
         newStreak = currentStreak + 1;
         message = `Streak continued! Day ${newStreak}`;
       } else if (diffDays > 1) {
-        // More than 1 day gap - reset streak
-        newStreak = 1;
-        message = 'Streak reset due to missed day(s)';
+        // More than 1 day gap - streak broken
+        if (currentStreak > 0) {
+          // Had a streak but missed days - reset to 0
+          newStreak = 0;
+          message = 'Streak broken due to missed days. Your streak has been reset to 0.';
+        } else {
+          // Already at 0, this activity starts new streak
+          newStreak = 1;
+          message = 'New streak started! Day 1';
+        }
       } else {
-        // Handle edge case
+        // Handle edge case (diffDays < 1, which shouldn't happen)
         shouldUpdate = false;
         message = 'Date calculation error';
         return {
@@ -93,7 +100,7 @@ export async function updateUserStreak(userId) {
     // Update longest streak if current streak exceeds it
     if (newStreak > longestStreak) {
       newLongestStreak = newStreak;
-      message += ` New personal best!`;
+      message += ' New personal best!';
     }
 
     // Update database if changes are needed

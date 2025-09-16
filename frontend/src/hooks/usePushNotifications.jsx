@@ -89,7 +89,7 @@ export const usePushNotifications = (userId, accessToken) => {
   const clearToken = async () => {
     try {
       if (userId) {
-        await removeFCMToken(userId);
+        await removeFCMToken(userId, accessToken);
       }
       setFcmToken(null);
       setNotificationPermission('default');

@@ -1,36 +1,38 @@
 /**
- * Keyboard Management Hook
- * Manages native and custom keyboard behavior on mobile devices
+ * Updated Keyboard Management Hook - ContentEditable Approach
+ * This version is optimized for contentEditable divs instead of textarea elements
  */
 
 import {
-    getActualViewportHeight,
-    getKeyboardBehavior,
-    shouldUseCustomKeyboard,
-    shouldUseNativeKeyboard
+  getActualViewportHeight,
+  getKeyboardBehavior,
+  shouldUseCustomKeyboard,
+  shouldUseNativeKeyboard
 } from '@/utils/platformDetection';
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-/**
- * Custom hook for managing keyboard behavior
- * @param {string} questionType - Current question type
- * @param {boolean} forceNativeKeyboard - Force native keyboard regardless of question type
- * @returns {object} Keyboard management utilities
- */
 export const useKeyboardManager = (questionType, forceNativeKeyboard = false) => {
   const [isCustomKeyboardActive, setIsCustomKeyboardActive] = useState(false);
   const [isNativeKeyboardVisible, setIsNativeKeyboardVisible] = useState(false);
   const [viewportHeight, setViewportHeight] = useState(0);
   const [keyboardHeight, setKeyboardHeight] = useState(0);
+  const [isHydrated, setIsHydrated] = useState(false);
   
   const initialViewportHeight = useRef(0);
   const inputRef = useRef(null);
   
-  const behavior = getKeyboardBehavior();
+  // Handle hydration - avoid SSR/client mismatch
+  useEffect(() => {
+    setIsHydrated(true);
+  }, []);
+  
+  const behavior = useMemo(() => {
+    return isHydrated ? getKeyboardBehavior() : { isMobile: false, isAndroid: false, isIOS: false };
+  }, [isHydrated]);
   
   // Determine keyboard behavior based on question type
-  const shouldUseCustom = shouldUseCustomKeyboard(questionType) && !forceNativeKeyboard;
-  const shouldUseNative = shouldUseNativeKeyboard(questionType) || forceNativeKeyboard;
+  const shouldUseCustom = isHydrated && shouldUseCustomKeyboard(questionType) && !forceNativeKeyboard;
+  const shouldUseNative = isHydrated && (shouldUseNativeKeyboard(questionType) || forceNativeKeyboard);
   
   // Initialize viewport height
   useEffect(() => {
@@ -51,7 +53,7 @@ export const useKeyboardManager = (questionType, forceNativeKeyboard = false) =>
       
       // Detect keyboard based on viewport height change
       const heightDifference = initialViewportHeight.current - currentHeight;
-      const keyboardVisible = heightDifference > 150; // Threshold for keyboard detection
+      const keyboardVisible = heightDifference > 150;
       
       setIsNativeKeyboardVisible(keyboardVisible);
       setKeyboardHeight(keyboardVisible ? heightDifference : 0);
@@ -68,107 +70,67 @@ export const useKeyboardManager = (questionType, forceNativeKeyboard = false) =>
   }, [behavior.isMobile]);
   
   /**
-   * Prevent native keyboard from appearing
-   */
-  const preventNativeKeyboard = useCallback((inputElement) => {
-    if (!behavior.shouldPreventNativeKeyboard || !inputElement) return;
-    
-    if (behavior.needsInputFocusPrevention) {
-      // iOS: Use readonly attribute
-      inputElement.setAttribute('readonly', 'true');
-      
-      // Remove readonly briefly to allow programmatic value changes
-      const removeReadonly = () => {
-        inputElement.removeAttribute('readonly');
-        setTimeout(() => {
-          if (inputElement && isCustomKeyboardActive) {
-            inputElement.setAttribute('readonly', 'true');
-          }
-        }, 100);
-      };
-      
-      inputElement._removeReadonly = removeReadonly;
-    }
-    
-    if (behavior.needsInputModePrevention) {
-      // Android: Use inputmode="none"
-      inputElement.setAttribute('inputmode', 'none');
-    }
-    
-    // Prevent focus events when custom keyboard is active
-    const handleFocus = (e) => {
-      if (isCustomKeyboardActive) {
-        e.preventDefault();
-        inputElement.blur();
-        setTimeout(() => inputElement.focus(), 10);
-      }
-    };
-    
-    inputElement.addEventListener('focus', handleFocus);
-    
-    return () => {
-      inputElement.removeEventListener('focus', handleFocus);
-      inputElement.removeAttribute('readonly');
-      inputElement.removeAttribute('inputmode');
-    };
-  }, [isCustomKeyboardActive, behavior]);
-  
-  /**
-   * Allow native keyboard to appear
-   */
-  const allowNativeKeyboard = useCallback((inputElement) => {
-    if (!inputElement) return;
-    
-    // Remove all keyboard prevention attributes
-    inputElement.removeAttribute('readonly');
-    inputElement.removeAttribute('inputmode');
-    
-    // Enable normal focus behavior
-    inputElement.style.pointerEvents = 'auto';
-  }, []);
-  
-  /**
-   * Activate custom keyboard mode
+   * Activate custom keyboard mode with Android-specific handling
+   * For contentEditable, this means setting contentEditable="false" and additional prevention
    */
   const activateCustomKeyboard = useCallback(() => {
     setIsCustomKeyboardActive(true);
     
-    // Blur any currently focused input to hide native keyboard
-    if (document.activeElement && document.activeElement.tagName === 'INPUT' || 
-        document.activeElement.tagName === 'TEXTAREA') {
-      document.activeElement.blur();
+    // Android-specific: Force blur and refocus to ensure keyboard is dismissed
+    if (behavior.isAndroid && inputRef.current) {
+      const input = inputRef.current;
+      
+      // Blur to ensure any open keyboard is closed
+      input.blur();
+      
+      // Wait for keyboard to close, then refocus without triggering keyboard
+      setTimeout(() => {
+        input.contentEditable = 'false';
+        input.focus();
+        
+        // Additional Android prevention: Set input mode
+        input.setAttribute('inputmode', 'none');
+        
+        console.log('Android custom keyboard activated with prevention measures');
+      }, 150);
+    } else {
+      console.log('Custom keyboard activated for contentEditable approach');
     }
-  }, []);
+  }, [behavior.isAndroid]);
   
   /**
-   * Deactivate custom keyboard mode
+   * Deactivate custom keyboard mode with Android cleanup
    */
   const deactivateCustomKeyboard = useCallback(() => {
     setIsCustomKeyboardActive(false);
-  }, []);
+    
+    // Android-specific cleanup
+    if (behavior.isAndroid && inputRef.current) {
+      const input = inputRef.current;
+      input.contentEditable = 'true';
+      input.removeAttribute('inputmode');
+      console.log('Android custom keyboard deactivated');
+    }
+  }, [behavior.isAndroid]);
   
   /**
-   * Focus input with appropriate keyboard behavior
+   * Focus input with appropriate keyboard behavior for contentEditable
    */
-  const focusInput = useCallback((inputElement, allowNative = false) => {
+  const focusInput = useCallback((inputElement) => {
     if (!inputElement) return;
     
-    if (allowNative || shouldUseNative) {
-      allowNativeKeyboard(inputElement);
-      inputElement.focus();
-    } else if (shouldUseCustom) {
-      preventNativeKeyboard(inputElement);
+    // For contentEditable approach, we can always focus safely
+    // The contentEditable attribute controls whether typing triggers keyboard
+    inputElement.focus();
+    
+    if (shouldUseCustom) {
       activateCustomKeyboard();
-      // Focus without triggering native keyboard
-      inputElement.focus();
-    } else {
-      // Default behavior
-      inputElement.focus();
     }
-  }, [shouldUseNative, shouldUseCustom, allowNativeKeyboard, preventNativeKeyboard, activateCustomKeyboard]);
+  }, [shouldUseCustom, activateCustomKeyboard]);
   
   /**
-   * Get input attributes for keyboard prevention
+   * Get input props for contentEditable elements
+   * This is much simpler than the textarea approach!
    */
   const getInputProps = useCallback((customProps = {}) => {
     const baseProps = {
@@ -185,66 +147,154 @@ export const useKeyboardManager = (questionType, forceNativeKeyboard = false) =>
       }
     };
     
-    if (!behavior.isMobile) return baseProps;
-    
-    if (shouldUseCustom && !forceNativeKeyboard) {
+    if (!behavior.isMobile) {
+      // Desktop: Always allow contentEditable
       return {
         ...baseProps,
-        readOnly: behavior.needsInputFocusPrevention,
-        inputMode: behavior.needsInputModePrevention ? 'none' : undefined,
-        autoComplete: 'off',
-        autoCorrect: 'off',
-        autoCapitalize: 'off',
-        spellCheck: false,
+        contentEditable: true,
+        suppressContentEditableWarning: true
+      };
+    }
+    
+    if (shouldUseCustom && !forceNativeKeyboard) {
+      // Mobile with custom keyboard: Dynamic contentEditable control
+      return {
+        ...baseProps,
+        // KEY CHANGE: contentEditable="false" when custom keyboard is active
+        contentEditable: !isCustomKeyboardActive,
+        suppressContentEditableWarning: true,
+        
+        // Enhanced focus handling for contentEditable
         onFocus: (e) => {
-          if (isCustomKeyboardActive) {
-            e.preventDefault();
-            e.target.blur();
-            setTimeout(() => e.target.focus(), 10);
+          if (shouldUseCustom) {
+            activateCustomKeyboard();
           }
           if (customProps.onFocus) customProps.onFocus(e);
+        },
+        
+        // Style overrides for mobile contentEditable
+        style: {
+          ...customProps.style,
+          fontSize: '16px', // Prevent zoom on focus
+          userSelect: 'text',
+          WebkitUserSelect: 'text',
+          cursor: 'text'
+        },
+        
+        // Prevent context menus that might trigger keyboards
+        onContextMenu: (e) => {
+          if (behavior.isMobile && shouldUseCustom) {
+            e.preventDefault();
+          }
+          if (customProps.onContextMenu) customProps.onContextMenu(e);
         }
       };
     }
     
-    return baseProps;
-  }, [behavior, shouldUseCustom, forceNativeKeyboard, isCustomKeyboardActive]);
+    // Default mobile behavior (native keyboard)
+    return {
+      ...baseProps,
+      contentEditable: true,
+      suppressContentEditableWarning: true
+    };
+  }, [behavior, shouldUseCustom, forceNativeKeyboard, isCustomKeyboardActive, activateCustomKeyboard]);
   
   /**
-   * Insert text at cursor position (for custom keyboards)
+   * Enhanced text insertion for contentEditable elements
+   * This method is optimized for contentEditable divs
    */
   const insertTextAtCursor = useCallback((text) => {
     const input = inputRef.current;
     if (!input) return;
     
-    // Temporarily remove readonly to allow value changes
-    const wasReadonly = input.hasAttribute('readonly');
-    if (wasReadonly) {
-      input.removeAttribute('readonly');
+    // Ensure the input is focused first
+    input.focus();
+    
+    const selection = window.getSelection();
+    let range;
+    
+    if (selection.rangeCount > 0) {
+      range = selection.getRangeAt(0);
+    } else {
+      // Create a new range at the end of the content
+      range = document.createRange();
+      range.selectNodeContents(input);
+      range.collapse(false); // Collapse to end
+      selection.removeAllRanges();
+      selection.addRange(range);
     }
     
-    const start = input.selectionStart;
-    const end = input.selectionEnd;
-    const currentValue = input.value;
+    // Delete any selected content first
+    range.deleteContents();
     
-    const newValue = currentValue.substring(0, start) + text + currentValue.substring(end);
+    // Insert the new text
+    const textNode = document.createTextNode(text);
+    range.insertNode(textNode);
     
-    // Update value
-    input.value = newValue;
+    // Move cursor after inserted text
+    range.setStartAfter(textNode);
+    range.collapse(true);
+    selection.removeAllRanges();
+    selection.addRange(range);
     
     // Trigger input event for React
     const event = new Event('input', { bubbles: true });
+    Object.defineProperty(event, 'target', { value: input });
+    Object.defineProperty(event, 'currentTarget', { value: input });
     input.dispatchEvent(event);
     
-    // Restore readonly and cursor position
-    setTimeout(() => {
-      if (wasReadonly && isCustomKeyboardActive) {
-        input.setAttribute('readonly', 'true');
+    console.log('Text inserted at cursor:', text);
+  }, []);
+  
+  /**
+   * Clear all content from contentEditable div
+   */
+  const clearContent = useCallback(() => {
+    const input = inputRef.current;
+    if (!input) return;
+    
+    input.textContent = '';
+    input.focus();
+    
+    // Trigger input event
+    const event = new Event('input', { bubbles: true });
+    Object.defineProperty(event, 'target', { value: input });
+    input.dispatchEvent(event);
+  }, []);
+  
+  /**
+   * Backspace functionality for contentEditable
+   */
+  const backspaceAtCursor = useCallback(() => {
+    const input = inputRef.current;
+    if (!input) return;
+    
+    const selection = window.getSelection();
+    if (selection.rangeCount > 0) {
+      const range = selection.getRangeAt(0);
+      
+      if (range.collapsed) {
+        // No selection, delete one character before cursor
+        const preCaretRange = range.cloneRange();
+        preCaretRange.selectNodeContents(input);
+        preCaretRange.setEnd(range.startContainer, range.startOffset);
+        const textBeforeCursor = preCaretRange.toString();
+        
+        if (textBeforeCursor.length > 0) {
+          range.setStart(range.startContainer, Math.max(0, range.startOffset - 1));
+          range.deleteContents();
+        }
+      } else {
+        // Delete selected content
+        range.deleteContents();
       }
-      const newPosition = start + text.length;
-      input.setSelectionRange(newPosition, newPosition);
-    }, 0);
-  }, [isCustomKeyboardActive]);
+      
+      // Trigger input event
+      const event = new Event('input', { bubbles: true });
+      Object.defineProperty(event, 'target', { value: input });
+      input.dispatchEvent(event);
+    }
+  }, []);
   
   // Auto-configure keyboard based on question type
   useEffect(() => {
@@ -272,10 +322,10 @@ export const useKeyboardManager = (questionType, forceNativeKeyboard = false) =>
     // Methods
     activateCustomKeyboard,
     deactivateCustomKeyboard,
-    preventNativeKeyboard,
-    allowNativeKeyboard,
     focusInput,
     insertTextAtCursor,
+    clearContent,
+    backspaceAtCursor,
     getInputProps,
     
     // Refs

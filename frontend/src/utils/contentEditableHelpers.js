@@ -216,18 +216,14 @@ export const insertTextAtCursor = (element, text, preventEcho = true) => {
 
   removeCursorIndicator(element);
 
-  // Get current text
-  const currentText = element.textContent || '';
-
-  // FIXED: Always append to end instead of using faulty cursor position
+  // Simple approach: always append to end for now
+  const currentText = getTextContent(element);
   const newText = currentText + text;
 
   element.textContent = newText;
 
-  // Set cursor at end
-  setTimeout(() => {
-    setCursorPosition(element, newText.length);
-  }, 10);
+  // Don't try to set cursor position - let it stay at end naturally
+  // This prevents cursor jumping issues
 
   if (!preventEcho) {
     const event = new Event('input', { bubbles: true });

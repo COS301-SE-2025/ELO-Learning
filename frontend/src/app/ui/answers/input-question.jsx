@@ -9,14 +9,12 @@ import {
 import { validateAnswerSync } from '@/utils/answerValidator';
 import {
   clearContent,
-  deleteAtCursor,
   getCursorPosition,
   getTextContent,
   insertTextAtCursor,
-  moveCursor,
   removeCursorIndicator,
   setTextContent,
-  showCursorIndicator,
+  showCursorIndicator
 } from '@/utils/contentEditableHelpers';
 import {
   getMathValidationMessage,
@@ -348,6 +346,9 @@ export default function MathInputTemplate({
     if (input.dataset.inserting === 'true') return;
     input.dataset.inserting = 'true';
 
+    // Ensure the input is focused first
+    input.focus();
+
     // Use contentEditable text insertion with improved helper and echo prevention
     insertTextAtCursor(input, symbol, true);
 
@@ -403,44 +404,36 @@ export default function MathInputTemplate({
     const input = inputRef.current;
     if (!input) return;
 
-    // Use the improved helper function for better reliability
-    deleteAtCursor(input, 1, true);
+    // Get current text
+    const currentText = getTextContent(input);
+    
+    if (currentText.length === 0) return; // Nothing to delete
+
+    // Simple approach: remove last character
+    const newText = currentText.slice(0, -1);
+
+    // Update content directly
+    input.textContent = newText;
 
     // Update local state
-    const newValue = getTextContent(input);
-    setInputValue(newValue);
-    setStudentAnswer(newValue);
+    setInputValue(newText);
+    setStudentAnswer(newText);
 
-    // Show cursor indicator for visual feedback
-    setTimeout(() => {
-      showCursorIndicator(input);
-      setTimeout(() => removeCursorIndicator(input), 1500);
-    }, 50);
+    // Don't try to set cursor position - let it stay at end naturally
+    // This prevents cursor jumping issues
   };
 
-  // Cursor navigation functions with visual feedback
+  // Cursor navigation functions - simplified for append-only mode
   const moveCursorLeft = () => {
-    const input = inputRef.current;
-    if (!input) return;
-    moveCursor(input, 'left', true);
-
-    // Show cursor indicator for visual feedback
-    setTimeout(() => {
-      showCursorIndicator(input);
-      setTimeout(() => removeCursorIndicator(input), 1500);
-    }, 50);
+    // Disabled for now in append-only mode
+    // This prevents cursor jumping issues
+    console.log('Cursor left disabled in append-only mode');
   };
 
   const moveCursorRight = () => {
-    const input = inputRef.current;
-    if (!input) return;
-    moveCursor(input, 'right', true);
-
-    // Show cursor indicator for visual feedback
-    setTimeout(() => {
-      showCursorIndicator(input);
-      setTimeout(() => removeCursorIndicator(input), 1500);
-    }, 50);
+    // Disabled for now in append-only mode
+    // This prevents cursor jumping issues
+    console.log('Cursor right disabled in append-only mode');
   };
 
   const handleKeyDown = (e) => {

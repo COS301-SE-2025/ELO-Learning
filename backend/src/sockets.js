@@ -459,16 +459,23 @@ export default (io, socket) => {
         const parsedResults =
           typeof results === 'string' ? JSON.parse(results) : results;
         if (Array.isArray(parsedResults)) {
-          console.log('Calculating XP for results:', parsedResults);
+          console.log('🔍 DEBUG - Calculating XP for results:', parsedResults);
+          console.log('📊 DEBUG - Detailed question breakdown:');
 
           // Calculate XP from correct answers
           parsedResults.forEach((question) => {
-            if (question?.isCorrect && question.question?.xpGain) {
-              const gainedXP = parseInt(question.question.xpGain) || 0;
-              console.log(
-                `Question ${question.q_index}: isCorrect=${question.isCorrect}, xpGain=${gainedXP}`,
-              );
-              xpGain += gainedXP;
+            const questionXP = parseInt(question.question?.xpGain) || 0;
+            const wasCorrect = question?.isCorrect || false;
+            const questionIndex = question.q_index || 'unknown';
+            
+            console.log(`📝 Question ${questionIndex}:`);
+            console.log(`   - Correct: ${wasCorrect ? '✅ YES' : '❌ NO'}`);
+            console.log(`   - Possible XP: ${questionXP}`);
+            console.log(`   - XP Gained: ${wasCorrect ? questionXP : 0}`);
+            
+            if (wasCorrect && questionXP) {
+              xpGain += questionXP;
+              console.log(`   - Running total XP: ${xpGain}`);
             }
           });
 
@@ -483,13 +490,22 @@ export default (io, socket) => {
         console.error('Raw results:', results);
       }
 
-      console.log('Final calculated stats:', { xpGain, timeTaken });
+      console.log('🏆 FINAL STATS:');
+      console.log('   - Total XP Gained: ', xpGain);
+      console.log('   - Total Time Taken: ', timeTaken);
       return { xpGain, timeTaken };
     };
 
     const [player1Id, player2Id] = gameData.players;
+    console.log('📊 DEBUG - PLAYER 1 RESULTS 📊');
     const player1Stats = calculateStats(gameData.playerResults[player1Id]);
+    console.log('📊 DEBUG - PLAYER 2 RESULTS 📊');
     const player2Stats = calculateStats(gameData.playerResults[player2Id]);
+
+    // Compare players' performance
+    console.log('🥇 MATCH COMPARISON:');
+    console.log(`   - Player 1 (${gameData.playerData[player1Id].username}) XP: ${player1Stats.xpGain}, Time: ${player1Stats.timeTaken}ms`);
+    console.log(`   - Player 2 (${gameData.playerData[player2Id].username}) XP: ${player2Stats.xpGain}, Time: ${player2Stats.timeTaken}ms`);
 
     // Determine winner based on time (faster wins)
     let score1;

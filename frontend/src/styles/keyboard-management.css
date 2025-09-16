@@ -166,6 +166,22 @@
   pointer-events: auto !important;
 }
 
+/* Additional Android keyboard prevention */
+.android-keyboard input[inputmode="none"],
+.android-keyboard textarea[inputmode="none"] {
+  -webkit-user-select: none !important;
+  -moz-user-select: none !important;
+  -ms-user-select: none !important;
+  user-select: none !important;
+  pointer-events: none !important;
+}
+
+/* Re-enable pointer events for custom keyboard mode */
+.android-keyboard.custom-keyboard-active input[inputmode="none"],
+.android-keyboard.custom-keyboard-active textarea[inputmode="none"] {
+  pointer-events: auto !important;
+}
+
 /* Ensure custom keyboard buttons are touch-friendly */
 .custom-keyboard-active button {
   min-height: 44px; /* iOS minimum touch target */

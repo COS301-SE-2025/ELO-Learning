@@ -4,7 +4,10 @@
 
 import { useKeyboardManager } from '@/hooks/useKeyboardManager';
 import '@/styles/mobile-keyboard-prevention.css';
-import { attachNonPassiveTouchHandler, handleAndroidFocus } from '@/utils/androidKeyboardPrevention';
+import {
+  attachNonPassiveTouchHandler,
+  handleAndroidFocus,
+} from '@/utils/androidKeyboardPrevention';
 import {
   clearContent,
   getCursorPosition,
@@ -13,7 +16,7 @@ import {
   moveCursor,
   removeCursorIndicator,
   setTextContent,
-  showCursorIndicator
+  showCursorIndicator,
 } from '@/utils/contentEditableHelpers';
 import {
   getMathValidationMessage,
@@ -47,7 +50,7 @@ export default function MathInputTemplate({
   const [showHelper, setShowHelper] = useState(false);
 
   const inputRef = useRef(null);
-  
+
   // Initialize keyboard manager for Math Input questions
   const keyboard = useKeyboardManager(QUESTION_TYPES.MATH_INPUT);
 
@@ -104,7 +107,7 @@ export default function MathInputTemplate({
   // Sync with parent studentAnswer prop
   useEffect(() => {
     setInputValue(studentAnswer);
-    
+
     // Update contentEditable div content if it exists
     const input = inputRef.current;
     if (input && input.contentEditable !== undefined) {
@@ -118,13 +121,21 @@ export default function MathInputTemplate({
   // Handle non-passive touch events for Android keyboard prevention
   useEffect(() => {
     const input = inputRef.current;
-    if (!input || !keyboard.isAndroid || !keyboard.shouldUseCustomKeyboard) return;
+    if (!input || !keyboard.isAndroid || !keyboard.shouldUseCustomKeyboard)
+      return;
 
     // Attach non-passive touch handler when custom keyboard is active
-    const cleanup = attachNonPassiveTouchHandler(input, keyboard.isCustomKeyboardActive);
+    const cleanup = attachNonPassiveTouchHandler(
+      input,
+      keyboard.isCustomKeyboardActive,
+    );
 
     return cleanup;
-  }, [keyboard.isAndroid, keyboard.shouldUseCustomKeyboard, keyboard.isCustomKeyboardActive]);
+  }, [
+    keyboard.isAndroid,
+    keyboard.shouldUseCustomKeyboard,
+    keyboard.isCustomKeyboardActive,
+  ]);
 
   // Real-time validation
   useEffect(() => {
@@ -164,12 +175,12 @@ export default function MathInputTemplate({
   const handleInputChange = (e) => {
     // Prevent rapid echoing by debouncing
     const value = getTextContent(e.target);
-    
+
     // Only update if value actually changed
     if (value !== inputValue) {
       setInputValue(value);
       setStudentAnswer(value);
-      
+
       // Update cursor position
       setCursorPosition(getCursorPosition(e.target));
     }
@@ -179,7 +190,7 @@ export default function MathInputTemplate({
     // Update cursor position using helper and show visual indicator
     const newPos = getCursorPosition(e.target);
     setCursorPosition(newPos);
-    
+
     // Show cursor indicator temporarily
     setTimeout(() => {
       showCursorIndicator(e.target);
@@ -193,12 +204,12 @@ export default function MathInputTemplate({
 
     // Use improved helper function with echo prevention
     insertTextAtCursor(input, text, true);
-    
+
     // Update local state without triggering additional events
     const newValue = getTextContent(input);
     setInputValue(newValue);
     setStudentAnswer(newValue);
-    
+
     // Show cursor indicator at new position
     setTimeout(() => showCursorIndicator(input), 50);
   };
@@ -210,20 +221,20 @@ export default function MathInputTemplate({
     // Prevent rapid clicking issues by debouncing
     if (input.dataset.inserting === 'true') return;
     input.dataset.inserting = 'true';
-    
+
     // Use contentEditable text insertion with improved helper and echo prevention
     insertTextAtCursor(input, symbol, true);
-    
+
     // Update local state without triggering additional events
     const newValue = getTextContent(input);
     setInputValue(newValue);
     setStudentAnswer(newValue);
-    
+
     // Add to history
     if (!inputHistory.includes(symbol)) {
       setInputHistory((prev) => [symbol, ...prev.slice(0, 9)]);
     }
-    
+
     // Show cursor indicator at new position
     setTimeout(() => {
       showCursorIndicator(input);
@@ -234,10 +245,10 @@ export default function MathInputTemplate({
   const clearInput = () => {
     const input = inputRef.current;
     if (!input) return;
-    
+
     // Use improved helper function with echo prevention
     clearContent(input, true);
-    
+
     setInputValue('');
     setStudentAnswer('');
     input.focus();
@@ -250,29 +261,32 @@ export default function MathInputTemplate({
     // Get current text and selection
     const text = input.textContent || '';
     const selection = window.getSelection();
-    
+
     if (selection.rangeCount === 0) return;
-    
+
     const range = selection.getRangeAt(0);
     const cursorPos = getCursorPosition(input);
-    
+
     if (cursorPos > 0) {
       // Remove one character before cursor
       const newText = text.slice(0, cursorPos - 1) + text.slice(cursorPos);
-      
+
       // Update content
       input.textContent = newText;
       setInputValue(newText);
       setStudentAnswer(newText);
-      
+
       // Set cursor position manually - simpler approach
       setTimeout(() => {
         const newRange = document.createRange();
         const textNode = input.firstChild;
-        
+
         if (textNode && textNode.nodeType === Node.TEXT_NODE) {
           const newPos = Math.max(0, cursorPos - 1);
-          newRange.setStart(textNode, Math.min(newPos, textNode.textContent.length));
+          newRange.setStart(
+            textNode,
+            Math.min(newPos, textNode.textContent.length),
+          );
           newRange.collapse(true);
           selection.removeAllRanges();
           selection.addRange(newRange);
@@ -285,7 +299,7 @@ export default function MathInputTemplate({
           selection.removeAllRanges();
           selection.addRange(newRange);
         }
-        
+
         // Show cursor indicator
         showCursorIndicator(input);
       }, 10);
@@ -297,7 +311,7 @@ export default function MathInputTemplate({
     const input = inputRef.current;
     if (!input) return;
     moveCursor(input, 'left', true);
-    
+
     // Show cursor indicator for visual feedback
     setTimeout(() => {
       showCursorIndicator(input);
@@ -309,7 +323,7 @@ export default function MathInputTemplate({
     const input = inputRef.current;
     if (!input) return;
     moveCursor(input, 'right', true);
-    
+
     // Show cursor indicator for visual feedback
     setTimeout(() => {
       showCursorIndicator(input);
@@ -318,16 +332,28 @@ export default function MathInputTemplate({
   };
 
   return (
-    <div className={`w-full space-y-6 ${getPlatformClasses()} ${keyboard.isCustomKeyboardActive ? 'custom-keyboard-active' : ''}`}>
+    <div
+      className={`w-full space-y-6 ${getPlatformClasses()} ${
+        keyboard.isCustomKeyboardActive ? 'custom-keyboard-active' : ''
+      }`}
+    >
       {/* ContentEditable Input Field - Android Keyboard Prevention */}
       <div className="relative">
         <div
           ref={inputRef}
           // CRITICAL: Multi-layered Android keyboard prevention
-          contentEditable={!keyboard.isAndroid || !keyboard.shouldUseCustomKeyboard || !keyboard.isCustomKeyboardActive}
+          contentEditable={
+            !keyboard.isAndroid ||
+            !keyboard.shouldUseCustomKeyboard ||
+            !keyboard.isCustomKeyboardActive
+          }
           suppressContentEditableWarning={true}
           // Android-specific attributes for keyboard prevention
-          inputMode={keyboard.isAndroid && keyboard.shouldUseCustomKeyboard ? "none" : undefined}
+          inputMode={
+            keyboard.isAndroid && keyboard.shouldUseCustomKeyboard
+              ? 'none'
+              : undefined
+          }
           data-gramm={false} // Disable Grammarly
           data-gramm_editor={false}
           data-enable-grammarly={false}
@@ -349,10 +375,16 @@ export default function MathInputTemplate({
           }}
           onPointerDown={(e) => {
             // Less aggressive prevention for Android Chrome
-            if (keyboard.isAndroid && keyboard.shouldUseCustomKeyboard && keyboard.isCustomKeyboardActive) {
+            if (
+              keyboard.isAndroid &&
+              keyboard.shouldUseCustomKeyboard &&
+              keyboard.isCustomKeyboardActive
+            ) {
               // Only prevent if contentEditable is false and not clicking buttons
-              if (e.currentTarget.getAttribute('contenteditable') === 'false' && 
-                  !e.target.closest('.h-12, button, [role="button"]')) {
+              if (
+                e.currentTarget.getAttribute('contenteditable') === 'false' &&
+                !e.target.closest('.h-12, button, [role="button"]')
+              ) {
                 e.preventDefault();
               }
               // Ensure focus is maintained
@@ -368,7 +400,7 @@ export default function MathInputTemplate({
                 ? 'border-yellow-500 focus:border-yellow-600 focus:ring-yellow-200'
                 : 'border-border focus:border-primary focus:ring-primary/20'
           }`}
-          style={{ 
+          style={{
             fontSize: '16px', // Prevents zoom on mobile
             lineHeight: '1.5',
             minHeight: '80px',
@@ -384,17 +416,18 @@ export default function MathInputTemplate({
             // Ensure caret is visible
             caretColor: '#4D5DED',
             // Android-specific styles for keyboard prevention
-            ...(keyboard.isAndroid && keyboard.shouldUseCustomKeyboard && {
-              WebkitAppearance: 'none',
-              appearance: 'none',
-              WebkitTouchCallout: 'none',
-              WebkitTapHighlightColor: 'transparent',
-              WebkitUserSelect: 'text',
-              userSelect: 'text',
-              caretColor: '#4D5DED'
-            })
+            ...(keyboard.isAndroid &&
+              keyboard.shouldUseCustomKeyboard && {
+                WebkitAppearance: 'none',
+                appearance: 'none',
+                WebkitTouchCallout: 'none',
+                WebkitTapHighlightColor: 'transparent',
+                WebkitUserSelect: 'text',
+                userSelect: 'text',
+                caretColor: '#4D5DED',
+              }),
           }}
-          data-placeholder={!inputValue ? "Write your answer" : ""}
+          data-placeholder={!inputValue ? 'Write your answer' : ''}
           onBlur={() => {
             // Remove cursor indicator on blur
             const input = inputRef.current;
@@ -446,7 +479,7 @@ export default function MathInputTemplate({
             History
           </button>
         </div>
-        
+
         {/* Cursor Navigation and Edit Controls */}
         <div className="flex gap-2">
           <button

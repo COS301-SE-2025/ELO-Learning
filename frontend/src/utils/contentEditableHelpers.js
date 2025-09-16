@@ -10,30 +10,29 @@
  */
 export const getCursorPosition = (element) => {
   if (!element) return 0;
-  
+
   const selection = window.getSelection();
   if (selection.rangeCount === 0) return 0;
-  
+
   try {
     // Remove cursor indicators first to get clean position
     const clone = element.cloneNode(true);
     const indicators = clone.querySelectorAll('.cursor-indicator');
-    indicators.forEach(indicator => indicator.remove());
-    
+    indicators.forEach((indicator) => indicator.remove());
+
     const range = selection.getRangeAt(0);
-    
+
     // Simple approach: use textContent for position calculation
     const preCaretRange = range.cloneRange();
     preCaretRange.selectNodeContents(element);
     preCaretRange.setEnd(range.startContainer, range.startOffset);
-    
+
     // Get text without cursor indicators
     const preText = preCaretRange.toString().replace(/\|/g, '');
     const totalText = getTextContent(element);
-    
+
     // Ensure position is within bounds
     return Math.min(Math.max(0, preText.length), totalText.length);
-    
   } catch (error) {
     console.warn('Cursor position detection failed:', error);
     return getTextContent(element).length; // Fallback to end
@@ -46,15 +45,15 @@ export const getCursorPosition = (element) => {
  */
 export const showCursorIndicator = (element) => {
   if (!element) return;
-  
+
   // Remove any existing cursor indicators
   removeCursorIndicator(element);
-  
+
   const selection = window.getSelection();
   if (selection.rangeCount === 0) return;
-  
+
   const range = selection.getRangeAt(0);
-  
+
   // Create cursor indicator element
   const cursorIndicator = document.createElement('span');
   cursorIndicator.className = 'cursor-indicator';
@@ -68,10 +67,10 @@ export const showCursorIndicator = (element) => {
     padding: 0;
     line-height: inherit;
   `;
-  
+
   // Insert the cursor indicator at current position
   range.insertNode(cursorIndicator);
-  
+
   // Collapse range after the indicator
   range.setStartAfter(cursorIndicator);
   range.collapse(true);
@@ -85,15 +84,15 @@ export const showCursorIndicator = (element) => {
  */
 export const removeCursorIndicator = (element) => {
   if (!element) return;
-  
+
   // Remove cursor indicator elements
   const indicators = element.querySelectorAll('.cursor-indicator');
-  indicators.forEach(indicator => {
+  indicators.forEach((indicator) => {
     if (indicator.parentNode) {
       indicator.parentNode.removeChild(indicator);
     }
   });
-  
+
   // Also remove any stray pipe characters that might be left behind
   let currentText = element.textContent || '';
   if (currentText.includes('|')) {
@@ -109,17 +108,17 @@ export const removeCursorIndicator = (element) => {
  */
 export const setCursorPosition = (element, position, showIndicator = false) => {
   if (!element) return;
-  
+
   // Remove any existing cursor indicators first
   removeCursorIndicator(element);
-  
+
   const selection = window.getSelection();
   const text = getTextContent(element);
   const targetPos = Math.min(Math.max(0, position), text.length);
-  
+
   try {
     const range = document.createRange();
-    
+
     // Handle empty element
     if (text.length === 0 || !element.firstChild) {
       if (!element.firstChild) {
@@ -130,13 +129,13 @@ export const setCursorPosition = (element, position, showIndicator = false) => {
       range.collapse(true);
       selection.removeAllRanges();
       selection.addRange(range);
-      
+
       if (showIndicator) {
         setTimeout(() => showCursorIndicator(element), 10);
       }
       return;
     }
-    
+
     // Find the correct text node and offset for the target position
     let currentPos = 0;
     const walker = document.createTreeWalker(
@@ -144,21 +143,24 @@ export const setCursorPosition = (element, position, showIndicator = false) => {
       NodeFilter.SHOW_TEXT,
       (node) => {
         // Skip cursor indicator nodes
-        if (node.parentElement && node.parentElement.classList.contains('cursor-indicator')) {
+        if (
+          node.parentElement &&
+          node.parentElement.classList.contains('cursor-indicator')
+        ) {
           return NodeFilter.FILTER_REJECT;
         }
         return NodeFilter.FILTER_ACCEPT;
       },
-      false
+      false,
     );
-    
+
     let targetNode = null;
     let targetOffset = 0;
     let node;
-    
-    while (node = walker.nextNode()) {
+
+    while ((node = walker.nextNode())) {
       const nodeLength = node.textContent.length;
-      
+
       if (currentPos + nodeLength >= targetPos) {
         targetNode = node;
         targetOffset = targetPos - currentPos;
@@ -166,10 +168,13 @@ export const setCursorPosition = (element, position, showIndicator = false) => {
       }
       currentPos += nodeLength;
     }
-    
+
     // If we found a target node, set the cursor there
     if (targetNode) {
-      range.setStart(targetNode, Math.min(targetOffset, targetNode.textContent.length));
+      range.setStart(
+        targetNode,
+        Math.min(targetOffset, targetNode.textContent.length),
+      );
       range.collapse(true);
       selection.removeAllRanges();
       selection.addRange(range);
@@ -180,7 +185,6 @@ export const setCursorPosition = (element, position, showIndicator = false) => {
       selection.removeAllRanges();
       selection.addRange(range);
     }
-    
   } catch (error) {
     console.warn('Cursor positioning failed:', error);
     // Fallback: place cursor at end
@@ -194,7 +198,7 @@ export const setCursorPosition = (element, position, showIndicator = false) => {
       console.warn('Fallback cursor positioning also failed:', fallbackError);
     }
   }
-  
+
   // Show visual indicator if requested
   if (showIndicator) {
     setTimeout(() => showCursorIndicator(element), 10);
@@ -209,22 +213,22 @@ export const setCursorPosition = (element, position, showIndicator = false) => {
  */
 export const insertTextAtCursor = (element, text, preventEcho = true) => {
   if (!element) return;
-  
+
   removeCursorIndicator(element);
-  
+
   // Get current text
   const currentText = element.textContent || '';
-  
+
   // FIXED: Always append to end instead of using faulty cursor position
   const newText = currentText + text;
-  
+
   element.textContent = newText;
-  
+
   // Set cursor at end
   setTimeout(() => {
     setCursorPosition(element, newText.length);
   }, 10);
-  
+
   if (!preventEcho) {
     const event = new Event('input', { bubbles: true });
     element.dispatchEvent(event);
@@ -239,34 +243,35 @@ export const insertTextAtCursor = (element, text, preventEcho = true) => {
  */
 export const deleteAtCursor = (element, count = 1, preventEcho = true) => {
   if (!element) return;
-  
+
   // Remove cursor indicators to prevent interference
   removeCursorIndicator(element);
-  
+
   // Get current position and text content
   const currentText = getTextContent(element);
   let currentPos = getCursorPosition(element);
-  
+
   // Validate position
   if (currentPos < 0 || currentPos > currentText.length) {
     currentPos = currentText.length;
   }
-  
+
   if (currentPos <= 0 || currentText.length === 0) return; // Nothing to delete
-  
+
   // Calculate deletion range
   const deleteStart = Math.max(0, currentPos - count);
   const deleteEnd = currentPos;
-  
+
   // Create new text with deletion
-  const newText = currentText.slice(0, deleteStart) + currentText.slice(deleteEnd);
-  
+  const newText =
+    currentText.slice(0, deleteStart) + currentText.slice(deleteEnd);
+
   // Update content directly
   element.textContent = newText;
-  
+
   // Set cursor position at the deletion point
   setCursorPosition(element, deleteStart);
-  
+
   // Only trigger input event if not preventing echo
   if (!preventEcho) {
     const event = new Event('input', { bubbles: true });
@@ -282,13 +287,13 @@ export const deleteAtCursor = (element, count = 1, preventEcho = true) => {
  */
 export const moveCursor = (element, direction, showIndicator = false) => {
   if (!element) return;
-  
+
   // Remove cursor indicators to prevent interference
   removeCursorIndicator(element);
-  
+
   const currentPos = getCursorPosition(element);
   const textLength = getTextContent(element).length;
-  
+
   let newPos;
   if (direction === 'left') {
     newPos = Math.max(0, currentPos - 1);
@@ -297,7 +302,7 @@ export const moveCursor = (element, direction, showIndicator = false) => {
   } else {
     return;
   }
-  
+
   // Always attempt to set the new position - remove the position change check
   // The issue was that getCursorPosition and setCursorPosition weren't always consistent
   setCursorPosition(element, newPos, showIndicator);
@@ -310,14 +315,14 @@ export const moveCursor = (element, direction, showIndicator = false) => {
  */
 export const getTextContent = (element) => {
   if (!element) return '';
-  
+
   // Clone the element to avoid modifying the original
   const clone = element.cloneNode(true);
-  
+
   // Remove cursor indicator elements
   const indicators = clone.querySelectorAll('.cursor-indicator');
-  indicators.forEach(indicator => indicator.remove());
-  
+  indicators.forEach((indicator) => indicator.remove());
+
   // Get text content and remove any stray pipe characters
   let text = clone.textContent || '';
   return text.replace(/\|/g, '');
@@ -330,23 +335,28 @@ export const getTextContent = (element) => {
  * @param {boolean} maintainCursor - Whether to maintain cursor position
  * @param {boolean} preventEcho - Whether to prevent text echoing
  */
-export const setTextContent = (element, text, maintainCursor = false, preventEcho = true) => {
+export const setTextContent = (
+  element,
+  text,
+  maintainCursor = false,
+  preventEcho = true,
+) => {
   if (!element) return;
-  
+
   const currentPos = maintainCursor ? getCursorPosition(element) : 0;
-  
+
   // Remove cursor indicators first
   removeCursorIndicator(element);
-  
+
   // Clear existing content
   element.textContent = text;
-  
+
   // Restore cursor position if requested
   if (maintainCursor && text.length > 0) {
     const newPos = Math.min(currentPos, text.length);
     setCursorPosition(element, newPos);
   }
-  
+
   // Only trigger input event if not preventing echo
   if (!preventEcho) {
     const event = new Event('input', { bubbles: true });
@@ -371,15 +381,15 @@ export const isEmpty = (element) => {
  */
 export const clearContent = (element, preventEcho = true) => {
   if (!element) return;
-  
+
   // Remove cursor indicators first
   removeCursorIndicator(element);
-  
+
   element.textContent = '';
-  
+
   // Set cursor at beginning
   setCursorPosition(element, 0);
-  
+
   // Only trigger input event if not preventing echo
   if (!preventEcho) {
     const event = new Event('input', { bubbles: true });
@@ -394,9 +404,9 @@ export const clearContent = (element, preventEcho = true) => {
  */
 export const focusAtEnd = (element, showIndicator = false) => {
   if (!element) return;
-  
+
   element.focus();
-  
+
   // Place cursor at end
   const textLength = getTextContent(element).length;
   setCursorPosition(element, textLength, showIndicator);

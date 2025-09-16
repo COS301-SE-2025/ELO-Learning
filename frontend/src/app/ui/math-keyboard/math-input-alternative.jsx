@@ -18,7 +18,7 @@ export default function MathInputAlternative({
 }) {
   const [inputValue, setInputValue] = useState(studentAnswer);
   const inputRef = useRef(null);
-  
+
   // Initialize keyboard manager for Math Input questions
   const keyboard = useKeyboardManager(QUESTION_TYPES.MATH_INPUT);
 
@@ -35,17 +35,17 @@ export default function MathInputAlternative({
 
       const selection = window.getSelection();
       const range = selection.getRangeAt(0);
-      
+
       // Insert text at cursor position
       range.deleteContents();
       range.insertNode(document.createTextNode(symbol));
-      
+
       // Move cursor after inserted text
       range.setStartAfter(range.endContainer);
       range.collapse(true);
       selection.removeAllRanges();
       selection.addRange(range);
-      
+
       // Update state
       const newValue = input.textContent;
       handleInputChange(newValue);
@@ -57,17 +57,17 @@ export default function MathInputAlternative({
       {/* Alternative: contenteditable div instead of textarea */}
       <div
         ref={inputRef}
-        contentEditable={!keyboard.isMobile || !keyboard.shouldUseCustomKeyboard}
+        contentEditable={
+          !keyboard.isMobile || !keyboard.shouldUseCustomKeyboard
+        }
         suppressContentEditableWarning={true}
-        className={`math-input w-full p-4 text-lg border rounded-lg min-h-[80px] font-mono focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-          'border-gray-300'
-        }`}
+        className={`math-input w-full p-4 text-lg border rounded-lg min-h-[80px] font-mono focus:outline-none focus:ring-2 focus:ring-blue-500 ${'border-gray-300'}`}
         style={{
           fontSize: '16px', // Prevent zoom on Android
           userSelect: 'text',
           WebkitUserSelect: 'text',
           wordWrap: 'break-word',
-          whiteSpace: 'pre-wrap'
+          whiteSpace: 'pre-wrap',
         }}
         onInput={(e) => {
           const value = e.target.textContent;

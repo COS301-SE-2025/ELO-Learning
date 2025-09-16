@@ -30,7 +30,7 @@
 .ios-keyboard textarea {
   /* Prevent zoom on iOS */
   font-size: 16px !important;
-  
+
   /* Remove iOS input styling */
   -webkit-appearance: none;
   appearance: none;
@@ -38,8 +38,8 @@
 }
 
 /* Android-specific styles */
-.android-keyboard input[inputmode="none"],
-.android-keyboard textarea[inputmode="none"] {
+.android-keyboard input[inputmode='none'],
+.android-keyboard textarea[inputmode='none'] {
   /* Ensure cursor is still visible even with inputmode="none" */
   caret-color: auto;
 }
@@ -52,7 +52,7 @@
   -moz-user-select: none;
   -ms-user-select: none;
   user-select: none;
-  
+
   /* Keep cursor visible */
   caret-color: auto;
 }
@@ -86,7 +86,7 @@
 .custom-keyboard-active input:focus,
 .custom-keyboard-active textarea:focus {
   /* Maintain focus outline for accessibility */
-  outline: 2px solid #7D32CE;
+  outline: 2px solid #7d32ce;
   outline-offset: 2px;
 }
 
@@ -111,7 +111,7 @@
     /* Adjust for landscape mode on mobile */
     min-height: auto;
   }
-  
+
   .keyboard-spacer {
     /* Reduce spacer height in landscape */
     height: auto !important;
@@ -136,7 +136,9 @@
 .keyboard-transition-enter-active {
   opacity: 1;
   transform: translateY(0);
-  transition: opacity 0.3s ease-in-out, transform 0.3s ease-in-out;
+  transition:
+    opacity 0.3s ease-in-out,
+    transform 0.3s ease-in-out;
 }
 
 .keyboard-transition-exit {
@@ -147,15 +149,17 @@
 .keyboard-transition-exit-active {
   opacity: 0;
   transform: translateY(20px);
-  transition: opacity 0.3s ease-in-out, transform 0.3s ease-in-out;
+  transition:
+    opacity 0.3s ease-in-out,
+    transform 0.3s ease-in-out;
 }
 
-.keyboard-wrapper[data-keyboard-behavior="custom"] {
-  border-left: 3px solid #7D32CE;
+.keyboard-wrapper[data-keyboard-behavior='custom'] {
+  border-left: 3px solid #7d32ce;
 }
 
-.keyboard-wrapper[data-keyboard-behavior="native"] {
-  border-left: 3px solid #4CAF50;
+.keyboard-wrapper[data-keyboard-behavior='native'] {
+  border-left: 3px solid #4caf50;
 }
 
 /* Override for readonly inputs to maintain cursor */
@@ -167,8 +171,8 @@
 }
 
 /* Additional Android keyboard prevention */
-.android-keyboard input[inputmode="none"],
-.android-keyboard textarea[inputmode="none"] {
+.android-keyboard input[inputmode='none'],
+.android-keyboard textarea[inputmode='none'] {
   -webkit-user-select: none !important;
   -moz-user-select: none !important;
   -ms-user-select: none !important;
@@ -177,8 +181,8 @@
 }
 
 /* Re-enable pointer events for custom keyboard mode */
-.android-keyboard.custom-keyboard-active input[inputmode="none"],
-.android-keyboard.custom-keyboard-active textarea[inputmode="none"] {
+.android-keyboard.custom-keyboard-active input[inputmode='none'],
+.android-keyboard.custom-keyboard-active textarea[inputmode='none'] {
   pointer-events: auto !important;
 }
 

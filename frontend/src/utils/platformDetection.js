@@ -9,20 +9,22 @@
  */
 export const isMobile = () => {
   if (typeof window === 'undefined') return false;
-  
+
   const userAgent = navigator.userAgent || navigator.vendor || window.opera;
-  
+
   // Check for mobile patterns
-  const mobileRegex = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i;
-  
+  const mobileRegex =
+    /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i;
+
   // Additional checks for touch support
-  const hasTouchSupport = 'ontouchstart' in window || 
-                         navigator.maxTouchPoints > 0 || 
-                         navigator.msMaxTouchPoints > 0;
-  
+  const hasTouchSupport =
+    'ontouchstart' in window ||
+    navigator.maxTouchPoints > 0 ||
+    navigator.msMaxTouchPoints > 0;
+
   // Check viewport width (mobile-like dimensions)
   const isSmallViewport = window.innerWidth <= 768;
-  
+
   return mobileRegex.test(userAgent) || (hasTouchSupport && isSmallViewport);
 };
 
@@ -32,7 +34,7 @@ export const isMobile = () => {
  */
 export const isIOS = () => {
   if (typeof window === 'undefined') return false;
-  
+
   const userAgent = navigator.userAgent || navigator.vendor || window.opera;
   return /iPad|iPhone|iPod/.test(userAgent) && !window.MSStream;
 };
@@ -43,7 +45,7 @@ export const isIOS = () => {
  */
 export const isAndroid = () => {
   if (typeof window === 'undefined') return false;
-  
+
   const userAgent = navigator.userAgent || navigator.vendor || window.opera;
   return /Android/i.test(userAgent);
 };
@@ -55,12 +57,12 @@ export const isAndroid = () => {
 export const getPlatformClasses = () => {
   // Return empty string during SSR to prevent hydration mismatch
   if (typeof window === 'undefined') return '';
-  
+
   if (!isMobile()) return 'platform-desktop';
-  
+
   if (isIOS()) return 'platform-mobile platform-ios';
   if (isAndroid()) return 'platform-mobile platform-android';
-  
+
   return 'platform-mobile platform-unknown';
 };
 
@@ -70,7 +72,7 @@ export const getPlatformClasses = () => {
  */
 export const supportsVirtualKeyboard = () => {
   if (typeof window === 'undefined') return false;
-  
+
   return 'virtualKeyboard' in navigator;
 };
 
@@ -80,12 +82,12 @@ export const supportsVirtualKeyboard = () => {
  */
 export const getActualViewportHeight = () => {
   if (typeof window === 'undefined') return 0;
-  
+
   // For mobile browsers, use visual viewport if available
   if (window.visualViewport) {
     return window.visualViewport.height;
   }
-  
+
   // Fallback to window inner height
   return window.innerHeight;
 };
@@ -96,7 +98,7 @@ export const getActualViewportHeight = () => {
  */
 export const isLandscape = () => {
   if (typeof window === 'undefined') return false;
-  
+
   return window.innerWidth > window.innerHeight;
 };
 
@@ -108,24 +110,24 @@ export const getKeyboardBehavior = () => {
     isMobile: isMobile(),
     isIOS: isIOS(),
     isAndroid: isAndroid(),
-    supportsVirtualKeyboard: supportsVirtualKeyboard()
+    supportsVirtualKeyboard: supportsVirtualKeyboard(),
   };
-  
+
   return {
     ...platform,
     // iOS-specific behavior - use readonly for keyboard prevention
     needsInputFocusPrevention: platform.isIOS,
     supportsReadOnlyPrevention: platform.isIOS,
     requiresBlurOnCustomKeyboard: false, // Changed: Don't blur for cursor positioning
-    
+
     // Android-specific behavior - use inputMode="none" only for clean prevention
     needsInputModePrevention: platform.isAndroid,
     supportsInputModeNone: platform.isAndroid,
-    
+
     // General mobile behavior
     shouldPreventNativeKeyboard: platform.isMobile,
     needsViewportAdjustment: platform.isMobile,
-    requiresManualFocus: false // Changed: Allow normal focus for cursor positioning
+    requiresManualFocus: false, // Changed: Allow normal focus for cursor positioning
   };
 };
 
@@ -138,33 +140,33 @@ export const getInputAttributes = (preventNativeKeyboard = false) => {
   if (!preventNativeKeyboard || !isMobile()) {
     return {};
   }
-  
+
   const behavior = getKeyboardBehavior();
   const attributes = {};
-  
+
   if (behavior.isIOS) {
     // Use readonly to prevent keyboard on iOS
     attributes.readOnly = true;
   }
-  
+
   if (behavior.isAndroid) {
     // Use multiple methods for Android keyboard prevention
     attributes.inputMode = 'none';
     attributes.readOnly = true; // Also use readonly for Android as backup
   }
-  
+
   // Additional prevention attributes
   attributes.autoComplete = 'off';
   attributes.autoCorrect = 'off';
   attributes.autoCapitalize = 'off';
   attributes.spellCheck = false;
-  
+
   // Prevent text selection and context menu
   if (isMobile()) {
     attributes.onContextMenu = (e) => e.preventDefault();
     attributes.onSelect = (e) => e.preventDefault();
   }
-  
+
   return attributes;
 };
 
@@ -175,14 +177,14 @@ export const getInputAttributes = (preventNativeKeyboard = false) => {
  */
 export const shouldUseCustomKeyboard = (questionType) => {
   if (!isMobile()) return false;
-  
+
   const customKeyboardTypes = [
     'Math Input',
     'Expression Builder',
     'Fill-in-the-Blank',
-    'Fill-in-the-Blanks'
+    'Fill-in-the-Blanks',
   ];
-  
+
   return customKeyboardTypes.includes(questionType);
 };
 
@@ -196,6 +198,6 @@ export const shouldUseNativeKeyboard = (questionType) => {
     'Open Response',
     // Add other types that need native keyboard
   ];
-  
+
   return nativeKeyboardTypes.includes(questionType);
 };

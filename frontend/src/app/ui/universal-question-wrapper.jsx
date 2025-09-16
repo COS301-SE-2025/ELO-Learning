@@ -36,7 +36,7 @@ export default function UniversalQuestionWrapper({ questions, numLives = 5 }) {
   const [answer, setAnswer] = useState(null);
   const [isAnswerCorrect, setIsAnswerCorrect] = useState(false);
   const [isValidExpression, setIsValidExpression] = useState(true);
-  
+
   // Keyboard state management
   const [keyboardState, setKeyboardState] = useState({
     isCustomKeyboardActive: false,
@@ -44,7 +44,7 @@ export default function UniversalQuestionWrapper({ questions, numLives = 5 }) {
     shouldUseCustomKeyboard: false,
     shouldUseNativeKeyboard: false,
     isMobile: false,
-    keyboardHeight: 0
+    keyboardHeight: 0,
   });
 
   // Handle keyboard state changes
@@ -329,7 +329,7 @@ export default function UniversalQuestionWrapper({ questions, numLives = 5 }) {
       </div>
 
       {/* Main Content */}
-      <KeyboardWrapper 
+      <KeyboardWrapper
         question={currQuestion}
         onKeyboardStateChange={handleKeyboardStateChange}
         className="pb-35 md:pb-50 pt-24"
@@ -337,22 +337,27 @@ export default function UniversalQuestionWrapper({ questions, numLives = 5 }) {
         {/* Mobile keyboard status indicator */}
         {keyboardState.isMobile && (
           <div className="px-4 mb-4">
-            <div className={`text-xs text-center py-2 px-3 rounded-lg ${
-              keyboardState.shouldUseCustomKeyboard 
-                ? 'bg-purple-50 text-purple-700 border border-purple-200' 
+            <div
+              className={`text-xs text-center py-2 px-3 rounded-lg ${
+                keyboardState.shouldUseCustomKeyboard
+                  ? 'bg-purple-50 text-purple-700 border border-purple-200'
+                  : keyboardState.shouldUseNativeKeyboard
+                    ? 'bg-green-50 text-green-700 border border-green-200'
+                    : 'bg-gray-50 text-gray-700 border border-gray-200'
+              }`}
+            >
+              {keyboardState.shouldUseCustomKeyboard
+                ? '📱 Custom Keyboard Mode'
                 : keyboardState.shouldUseNativeKeyboard
-                ? 'bg-green-50 text-green-700 border border-green-200'
-                : 'bg-gray-50 text-gray-700 border border-gray-200'
-            }`}>
-              {keyboardState.shouldUseCustomKeyboard ? '📱 Custom Keyboard Mode' : 
-               keyboardState.shouldUseNativeKeyboard ? '⌨️ Native Keyboard Mode' : 
-               '🔧 Keyboard Mode: Auto'}
+                  ? '⌨️ Native Keyboard Mode'
+                  : '🔧 Keyboard Mode: Auto'}
               {keyboardState.isCustomKeyboardActive && ' (Active)'}
-              {keyboardState.isNativeKeyboardVisible && ` (H:${keyboardState.keyboardHeight}px)`}
+              {keyboardState.isNativeKeyboardVisible &&
+                ` (H:${keyboardState.keyboardHeight}px)`}
             </div>
           </div>
         )}
-        
+
         {/* Question Section */}
         <div className="">
           <h2 className="text-2xl font-bold text-center leading-relaxed">
@@ -381,17 +386,19 @@ export default function UniversalQuestionWrapper({ questions, numLives = 5 }) {
       </KeyboardWrapper>
 
       {/* Submit Button */}
-      <div className={`flex fixed left-0 w-full z-10 px-4 py-4 bg-[#201F1F] ${
-        keyboardState.isMobile && keyboardState.isNativeKeyboardVisible
-          ? 'bottom-0' // Position above native keyboard
-          : 'bottom-0'
-      }`}
-      style={{
-        bottom: keyboardState.isMobile && keyboardState.isNativeKeyboardVisible 
-          ? `${keyboardState.keyboardHeight}px` 
-          : '0px',
-        transition: 'bottom 0.3s ease-in-out'
-      }}
+      <div
+        className={`flex fixed left-0 w-full z-10 px-4 py-4 bg-[#201F1F] ${
+          keyboardState.isMobile && keyboardState.isNativeKeyboardVisible
+            ? 'bottom-0' // Position above native keyboard
+            : 'bottom-0'
+        }`}
+        style={{
+          bottom:
+            keyboardState.isMobile && keyboardState.isNativeKeyboardVisible
+              ? `${keyboardState.keyboardHeight}px`
+              : '0px',
+          transition: 'bottom 0.3s ease-in-out',
+        }}
       >
         <div className="flex flex-col justify-center md:m-auto max-w-2xl mx-auto">
           <button

@@ -11,7 +11,7 @@ export default function OpenResponseTemplate({
   setIsAnswerCorrect,
 }) {
   const [inputValue, setInputValue] = useState('');
-  
+
   // Force native keyboard for open response questions
   const keyboard = useKeyboardManager(QUESTION_TYPES.OPEN_RESPONSE, true);
 
@@ -43,9 +43,10 @@ export default function OpenResponseTemplate({
           {...keyboard.getInputProps({
             value: inputValue,
             onChange: handleInputChange,
-            placeholder: "Write your answer",
-            className: "w-full p-4 resize-none text-sm min-h-[200px] focus:outline-none transition-all duration-200 text-[var(--color-foreground)]",
-            rows: 8
+            placeholder: 'Write your answer',
+            className:
+              'w-full p-4 resize-none text-sm min-h-[200px] focus:outline-none transition-all duration-200 text-[var(--color-foreground)]',
+            rows: 8,
           })}
           style={{
             border: '1px solid var(--grey)',

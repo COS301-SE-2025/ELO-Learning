@@ -24,11 +24,11 @@ export default function KeyboardWrapper({
   children,
   forceNativeKeyboard = false,
   onKeyboardStateChange,
-  className = ''
+  className = '',
 }) {
   const questionType = getQuestionType(question);
   const keyboard = useKeyboardManager(questionType, forceNativeKeyboard);
-  
+
   // Notify parent of keyboard state changes
   useEffect(() => {
     if (onKeyboardStateChange) {
@@ -38,7 +38,7 @@ export default function KeyboardWrapper({
         shouldUseCustomKeyboard: keyboard.shouldUseCustomKeyboard,
         shouldUseNativeKeyboard: keyboard.shouldUseNativeKeyboard,
         isMobile: keyboard.isMobile,
-        keyboardHeight: keyboard.keyboardHeight
+        keyboardHeight: keyboard.keyboardHeight,
       });
     }
   }, [
@@ -48,81 +48,83 @@ export default function KeyboardWrapper({
     keyboard.shouldUseNativeKeyboard,
     keyboard.isMobile,
     keyboard.keyboardHeight,
-    onKeyboardStateChange
+    onKeyboardStateChange,
   ]);
-  
+
   // Apply platform-specific styling
   const getPlatformStyles = () => {
     const styles = {};
-    
+
     if (keyboard.isMobile) {
       // Adjust for mobile keyboard
       if (keyboard.isNativeKeyboardVisible) {
         styles.paddingBottom = `${keyboard.keyboardHeight}px`;
         styles.transition = 'padding-bottom 0.3s ease-in-out';
       }
-      
+
       // Prevent zoom on iOS when focusing inputs
       if (keyboard.isIOS) {
         styles.fontSize = '16px'; // Prevent zoom on iOS
       }
     }
-    
+
     return styles;
   };
-  
+
   // Get wrapper classes based on keyboard state
   const getWrapperClasses = () => {
     const classes = ['keyboard-wrapper'];
-    
+
     if (keyboard.isMobile) {
       classes.push('mobile-keyboard');
-      
+
       if (keyboard.isIOS) {
         classes.push('ios-keyboard');
       }
-      
+
       if (keyboard.isAndroid) {
         classes.push('android-keyboard');
       }
-      
+
       if (keyboard.isCustomKeyboardActive) {
         classes.push('custom-keyboard-active');
       }
-      
+
       if (keyboard.isNativeKeyboardVisible) {
         classes.push('native-keyboard-visible');
       }
     }
-    
+
     if (keyboard.shouldUseCustomKeyboard) {
       classes.push('uses-custom-keyboard');
     }
-    
+
     if (keyboard.shouldUseNativeKeyboard) {
       classes.push('uses-native-keyboard');
     }
-    
+
     if (className) {
       classes.push(className);
     }
-    
+
     return classes.join(' ');
   };
-  
+
   return (
-    <div 
+    <div
       className={getWrapperClasses()}
       style={getPlatformStyles()}
       data-question-type={questionType}
-      data-keyboard-behavior={keyboard.shouldUseCustomKeyboard ? 'custom' : 'native'}
+      data-keyboard-behavior={
+        keyboard.shouldUseCustomKeyboard ? 'custom' : 'native'
+      }
     >
       {/* Main content */}
       {children}
-      
+
       {/* Keyboard spacer for mobile */}
       {keyboard.isMobile && keyboard.isNativeKeyboardVisible && (
-        <div 
+        <div
           className="keyboard-spacer"
           style={{ height: `${keyboard.keyboardHeight}px` }}
         />

@@ -28,25 +28,22 @@ export const usePlatformDetection = () => {
     isMobile: false,
     isAndroid: false,
     isIOS: false,
-    classes: ''
+    classes: '',
   });
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
       // Dynamic import to avoid SSR issues
-      import('@/utils/platformDetection').then(({ 
-        isMobile, 
-        isAndroid, 
-        isIOS, 
-        getPlatformClasses 
-      }) => {
-        setPlatform({
-          isMobile: isMobile(),
-          isAndroid: isAndroid(),
-          isIOS: isIOS(),
-          classes: getPlatformClasses()
-        });
-      });
+      import('@/utils/platformDetection').then(
+        ({ isMobile, isAndroid, isIOS, getPlatformClasses }) => {
+          setPlatform({
+            isMobile: isMobile(),
+            isAndroid: isAndroid(),
+            isIOS: isIOS(),
+            classes: getPlatformClasses(),
+          });
+        },
+      );
     }
   }, []);
 

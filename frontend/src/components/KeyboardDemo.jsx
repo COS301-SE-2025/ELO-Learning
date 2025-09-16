@@ -11,21 +11,26 @@ import { QUESTION_TYPES } from '@/utils/questionTypeDetection';
 import { useState } from 'react';
 
 export default function KeyboardDemo() {
-  const [selectedQuestionType, setSelectedQuestionType] = useState(QUESTION_TYPES.MATH_INPUT);
+  const [selectedQuestionType, setSelectedQuestionType] = useState(
+    QUESTION_TYPES.MATH_INPUT,
+  );
   const [keyboardState, setKeyboardState] = useState({});
-  
+
   // Mock question object
   const mockQuestion = {
     type: selectedQuestionType,
     questionText: `Sample ${selectedQuestionType} question`,
-    Q_id: 'demo-123'
+    Q_id: 'demo-123',
   };
 
   const questionTypes = [
     { value: QUESTION_TYPES.MATH_INPUT, label: 'Math Input (Custom KB)' },
     { value: QUESTION_TYPES.OPEN_RESPONSE, label: 'Open Response (Native KB)' },
     { value: QUESTION_TYPES.MULTIPLE_CHOICE, label: 'Multiple Choice (No KB)' },
-    { value: QUESTION_TYPES.EXPRESSION_BUILDER, label: 'Expression Builder (Custom KB)' }
+    {
+      value: QUESTION_TYPES.EXPRESSION_BUILDER,
+      label: 'Expression Builder (Custom KB)',
+    },
   ];
 
   return (
@@ -34,7 +39,7 @@ export default function KeyboardDemo() {
         <h1 className="text-3xl font-bold text-center mb-8 text-gray-800">
           Keyboard Management Demo
         </h1>
-        
+
         {/* Question Type Selector */}
         <div className="bg-white rounded-lg shadow-md p-6 mb-6">
           <h2 className="text-xl font-semibold mb-4">Select Question Type</h2>
@@ -51,10 +56,14 @@ export default function KeyboardDemo() {
               >
                 <div className="font-medium">{type.label}</div>
                 <div className="text-sm text-gray-600">
-                  {type.value === QUESTION_TYPES.MATH_INPUT && '📱 Custom keyboard with math symbols'}
-                  {type.value === QUESTION_TYPES.OPEN_RESPONSE && '⌨️ Native keyboard for text input'}
-                  {type.value === QUESTION_TYPES.MULTIPLE_CHOICE && '👆 Touch-only interaction'}
-                  {type.value === QUESTION_TYPES.EXPRESSION_BUILDER && '🔧 Custom expression keyboard'}
+                  {type.value === QUESTION_TYPES.MATH_INPUT &&
+                    '📱 Custom keyboard with math symbols'}
+                  {type.value === QUESTION_TYPES.OPEN_RESPONSE &&
+                    '⌨️ Native keyboard for text input'}
+                  {type.value === QUESTION_TYPES.MULTIPLE_CHOICE &&
+                    '👆 Touch-only interaction'}
+                  {type.value === QUESTION_TYPES.EXPRESSION_BUILDER &&
+                    '🔧 Custom expression keyboard'}
                 </div>
               </button>
             ))}
@@ -66,24 +75,31 @@ export default function KeyboardDemo() {
           <h2 className="text-xl font-semibold mb-4">Keyboard State</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
             <div>
-              <strong>Platform:</strong> {keyboardState.isMobile ? 'Mobile' : 'Desktop'}
+              <strong>Platform:</strong>{' '}
+              {keyboardState.isMobile ? 'Mobile' : 'Desktop'}
               {keyboardState.isIOS && ' (iOS)'}
               {keyboardState.isAndroid && ' (Android)'}
             </div>
             <div>
               <strong>Keyboard Mode:</strong>{' '}
-              {keyboardState.shouldUseCustomKeyboard ? 'Custom' : 
-               keyboardState.shouldUseNativeKeyboard ? 'Native' : 'None'}
+              {keyboardState.shouldUseCustomKeyboard
+                ? 'Custom'
+                : keyboardState.shouldUseNativeKeyboard
+                  ? 'Native'
+                  : 'None'}
             </div>
             <div>
-              <strong>Custom KB Active:</strong> {keyboardState.isCustomKeyboardActive ? 'Yes' : 'No'}
+              <strong>Custom KB Active:</strong>{' '}
+              {keyboardState.isCustomKeyboardActive ? 'Yes' : 'No'}
             </div>
             <div>
-              <strong>Native KB Visible:</strong> {keyboardState.isNativeKeyboardVisible ? 'Yes' : 'No'}
+              <strong>Native KB Visible:</strong>{' '}
+              {keyboardState.isNativeKeyboardVisible ? 'Yes' : 'No'}
             </div>
             {keyboardState.keyboardHeight > 0 && (
               <div className="md:col-span-2">
-                <strong>Keyboard Height:</strong> {keyboardState.keyboardHeight}px
+                <strong>Keyboard Height:</strong> {keyboardState.keyboardHeight}
+                px
               </div>
             )}
           </div>
@@ -97,10 +113,8 @@ export default function KeyboardDemo() {
         >
           <div className="p-6">
             <h2 className="text-xl font-semibold mb-4">Demo Question</h2>
-            <p className="mb-6 text-gray-700">
-              {mockQuestion.questionText}
-            </p>
-            
+            <p className="mb-6 text-gray-700">{mockQuestion.questionText}</p>
+
             <DemoQuestionComponent questionType={selectedQuestionType} />
           </div>
         </KeyboardWrapper>
@@ -112,7 +126,10 @@ export default function KeyboardDemo() {
           </h3>
           <ul className="text-blue-700 space-y-2 text-sm">
             <li>• Try different question types to see keyboard behavior</li>
-            <li>• On mobile: Math Input prevents native keyboard, Open Response allows it</li>
+            <li>
+              • On mobile: Math Input prevents native keyboard, Open Response
+              allows it
+            </li>
             <li>• Watch the keyboard state indicators above</li>
             <li>• Test focus management by tapping input fields</li>
             <li>• Notice how the UI adapts to keyboard presence</li>
@@ -138,7 +155,7 @@ function DemoQuestionComponent({ questionType }) {
       }
     } else {
       // Desktop fallback
-      setInputValue(prev => prev + symbol);
+      setInputValue((prev) => prev + symbol);
     }
   };
 
@@ -154,18 +171,34 @@ function DemoQuestionComponent({ questionType }) {
               {...keyboard.getInputProps({
                 value: inputValue,
                 onChange: (e) => setInputValue(e.target.value),
-                placeholder: "e.g., x^2 + 2x + 1",
-                className: "w-full p-3 border border-gray-300 rounded-lg resize-none"
+                placeholder: 'e.g., x^2 + 2x + 1',
+                className:
+                  'w-full p-3 border border-gray-300 rounded-lg resize-none',
               })}
               rows={3}
             />
           </div>
-          
+
           {keyboard.shouldUseCustomKeyboard && (
             <div className="bg-purple-100 rounded-lg p-4">
-              <div className="text-sm font-medium text-purple-800 mb-3">Custom Math Keyboard</div>
+              <div className="text-sm font-medium text-purple-800 mb-3">
+                Custom Math Keyboard
+              </div>
               <div className="grid grid-cols-4 gap-2">
-                {['x', 'y', '^', '√', '+', '-', '*', '/', '(', ')', '=', 'π'].map(symbol => (
+                {[
+                  'x',
+                  'y',
+                  '^',
+                  '√',
+                  '+',
+                  '-',
+                  '*',
+                  '/',
+                  '(',
+                  ')',
+                  '=',
+                  'π',
+                ].map((symbol) => (
                   <button
                     key={symbol}
                     onClick={() => insertSymbol(symbol)}
@@ -190,8 +223,9 @@ function DemoQuestionComponent({ questionType }) {
             {...keyboard.getInputProps({
               value: inputValue,
               onChange: (e) => setInputValue(e.target.value),
-              placeholder: "Explain your reasoning in detail...",
-              className: "w-full p-3 border border-gray-300 rounded-lg resize-none"
+              placeholder: 'Explain your reasoning in detail...',
+              className:
+                'w-full p-3 border border-gray-300 rounded-lg resize-none',
             })}
             rows={6}
           />
@@ -207,19 +241,21 @@ function DemoQuestionComponent({ questionType }) {
           <div className="text-sm font-medium text-gray-700 mb-3">
             Select the correct answer:
           </div>
-          {['Option A', 'Option B', 'Option C', 'Option D'].map((option, index) => (
-            <button
-              key={index}
-              onClick={() => setSelectedOption(option)}
-              className={`w-full p-3 text-left rounded-lg border-2 transition-all ${
-                selectedOption === option
-                  ? 'border-purple-500 bg-purple-50'
-                  : 'border-gray-200 hover:border-purple-300'
-              }`}
-            >
-              {option}
-            </button>
-          ))}
+          {['Option A', 'Option B', 'Option C', 'Option D'].map(
+            (option, index) => (
+              <button
+                key={index}
+                onClick={() => setSelectedOption(option)}
+                className={`w-full p-3 text-left rounded-lg border-2 transition-all ${
+                  selectedOption === option
+                    ? 'border-purple-500 bg-purple-50'
+                    : 'border-gray-200 hover:border-purple-300'
+                }`}
+              >
+                {option}
+              </button>
+            ),
+          )}
         </div>
       );
 
@@ -234,14 +270,32 @@ function DemoQuestionComponent({ questionType }) {
               {inputValue || 'Click symbols below to build expression...'}
             </div>
           </div>
-          
+
           <div className="bg-green-100 rounded-lg p-4">
-            <div className="text-sm font-medium text-green-800 mb-3">Expression Builder</div>
+            <div className="text-sm font-medium text-green-800 mb-3">
+              Expression Builder
+            </div>
             <div className="grid grid-cols-5 gap-2">
-              {['x', 'y', 'z', '+', '-', '*', '/', '^', '(', ')', 'sin', 'cos', 'log', '√', '∫'].map(symbol => (
+              {[
+                'x',
+                'y',
+                'z',
+                '+',
+                '-',
+                '*',
+                '/',
+                '^',
+                '(',
+                ')',
+                'sin',
+                'cos',
+                'log',
+                '√',
+                '∫',
+              ].map((symbol) => (
                 <button
                   key={symbol}
-                  onClick={() => setInputValue(prev => prev + symbol)}
+                  onClick={() => setInputValue((prev) => prev + symbol)}
                   className="p-2 bg-white rounded border hover:bg-green-50 text-center text-sm font-mono"
                 >
                   {symbol}

@@ -16,7 +16,7 @@ export const QUESTION_TYPES = {
   MATCH_QUESTION: 'Match Question',
   MATCHING: 'Matching',
   TRUE_FALSE: 'True/False',
-  TRUE_FALSE_ALT: 'True-False'
+  TRUE_FALSE_ALT: 'True-False',
 };
 
 /**
@@ -26,15 +26,13 @@ export const CUSTOM_KEYBOARD_TYPES = [
   QUESTION_TYPES.MATH_INPUT,
   QUESTION_TYPES.EXPRESSION_BUILDER,
   QUESTION_TYPES.FILL_IN_THE_BLANK,
-  QUESTION_TYPES.FILL_IN_THE_BLANKS
+  QUESTION_TYPES.FILL_IN_THE_BLANKS,
 ];
 
 /**
  * Question types that require native keyboards on mobile
  */
-export const NATIVE_KEYBOARD_TYPES = [
-  QUESTION_TYPES.OPEN_RESPONSE
-];
+export const NATIVE_KEYBOARD_TYPES = [QUESTION_TYPES.OPEN_RESPONSE];
 
 /**
  * Question types that don't require keyboards (UI-only interaction)
@@ -44,7 +42,7 @@ export const NO_KEYBOARD_TYPES = [
   QUESTION_TYPES.MATCH_QUESTION,
   QUESTION_TYPES.MATCHING,
   QUESTION_TYPES.TRUE_FALSE,
-  QUESTION_TYPES.TRUE_FALSE_ALT
+  QUESTION_TYPES.TRUE_FALSE_ALT,
 ];
 
 /**
@@ -56,39 +54,39 @@ export const normalizeQuestionType = (questionType) => {
   if (!questionType || typeof questionType !== 'string') {
     return '';
   }
-  
+
   const normalized = questionType.trim();
-  
+
   // Handle common variations
   const typeMap = {
     'math input': QUESTION_TYPES.MATH_INPUT,
-    'mathinput': QUESTION_TYPES.MATH_INPUT,
+    mathinput: QUESTION_TYPES.MATH_INPUT,
     'math-input': QUESTION_TYPES.MATH_INPUT,
     'open response': QUESTION_TYPES.OPEN_RESPONSE,
-    'openresponse': QUESTION_TYPES.OPEN_RESPONSE,
+    openresponse: QUESTION_TYPES.OPEN_RESPONSE,
     'open-response': QUESTION_TYPES.OPEN_RESPONSE,
     'expression builder': QUESTION_TYPES.EXPRESSION_BUILDER,
-    'expressionbuilder': QUESTION_TYPES.EXPRESSION_BUILDER,
+    expressionbuilder: QUESTION_TYPES.EXPRESSION_BUILDER,
     'expression-builder': QUESTION_TYPES.EXPRESSION_BUILDER,
     'fill in the blank': QUESTION_TYPES.FILL_IN_THE_BLANK,
     'fill-in-the-blank': QUESTION_TYPES.FILL_IN_THE_BLANK,
-    'fillintheblank': QUESTION_TYPES.FILL_IN_THE_BLANK,
+    fillintheblank: QUESTION_TYPES.FILL_IN_THE_BLANK,
     'fill in the blanks': QUESTION_TYPES.FILL_IN_THE_BLANKS,
     'fill-in-the-blanks': QUESTION_TYPES.FILL_IN_THE_BLANKS,
-    'fillintheblanks': QUESTION_TYPES.FILL_IN_THE_BLANKS,
+    fillintheblanks: QUESTION_TYPES.FILL_IN_THE_BLANKS,
     'match question': QUESTION_TYPES.MATCH_QUESTION,
-    'matchquestion': QUESTION_TYPES.MATCH_QUESTION,
+    matchquestion: QUESTION_TYPES.MATCH_QUESTION,
     'match-question': QUESTION_TYPES.MATCH_QUESTION,
-    'matching': QUESTION_TYPES.MATCHING,
+    matching: QUESTION_TYPES.MATCHING,
     'multiple choice': QUESTION_TYPES.MULTIPLE_CHOICE,
-    'multiplechoice': QUESTION_TYPES.MULTIPLE_CHOICE,
+    multiplechoice: QUESTION_TYPES.MULTIPLE_CHOICE,
     'multiple-choice': QUESTION_TYPES.MULTIPLE_CHOICE,
     'true/false': QUESTION_TYPES.TRUE_FALSE,
     'true false': QUESTION_TYPES.TRUE_FALSE,
-    'truefalse': QUESTION_TYPES.TRUE_FALSE,
-    'true-false': QUESTION_TYPES.TRUE_FALSE_ALT
+    truefalse: QUESTION_TYPES.TRUE_FALSE,
+    'true-false': QUESTION_TYPES.TRUE_FALSE_ALT,
   };
-  
+
   const lowerCaseType = normalized.toLowerCase();
   return typeMap[lowerCaseType] || normalized;
 };
@@ -130,14 +128,15 @@ export const requiresNoKeyboard = (questionType) => {
  */
 export const getKeyboardBehavior = (questionType) => {
   const normalized = normalizeQuestionType(questionType);
-  
+
   return {
     questionType: normalized,
     needsCustomKeyboard: requiresCustomKeyboard(normalized),
     needsNativeKeyboard: requiresNativeKeyboard(normalized),
     needsNoKeyboard: requiresNoKeyboard(normalized),
     preventNativeKeyboard: requiresCustomKeyboard(normalized),
-    allowNativeKeyboard: requiresNativeKeyboard(normalized) || requiresNoKeyboard(normalized)
+    allowNativeKeyboard:
+      requiresNativeKeyboard(normalized) || requiresNoKeyboard(normalized),
   };
 };
 
@@ -148,7 +147,7 @@ export const getKeyboardBehavior = (questionType) => {
  */
 export const getCustomKeyboardType = (questionType) => {
   const normalized = normalizeQuestionType(questionType);
-  
+
   switch (normalized) {
     case QUESTION_TYPES.MATH_INPUT:
       return 'math';
@@ -169,41 +168,41 @@ export const getCustomKeyboardType = (questionType) => {
  */
 export const getValidationRequirements = (questionType) => {
   const normalized = normalizeQuestionType(questionType);
-  
+
   switch (normalized) {
     case QUESTION_TYPES.MATH_INPUT:
       return {
         requiresValidExpression: true,
         minimumLength: 1,
         allowEmpty: false,
-        validateMathSyntax: true
+        validateMathSyntax: true,
       };
-    
+
     case QUESTION_TYPES.OPEN_RESPONSE:
       return {
         requiresValidExpression: false,
         minimumLength: 10,
         allowEmpty: false,
-        validateMathSyntax: false
+        validateMathSyntax: false,
       };
-    
+
     case QUESTION_TYPES.EXPRESSION_BUILDER:
       return {
         requiresValidExpression: true,
         minimumLength: 1,
         allowEmpty: false,
-        validateMathSyntax: true
+        validateMathSyntax: true,
       };
-    
+
     case QUESTION_TYPES.FILL_IN_THE_BLANK:
     case QUESTION_TYPES.FILL_IN_THE_BLANKS:
       return {
         requiresValidExpression: false,
         minimumLength: 1,
         allowEmpty: false,
-        validateMathSyntax: false
+        validateMathSyntax: false,
       };
-    
+
     case QUESTION_TYPES.MULTIPLE_CHOICE:
     case QUESTION_TYPES.TRUE_FALSE:
     case QUESTION_TYPES.TRUE_FALSE_ALT:
@@ -211,9 +210,9 @@ export const getValidationRequirements = (questionType) => {
         requiresValidExpression: false,
         minimumLength: 0,
         allowEmpty: false,
-        validateMathSyntax: false
+        validateMathSyntax: false,
       };
-    
+
     case QUESTION_TYPES.MATCH_QUESTION:
     case QUESTION_TYPES.MATCHING:
       return {
@@ -221,15 +220,15 @@ export const getValidationRequirements = (questionType) => {
         minimumLength: 0,
         allowEmpty: false,
         validateMathSyntax: false,
-        requiresAllMatches: true
+        requiresAllMatches: true,
       };
-    
+
     default:
       return {
         requiresValidExpression: false,
         minimumLength: 0,
         allowEmpty: true,
-        validateMathSyntax: false
+        validateMathSyntax: false,
       };
   }
 };
@@ -241,50 +240,59 @@ export const getValidationRequirements = (questionType) => {
  * @param {boolean} isValidExpression - Whether expression is mathematically valid
  * @returns {boolean} True if answer is valid
  */
-export const isAnswerValid = (questionType, answer, isValidExpression = true) => {
+export const isAnswerValid = (
+  questionType,
+  answer,
+  isValidExpression = true,
+) => {
   const requirements = getValidationRequirements(questionType);
-  
+
   // Check if empty answer is allowed
   if (!answer || (typeof answer === 'string' && !answer.trim())) {
     return requirements.allowEmpty;
   }
-  
+
   // Check minimum length for string answers
   if (typeof answer === 'string') {
     if (answer.trim().length < requirements.minimumLength) {
       return false;
     }
   }
-  
+
   // Check math expression validity
   if (requirements.requiresValidExpression && !isValidExpression) {
     return false;
   }
-  
+
   // Special handling for different question types
   const normalized = normalizeQuestionType(questionType);
-  
+
   switch (normalized) {
     case QUESTION_TYPES.MULTIPLE_CHOICE:
     case QUESTION_TYPES.TRUE_FALSE:
     case QUESTION_TYPES.TRUE_FALSE_ALT:
       return answer !== null && answer !== undefined && answer !== '';
-    
+
     case QUESTION_TYPES.MATCH_QUESTION:
     case QUESTION_TYPES.MATCHING:
       if (typeof answer === 'object' && answer !== null) {
         const matches = Object.keys(answer);
-        return matches.length > 0 && matches.every(key => answer[key] && answer[key].trim());
+        return (
+          matches.length > 0 &&
+          matches.every((key) => answer[key] && answer[key].trim())
+        );
       }
       return false;
-    
+
     case QUESTION_TYPES.FILL_IN_THE_BLANKS:
       if (typeof answer === 'object' && answer !== null) {
         const blanks = Object.values(answer);
-        return blanks.length > 0 && blanks.every(blank => blank && blank.trim());
+        return (
+          blanks.length > 0 && blanks.every((blank) => blank && blank.trim())
+        );
       }
       return false;
-    
+
     default:
       return true;
   }
@@ -297,13 +305,14 @@ export const isAnswerValid = (questionType, answer, isValidExpression = true) =>
  */
 export const getQuestionType = (question) => {
   if (!question) return '';
-  
+
   // Check various possible type fields
-  const type = question.type || 
-               question.questionType || 
-               question.question_type ||
-               question.Type ||
-               '';
-  
+  const type =
+    question.type ||
+    question.questionType ||
+    question.question_type ||
+    question.Type ||
+    '';
+
   return normalizeQuestionType(type);
 };

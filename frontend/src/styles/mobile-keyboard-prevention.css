@@ -1,0 +1,305 @@
+/* Mobile Keyboard Prevention for ContentEditable Approach */
+
+/* Cursor blinking animation for visual indicator */
+@keyframes cursor-blink {
+  0%, 50% {
+    opacity: 1;
+  }
+  51%, 100% {
+    opacity: 0;
+  }
+}
+
+/* Cursor indicator styling */
+.cursor-indicator {
+  display: inline-block !important;
+  color: #4D5DED !important;
+  font-weight: bold !important;
+  animation: cursor-blink 1s infinite !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  line-height: inherit !important;
+  font-size: inherit !important;
+}
+
+/* ContentEditable placeholder styling */
+.math-input[data-placeholder]:empty::before {
+  content: attr(data-placeholder);
+  color: #9CA3AF; /* gray-400 */
+  pointer-events: none;
+  font-style: normal;
+  opacity: 0.7;
+}
+
+/* ContentEditable focus styles with enhanced cursor visibility */
+.math-input[contenteditable="true"]:focus {
+  outline: none;
+  caret-color: #4D5DED;
+}
+
+/* Enhanced caret styling for better visibility */
+.math-input {
+  caret-color: #4D5DED !important;
+}
+
+/* White text color for better visibility - Enhanced specificity */
+.math-input,
+.math-input *,
+div[contenteditable].math-input,
+[contenteditable="true"].math-input,
+[contenteditable="false"].math-input {
+  color: white !important;
+}
+
+/* Ensure text color is white in all states */
+.math-input:focus,
+.math-input:active,
+.math-input:hover {
+  color: white !important;
+}
+
+/* Force white text on all child elements */
+.math-input * {
+  color: inherit !important;
+}
+
+/* Override any potential Tailwind or other framework color classes */
+.math-input.text-black,
+.math-input.text-gray-900,
+.math-input.text-foreground {
+  color: white !important;
+}
+
+/* CRITICAL: When contentEditable="false" (mobile custom keyboard mode) - IMPROVED */
+.math-input[contenteditable="false"] {
+  /* Maintain cursor and text selection even when editing is disabled */
+  cursor: text !important;
+  user-select: text !important;
+  -webkit-user-select: text !important;
+  
+  /* CRITICAL: Ensure the content is still interactive for cursor positioning */
+  pointer-events: auto !important;
+  
+  /* Visual feedback that content is selectable and focusable */
+  caret-color: #4D5DED !important;
+  
+  /* Ensure focus behavior works */
+  outline: none;
+  
+  /* Prevent any potential blocking of interactions */
+  touch-action: manipulation;
+}
+
+/* Enhanced focus behavior for contentEditable elements */
+.math-input[contenteditable="false"]:focus {
+  /* Strong visual focus indicator */
+  outline: 2px solid white !important;
+  outline-offset: -2px;
+  
+  /* Ensure all interactions work in focus state */
+  pointer-events: auto !important;
+  user-select: text !important;
+  -webkit-user-select: text !important;
+}
+
+/* Android-specific keyboard prevention - Enhanced for Chrome and Samsung Internet */
+.platform-android .math-input {
+  /* Prevent any zoom that might trigger keyboard */
+  font-size: 16px !important;
+  
+  /* CRITICAL: Multiple layers of Android keyboard prevention */
+  -webkit-appearance: none !important;
+  appearance: none !important;
+  
+  /* Disable webkit behaviors that might trigger keyboard */
+  -webkit-text-fill-color: white !important;
+  -webkit-opacity: 1 !important;
+  opacity: 1 !important;
+  
+  /* Prevent touch callouts and highlights */
+  -webkit-touch-callout: none !important;
+  -webkit-tap-highlight-color: transparent !important;
+  
+  /* Samsung Internet specific prevention */
+  -webkit-user-modify: read-only !important;
+  
+  /* Ensure text selection works even with prevention measures */
+  -webkit-user-select: text !important;
+  user-select: text !important;
+  
+  /* Prevent context menu that might trigger keyboard */
+  pointer-events: auto !important;
+}
+
+/* Android keyboard prevention when custom keyboard is active - IMPROVED */
+.platform-android .custom-keyboard-active .math-input[contenteditable="false"] {
+  /* Chrome specific: Completely disable text input processing */
+  -webkit-user-modify: read-only !important;
+  
+  /* Samsung Internet specific: Additional layer */
+  -webkit-writing-mode: unset !important;
+  writing-mode: unset !important;
+  
+  /* Prevent any input method activation */
+  ime-mode: disabled !important;
+  -webkit-ime-mode: disabled !important;
+  
+  /* IMPROVED: Maintain visual feedback and interaction capability */
+  cursor: text !important;
+  caret-color: #4D5DED !important;
+  
+  /* CRITICAL: Ensure touch and pointer events work for focus */
+  pointer-events: auto !important;
+  touch-action: manipulation !important;
+  
+  /* Allow text selection for cursor positioning */
+  -webkit-user-select: text !important;
+  user-select: text !important;
+  
+  /* Prevent context menus but allow selection */
+  -webkit-touch-callout: none !important;
+  -webkit-tap-highlight-color: transparent !important;
+}
+
+/* Android Chrome specific overrides */
+@supports (-webkit-touch-callout: none) {
+  .platform-android .math-input[inputmode="none"] {
+    /* Force input mode none compliance */
+    -webkit-appearance: none !important;
+    appearance: none !important;
+    
+    /* Disable all text input methods */
+    -webkit-user-modify: read-only !important;
+    
+    /* Ensure no zoom triggers */
+    font-size: 16px !important;
+    transform: scale(1) !important;
+  }
+}
+
+/* Samsung Internet Browser specific fixes */
+@media screen and (-webkit-min-device-pixel-ratio: 0) {
+  .platform-android .math-input {
+    /* Samsung specific keyboard prevention */
+    -webkit-user-modify: read-only !important;
+    -webkit-appearance: none !important;
+    appearance: none !important;
+    
+    /* Additional Samsung Internet overrides */
+    -webkit-text-size-adjust: 100% !important;
+    text-size-adjust: 100% !important;
+  }
+  
+  .platform-android .custom-keyboard-active .math-input[contenteditable="false"] {
+    /* Force disable all input capabilities while maintaining interaction */
+    -webkit-user-modify: read-only !important;
+    
+    /* IMPROVED: Don't disable pointer events completely */
+    pointer-events: auto !important;
+    touch-action: manipulation !important;
+  }
+  
+  /* IMPROVED: Enhanced focus state for Samsung Internet */
+  .platform-android .custom-keyboard-active .math-input[contenteditable="false"]:focus {
+    pointer-events: auto !important;
+    outline: 2px solid white !important;
+    outline-offset: -2px;
+  }
+}
+
+/* iOS-specific styles */
+.platform-ios .math-input {
+  -webkit-appearance: none;
+  appearance: none;
+  
+  /* iOS-specific user selection handling */
+  -webkit-user-select: text;
+  user-select: text;
+}
+
+/* Custom keyboard active state */
+.custom-keyboard-active .math-input {
+  /* Visual indicators when custom keyboard is controlling input */
+  border-color: #4D5DED !important;
+  caret-color: #4D5DED;
+}
+
+.custom-keyboard-active .math-input[contenteditable="false"] {
+  /* Maintain interactivity when custom keyboard is active */
+  background-color: #fff;
+  color: #000;
+  opacity: 1;
+}
+
+/* Prevent context menus on mobile that might trigger keyboards */
+@media (max-width: 768px) {
+  .math-input {
+    -webkit-touch-callout: none;
+    -webkit-user-select: text;
+    user-select: text;
+  }
+  
+  /* Prevent long-press context menus */
+  .math-input * {
+    -webkit-touch-callout: none;
+  }
+}
+
+/* Ensure contentEditable div behaves like a proper input field */
+.math-input {
+  /* Make sure it has proper input-like behavior */
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  white-space: pre-wrap;
+  
+  /* Proper scrolling for long content */
+  overflow-y: auto;
+  
+  /* Consistent font rendering */
+  font-feature-settings: normal;
+  font-variant: normal;
+}
+
+/* Focus styles that work for both contenteditable states */
+.math-input:focus {
+  outline: 2px solid white;
+  outline-offset: -2px;
+}
+
+/* Selection styles that work in all states */
+.math-input::selection {
+  background-color: #4D5DED;
+  color: white;
+}
+
+.math-input::-moz-selection {
+  background-color: #4D5DED;
+  color: white;
+}
+
+/* Ensure proper text rendering in contentEditable */
+.math-input > * {
+  display: inline;
+}
+
+/* Handle empty state properly */
+.math-input:empty {
+  min-height: 80px;
+}
+
+/* Prevent unwanted formatting in contentEditable */
+.math-input div, 
+.math-input p, 
+.math-input br {
+  display: inline;
+  margin: 0;
+  padding: 0;
+}
+
+
+.math-input,
+.math-input *,
+.platform-android .math-input {
+  -webkit-text-fill-color: white !important;
+  color: white !important;
+}

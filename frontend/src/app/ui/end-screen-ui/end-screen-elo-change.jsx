@@ -32,17 +32,18 @@ export default function EndELOChange({ eloChange }) {
     );
   }
 
-  const delta =
-    eloChange != null
-      ? `${eloChange >= 0 ? '+' : ''}${eloChange.toFixed(0)}`
-      : '—';
+  const isValidNumber = typeof eloChange === 'number' && !isNaN(eloChange);
+  const delta = isValidNumber
+    ? `${eloChange >= 0 ? '+' : ''}${eloChange.toFixed(0)}`
+    : '—';
 
-  const textColor =
-    eloChange > 0
+  const textColor = isValidNumber
+    ? eloChange > 0
       ? 'text-green-500'
       : eloChange < 0
         ? 'text-red-500'
-        : 'text-gray-500';
+        : 'text-gray-500'
+    : 'text-gray-500';
 
   return (
     <div className="border-1 border-[#FF6E99] rounded-[10px] w-[120px]">

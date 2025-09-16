@@ -9,6 +9,7 @@ import {
 import { validateAnswerSync } from '@/utils/answerValidator';
 import {
   clearContent,
+  deleteAtCursor,
   getCursorPosition,
   getTextContent,
   insertTextAtCursor,
@@ -402,52 +403,19 @@ export default function MathInputTemplate({
     const input = inputRef.current;
     if (!input) return;
 
-    // Get current text and selection
-    const text = input.textContent || '';
-    const selection = window.getSelection();
+    // Use the improved helper function for better reliability
+    deleteAtCursor(input, 1, true);
 
-    if (selection.rangeCount === 0) return;
+    // Update local state
+    const newValue = getTextContent(input);
+    setInputValue(newValue);
+    setStudentAnswer(newValue);
 
-    const range = selection.getRangeAt(0);
-    const cursorPos = getCursorPosition(input);
-
-    if (cursorPos > 0) {
-      // Remove one character before cursor
-      const newText = text.slice(0, cursorPos - 1) + text.slice(cursorPos);
-
-      // Update content
-      input.textContent = newText;
-      setInputValue(newText);
-      setStudentAnswer(newText);
-
-      // Set cursor position manually - simpler approach
-      setTimeout(() => {
-        const newRange = document.createRange();
-        const textNode = input.firstChild;
-
-        if (textNode && textNode.nodeType === Node.TEXT_NODE) {
-          const newPos = Math.max(0, cursorPos - 1);
-          newRange.setStart(
-            textNode,
-            Math.min(newPos, textNode.textContent.length),
-          );
-          newRange.collapse(true);
-          selection.removeAllRanges();
-          selection.addRange(newRange);
-        } else if (newText.length === 0) {
-          // Empty content, create text node and set cursor
-          const emptyTextNode = document.createTextNode('');
-          input.appendChild(emptyTextNode);
-          newRange.setStart(emptyTextNode, 0);
-          newRange.collapse(true);
-          selection.removeAllRanges();
-          selection.addRange(newRange);
-        }
-
-        // Show cursor indicator
-        showCursorIndicator(input);
-      }, 10);
-    }
+    // Show cursor indicator for visual feedback
+    setTimeout(() => {
+      showCursorIndicator(input);
+      setTimeout(() => removeCursorIndicator(input), 1500);
+    }, 50);
   };
 
   // Cursor navigation functions with visual feedback

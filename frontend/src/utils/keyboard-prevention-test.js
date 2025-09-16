@@ -60,7 +60,7 @@ window.debugContentEditableState = () => {
     // Check iOS-specific attributes
     console.log('readonly attribute:', mathInput.hasAttribute('readonly'));
     console.log('inputmode attribute:', mathInput.getAttribute('inputmode'));
-    
+
     // Check iOS-specific styles
     const computedStyle = window.getComputedStyle(mathInput);
     console.log('webkit-user-select:', computedStyle.webkitUserSelect);
@@ -86,11 +86,12 @@ window.debugContentEditableState = () => {
       document.body.className ||
       mathInput.closest('[class*="platform-"]')?.className;
     console.log('platform classes:', platformClasses);
-    
+
     // iOS-specific detection
     const userAgent = navigator.userAgent;
     const isIOSUserAgent = /iPad|iPhone|iPod/.test(userAgent);
-    const isPossibleIOS = /Macintosh/.test(userAgent) && navigator.maxTouchPoints > 1;
+    const isPossibleIOS =
+      /Macintosh/.test(userAgent) && navigator.maxTouchPoints > 1;
     console.log('iOS detected (userAgent):', isIOSUserAgent);
     console.log('iOS detected (Macintosh + touch):', isPossibleIOS);
     console.log('iOS detected (combined):', isIOSUserAgent || isPossibleIOS);

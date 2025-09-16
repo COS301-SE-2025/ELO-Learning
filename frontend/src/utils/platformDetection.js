@@ -36,13 +36,14 @@ export const isIOS = () => {
   if (typeof window === 'undefined') return false;
 
   const userAgent = navigator.userAgent || navigator.vendor || window.opera;
-  
+
   // Check for traditional iOS devices
   const isIOSUserAgent = /iPad|iPhone|iPod/.test(userAgent) && !window.MSStream;
-  
+
   // Check for newer iOS devices that might use different user agents (iOS 13+)
-  const isPossibleIOS = /Macintosh/.test(userAgent) && navigator.maxTouchPoints > 1;
-  
+  const isPossibleIOS =
+    /Macintosh/.test(userAgent) && navigator.maxTouchPoints > 1;
+
   return isIOSUserAgent || isPossibleIOS;
 };
 

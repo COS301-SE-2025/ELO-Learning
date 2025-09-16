@@ -217,39 +217,39 @@ div[contenteditable].math-input,
 .platform-ios .math-input {
   -webkit-appearance: none;
   appearance: none;
-  
+
   /* iOS-specific user selection handling */
   -webkit-user-select: text;
   user-select: text;
-  
+
   /* Prevent iOS zoom that can trigger keyboard */
   font-size: 16px !important;
-  
+
   /* iOS specific keyboard prevention */
   -webkit-touch-callout: none;
   -webkit-tap-highlight-color: transparent;
 }
 
 /* iOS keyboard prevention when custom keyboard is active */
-.platform-ios .custom-keyboard-active .math-input[contenteditable="false"] {
+.platform-ios .custom-keyboard-active .math-input[contenteditable='false'] {
   /* iOS specific: Multiple layers of keyboard prevention */
   -webkit-user-select: none !important;
   user-select: none !important;
-  
+
   /* Prevent any text input methods */
   pointer-events: auto !important;
-  
+
   /* iOS specific: Disable text editing capabilities while maintaining interaction */
   -webkit-user-modify: read-only !important;
-  
+
   /* Prevent context menus and selection */
   -webkit-touch-callout: none !important;
   -webkit-tap-highlight-color: transparent !important;
-  
+
   /* Ensure no zoom triggers */
   font-size: 16px !important;
   transform: scale(1) !important;
-  
+
   /* Additional iOS prevention */
   -webkit-text-size-adjust: 100% !important;
   text-size-adjust: 100% !important;
@@ -257,28 +257,30 @@ div[contenteditable].math-input,
 
 /* iOS Safari specific overrides */
 @supports (-webkit-appearance: none) {
-  .platform-ios .custom-keyboard-active .math-input[contenteditable="false"] {
+  .platform-ios .custom-keyboard-active .math-input[contenteditable='false'] {
     /* Force disable all input capabilities for iOS Safari */
     -webkit-user-modify: read-only !important;
     -webkit-appearance: none !important;
     appearance: none !important;
-    
+
     /* Prevent any focus behaviors that might trigger keyboard */
     outline: none !important;
-    
+
     /* Maintain visual feedback */
     cursor: text !important;
   }
-  
-  .platform-ios .custom-keyboard-active .math-input[contenteditable="false"]:focus {
+
+  .platform-ios
+    .custom-keyboard-active
+    .math-input[contenteditable='false']:focus {
     /* Enhanced focus state for iOS */
     outline: 2px solid white !important;
     outline-offset: -2px;
-    
+
     /* Ensure focus doesn't trigger keyboard */
     -webkit-user-modify: read-only !important;
   }
-}/* Custom keyboard active state */
+} /* Custom keyboard active state */
 .custom-keyboard-active .math-input {
   /* Visual indicators when custom keyboard is controlling input */
   border-color: #4d5ded !important;

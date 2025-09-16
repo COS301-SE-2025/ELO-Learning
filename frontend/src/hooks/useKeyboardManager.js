@@ -108,35 +108,39 @@ export const useKeyboardManager = (
             'Android custom keyboard activated with prevention measures',
           );
         }, 150);
-        } else if (behavior.isIOS) {
-          // iOS-specific: Much more aggressive approach
-          input.blur();
-          
-          setTimeout(() => {
-            // Multiple layers of iOS prevention
-            input.contentEditable = 'false';
-            input.setAttribute('readonly', 'true');
-            input.setAttribute('inputmode', 'none');
-            input.setAttribute('autocomplete', 'off');
-            input.setAttribute('autocorrect', 'off');
-            input.setAttribute('autocapitalize', 'off');
-            input.setAttribute('spellcheck', 'false');
-            
-            // iOS-specific styles that are harder to override
-            input.style.setProperty('-webkit-user-select', 'none', 'important');
-            input.style.setProperty('user-select', 'none', 'important');
-            input.style.setProperty('-webkit-touch-callout', 'none', 'important');
-            input.style.setProperty('-webkit-tap-highlight-color', 'transparent', 'important');
-            input.style.setProperty('pointer-events', 'none', 'important');
-            
-            // Critical: Re-enable pointer events only for the parent container
-            const parent = input.parentElement;
-            if (parent) {
-              parent.style.setProperty('pointer-events', 'auto', 'important');
-            }
-            
-            console.log('iOS aggressive keyboard prevention applied');
-          }, 200); // Longer delay for iOS
+      } else if (behavior.isIOS) {
+        // iOS-specific: Much more aggressive approach
+        input.blur();
+
+        setTimeout(() => {
+          // Multiple layers of iOS prevention
+          input.contentEditable = 'false';
+          input.setAttribute('readonly', 'true');
+          input.setAttribute('inputmode', 'none');
+          input.setAttribute('autocomplete', 'off');
+          input.setAttribute('autocorrect', 'off');
+          input.setAttribute('autocapitalize', 'off');
+          input.setAttribute('spellcheck', 'false');
+
+          // iOS-specific styles that are harder to override
+          input.style.setProperty('-webkit-user-select', 'none', 'important');
+          input.style.setProperty('user-select', 'none', 'important');
+          input.style.setProperty('-webkit-touch-callout', 'none', 'important');
+          input.style.setProperty(
+            '-webkit-tap-highlight-color',
+            'transparent',
+            'important',
+          );
+          input.style.setProperty('pointer-events', 'none', 'important');
+
+          // Critical: Re-enable pointer events only for the parent container
+          const parent = input.parentElement;
+          if (parent) {
+            parent.style.setProperty('pointer-events', 'auto', 'important');
+          }
+
+          console.log('iOS aggressive keyboard prevention applied');
+        }, 200); // Longer delay for iOS
       } else {
         // Generic mobile or desktop
         input.contentEditable = 'false';
@@ -149,35 +153,35 @@ export const useKeyboardManager = (
   /**
    * Deactivate custom keyboard mode with platform-specific cleanup
    */
-const deactivateCustomKeyboard = useCallback(() => {
-  setIsCustomKeyboardActive(false);
+  const deactivateCustomKeyboard = useCallback(() => {
+    setIsCustomKeyboardActive(false);
 
-  if (inputRef.current) {
-    const input = inputRef.current;
+    if (inputRef.current) {
+      const input = inputRef.current;
 
-    if (behavior.isAndroid) {
-      // Android-specific cleanup
-      input.contentEditable = 'true';
-      input.removeAttribute('inputmode');
-      console.log('Android custom keyboard deactivated');
-    } else if (behavior.isIOS) {
-      // iOS-specific cleanup
-      input.contentEditable = 'true';
-      input.removeAttribute('readonly');
-      input.removeAttribute('inputmode');
-      
-      // Restore iOS user selection
-      input.style.removeProperty('-webkit-user-select');
-      input.style.removeProperty('user-select');
-      
-      console.log('iOS custom keyboard deactivated');
-    } else {
-      // Generic cleanup
-      input.contentEditable = 'true';
-      input.removeAttribute('inputmode');
+      if (behavior.isAndroid) {
+        // Android-specific cleanup
+        input.contentEditable = 'true';
+        input.removeAttribute('inputmode');
+        console.log('Android custom keyboard deactivated');
+      } else if (behavior.isIOS) {
+        // iOS-specific cleanup
+        input.contentEditable = 'true';
+        input.removeAttribute('readonly');
+        input.removeAttribute('inputmode');
+
+        // Restore iOS user selection
+        input.style.removeProperty('-webkit-user-select');
+        input.style.removeProperty('user-select');
+
+        console.log('iOS custom keyboard deactivated');
+      } else {
+        // Generic cleanup
+        input.contentEditable = 'true';
+        input.removeAttribute('inputmode');
+      }
     }
-  }
-}, [behavior.isAndroid, behavior.isIOS]);
+  }, [behavior.isAndroid, behavior.isIOS]);
 
   /**
    * Focus input with appropriate keyboard behavior for contentEditable

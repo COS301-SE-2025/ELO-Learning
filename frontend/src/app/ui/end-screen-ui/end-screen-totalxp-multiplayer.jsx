@@ -204,6 +204,9 @@ export default function TotalXPMP({ onLoadComplete, onResults }) {
               resultsKey,
               JSON.stringify({
                 xpEarned: userResults.xpEarned,
+                newElo: userResults.newElo,
+                eloChange: userResults.eloChange,
+                currentRank: userResults.currentRank,
                 timestamp: Date.now(),
               }),
             );

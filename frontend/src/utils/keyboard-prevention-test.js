@@ -1,10 +1,22 @@
 /**
- * ContentEditable Math Input Test - Android Keyboard Prevention
+ * ContentEditable Math Input Test - iOS & Android Keyboard Prevention
  *
  * This tests the contentEditable div approach for preventing native keyboards
  * while maintaining full functionality for math input.
  *
  * TESTING CHECKLIST:
+ *
+ * On iOS Device (iPhone/iPad):
+ * 1. Open Math Input question
+ * 2. Tap the input field
+ * 3. Verify: contentEditable="false" (check in dev tools)
+ * 4. Verify: NO native keyboard appears
+ * 5. Verify: Custom keyboard is visible
+ * 6. Verify: Can tap to position cursor
+ * 7. Verify: Custom keyboard buttons insert text at cursor
+ * 8. Verify: Text selection works
+ * 9. Verify: Backspace and clear work
+ * 10. Verify: Placeholder appears when empty
  *
  * On Android Device:
  * 1. Open Math Input question
@@ -24,7 +36,7 @@
  * 3. Verify: All functionality works as expected
  */
 
-console.log('ContentEditable Math Input Test Loaded');
+console.log('ContentEditable Math Input Test Loaded - iOS & Android Support');
 
 // Debug helper to check contentEditable state
 window.debugContentEditableState = () => {
@@ -45,6 +57,16 @@ window.debugContentEditableState = () => {
     );
     console.log('isEmpty:', mathInput.textContent.length === 0);
 
+    // Check iOS-specific attributes
+    console.log('readonly attribute:', mathInput.hasAttribute('readonly'));
+    console.log('inputmode attribute:', mathInput.getAttribute('inputmode'));
+    
+    // Check iOS-specific styles
+    const computedStyle = window.getComputedStyle(mathInput);
+    console.log('webkit-user-select:', computedStyle.webkitUserSelect);
+    console.log('user-select:', computedStyle.userSelect);
+    console.log('webkit-user-modify:', computedStyle.webkitUserModify);
+
     // Check selection state
     const selection = window.getSelection();
     console.log('selection.rangeCount:', selection.rangeCount);
@@ -64,6 +86,14 @@ window.debugContentEditableState = () => {
       document.body.className ||
       mathInput.closest('[class*="platform-"]')?.className;
     console.log('platform classes:', platformClasses);
+    
+    // iOS-specific detection
+    const userAgent = navigator.userAgent;
+    const isIOSUserAgent = /iPad|iPhone|iPod/.test(userAgent);
+    const isPossibleIOS = /Macintosh/.test(userAgent) && navigator.maxTouchPoints > 1;
+    console.log('iOS detected (userAgent):', isIOSUserAgent);
+    console.log('iOS detected (Macintosh + touch):', isPossibleIOS);
+    console.log('iOS detected (combined):', isIOSUserAgent || isPossibleIOS);
 
     return {
       element: mathInput,
@@ -71,6 +101,9 @@ window.debugContentEditableState = () => {
       textContent: mathInput.textContent,
       customKeyboardActive: !!container,
       hasSelection: selection.rangeCount > 0,
+      isIOS: isIOSUserAgent || isPossibleIOS,
+      readOnly: mathInput.hasAttribute('readonly'),
+      inputMode: mathInput.getAttribute('inputmode'),
     };
   } else {
     console.log('Math input element not found');

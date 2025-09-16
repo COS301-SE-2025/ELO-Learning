@@ -3,19 +3,25 @@
 import { updateUserAvatar } from '@/services/api';
 import { useSession } from 'next-auth/react';
 import { createContext, useContext, useEffect, useState } from 'react';
-import { BackgroundTypes } from '../ui/avatar/background';
+import { defaultColors } from '../ui/avatar/avatar-colors';
 import { BodyShapes } from '../ui/avatar/body-shape';
-import { AvatarColors } from '../ui/avatar/color';
 import { EyeTypes } from '../ui/avatar/eyes';
+import { GlassesTypes } from '../ui/avatar/glasses';
+import { HatTypes } from '../ui/avatar/hats';
+import { MoustacheTypes } from '../ui/avatar/moustache';
 import { MouthTypes } from '../ui/avatar/mouth';
+
 const AvatarContext = createContext();
 
 const DEFAULT_AVATAR = {
-  bodyShape: BodyShapes.CIRCLE,
-  color: AvatarColors.BRIGHT_RED,
+  bodyShape: BodyShapes.SQUARE,
+  color: defaultColors.avatar,
   eyes: EyeTypes.EYE_1,
   mouth: MouthTypes.MOUTH_1,
-  background: BackgroundTypes.SOLID_PINK,
+  moustache: MoustacheTypes.NOTHING,
+  glasses: GlassesTypes.NOTHING,
+  hat: HatTypes.NOTHING,
+  background: 'solid-3', // This corresponds to the blue color #4d5ded (index 3 in avatarColors)
 };
 
 export function AvatarProvider({ children }) {

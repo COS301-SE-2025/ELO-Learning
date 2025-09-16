@@ -16,7 +16,7 @@ export default function MultipleChoiceTemplate({
   };
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4 md:mb-100">
       {answers.map((answer, idx) => (
         <button
           key={answer.id || idx}

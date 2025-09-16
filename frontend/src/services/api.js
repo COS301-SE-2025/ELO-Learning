@@ -630,6 +630,7 @@ export async function loginUser(email, password) {
           elo_rating: 5.0,
           rank: 'Bronze',
           baseLineTest: true,
+          daily_streak: 0,
         },
       };
     }
@@ -650,6 +651,7 @@ export async function registerUser(
   elo_rating,
   rank,
   baseLineTest,
+  daily_streak,
 ) {
   try {
     console.log('🚀 Starting registration...');
@@ -701,6 +703,7 @@ export async function registerUser(
           elo_rating,
           rank,
           baseLineTest,
+          daily_streak: 0,
         },
       };
     }
@@ -890,7 +893,7 @@ export async function submitSinglePlayerAttempt(data) {
 export async function submitMultiplayerResult(data) {
   try {
     const res = await axiosInstance.post('/multiplayer', data, {
-      timeout: 30000, // Extended timeout for multiplayer
+      timeout: 60000, // Extended timeout for multiplayer
       retries: 2, // Allow retries
     });
     return res.data;
@@ -1295,5 +1298,45 @@ export async function updateUserElo(userId, finalElo) {
   } catch (err) {
     console.error('Failed to update user level:', err);
     throw err;
+  }
+}
+
+// ========== STREAK FUNCTIONS ==========
+
+/**
+ * Get user's streak information
+ * @param {string} userId - User ID
+ * @returns {Promise<Object>} Streak data including current and longest streak
+ */
+export async function fetchUserStreakInfo(userId) {
+  try {
+    const res = await axiosInstance.get(`/users/${userId}/streak`);
+    return res.data;
+  } catch (error) {
+    console.error('Failed to fetch user streak info:', error);
+    // Return mock data in case of error to prevent UI crashes
+    return {
+      success: false,
+      streak_data: {
+        current_streak: 0,
+        longest_streak: 0,
+        last_activity: null,
+      },
+    };
+  }
+}
+
+/**
+ * Update user's streak (typically called on login or daily activity)
+ * @param {string} userId - User ID
+ * @returns {Promise<Object>} Updated streak data and any unlocked achievements
+ */
+export async function updateUserStreak(userId) {
+  try {
+    const res = await axiosInstance.post(`/users/${userId}/streak/update`);
+    return res.data;
+  } catch (error) {
+    console.error('Failed to update user streak:', error);
+    throw error;
   }
 }

@@ -49,6 +49,11 @@ function ResetPasswordContent() {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
+    // Prevent double submission
+    if (loading) {
+      return;
+    }
+
     if (!password || !confirmPassword) {
       setError('Please fill in both password fields.');
       return;
@@ -117,7 +122,7 @@ function ResetPasswordContent() {
               <div className="break_small"></div>
               <Link
                 href="/login-landing/forgot-password"
-                className="main-button px-2 py-8 text-center"
+                className="signup-button px-2 py-8 text-center"
               >
                 Request New Reset Link
               </Link>
@@ -152,7 +157,7 @@ function ResetPasswordContent() {
               <div className="break_small"></div>
               <Link
                 href="/login-landing/login"
-                className="main-button px-2 py-8 text-center"
+                className="signup-button px-2 py-8 text-center"
               >
                 Login with New Password
               </Link>
@@ -205,11 +210,11 @@ function ResetPasswordContent() {
                 )}
                 <div className="break_small"></div>
                 <button
-                  className="main-button px-2 py-8"
+                  className="signup-button  px-2 py-8"
                   type="submit"
                   disabled={loading}
                 >
-                  {loading ? 'Resetting...' : 'Reset Password'}
+                  {loading ? 'Resetting Password...' : 'Reset Password'}
                 </button>
               </div>
             </form>

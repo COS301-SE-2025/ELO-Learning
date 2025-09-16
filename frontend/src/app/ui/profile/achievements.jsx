@@ -87,7 +87,7 @@ export default function Achievements() {
         </h3>
         <Link
           href="/achievements"
-          className="text-sm font-medium uppercase"
+          className="text-sm font-bold uppercase"
           style={{ color: '#FF6E99' }}
           data-cy="view-all-achievements"
         >
@@ -97,7 +97,7 @@ export default function Achievements() {
 
       {unlockedAchievements.length === 0 ? (
         <div
-          className="bg-gray-800 rounded-lg p-4 border border-gray-700"
+          className="dark:bg-[var(--midnight-theorem)] bg-[var(--vector-violet)] rounded-lg p-4"
           data-cy="no-achievements"
         >
           <div className="flex justify-center items-center py-8">
@@ -121,7 +121,7 @@ export default function Achievements() {
         </div>
       ) : (
         <div
-          className="bg-gray-800 rounded-lg p-4 border border-gray-700"
+          className="dark:bg-[var(--midnight-theorem)] bg-[var(--chalk-dust)] rounded-lg p-4"
           data-cy="achievements-list"
         >
           <div

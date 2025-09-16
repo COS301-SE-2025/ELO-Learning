@@ -14,7 +14,7 @@ import {
   insertTextAtCursor,
   removeCursorIndicator,
   setTextContent,
-  showCursorIndicator
+  showCursorIndicator,
 } from '@/utils/contentEditableHelpers';
 import {
   getMathValidationMessage,
@@ -406,7 +406,7 @@ export default function MathInputTemplate({
 
     // Get current text
     const currentText = getTextContent(input);
-    
+
     if (currentText.length === 0) return; // Nothing to delete
 
     // Simple approach: remove last character

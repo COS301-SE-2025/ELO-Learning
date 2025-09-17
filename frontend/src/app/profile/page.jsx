@@ -1,10 +1,11 @@
 'use client';
 import ClickableAvatar from '@/app/ui/profile/clickable-avatar';
+import { fetchUserStreakInfo } from '@/services/api';
 import { initializeAchievementTracking } from '@/utils/gameplayAchievementHandler';
 import { Cog } from 'lucide-react';
 import { useSession } from 'next-auth/react';
 import Link from 'next/link';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useAvatar } from '../context/avatar-context';
 import { avatarColors, gradients } from '../ui/avatar/avatar-colors';
 import Achievements from '../ui/profile/achievements';
@@ -17,6 +18,22 @@ import { fetchUserById } from '@/services/api';
 export default function Profile() {
   const { data: session, status, update: updateSession } = useSession();
   const { avatar } = useAvatar();
+  const [streakData, setStreakData] = useState(null);
+  const [refreshKey, setRefreshKey] = useState(0);
+
+  // Listen for ELO updates
+  useEffect(() => {
+    const handleEloUpdate = () => {
+      console.log('Profile: ELO update event received, refreshing...');
+      setRefreshKey((prev) => prev + 1);
+    };
+
+    window.addEventListener('eloUpdated', handleEloUpdate);
+
+    return () => {
+      window.removeEventListener('eloUpdated', handleEloUpdate);
+    };
+  }, []);
 
   // Initialize achievement tracking when user logs in (no notifications)
   useEffect(() => {
@@ -70,6 +87,26 @@ export default function Profile() {
 
     refreshUserData();
   }, [session?.user?.id, updateSession]);
+
+  // Fetch streak data when user is authenticated
+  useEffect(() => {
+    async function loadStreakData() {
+      if (status === 'authenticated' && session?.user?.id) {
+        try {
+          const response = await fetchUserStreakInfo(session.user.id);
+          if (response.success) {
+            setStreakData(response.streak_data);
+          }
+        } catch (error) {
+          console.warn('Failed to load streak data for profile:', error);
+          // Set default streak data to prevent UI issues
+          setStreakData({ current_streak: 0 });
+        }
+      }
+    }
+
+    loadStreakData();
+  }, [session?.user?.id, status, refreshKey]); // Add refreshKey to re-fetch when ELO updates
 
   if (status === 'loading') return <div>Loading...</div>;
   if (status === 'unauthenticated')
@@ -145,9 +182,10 @@ export default function Profile() {
           {/* Baseline Test Option - Show only if user hasn't taken it */}
           <BaselineTestOption userHasTakenBaseline={user.baseLineTest} />
           <UserInfo
-            elo={user.elo_rating || 0}
+            elo={user.elo_rating || user.eloRating || 0}
             xp={user.xp || 0}
             ranking={user.rank || 'Unranked'}
+            streak={streakData?.current_streak || 0}
           />
           <MatchStats />
           <Achievements />

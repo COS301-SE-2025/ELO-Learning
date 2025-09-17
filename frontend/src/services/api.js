@@ -131,7 +131,6 @@ axiosInstance.interceptors.request.use(async (config) => {
   // In test environment, add mock auth and continue
   if (process.env.NODE_ENV === 'test' || process.env.CI) {
     config.headers.Authorization = 'Bearer mock-test-token';
-    console.log('🧪 Test mode: Using mock auth token');
     return config;
   }
 
@@ -173,33 +172,23 @@ axiosInstance.interceptors.request.use(async (config) => {
       const session = await getSession();
       if (session?.backendToken) {
         token = session.backendToken;
-        console.log('🔐 Using NextAuth backend token');
       } else {
         // 🔄 FALLBACK: Check localStorage
         token =
           localStorage.getItem('token') || localStorage.getItem('oauth_token');
-        console.log(
-          '🔐 Using localStorage token:',
-          token ? 'Found' : 'Not found',
-        );
       }
     } catch (error) {
-      console.warn('🔐 Token retrieval failed:', error);
-
       // Final fallback to localStorage only
       try {
         token =
           localStorage.getItem('token') || localStorage.getItem('oauth_token');
       } catch (storageError) {
-        console.warn('localStorage access failed:', storageError);
+        // localStorage access failed
       }
     }
 
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
-      console.log('🔐 Authorization header set');
-    } else {
-      console.warn('🚫 No authentication token available for:', config.url);
     }
   }
 
@@ -230,7 +219,6 @@ export async function fetchAllUsers() {
       if (cached) return cached;
     }
 
-    console.log('🌐 Fetching fresh users data...');
     const res = await axiosInstance.get('/users');
 
     // Don't cache in tests
@@ -257,7 +245,6 @@ export async function fetchAllQuestions() {
       if (cached) return cached;
     }
 
-    console.log('🌐 Fetching fresh questions data...');
     const res = await axiosInstance.get('/questions');
 
     if (process.env.NODE_ENV !== 'test') {
@@ -277,26 +264,19 @@ export async function fetchAllQuestions() {
 //  LOGIN - Keep your caching fixes
 export async function loginUser(email, password) {
   try {
-    console.log('🚀 Starting login...');
-
     const res = await axiosInstance.post('/login', { email, password });
-
-    console.log('✅ Login API response:', res.data);
 
     // SIMPLE, DIRECT STORAGE (your fix for caching issues)
     if (res.data.token) {
       localStorage.setItem('token', res.data.token);
-      console.log('✅ Token stored');
     }
 
     if (res.data.user) {
       localStorage.setItem('user', JSON.stringify(res.data.user));
-      console.log('✅ User data stored:', res.data.user);
     }
 
     localStorage.setItem('auth_provider', 'credentials');
 
-    console.log('🎉 Login completed successfully');
     return res.data;
   } catch (error) {
     console.error('❌ Login failed:', error);
@@ -318,6 +298,7 @@ export async function loginUser(email, password) {
           elo_rating: 5.0,
           rank: 'Bronze',
           base_line_test: true,
+          daily_streak: 0,
         },
       };
     }
@@ -338,10 +319,9 @@ export async function registerUser(
   elo_rating,
   rank,
   base_line_test,
+  daily_streak,
 ) {
   try {
-    console.log('🚀 Starting registration...');
-
     const res = await axiosInstance.post('/register', {
       name,
       surname,
@@ -355,22 +335,17 @@ export async function registerUser(
       rank,
     });
 
-    console.log('✅ Registration API response:', res.data);
-
     // SIMPLE, DIRECT STORAGE - No complex caching (your fix)
     if (res.data.token) {
       localStorage.setItem('token', res.data.token);
-      console.log('✅ Token stored');
     }
 
     if (res.data.user) {
       localStorage.setItem('user', JSON.stringify(res.data.user));
-      console.log('✅ User data stored:', res.data.user);
     }
 
     localStorage.setItem('auth_provider', 'credentials');
 
-    console.log('🎉 Registration completed successfully');
     return res.data;
   } catch (error) {
     console.error('❌ Registration failed:', error);
@@ -407,7 +382,6 @@ export async function logoutUser() {
     // Clear performance cache (your fix for caching issues)
     performanceCache.clear();
 
-    console.log('🧹 Logout cleanup completed (auth + cache cleared)');
     return true;
   } catch (error) {
     console.error('Logout cleanup failed:', error);
@@ -454,12 +428,6 @@ export async function fetchRandomQuestions(level) {
       const cached = performanceCache.get(cacheKey, CACHE_DURATIONS.MEDIUM);
       if (cached) return cached;
     }
-
-    console.log(`🌐 Fetching random questions for level ${level}...`);
-    console.log(`🌐 Fetching random questions for level ${level}...`);
-    console.log('fetchRandomQuestions called with level:', level);
-    console.log('BASE_URL:', BASE_URL);
-    console.log('isServer:', typeof window === 'undefined');
 
     const res = await axiosInstance.get('/questions/random', {
       params: { level },
@@ -578,7 +546,7 @@ export async function submitSinglePlayerAttempt(data) {
 export async function submitMultiplayerResult(data) {
   try {
     const res = await axiosInstance.post('/multiplayer', data, {
-      timeout: 30000, // Extended timeout for multiplayer
+      timeout: 60000, // Extended timeout for multiplayer
       retries: 2, // Allow retries
     });
     return res.data;
@@ -993,5 +961,45 @@ export async function updateUserElo(userId, finalElo) {
   } catch (err) {
     console.error('Failed to update user level:', err);
     throw err;
+  }
+}
+
+// ========== STREAK FUNCTIONS ==========
+
+/**
+ * Get user's streak information
+ * @param {string} userId - User ID
+ * @returns {Promise<Object>} Streak data including current and longest streak
+ */
+export async function fetchUserStreakInfo(userId) {
+  try {
+    const res = await axiosInstance.get(`/users/${userId}/streak`);
+    return res.data;
+  } catch (error) {
+    console.error('Failed to fetch user streak info:', error);
+    // Return mock data in case of error to prevent UI crashes
+    return {
+      success: false,
+      streak_data: {
+        current_streak: 0,
+        longest_streak: 0,
+        last_activity: null,
+      },
+    };
+  }
+}
+
+/**
+ * Update user's streak (typically called on login or daily activity)
+ * @param {string} userId - User ID
+ * @returns {Promise<Object>} Updated streak data and any unlocked achievements
+ */
+export async function updateUserStreak(userId) {
+  try {
+    const res = await axiosInstance.post(`/users/${userId}/streak/update`);
+    return res.data;
+  } catch (error) {
+    console.error('Failed to update user streak:', error);
+    throw error;
   }
 }

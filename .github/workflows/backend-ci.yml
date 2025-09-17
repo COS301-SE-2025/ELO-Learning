@@ -26,6 +26,12 @@ jobs:
         working-directory: backend
         run: npm ci
 
+      - name: Run Snyk security test
+        working-directory: backend
+        run: npx snyk test --all-projects
+        env:
+          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+
       # - name: Run ESLint
       #   working-directory: backend
       #   run: npm run lint

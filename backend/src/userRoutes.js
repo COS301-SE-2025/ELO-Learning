@@ -13,7 +13,7 @@ router.get('/users', async (req, res) => {
   const { data, error } = await supabase
     .from('Users')
     .select(
-      'id,name,surname,username,email,currentLevel,joinDate,xp,avatar,elo_rating,rank,base_line_test',
+      'id,name,surname,username,email,currentLevel,joinDate,xp,avatar,elo_rating,rank,base_line_test,daily_streak',
     );
   if (error) {
     console.error('Error fetching users:', error.message);
@@ -30,7 +30,7 @@ router.get('/user/:id', verifyToken, async (req, res) => {
   const { data, error } = await supabase
     .from('Users')
     .select(
-      'id,name,surname,username,email,currentLevel,joinDate,xp,avatar,elo_rating,rank,base_line_test,best_elo_rating,last_session_elo,consecutive_improvements,last_elo_drop',
+      'id,name,surname,username,email,currentLevel,joinDate,xp,avatar,elo_rating,rank,base_line_test,best_elo_rating,last_session_elo,consecutive_improvements,last_elo_drop,daily_streak',
     )
     .eq('id', id)
     .single();
@@ -71,7 +71,7 @@ router.get('/users/:id/debug', async (req, res) => {
     const { data, error } = await supabase
       .from('Users')
       .select(
-        'id,elo_rating,best_elo_rating,last_session_elo,consecutive_improvements,last_elo_drop',
+        'id,elo_rating,best_elo_rating,last_session_elo,consecutive_improvements,last_elo_drop,daily_streak',
       )
       .eq('id', id)
       .single();
@@ -283,6 +283,7 @@ router.post('/register', async (req, res) => {
   };
   const eloRating = 100;
   const defaultRank = 'Iron';
+  const default_daily_streak = 0;
 
   const startBase = false;
 
@@ -302,6 +303,7 @@ router.post('/register', async (req, res) => {
         avatar: DEFAULT_AVATAR,
         elo_rating: eloRating,
         rank: defaultRank,
+        daily_streak: default_daily_streak,
       },
     ])
     .select()
@@ -334,6 +336,7 @@ router.post('/register', async (req, res) => {
       avatar: data.avatar,
       elo_rating: data.elo_rating,
       rank: data.rank,
+      daily_streak: data.daily_streak,
     },
   });
 });
@@ -350,7 +353,7 @@ router.post('/login', async (req, res) => {
   const { data: user, error: fetchError } = await supabase
     .from('Users')
     .select(
-      'id,name,surname,username,email,password,currentLevel,joinDate,xp,avatar,elo_rating,rank,base_line_test',
+      'id,name,surname,username,email,password,currentLevel,joinDate,xp,avatar,elo_rating,rank,base_line_test,daily_streak',
     )
     .eq('email', email)
     .single();
@@ -389,6 +392,7 @@ router.post('/login', async (req, res) => {
       elo_rating: user.elo_rating,
       rank: user.rank,
       baseLineTest: user.base_line_test,
+      daily_streak: user.daily_streak,
     },
   });
 });

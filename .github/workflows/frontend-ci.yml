@@ -42,7 +42,7 @@ jobs:
           NEXT_PUBLIC_API_URL: http://localhost:8080
           NEXT_PUBLIC_SOCKET_URL: http://localhost:8080
           NEXT_PUBLIC_FRONTEND_URL: http://localhost:8080
-          NEXTAUTH_URL: http://localhost:3000
+          NEXTAUTH_URL: http://localhost:8080
           NEXTAUTH_SECRET: test-secret
           GOOGLE_CLIENT_ID: test-client-id
           GOOGLE_CLIENT_SECRET: test-client-secret

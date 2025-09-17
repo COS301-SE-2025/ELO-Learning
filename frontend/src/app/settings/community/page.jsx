@@ -7,6 +7,7 @@ import {
   fetchCommunityData,
   sendFriendRequest,
   updateCommunityData,
+  removeAcceptedFriend,
 } from '../../../services/api';
 
 // Color scheme and button classes from login-landing
@@ -105,17 +106,56 @@ export default function CommunitySettingsPage() {
       return;
     }
     try {
+      const friendObj = friends.find((f) => f.email === email);
       const token = session?.user?.accessToken || session?.accessToken;
-      const result = await removeFriend(userId, email, token);
-      if (result && result.message === 'Friend request rejected') {
-        setFriends(friends.filter((f) => f.email !== email));
+      if (friendObj.status === 'accepted') {
+        // Remove accepted friend using new endpoint
+        console.log('[COMMUNITY] Removing accepted friend:', friendObj);
+        const result = await removeAcceptedFriend(userId, friendObj.id, token);
+        console.log('[COMMUNITY] removeAcceptedFriend result:', result);
+        if (result && result.message) {
+          setFriends(friends.filter((f) => f.email !== email));
+          setError('');
+        } else if (result && result.error) {
+          setError(result.error);
+        } else {
+          setError('Failed to remove friend.');
+        }
+      } else if (friendObj.status === 'pending') {
+        // Remove pending friend using same logic as accept button
+        const api = await import('../../../services/api');
+        if (!friendObj.request_id) {
+          setError('No request_id found for pending friend.');
+          return;
+        }
         setError('');
-      } else if (result && result.error) {
-        setError(result.error);
+        try {
+          const result = await api.apiRejectFriendRequest(
+            userId,
+            friendObj.request_id,
+            token,
+          );
+          if (
+            result &&
+            (result.status === 200 ||
+              result.success ||
+              result.message === 'Friend request rejected')
+          ) {
+            setFriends(friends.filter((f) => f.email !== email));
+            setError('');
+          } else if (result && result.error) {
+            setError(result.error);
+          } else {
+            setError('Failed to remove friend.');
+          }
+        } catch (err) {
+          setError(err?.message || 'Failed to remove friend.');
+        }
       } else {
-        setError('Failed to remove friend.');
+        setError('Unknown friend status.');
       }
     } catch (err) {
+      console.error('[COMMUNITY] Error removing friend:', err);
       setError('Failed to remove friend.');
     }
   };
@@ -215,13 +255,17 @@ export default function CommunitySettingsPage() {
                   >
                     {f.status === 'pending' ? 'Pending' : 'Accepted'}
                   </span>
-                  <button
-                    type="button"
-                    className={removeBtnClass}
-                    onClick={() => handleRemoveFriend(f.email)}
-                  >
-                    Remove
-                  </button>
+                  {f.status === 'accepted' && (
+                    <div className="main-button-landing px-2 py-1 rounded-lg text-white bg-elo-primary hover:bg-elo-primary-dark transition w-fit text-xs font-semibold flex items-center justify-center">
+                      <button
+                        type="button"
+                        style={{ minWidth: '60px', padding: '2px 8px' }}
+                        onClick={() => handleRemoveFriend(f.email)}
+                      >
+                        Remove
+                      </button>
+                    </div>
+                  )}
                 </li>
               ))}
             </ul>

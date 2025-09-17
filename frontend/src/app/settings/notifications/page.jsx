@@ -5,6 +5,41 @@ import NotificationSettings from '@/components/NotificationSettings.jsx';
 import { useSession } from 'next-auth/react';
 
 export default function NotificationsPage() {
+  // Remove handler for accepted friends
+  const handleRemove = async (friendId) => {
+    if (!session?.user?.id) {
+      setPendingError('User not authenticated.');
+      return;
+    }
+    try {
+      const token =
+        session?.user?.accessToken ||
+        session?.accessToken ||
+        session?.backendToken;
+      const api = await import('../../../services/api');
+      console.log(
+        '[FRONTEND] Calling removeAcceptedFriend with:',
+        session.user.id,
+        friendId,
+        token,
+      );
+      const result = await api.removeAcceptedFriend(
+        session.user.id,
+        friendId,
+        token,
+      );
+      console.log('[FRONTEND] removeAcceptedFriend result:', result);
+      if (result && result.message) {
+        setPendingError('Friend removed!');
+        await fetchIncoming();
+      } else {
+        setPendingError(result.error || 'Failed to remove friend.');
+      }
+    } catch (err) {
+      console.error('[FRONTEND] Error in handleRemove:', err);
+      setPendingError(err?.message || 'Failed to remove friend.');
+    }
+  };
   // Community page styles
   const cardClass =
     'bg-elo-bg border border-gray-200 rounded-xl shadow-lg p-4 md:p-6 w-full';
@@ -60,11 +95,16 @@ export default function NotificationsPage() {
         requestId,
         token,
       );
-      if (result && result.status === 200) {
+      if (
+        result &&
+        (result.status === 200 ||
+          result.success ||
+          result.message === 'Friend request accepted')
+      ) {
         setPendingError('Accepted!');
         await fetchIncoming(); // Force refresh
       } else {
-        setPendingError('Failed to accept friend request.');
+        setPendingError(result?.error || 'Failed to accept friend request.');
       }
     } catch (err) {
       setPendingError(err?.message || 'Failed to accept friend request.');
@@ -76,6 +116,7 @@ export default function NotificationsPage() {
       setPendingError('User not authenticated.');
       return;
     }
+    setPendingError(''); // Clear error before API call
     try {
       const token =
         session?.user?.accessToken ||
@@ -87,11 +128,16 @@ export default function NotificationsPage() {
         requestId,
         token,
       );
-      if (result && result.status === 200) {
+      if (
+        result &&
+        (result.status === 200 ||
+          result.success ||
+          result.message === 'Friend request rejected')
+      ) {
         setPendingError('Rejected!');
         await fetchIncoming(); // Force refresh
       } else {
-        setPendingError('Failed to reject friend request.');
+        setPendingError(result?.error || 'Failed to reject friend request.');
       }
     } catch (err) {
       setPendingError(err?.message || 'Failed to reject friend request.');
@@ -145,7 +191,13 @@ export default function NotificationsPage() {
       <div className="m-4 p-6 flex flex-col items-center bg-[var(--chalk-dust)] dark:bg-[var(--midnight-theorem)]">
         <h2 className="text-xl font-bold mb-2">Friend Requests</h2>
         {pendingError && (
-          <p className="text-red-500 mb-2 text-center">{pendingError}</p>
+          <p
+            className={`mb-2 text-center ${
+              pendingError === 'Accepted!' ? 'text-green-500' : 'text-red-500'
+            }`}
+          >
+            {pendingError}
+          </p>
         )}
         {Array.isArray(incomingRequests) && incomingRequests.length === 0 ? (
           <p className="text-gray-500 text-center">
@@ -181,6 +233,17 @@ export default function NotificationsPage() {
                       >
                         Reject
                       </button>
+                      {/* Remove button for accepted friends only */}
+                      {req.status === 'accepted' && req.sender_id && (
+                        <div className="main-button-landing px-2 py-1 rounded-lg text-white bg-elo-primary hover:bg-elo-primary-dark transition w-fit text-xs font-semibold flex items-center justify-center">
+                          <button
+                            style={{ minWidth: '60px', padding: '2px 8px' }}
+                            onClick={() => handleRemove(req.sender_id)}
+                          >
+                            Remove
+                          </button>
+                        </div>
+                      )}
                     </div>
                   </div>
                 </div>

@@ -1,3 +1,32 @@
+/**
+ * Remove an accepted friend for a user
+ * @param {string|number} userId - User ID
+ * @param {string|number} friendId - Friend's user ID to remove
+ * @param {string} token - JWT token
+ * @returns {Promise<object>} API response
+ */
+export async function removeAcceptedFriend(userId, friendId, token) {
+  try {
+    console.log(
+      '[FRONTEND] Sending DELETE /user/' + userId + '/friend with friend_id:',
+      friendId,
+    );
+    const res = await axiosInstance.delete(`/user/${userId}/friend`, {
+      headers: {
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      },
+      data: { friend_id: friendId },
+    });
+    console.log('[FRONTEND] Remove friend response:', res.data);
+    return res.data;
+  } catch (error) {
+    console.error('❌ Failed to remove accepted friend:', error);
+    if (error.response) {
+      console.error('❌ Backend response:', error.response.data);
+    }
+    return { error: error.message || 'Failed to remove accepted friend' };
+  }
+}
 // Fetch incoming friend requests for a user, including sender info
 export async function fetchIncomingFriendRequests(userId, token) {
   try {

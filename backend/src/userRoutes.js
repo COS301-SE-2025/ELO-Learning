@@ -748,7 +748,7 @@ router.get('/user/:id/community', verifyToken, async (req, res) => {
             surname: friendUser?.surname || '',
             email: friendUser?.email || 'unknown',
             status: f.status,
-            request_id: f.id, // Add the row ID for friend relationship
+            request_id: f.id ?? f.request_id, // Always include request_id
           };
         });
       }
@@ -869,6 +869,12 @@ router.post('/user/:id/friend-request', verifyToken, async (req, res) => {
       return res
         .status(404)
         .json({ error: 'Friend not found', details: { friendError, friend } });
+    }
+    // Prohibit sending friend request to self
+    if (Number(id) === Number(friend.id)) {
+      return res.status(400).json({
+        error: 'Add your other mates pal, good self love though! Self bestie!',
+      });
     }
     console.log(`[FRIEND REQUEST] Found friend:`, friend);
 
@@ -1051,4 +1057,39 @@ router.get(
     }
   },
 );
+
+// Remove an accepted friend relationship
+// Usage: DELETE /user/:id/friend
+// Body: { friend_id: <id of the friend to remove> }
+router.delete('/user/:id/friend', verifyToken, async (req, res) => {
+  const { id } = req.params; // current user
+  console.log('[REMOVE FRIEND] req.params:', req.params);
+  console.log('[REMOVE FRIEND] req.body:', req.body);
+  const { friend_id } = req.body;
+  if (!friend_id) {
+    console.error('[REMOVE FRIEND] friend_id missing in body');
+    return res.status(400).json({ error: 'friend_id is required' });
+  }
+  try {
+    // Delete the relationship in either direction where status is accepted
+    const { error } = await supabase
+      .from('friends')
+      .delete()
+      .or(
+        `and(user_id.eq.${id},friend_id.eq.${friend_id},status.eq.accepted),and(friend_id.eq.${id},user_id.eq.${friend_id},status.eq.accepted)`,
+      );
+    if (error) {
+      console.error('[REMOVE FRIEND] Error:', error);
+      return res
+        .status(500)
+        .json({ error: 'Failed to remove friend', details: error });
+    }
+    res.status(200).json({ message: 'Friend removed successfully' });
+  } catch (err) {
+    console.error('[REMOVE FRIEND] Unexpected error:', err);
+    res
+      .status(500)
+      .json({ error: 'Internal server error', details: err.message });
+  }
+});
 export default router;

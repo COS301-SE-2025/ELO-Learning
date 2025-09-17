@@ -8,6 +8,7 @@ import {
   fetchInstitutionLeaderboard,
 } from '@/services/api';
 import LeaderboardTable from '../../ui/leaderboard-table';
+import Back from '@/app/ui/back';
 import Link from 'next/link';
 
 export default function CommunityRankingsPage() {
@@ -80,7 +81,10 @@ export default function CommunityRankingsPage() {
 
   return (
     <div className="flex flex-col gap-8 p-4 md:p-8">
-      <h1 className="text-2xl font-bold mb-4">Community Rankings</h1>
+      {/* Back header */}
+      <div>
+        <Back pagename="Community Rankings" />
+      </div>
       {loading ? (
         <div>Loading leaderboards...</div>
       ) : error ? (

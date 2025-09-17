@@ -81,12 +81,17 @@ export default function Profile() {
           }
         } catch (error) {
           console.error('❌ Failed to refresh user data on profile:', error);
+          // Continue with existing session data - don't let auth errors break the page
+          console.log('🔄 Using existing session data due to auth error');
         }
       }
     };
 
-    refreshUserData();
-  }, [session?.user?.id, updateSession]);
+    // Only try to refresh if we have a session and are authenticated
+    if (status === 'authenticated') {
+      refreshUserData();
+    }
+  }, [session?.user?.id, status, updateSession]);
 
   // Fetch streak data when user is authenticated
   useEffect(() => {
@@ -96,10 +101,13 @@ export default function Profile() {
           const response = await fetchUserStreakInfo(session.user.id);
           if (response.success) {
             setStreakData(response.streak_data);
+          } else {
+            // Set default if API response indicates failure
+            setStreakData({ current_streak: 0 });
           }
         } catch (error) {
           console.warn('Failed to load streak data for profile:', error);
-          // Set default streak data to prevent UI issues
+          // Set default streak data to prevent UI issues - continue gracefully
           setStreakData({ current_streak: 0 });
         }
       }
@@ -119,6 +127,7 @@ export default function Profile() {
     id: user.id,
     username: user.username,
     baseLineTest: user.baseLineTest,
+    baseLineTestType: typeof user.baseLineTest,
     currentLevel: user.currentLevel,
     elo_rating: user.elo_rating,
   });

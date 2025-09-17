@@ -16,11 +16,11 @@ export default function BaselineTestOption({ userHasTakenBaseline }) {
 
   // Don't show this component if user has already taken the baseline test
   if (userHasTakenBaseline) {
-    console.log(' User has taken baseline test, hiding component');
+    console.log('✅ User has taken baseline test, hiding component');
     return null;
   }
 
-  console.log('Showing baseline test option for user');
+  console.log('📝 Showing baseline test option for user');
 
   const handleTakeBaselineTest = async () => {
     setLoading(true);

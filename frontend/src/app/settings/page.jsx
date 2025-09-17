@@ -43,6 +43,12 @@ export default function Page() {
                 <ChevronRight />
               </div>
             </Link>
+            <Link href="/settings/community-rankings">
+              <div className="flex flex-row justify-between p-3 border-b border-[#696969] hover:bg-[#1d1a34]">
+                <div>Community Rankings</div>
+                <ChevronRight />
+              </div>
+            </Link>
             <div
               className="flex flex-row justify-between p-3 cursor-pointer hover:bg-[#1d1a34]"
               onClick={handleLogout}

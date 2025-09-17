@@ -1092,4 +1092,120 @@ router.delete('/user/:id/friend', verifyToken, async (req, res) => {
       .json({ error: 'Internal server error', details: err.message });
   }
 });
+
+// GET /user/:id/community-leaderboard
+router.get('/user/:id/community-leaderboard', verifyToken, async (req, res) => {
+  const { id } = req.params;
+  // Fetch user info
+  const { data: user, error: userError } = await supabase
+    .from('Users')
+    .select('id, academic_institution, location')
+    .eq('id', id)
+    .single();
+  if (userError || !user) {
+    return res.status(404).json({
+      error: 'User not found',
+      hasInstitution: false,
+      hasLocation: false,
+    });
+  }
+  const hasInstitution = !!user.academic_institution;
+  const hasLocation = !!user.location;
+  if (!hasInstitution || !hasLocation) {
+    return res.status(200).json({
+      message: 'Add your institution and location to see more rankings!',
+      hasInstitution,
+      hasLocation,
+      leaderboard: [],
+    });
+  }
+  // Get all accepted friends
+  const { data: friends, error: friendsError } = await supabase
+    .from('friends')
+    .select('user_id, friend_id')
+    .or(`user_id.eq.${id},friend_id.eq.${id}`)
+    .eq('status', 'accepted');
+  if (friendsError)
+    return res
+      .status(500)
+      .json({ error: 'Failed to fetch friends', hasInstitution, hasLocation });
+
+  // Collect all IDs (me + friends)
+  const friendIds = [
+    ...new Set(
+      friends
+        .map((f) => (f.user_id === Number(id) ? f.friend_id : f.user_id))
+        .concat(Number(id)),
+    ),
+  ];
+
+  // Get leaderboard data
+  const { data: leaderboard, error: lbError } = await supabase
+    .from('Users')
+    .select('id,username,elo_rating,avatar,xp,academic_institution,location')
+    .in('id', friendIds)
+    .eq('academic_institution', user.academic_institution)
+    .eq('location', user.location)
+    .order('xp', { ascending: false });
+  if (lbError)
+    return res.status(500).json({
+      error: 'Failed to fetch leaderboard',
+      hasInstitution,
+      hasLocation,
+    });
+
+  res.json({ leaderboard, hasInstitution, hasLocation });
+});
+
+// GET /user/:id/location-leaderboard
+router.get('/user/:id/location-leaderboard', verifyToken, async (req, res) => {
+  const { id } = req.params;
+  // Get user's locations
+  const { data: user, error: userError } = await supabase
+    .from('Users')
+    .select('location')
+    .eq('id', id)
+    .single();
+  if (userError || !user) return res.json({ leaderboards: {} });
+
+  let locations = [];
+  if (Array.isArray(user.location)) locations = user.location;
+  else if (typeof user.location === 'string' && user.location.length > 0)
+    locations = user.location.split(',').map((l) => l.trim());
+
+  // For each location, get leaderboard
+  const leaderboards = {};
+  for (const loc of locations) {
+    const { data: lb } = await supabase
+      .from('Users')
+      .select('id,username,elo_rating,avatar,xp')
+      .ilike('location', `%${loc}%`)
+      .order('elo_rating', { ascending: false });
+    leaderboards[loc] = lb || [];
+  }
+  res.json({ leaderboards });
+});
+
+// GET /user/:id/institution-leaderboard
+router.get(
+  '/user/:id/institution-leaderboard',
+  verifyToken,
+  async (req, res) => {
+    const { id } = req.params;
+    const { data: user, error: userError } = await supabase
+      .from('Users')
+      .select('academic_institution')
+      .eq('id', id)
+      .single();
+    if (userError || !user || !user.academic_institution)
+      return res.json({ leaderboard: [], institution: null });
+
+    const { data: leaderboard } = await supabase
+      .from('Users')
+      .select('id,username,elo_rating,avatar,xp')
+      .eq('academic_institution', user.academic_institution)
+      .order('elo_rating', { ascending: false });
+    res.json({ leaderboard, institution: user.academic_institution });
+  },
+);
 export default router;

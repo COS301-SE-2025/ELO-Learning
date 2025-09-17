@@ -1,4 +1,94 @@
 /**
+ * Fetch community leaderboard (me + friends)
+ * @param {string|number} userId - User ID
+ * @param {string} token - JWT token
+ * @returns {Promise<object[]>} Leaderboard data
+ */
+export async function fetchCommunityLeaderboard(userId, token) {
+  try {
+    const res = await axiosInstance.get(
+      `/user/${userId}/community-leaderboard`,
+      {
+        headers: {
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+      },
+    );
+    // Return full response including hasInstitution, hasLocation, message, leaderboard
+    return res.data;
+  } catch (error) {
+    if (error.response) {
+      console.error(
+        '❌ Backend error fetching community leaderboard:',
+        error.response.data,
+      );
+      if (error.response.status === 404) {
+        return { leaderboard: [], hasInstitution: false, hasLocation: false };
+      }
+      return {
+        error:
+          error.response.data?.error || 'Failed to fetch community leaderboard',
+        details: error.response.data,
+      };
+    } else {
+      console.error(
+        '❌ Network/other error fetching community leaderboard:',
+        error.message,
+      );
+      return {
+        error: error.message || 'Failed to fetch community leaderboard',
+      };
+    }
+  }
+}
+
+/**
+ * Fetch location leaderboards for user
+ * @param {string|number} userId - User ID
+ * @param {string} token - JWT token
+ * @returns {Promise<object>} Leaderboards by location
+ */
+export async function fetchLocationLeaderboards(userId, token) {
+  try {
+    const res = await axiosInstance.get(
+      `/user/${userId}/location-leaderboard`,
+      {
+        headers: {
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+      },
+    );
+    return res.data.leaderboards || {};
+  } catch (error) {
+    console.error('❌ Failed to fetch location leaderboards:', error);
+    return {};
+  }
+}
+
+/**
+ * Fetch institution leaderboard for user
+ * @param {string|number} userId - User ID
+ * @param {string} token - JWT token
+ * @returns {Promise<object[]>} Leaderboard data
+ */
+export async function fetchInstitutionLeaderboard(userId, token) {
+  try {
+    const res = await axiosInstance.get(
+      `/user/${userId}/institution-leaderboard`,
+      {
+        headers: {
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+      },
+    );
+    // Return the full response object so the frontend can access both leaderboard and institution name
+    return res.data;
+  } catch (error) {
+    console.error('❌ Failed to fetch institution leaderboard:', error);
+    return { leaderboard: [], institution: '' };
+  }
+}
+/**
  * Remove an accepted friend for a user
  * @param {string|number} userId - User ID
  * @param {string|number} friendId - Friend's user ID to remove

@@ -13,7 +13,8 @@ export default function QuestionsTracker({ questions, userId, onComplete }) {
   const router = useRouter();
   //Normal JS variables
   const allQuestions = questions || [];
-  const totalSteps = allQuestions.length;
+  // const totalSteps = allQuestions.length;
+  const totalSteps = 15; // Fixed to 15 questions for base test
   const { data: session, update } = useSession();
 
   //React hooks

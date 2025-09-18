@@ -9,7 +9,7 @@ import { updateUserElo } from '@/services/api';
 
 export default function BaselineTracker({ questions, userId, onComplete }) {
   // Constants
-  const totalSteps = 10; // Baseline test length
+  const totalSteps = 15; // Baseline test length (updated from 10 to 15)
 
   // State
   const [currentQuestion, setCurrentQuestion] = useState(questions[0]);

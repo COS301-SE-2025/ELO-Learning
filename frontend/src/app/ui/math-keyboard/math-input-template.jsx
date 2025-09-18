@@ -86,8 +86,38 @@ export default function MathInputTemplate({
         { symbol: '8', label: '8', description: 'Eight' },
         { symbol: '9', label: '9', description: 'Nine' },
         { symbol: '.', label: '.', description: 'Decimal point' },
+      ],
+    },
+    alphabet: {
+      label: 'Letters',
+      icon: 'Abc',
+      symbols: [
+        { symbol: 'a', label: 'a', description: 'Variable a' },
+        { symbol: 'b', label: 'b', description: 'Variable b' },
+        { symbol: 'c', label: 'c', description: 'Variable c' },
+        { symbol: 'd', label: 'd', description: 'Variable d' },
+        { symbol: 'e', label: 'e', description: 'Variable e' },
+        { symbol: 'f', label: 'f', description: 'Variable f' },
+        { symbol: 'g', label: 'g', description: 'Variable g' },
+        { symbol: 'h', label: 'h', description: 'Variable h' },
+        { symbol: 'i', label: 'i', description: 'Variable i' },
+        { symbol: 'j', label: 'j', description: 'Variable j' },
+        { symbol: 'k', label: 'k', description: 'Variable k' },
+        { symbol: 'l', label: 'l', description: 'Variable l' },
+        { symbol: 'm', label: 'm', description: 'Variable m' },
+        { symbol: 'n', label: 'n', description: 'Variable n' },
+        { symbol: 'o', label: 'o', description: 'Variable o' },
+        { symbol: 'p', label: 'p', description: 'Variable p' },
+        { symbol: 'q', label: 'q', description: 'Variable q' },
+        { symbol: 'r', label: 'r', description: 'Variable r' },
+        { symbol: 's', label: 's', description: 'Variable s' },
+        { symbol: 't', label: 't', description: 'Variable t' },
+        { symbol: 'u', label: 'u', description: 'Variable u' },
+        { symbol: 'v', label: 'v', description: 'Variable v' },
+        { symbol: 'w', label: 'w', description: 'Variable w' },
         { symbol: 'x', label: 'x', description: 'Variable x' },
         { symbol: 'y', label: 'y', description: 'Variable y' },
+        { symbol: 'z', label: 'z', description: 'Variable z' },
       ],
     },
     functions: {
@@ -547,7 +577,11 @@ export default function MathInputTemplate({
 
           {/* Symbol grid */}
           <div className="p-4">
-            <div className="grid gap-3 grid-cols-3 sm:grid-cols-4 md:grid-cols-5">
+            <div className={`grid gap-3 ${
+              activeTab === 'numbers' || activeTab === 'alphabet'
+                ? 'grid-cols-5'
+                : 'grid-cols-3 sm:grid-cols-4 md:grid-cols-5'
+            }`}>
               {mathCategories[activeTab].symbols.map((item, index) => (
                 <button
                   key={index}

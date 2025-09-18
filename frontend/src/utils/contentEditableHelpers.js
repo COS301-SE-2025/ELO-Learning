@@ -216,14 +216,43 @@ export const insertTextAtCursor = (element, text, preventEcho = true) => {
 
   removeCursorIndicator(element);
 
-  // Simple approach: always append to end for now
-  const currentText = getTextContent(element);
-  const newText = currentText + text;
+  try {
+    const selection = window.getSelection();
+    const currentText = getTextContent(element);
+    
+    // Get current cursor position
+    let currentPos = 0;
+    if (selection.rangeCount > 0) {
+      const range = selection.getRangeAt(0);
+      const preRange = document.createRange();
+      preRange.selectNodeContents(element);
+      preRange.setEnd(range.startContainer, range.startOffset);
+      currentPos = preRange.toString().replace(/\|/g, '').length;
+    } else {
+      // No selection, assume cursor is at end
+      currentPos = currentText.length;
+    }
 
-  element.textContent = newText;
+    // Insert text at cursor position
+    const newText = currentText.substring(0, currentPos) + text + currentText.substring(currentPos);
+    const newCursorPos = currentPos + text.length;
 
-  // Don't try to set cursor position - let it stay at end naturally
-  // This prevents cursor jumping issues
+    // Update content
+    element.textContent = newText;
+
+    // Set cursor position after inserted text
+    setCursorPosition(element, newCursorPos);
+
+  } catch (error) {
+    console.warn('Insert at cursor failed, falling back to append:', error);
+    // Fallback: append to end
+    const currentText = getTextContent(element);
+    const newText = currentText + text;
+    element.textContent = newText;
+    
+    // Position cursor at end
+    setCursorPosition(element, newText.length);
+  }
 
   if (!preventEcho) {
     const event = new Event('input', { bubbles: true });

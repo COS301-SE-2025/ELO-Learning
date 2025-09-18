@@ -32,8 +32,8 @@ router.post('/baseline/answer', async (req, res) => {
   }
 
   // Check if test is done
-  if (questionNumber >= 10) {
-    //to be changed to 15 later
+  if (questionNumber >= 15) {
+    //to be changed to 15 later - done
     //const finalElo = await setBaselineElo(user_id, nextLevel);
     //return res.json({ done: true, finalLevel: nextLevel , elo_rating: finalElo});
     return res.json({

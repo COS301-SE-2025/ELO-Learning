@@ -651,6 +651,15 @@ router.post('/multiplayer', idempotencyMiddleware, async (req, res) => {
       }
     }
 
+    if (fingerprint) {
+      setTimeout(() => {
+        if (processingMap.has(fingerprint)) {
+          processingMap.delete(fingerprint);
+          console.log(`🧹 Cleared processing map for fingerprint: ${fingerprint}`);
+        }
+      }, 5000); // 5 second delay to allow late duplicate requests
+    }
+
     const processingTime = Date.now() - startTime;
     console.log(
       `✅ MULTIPLAYER: Successfully processed match in ${processingTime}ms`,
@@ -681,8 +690,9 @@ router.post('/multiplayer', idempotencyMiddleware, async (req, res) => {
     res.status(500).json({ error: 'Server error' });
   } finally {
     // Clean up in-progress tracking
-    if (fingerprint) {
+    if (fingerprint && processingMap.has(fingerprint)) {
       processingMap.delete(fingerprint);
+      console.log(`🧹 Immediate cleanup for failed request: ${fingerprint}`);
     }
   }
 });

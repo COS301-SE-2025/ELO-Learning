@@ -2,12 +2,13 @@
 import { fetchUsersByRank, fetchUserById } from '@/services/api';
 import { initializeAchievementTracking } from '@/utils/gameplayAchievementHandler';
 import { useSession } from 'next-auth/react';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import LeaderboardTable from '../ui/leaderboard-table';
 import BaselineTestPopup from '../ui/pop-up/baseline-test';
 
-export default function Page() {
+// Component to handle search params
+function DashboardContent() {
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -252,5 +253,14 @@ export default function Page() {
         )}
       </div>
     </>
+  );
+}
+
+// Main page component with Suspense boundary
+export default function Page() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <DashboardContent />
+    </Suspense>
   );
 }

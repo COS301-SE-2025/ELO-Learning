@@ -41,17 +41,26 @@ export default function BaselineGameClient({ questions }) {
         }
       }
 
+      // Get the actual calculated ELO and rank from backend response
+      const calculatedElo = backendResponse?.elo_rating || finalElo;
+      const assignedRank = backendResponse?.rank || 'Unranked';
+
       // Save the final ELO rating to localStorage for the end screen
-      localStorage.setItem('baselineFinalElo', finalElo.toString());
+      localStorage.setItem('baselineFinalElo', calculatedElo.toString());
+      localStorage.setItem('baselineAssignedRank', assignedRank);
 
       console.log('🚀 Redirecting to end screen...');
-      // Redirect to end screen with baseline mode
-      router.push(`/end-screen?mode=baseline&elo=${finalElo}`);
+      // Redirect to end screen with baseline mode and calculated ELO
+      router.push(
+        `/end-screen?mode=baseline&elo=${calculatedElo}&rank=${assignedRank}`,
+      );
     } catch (error) {
       console.error('Error completing baseline:', error);
       // Still try to go to end screen even if session update fails
-      localStorage.setItem('baselineFinalElo', finalElo.toString());
-      router.push(`/end-screen?mode=baseline&elo=${finalElo}`);
+      const fallbackElo = finalElo; // Use level as fallback
+      localStorage.setItem('baselineFinalElo', fallbackElo.toString());
+      localStorage.setItem('baselineAssignedRank', 'Unranked');
+      router.push(`/end-screen?mode=baseline&elo=${fallbackElo}&rank=Unranked`);
     }
   };
 

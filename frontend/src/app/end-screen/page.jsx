@@ -16,6 +16,7 @@ function EndScreen() {
   const router = useRouter();
   const mode = searchParams.get('mode');
   const eloRating = searchParams.get('elo');
+  const assignedRank = searchParams.get('rank');
   const [isLoading, setIsLoading] = useState(false);
   const [xpReady, setXpReady] = useState(false);
   const [practiceXpReady, setPracticeXpReady] = useState(false);
@@ -195,9 +196,17 @@ function EndScreen() {
               <p className="text-lg text-center mb-5">
                 Congratulations! You've completed your baseline assessment.
               </p>
-              <p className="text-lg font-bold">Your starting level is:</p>
-              <div className="mb-15">
-                <EndELO elo={eloRating} />
+              <p className="text-lg font-bold">Your starting ELO and rank:</p>
+              <div className="flex flex-row gap-4 items-center mb-8">
+                <EndELO newElo={eloRating ? parseFloat(eloRating) : null} />
+                <div className="border-1 border-[#FF6E99] rounded-[10px] w-[120px]">
+                  <div className="uppercase bg-[#FF6E99] p-2 rounded-t-[9px] text-[14px] font-bold text-center tracking-wide">
+                    RANK
+                  </div>
+                  <div className="text-center text-[18px] font-bold py-3 px-5">
+                    {assignedRank || '—'}
+                  </div>
+                </div>
               </div>
 
               <button
@@ -205,6 +214,7 @@ function EndScreen() {
                 onClick={() => {
                   localStorage.removeItem('baselineQuestionsObj');
                   localStorage.removeItem('baselineFinalElo');
+                  localStorage.removeItem('baselineAssignedRank');
                   router.push('/dashboard?baseline_completed=true');
                 }}
               >

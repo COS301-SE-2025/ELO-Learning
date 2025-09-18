@@ -577,11 +577,13 @@ export default function MathInputTemplate({
 
           {/* Symbol grid */}
           <div className="p-4">
-            <div className={`grid gap-3 ${
-              activeTab === 'numbers' || activeTab === 'alphabet'
-                ? 'grid-cols-5'
-                : 'grid-cols-3 sm:grid-cols-4 md:grid-cols-5'
-            }`}>
+            <div
+              className={`grid gap-3 ${
+                activeTab === 'numbers' || activeTab === 'alphabet'
+                  ? 'grid-cols-5'
+                  : 'grid-cols-3 sm:grid-cols-4 md:grid-cols-5'
+              }`}
+            >
               {mathCategories[activeTab].symbols.map((item, index) => (
                 <button
                   key={index}

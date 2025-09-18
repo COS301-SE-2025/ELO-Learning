@@ -219,7 +219,7 @@ export const insertTextAtCursor = (element, text, preventEcho = true) => {
   try {
     const selection = window.getSelection();
     const currentText = getTextContent(element);
-    
+
     // Get current cursor position
     let currentPos = 0;
     if (selection.rangeCount > 0) {
@@ -234,7 +234,10 @@ export const insertTextAtCursor = (element, text, preventEcho = true) => {
     }
 
     // Insert text at cursor position
-    const newText = currentText.substring(0, currentPos) + text + currentText.substring(currentPos);
+    const newText =
+      currentText.substring(0, currentPos) +
+      text +
+      currentText.substring(currentPos);
     const newCursorPos = currentPos + text.length;
 
     // Update content
@@ -242,14 +245,13 @@ export const insertTextAtCursor = (element, text, preventEcho = true) => {
 
     // Set cursor position after inserted text
     setCursorPosition(element, newCursorPos);
-
   } catch (error) {
     console.warn('Insert at cursor failed, falling back to append:', error);
     // Fallback: append to end
     const currentText = getTextContent(element);
     const newText = currentText + text;
     element.textContent = newText;
-    
+
     // Position cursor at end
     setCursorPosition(element, newText.length);
   }

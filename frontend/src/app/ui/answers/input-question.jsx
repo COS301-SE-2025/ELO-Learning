@@ -66,18 +66,21 @@ export default function MathInputTemplate({
     if (input && inputValue) {
       // Set initial content
       input.textContent = inputValue;
-      
+
       setTimeout(() => {
         // Set cursor to end of existing text
         const textLength = inputValue.length;
         setCursorPosition(textLength);
-        
+
         // Also set the actual cursor position in the DOM
         const range = document.createRange();
         const selection = window.getSelection();
-        
+
         if (input.firstChild) {
-          range.setStart(input.firstChild, Math.min(textLength, input.firstChild.textContent.length));
+          range.setStart(
+            input.firstChild,
+            Math.min(textLength, input.firstChild.textContent.length),
+          );
         } else if (textLength > 0) {
           // Create text node if it doesn't exist
           input.textContent = inputValue;
@@ -88,7 +91,7 @@ export default function MathInputTemplate({
           range.setStart(input, 0);
         }
         range.collapse(true);
-        
+
         selection.removeAllRanges();
         selection.addRange(range);
       }, 100); // Small delay to ensure DOM is ready
@@ -313,10 +316,13 @@ export default function MathInputTemplate({
   // Sync with parent studentAnswer prop - FIXED to prevent infinite loops
   useEffect(() => {
     // Only sync if studentAnswer changed from parent AND it's different from current input
-    if (prevStudentAnswerRef.current !== studentAnswer && studentAnswer !== inputValue) {
+    if (
+      prevStudentAnswerRef.current !== studentAnswer &&
+      studentAnswer !== inputValue
+    ) {
       prevStudentAnswerRef.current = studentAnswer;
       setInputValue(studentAnswer);
-      
+
       // Update contentEditable if needed
       const input = inputRef.current;
       if (input && input.contentEditable !== undefined) {
@@ -324,24 +330,27 @@ export default function MathInputTemplate({
           setTextContent(input, studentAnswer, true, true);
         }
       }
-      
+
       // Set cursor to end of new text
       setCursorPosition(studentAnswer.length);
-      
+
       // Also set the actual cursor position in the DOM
       setTimeout(() => {
         if (input) {
           const textLength = studentAnswer.length;
           const range = document.createRange();
           const selection = window.getSelection();
-          
+
           if (input.firstChild) {
-            range.setStart(input.firstChild, Math.min(textLength, input.firstChild.textContent.length));
+            range.setStart(
+              input.firstChild,
+              Math.min(textLength, input.firstChild.textContent.length),
+            );
           } else {
             range.setStart(input, 0);
           }
           range.collapse(true);
-          
+
           selection.removeAllRanges();
           selection.addRange(range);
         }
@@ -362,19 +371,22 @@ export default function MathInputTemplate({
     if (input && getTextContent(input) !== inputValue) {
       // Only update if content is actually different to avoid cursor jumps
       input.textContent = inputValue;
-      
+
       // Ensure cursor stays at end for better UX
       setTimeout(() => {
         const textLength = inputValue.length;
         if (cursorPosition > textLength) {
           setCursorPosition(textLength);
-          
+
           // Set DOM cursor position
           const range = document.createRange();
           const selection = window.getSelection();
-          
+
           if (input.firstChild) {
-            range.setStart(input.firstChild, Math.min(textLength, input.firstChild.textContent.length));
+            range.setStart(
+              input.firstChild,
+              Math.min(textLength, input.firstChild.textContent.length),
+            );
             range.collapse(true);
             selection.removeAllRanges();
             selection.addRange(range);
@@ -474,7 +486,7 @@ export default function MathInputTemplate({
     // Get current text and cursor position
     const currentText = getTextContent(input);
     let currentPos = cursorPosition;
-    
+
     // If cursor position seems wrong, try to get it from DOM
     try {
       const selection = window.getSelection();
@@ -497,7 +509,10 @@ export default function MathInputTemplate({
     currentPos = Math.max(0, Math.min(currentPos, currentText.length));
 
     // Insert text at cursor position
-    const newText = currentText.substring(0, currentPos) + symbol + currentText.substring(currentPos);
+    const newText =
+      currentText.substring(0, currentPos) +
+      symbol +
+      currentText.substring(currentPos);
     const newCursorPos = currentPos + symbol.length;
 
     // Update content
@@ -507,9 +522,12 @@ export default function MathInputTemplate({
     try {
       const range = document.createRange();
       const selection = window.getSelection();
-      
+
       if (input.firstChild && input.firstChild.nodeType === Node.TEXT_NODE) {
-        const maxOffset = Math.min(newCursorPos, input.firstChild.textContent.length);
+        const maxOffset = Math.min(
+          newCursorPos,
+          input.firstChild.textContent.length,
+        );
         range.setStart(input.firstChild, maxOffset);
       } else {
         // Create text node if needed
@@ -517,11 +535,14 @@ export default function MathInputTemplate({
           input.appendChild(document.createTextNode(newText));
         }
         if (input.firstChild) {
-          const maxOffset = Math.min(newCursorPos, input.firstChild.textContent.length);
+          const maxOffset = Math.min(
+            newCursorPos,
+            input.firstChild.textContent.length,
+          );
           range.setStart(input.firstChild, maxOffset);
         }
       }
-      
+
       range.collapse(true);
       selection.removeAllRanges();
       selection.addRange(range);
@@ -609,7 +630,7 @@ export default function MathInputTemplate({
 
     // Use the helper function with visual indicator
     moveCursor(input, 'left', true);
-    
+
     // Update cursor position state
     setTimeout(() => {
       const newPos = getCursorPosition(input);
@@ -626,7 +647,7 @@ export default function MathInputTemplate({
 
     // Use the helper function with visual indicator
     moveCursor(input, 'right', true);
-    
+
     // Update cursor position state
     setTimeout(() => {
       const newPos = getCursorPosition(input);
@@ -702,18 +723,21 @@ export default function MathInputTemplate({
                 keyboard.activateCustomKeyboard();
               }
             }
-            
+
             // Position cursor at end when focused (better UX)
             setTimeout(() => {
               const input = e.target;
               const textLength = getTextContent(input).length;
-              
+
               // Always position at end on focus for better UX
               const range = document.createRange();
               const selection = window.getSelection();
-              
+
               if (input.firstChild && textLength > 0) {
-                range.setStart(input.firstChild, Math.min(textLength, input.firstChild.textContent.length));
+                range.setStart(
+                  input.firstChild,
+                  Math.min(textLength, input.firstChild.textContent.length),
+                );
               } else if (textLength === 0) {
                 // Empty input - position at start
                 range.setStart(input, 0);
@@ -722,12 +746,12 @@ export default function MathInputTemplate({
                 range.setStart(input, 0);
               }
               range.collapse(true);
-              
+
               selection.removeAllRanges();
               selection.addRange(range);
-              
+
               setCursorPosition(textLength);
-              
+
               // Show cursor indicator on focus
               showCursorIndicator(input);
             }, 200); // Longer delay to ensure focus is complete

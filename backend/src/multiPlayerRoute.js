@@ -7,10 +7,10 @@ import {
   checkQuestionAchievements,
   checkStreakAchievements,
 } from './achievementRoutes.js';
-import {
-  cacheSuccessfulResponse,
-  idempotencyMiddleware,
-} from './middleware/idempotency.js';
+// import {
+//   cacheSuccessfulResponse,
+//   idempotencyMiddleware,
+// } from './middleware/idempotency.js';
 import { checkAllProgressAchievements } from './progressAchievements.js';
 import {
   calculateExpectedRating,
@@ -23,62 +23,16 @@ import { calculateMultiplayerXP } from './utils/xpCalculator.js';
 
 const router = express.Router();
 
-// NEW: track in-progress processing by fingerprint so concurrent requests can await the same result
-const processingMap = new Map();
-
-// Apply idempotency middleware directly to the route
-router.post('/multiplayer', idempotencyMiddleware, async (req, res) => {
+// Apply simplified route without idempotency middleware
+router.post('/multiplayer', async (req, res) => {
+  console.log(
+    '------------------------------- New /multiplayer request received --------------------------',
+  );
   const startTime = Date.now();
-
-  // If we have a fingerprint, use it to prevent concurrent processing of the same match.
-  const fingerprint = req.matchFingerprint;
-
-  // If another request is already processing this fingerprint, await its result and return it.
-  if (fingerprint && processingMap.has(fingerprint)) {
-    console.log(
-      `🔁 IDEMPOTENCY: Duplicate request detected for fingerprint ${fingerprint}, awaiting existing processing...`,
-    );
-    try {
-      const existingPromise = processingMap.get(fingerprint);
-      const existingResult = await existingPromise;
-      console.log(
-        `🔁 IDEMPOTENCY: Returning existing cached result for fingerprint ${fingerprint}`,
-      );
-      return res.status(200).json(existingResult);
-    } catch (err) {
-      console.error(
-        `❌ IDEMPOTENCY: Error while awaiting existing processing for ${fingerprint}:`,
-        err,
-      );
-      return res.status(500).json({ error: 'Server error' });
-    }
-  }
-
-  // Create a deferred promise for this fingerprint so duplicates can await it.
-  let resolveProcessing;
-  let rejectProcessing;
-  if (fingerprint) {
-    const processingPromise = new Promise((resolve, reject) => {
-      resolveProcessing = resolve;
-      rejectProcessing = reject;
-    });
-    processingMap.set(fingerprint, processingPromise);
-  }
 
   try {
     console.log('Using multiplayer route... --------------------');
     console.log('Received multiplayer request:', req.body);
-
-    // Log idempotency status
-    if (req.matchFingerprint) {
-      console.log(
-        `🔍 IDEMPOTENCY: Processing new match with fingerprint: ${req.matchFingerprint}`,
-      );
-    } else {
-      console.log(
-        '⚠️ IDEMPOTENCY: No fingerprint found - middleware may not be working',
-      );
-    }
 
     const { player1_id, player2_id, score1, xpTotal } = req.body;
 
@@ -636,64 +590,12 @@ router.post('/multiplayer', idempotencyMiddleware, async (req, res) => {
       unlockedAchievements: unlockedAchievements,
     };
 
-    // Cache the successful response for idempotency
-    cacheSuccessfulResponse(req, finalResponse);
-
-    // Resolve any waiting duplicate requests with the same final response
-    if (fingerprint && resolveProcessing) {
-      try {
-        resolveProcessing(finalResponse);
-      } catch (e) {
-        console.error(
-          `❌ Error resolving processing promise for fingerprint ${fingerprint}:`,
-          e,
-        );
-      }
-    }
-
-    if (fingerprint) {
-      setTimeout(() => {
-        if (processingMap.has(fingerprint)) {
-          processingMap.delete(fingerprint);
-          console.log(`🧹 Cleared processing map for fingerprint: ${fingerprint}`);
-        }
-      }, 5000); // 5 second delay to allow late duplicate requests
-    }
-
-    const processingTime = Date.now() - startTime;
-    console.log(
-      `✅ MULTIPLAYER: Successfully processed match in ${processingTime}ms`,
-    );
-    if (req.matchFingerprint) {
-      console.log(
-        `💾 IDEMPOTENCY: Cached response for fingerprint: ${req.matchFingerprint}`,
-      );
-    }
-
     return res.status(200).json(finalResponse);
   } catch (err) {
-    // Reject waiting duplicates so they know processing failed
-    if (fingerprint && rejectProcessing) {
-      try {
-        rejectProcessing(err);
-      } catch (e) {
-        console.error(
-          `❌ Error rejecting processing promise for fingerprint ${fingerprint}:`,
-          e,
-        );
-      }
-    }
-
     const processingTime = Date.now() - startTime;
     console.error(`❌ MULTIPLAYER: Error after ${processingTime}ms:`, err);
     console.error('❌ Error stack:', err.stack);
     res.status(500).json({ error: 'Server error' });
-  } finally {
-    // Clean up in-progress tracking
-    if (fingerprint && processingMap.has(fingerprint)) {
-      processingMap.delete(fingerprint);
-      console.log(`🧹 Immediate cleanup for failed request: ${fingerprint}`);
-    }
   }
 });
 

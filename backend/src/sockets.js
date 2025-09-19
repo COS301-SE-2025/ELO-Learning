@@ -113,8 +113,8 @@ const startGame = (playerWrapper, opponentWrapper) => {
       opponent: {
         name: p1Data?.name,
         username: p1Data?.username,
-        xp: p1Data?.xp,
-        rank: p1Data?.rank,
+        xp: p2Data?.xp,
+        rank: p2Data?.rank,
       },
     });
 
@@ -544,13 +544,14 @@ export default (io, socket) => {
     console.log('Player 2 id:', user2Id);
     console.log('Player 2 totalXPGain:', player2Stats.xpGain);
 
-    // Prepare match data for frontend
+    // Prepare match data for frontend with unique timestamp
     const matchResults = {
       players: [user1Id, user2Id],
       player1Results: gameData.playerResults[player1Id],
       player2Results: gameData.playerResults[player2Id],
       score1,
-      totalXP: player1Stats.xpGain + player2Stats.xpGain, // Total XP from both players
+      totalXP: player1Stats.xpGain + player2Stats.xpGain,
+      timestamp: Date.now(), // Unique timestamp for each match
     };
 
     // Emit to both players with their results - wrap in try/catch for safety
@@ -575,7 +576,44 @@ export default (io, socket) => {
       console.error('Error emitting match results:', emitError);
     }
 
-    // Add a small delay to ensure both clients receive the events
+    // -------------- CLEANUP (recommended additions) ----------------
+    // 1) Remove players from the game room and reset any per-player flags
+    try {
+      const playerSocketIds = gameData.players || [];
+
+      playerSocketIds.forEach((sockId) => {
+        const sock = io.sockets.sockets.get(sockId);
+        if (sock) {
+          // make the socket leave the room explicitly
+          try {
+            sock.leave(gameId);
+          } catch (e) {
+            // ignore if socket already left/disconnected
+          }
+
+          // If you stored wrapper objects in the queue, remove any wrapper matching this socket
+          const qIndex = queue.findIndex(
+            (p) => p.socket && p.socket.id === sockId,
+          );
+          if (qIndex !== -1) {
+            queue.splice(qIndex, 1);
+            console.log(
+              'Removed lingering wrapper from queue for socket:',
+              sockId,
+            );
+          }
+
+          // If you put a `matching` flag on wrappers kept elsewhere, clear it
+          // (Find wrapper and clear matching)
+          const wrapper = queue.find((p) => p.socket && p.socket.id === sockId);
+          if (wrapper) wrapper.matching = false;
+        }
+      });
+    } catch (cleanupErr) {
+      console.error('Error during per-socket cleanup:', cleanupErr);
+    }
+
+    // 2) Remove the matchMap entry after a short delay (ensure clients processed save)
     setTimeout(() => {
       console.log(`Cleaning up game ${gameId} after results sent`);
       matchMap.delete(gameId);

@@ -1,4 +1,16 @@
 // server.js
+
+// Suppress specific deprecation warnings
+process.removeAllListeners('warning');
+process.on('warning', (warning) => {
+  // Suppress the url.parse() deprecation warning (DEP0169)
+  if (warning.code === 'DEP0169') {
+    return; // Ignore this specific warning
+  }
+  // Log other warnings
+  console.warn(warning.name, warning.message);
+});
+
 import cors from 'cors';
 import dotenv from 'dotenv';
 import express from 'express';

@@ -32,8 +32,8 @@ router.post('/baseline/answer', async (req, res) => {
   }
 
   // Check if test is done
-  if (questionNumber >= 10) {
-    //to be changed to 15 later
+  if (questionNumber >= 15) {
+    //to be changed to 15 later - done
     //const finalElo = await setBaselineElo(user_id, nextLevel);
     //return res.json({ done: true, finalLevel: nextLevel , elo_rating: finalElo});
     return res.json({
@@ -60,6 +60,7 @@ router.post('/baseline/answer', async (req, res) => {
 });
 
 // POST /baseline/skip
+//we will only use this when the user chooses to skip also in the profile section
 router.post('/baseline/skip', async (req, res) => {
   const { user_id } = req.body;
 
@@ -70,7 +71,7 @@ router.post('/baseline/skip', async (req, res) => {
   try {
     const { error } = await supabase
       .from('Users')
-      .update({ baseLineTest: true })
+      .update({ base_line_test: true })
       .eq('id', user_id);
 
     if (error) {
@@ -89,23 +90,50 @@ router.post('/baseline/skip', async (req, res) => {
 router.post('/baseline/confirm', async (req, res) => {
   const { user_id } = req.body;
 
+  console.log('🎯 /baseline/confirm called with user_id:', user_id);
+
   if (!user_id) {
+    console.error('❌ Missing user_id in request body');
     return res.status(400).json({ error: 'Missing userId' });
   }
 
   try {
+    console.log('🔄 Updating base_line_test to true for user:', user_id);
+
     // Update the baseLineTest flag to true
     const { data, error } = await supabase
       .from('Users')
-      .update({ baseLineTest: true })
-      .eq('id', user_id);
+      .update({ base_line_test: true })
+      .eq('id', user_id)
+      .select('*')
+      .single();
 
     if (error) {
-      console.error('Error updating baseLineTest:', error);
-      return res.status(500).json({ error: 'Database update failed' });
+      console.error('❌ Database error updating base_line_test:', error);
+      return res
+        .status(500)
+        .json({ error: 'Database update failed', details: error.message });
     }
 
-    return res.status(200).json({ success: true, updatedUser: data });
+    console.log('✅ Successfully updated base_line_test for user:', user_id);
+
+    // Return the updated user data with proper field name conversion
+    const updatedUser = {
+      id: data.id,
+      name: data.name,
+      surname: data.surname,
+      username: data.username,
+      email: data.email,
+      currentLevel: data.currentLevel,
+      joinDate: data.joinDate,
+      xp: data.xp,
+      avatar: data.avatar,
+      elo_rating: data.elo_rating,
+      rank: data.rank,
+      baseLineTest: data.base_line_test, // Convert snake_case to camelCase
+    };
+
+    return res.status(200).json({ success: true, user: updatedUser });
   } catch (err) {
     console.error('Server error:', err);
     return res.status(500).json({ error: 'Internal server error' });
@@ -153,8 +181,8 @@ router.get('/baseline/questions', async (req, res) => {
 
 /**
  * POST /baseline/complete
- * Update user's final Elo rating after baseline test.
- * Body: { user_id, elo_rating }
+ * Update user's final Elo rating and rank after baseline test.
+ * Body: { user_id, finalElo } - finalElo is actually the final level achieved
  */
 router.post('/baseline/complete', async (req, res) => {
   const { user_id, finalElo } = req.body;
@@ -164,16 +192,101 @@ router.post('/baseline/complete', async (req, res) => {
   }
 
   try {
+    console.log(
+      `🎯 Processing baseline completion for user ${user_id}, final level: ${finalElo}`,
+    );
+
+    // Step 1: Get the minXP for the achieved level from Levels table
+    const { data: levelData, error: levelError } = await supabase
+      .from('Levels')
+      .select('minXP')
+      .eq('level', finalElo)
+      .single();
+
+    if (levelError || !levelData) {
+      console.error('Failed to fetch level data:', levelError);
+      return res.status(500).json({ error: 'Failed to fetch level data' });
+    }
+
+    const baseXP = levelData.minXP;
+    console.log(`Level ${finalElo} corresponds to ${baseXP} XP`);
+
+    // Step 2: Apply 75% reduction for baseline test (you can adjust this percentage)
+    const baselineMultiplier = 0.75; // 75% of the level's minXP
+    const calculatedElo = Math.max(
+      100,
+      Math.round(baseXP * baselineMultiplier),
+    ); // Minimum 100 ELO
+    console.log(
+      `⚡ Calculated ELO (${
+        baselineMultiplier * 100
+      }% of ${baseXP}, min 100): ${calculatedElo}`,
+    );
+
+    // Step 3: Determine rank based on calculated ELO
+    const { data: rankData, error: rankError } = await supabase
+      .from('Ranks')
+      .select('rank')
+      .lte('min_elo', calculatedElo)
+      .order('min_elo', { ascending: false })
+      .limit(1)
+      .single();
+
+    if (rankError || !rankData) {
+      console.error('Failed to determine rank:', rankError);
+      return res.status(500).json({ error: 'Failed to determine rank' });
+    }
+
+    const assignedRank = rankData.rank;
+    console.log(`Assigned rank: ${assignedRank} (ELO: ${calculatedElo})`);
+
+    // Step 4: Update user with new ELO, rank, level, and baseline completion
     const { data, error } = await supabase
       .from('Users')
-      .update({ currentLevel: finalElo, base_line_test: true })
-      .eq('id', user_id);
+      .update({
+        currentLevel: finalElo,
+        elo_rating: calculatedElo,
+        rank: assignedRank,
+        base_line_test: true,
+      })
+      .eq('id', user_id)
+      .select('*')
+      .single();
 
-    if (error)
-      return res.status(500).json({ error: 'Failed to update user ELO' });
-    res.json({ success: true, elo_rating: finalElo });
+    if (error) {
+      console.error('Failed to update user data:', error);
+      return res.status(500).json({ error: 'Failed to update user data' });
+    }
+
+    console.log(
+      ` Successfully updated user ${user_id}: Level ${finalElo}, ELO ${calculatedElo}, Rank ${assignedRank}`,
+    );
+
+    // Return the updated user data with proper field name conversion
+    const updatedUser = {
+      id: data.id,
+      name: data.name,
+      surname: data.surname,
+      username: data.username,
+      email: data.email,
+      currentLevel: data.currentLevel,
+      joinDate: data.joinDate,
+      xp: data.xp,
+      avatar: data.avatar,
+      elo_rating: data.elo_rating,
+      rank: data.rank,
+      baseLineTest: data.base_line_test, // Convert snake_case to camelCase
+    };
+
+    res.json({
+      success: true,
+      elo_rating: calculatedElo,
+      rank: assignedRank,
+      level: finalElo,
+      user: updatedUser,
+    });
   } catch (err) {
-    console.error('Server error:', err);
+    console.error('Server error in baseline/complete:', err);
     res.status(500).json({ error: 'Internal server error' });
   }
 });

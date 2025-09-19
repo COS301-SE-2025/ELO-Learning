@@ -48,3 +48,4 @@ screenshots/
 fallback-*
 workbox-*
 sw.js
+.DS_Store

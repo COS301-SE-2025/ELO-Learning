@@ -93,8 +93,8 @@ class BaselineEngine {
       return { done: true, rating: bounceEnd };
     }
 
-    if (this.questionCount >= 10) {
-      //max is 10 for now
+    if (this.questionCount >= 15) {
+      //max is 15 for baseline test
       return { done: true, rating: this.currentLevel };
     }
 

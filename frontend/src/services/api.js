@@ -297,7 +297,7 @@ export async function loginUser(email, password) {
           },
           elo_rating: 5.0,
           rank: 'Bronze',
-          baseLineTest: true,
+          base_line_test: true,
           daily_streak: 0,
         },
       };
@@ -318,7 +318,7 @@ export async function registerUser(
   avatar,
   elo_rating,
   rank,
-  baseLineTest,
+  base_line_test,
   daily_streak,
 ) {
   try {
@@ -363,8 +363,7 @@ export async function registerUser(
           avatar,
           elo_rating,
           rank,
-          baseLineTest,
-          daily_streak: 0,
+          base_line_test,
         },
       };
     }
@@ -904,6 +903,27 @@ export async function fetchNextRandomBaselineQuestion(level) {
   }
 }
 
+export async function confirmBaselineTest(userId) {
+  try {
+    console.log('🎯 Calling confirmBaselineTest for user:', userId);
+
+    const res = await axiosInstance.post('/baseline/confirm', {
+      user_id: userId,
+    });
+
+    console.log('✅ confirmBaselineTest response:', res.data);
+    return res.data;
+  } catch (err) {
+    console.error('❌ Failed to confirm baseline test:', {
+      error: err.message,
+      status: err.response?.status,
+      data: err.response?.data,
+      userId: userId,
+    });
+    throw err;
+  }
+}
+
 export async function skipBaselineTest(userId) {
   if (!userId) throw new Error('Missing userId');
   try {
@@ -916,17 +936,6 @@ export async function skipBaselineTest(userId) {
     console.error('Failed to skip baseline test:', err);
     throw err;
   }
-}
-
-// Submit baseline result
-export async function submitBaselineResult(userId, finalLevel) {
-  const res = await fetch('/baseline/complete', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ user_id: userId, finalLevel }),
-  });
-  const data = await res.json();
-  return data;
 }
 
 export async function fetchBaselineQuestion(level) {

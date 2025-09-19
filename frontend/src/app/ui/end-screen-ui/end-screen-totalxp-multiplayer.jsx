@@ -115,30 +115,10 @@ export default function TotalXPMP({ onLoadComplete, onResults }) {
           return;
         }
 
-        // SIMPLIFIED: Use basic results key without complex fingerprinting
-        const resultsKey = `mp_results_${matchData.players[0]}_${
-          matchData.players[1]
-        }_${matchData.score1}_${Date.now()}`;
-
-        // Check if results have already been processed (basic session storage check)
-        const existingResults = sessionStorage.getItem(resultsKey);
-        if (existingResults) {
-          console.log(
-            '🔄 FRONTEND DEDUP: Results found in session storage, using cached data...',
-          );
-          const cachedData = JSON.parse(existingResults);
-          setXpEarned(cachedData.xpEarned || 0);
-          if (onResults) {
-            onResults({
-              newElo: cachedData.newElo || 0,
-              eloChange: cachedData.eloChange || 0,
-              currentRank: cachedData.currentRank || 'Bronze',
-            });
-          }
-          if (onLoadComplete) onLoadComplete();
-          setIsLoading(false);
-          return;
-        }
+        // REMOVE: timestamp-based resultsKey (causes no dedup)
+        // const resultsKey = `mp_results_${matchData.players[0]}_${matchData.players[1]}_${matchData.score1}_${Date.now()}`;
+        // const existingResults = sessionStorage.getItem(resultsKey);
+        // if (existingResults) { ... }
 
         // Get current user ID
         let userId = session?.user?.id;
@@ -197,18 +177,51 @@ export default function TotalXPMP({ onLoadComplete, onResults }) {
             )
           : 0;
 
-        console.log(
-          `🎯 FRONTEND: Submitting multiplayer results - ${matchData.players[0]} vs ${matchData.players[1]}, score: ${matchData.score1}, totalXP: ${matchData.totalXP}`,
+        // Normalize xpTotal to be > 0 to satisfy backend validation
+        const xpToSend = Math.max(
+          1, // ensure positive
+          Number.isFinite(Number(matchData.totalXP))
+            ? Number(matchData.totalXP)
+            : 0,
+          Number.isFinite(totalXPSum) ? totalXPSum : 0,
         );
 
-        // Submit results (no fingerprint complexity)
+        // Stable dedup key (no timestamp) to prevent instant double-submit
+        const playersSorted = [...matchData.players].map(String).sort();
+        const resultsKey = `mp_results_${playersSorted[0]}_${playersSorted[1]}_${matchData.score1}_${xpToSend}`;
+
+        // Check if results have already been processed (session storage)
+        const existingResults = sessionStorage.getItem(resultsKey);
+        if (existingResults) {
+          console.log(
+            '🔄 FRONTEND DEDUP: Results found in session storage, using cached data...',
+          );
+          const cachedData = JSON.parse(existingResults);
+          setXpEarned(cachedData.xpEarned || 0);
+          if (onResults) {
+            onResults({
+              newElo: cachedData.newElo || 0,
+              eloChange: cachedData.eloChange || 0,
+              currentRank: cachedData.currentRank || 'Bronze',
+            });
+          }
+          if (onLoadComplete) onLoadComplete();
+          setIsLoading(false);
+          return;
+        }
+
+        console.log(
+          `🎯 FRONTEND: Submitting multiplayer results - ${matchData.players[0]} vs ${matchData.players[1]}, score: ${matchData.score1}, totalXP(normalized): ${xpToSend}`,
+        );
+
+        // Submit results with normalized xpTotal
         let response;
         try {
           response = await submitMultiplayerResult({
             player1_id: matchData.players[0],
             player2_id: matchData.players[1],
             score1: matchData.score1,
-            xpTotal: matchData.totalXP,
+            xpTotal: xpToSend,
           });
 
           console.log('✅ Multiplayer API response:', response);

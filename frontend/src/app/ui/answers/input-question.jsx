@@ -9,14 +9,13 @@ import {
 import { validateAnswerSync } from '@/utils/answerValidator';
 import {
   clearContent,
-  deleteAtCursor,
   getCursorPosition,
   getTextContent,
   insertTextAtCursor,
   moveCursor,
   removeCursorIndicator,
   setTextContent,
-  showCursorIndicator,
+  showCursorIndicator
 } from '@/utils/contentEditableHelpers';
 import {
   getMathValidationMessage,
@@ -36,7 +35,7 @@ export default function MathInputTemplate({
   setIsValidExpression,
   studentAnswer = '',
 }) {
-  const [inputValue, setInputValue] = useState(studentAnswer);
+  const [inputValue, setInputValue] = useState(studentAnswer || '');
   const [validationMessage, setValidationMessage] = useState('');
   const [localIsValidExpression, setLocalIsValidExpression] = useState(true);
   const [showErrorMessage, setShowErrorMessage] = useState(false);
@@ -44,7 +43,7 @@ export default function MathInputTemplate({
   const [activeTab, setActiveTab] = useState('basic');
   const [showHistory, setShowHistory] = useState(false);
   const [inputHistory, setInputHistory] = useState([]);
-  const [cursorPosition, setCursorPosition] = useState(studentAnswer.length);
+  const [cursorPosition, setCursorPosition] = useState((studentAnswer || '').length);
   const [suggestions, setSuggestions] = useState([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [showHelper, setShowHelper] = useState(false);
@@ -52,51 +51,20 @@ export default function MathInputTemplate({
 
   const inputRef = useRef(null);
 
-  // Add ref to track previous studentAnswer value to prevent infinite loops
-  const prevStudentAnswerRef = useRef(studentAnswer);
-
   // Handle hydration
   useEffect(() => {
     setIsHydrated(true);
   }, []);
 
-  // Initialize cursor position at end when component mounts
+  // Initialize DOM content on component mount
   useEffect(() => {
     const input = inputRef.current;
-    if (input && inputValue) {
-      // Set initial content
-      input.textContent = inputValue;
-
-      setTimeout(() => {
-        // Set cursor to end of existing text
-        const textLength = inputValue.length;
-        setCursorPosition(textLength);
-
-        // Also set the actual cursor position in the DOM
-        const range = document.createRange();
-        const selection = window.getSelection();
-
-        if (input.firstChild) {
-          range.setStart(
-            input.firstChild,
-            Math.min(textLength, input.firstChild.textContent.length),
-          );
-        } else if (textLength > 0) {
-          // Create text node if it doesn't exist
-          input.textContent = inputValue;
-          if (input.firstChild) {
-            range.setStart(input.firstChild, textLength);
-          }
-        } else {
-          range.setStart(input, 0);
-        }
-        range.collapse(true);
-
-        selection.removeAllRanges();
-        selection.addRange(range);
-      }, 100); // Small delay to ensure DOM is ready
+    if (input) {
+      const initialValue = studentAnswer || '';
+      setTextContent(input, initialValue, true, true);
+      setCursorPosition(initialValue.length);
     }
-  }, [isHydrated]); // Run when hydrated
+  }, []); // Run only once on mount
 
   // Initialize keyboard manager for Math Input questions
   const keyboard = useKeyboardManager(QUESTION_TYPES.MATH_INPUT);
@@ -313,50 +281,59 @@ export default function MathInputTemplate({
     return () => clearTimeout(timeoutId);
   }, [inputValue, cursorPosition, setIsValidExpression]);
 
-  // Sync with parent studentAnswer prop - FIXED to prevent infinite loops
+  // Sync with parent studentAnswer prop - SIMPLIFIED to prevent race conditions
   useEffect(() => {
-    // Only sync if studentAnswer changed from parent AND it's different from current input
-    if (
-      prevStudentAnswerRef.current !== studentAnswer &&
-      studentAnswer !== inputValue
-    ) {
-      prevStudentAnswerRef.current = studentAnswer;
-      setInputValue(studentAnswer);
+    // Normalize studentAnswer (handle null/undefined as empty string)
+    const normalizedStudentAnswer = studentAnswer || '';
+    
+    // Always sync when studentAnswer prop changes
+    setInputValue(normalizedStudentAnswer);
 
-      // Update contentEditable if needed
-      const input = inputRef.current;
-      if (input && input.contentEditable !== undefined) {
-        if (getTextContent(input) !== studentAnswer) {
-          setTextContent(input, studentAnswer, true, true);
-        }
-      }
+    // Clear all related state when resetting to empty
+    if (normalizedStudentAnswer === '') {
+      setInputHistory([]);
+      setShowHistory(false);
+      setShowSuggestions(false);
+      setSuggestions([]);
+      setValidationMessage('');
+      setShowErrorMessage(false);
+      setLocalIsValidExpression(true);
+    }
 
-      // Set cursor to end of new text
-      setCursorPosition(studentAnswer.length);
-
-      // Also set the actual cursor position in the DOM
+    // Update DOM content
+    const input = inputRef.current;
+    if (input) {
+      setTextContent(input, normalizedStudentAnswer, true, true);
+      
+      // Set cursor position to end of content
+      setCursorPosition(normalizedStudentAnswer.length);
+      
+      // Update DOM cursor position
       setTimeout(() => {
-        if (input) {
-          const textLength = studentAnswer.length;
+        if (normalizedStudentAnswer === '') {
+          // For empty content, position cursor at start
           const range = document.createRange();
           const selection = window.getSelection();
-
-          if (input.firstChild) {
-            range.setStart(
-              input.firstChild,
-              Math.min(textLength, input.firstChild.textContent.length),
-            );
-          } else {
-            range.setStart(input, 0);
-          }
+          range.setStart(input, 0);
           range.collapse(true);
-
+          selection.removeAllRanges();
+          selection.addRange(range);
+        } else if (input.firstChild) {
+          // For non-empty content, position cursor at end
+          const range = document.createRange();
+          const selection = window.getSelection();
+          const textLength = normalizedStudentAnswer.length;
+          range.setStart(
+            input.firstChild,
+            Math.min(textLength, input.firstChild.textContent.length)
+          );
+          range.collapse(true);
           selection.removeAllRanges();
           selection.addRange(range);
         }
       }, 10);
     }
-  }, [studentAnswer]);
+  }, [studentAnswer]); // Only depend on studentAnswer prop
 
   // Reset error message when typing
   useEffect(() => {
@@ -369,28 +346,30 @@ export default function MathInputTemplate({
   useEffect(() => {
     const input = inputRef.current;
     if (input && getTextContent(input) !== inputValue) {
-      // Only update if content is actually different to avoid cursor jumps
-      input.textContent = inputValue;
-
-      // Ensure cursor stays at end for better UX
+      setTextContent(input, inputValue, true, true);
+      
+      // Set cursor position to end for better UX
       setTimeout(() => {
-        const textLength = inputValue.length;
-        if (cursorPosition > textLength) {
-          setCursorPosition(textLength);
-
-          // Set DOM cursor position
+        if (inputValue === '') {
+          // For empty content, position cursor at start
           const range = document.createRange();
           const selection = window.getSelection();
-
-          if (input.firstChild) {
-            range.setStart(
-              input.firstChild,
-              Math.min(textLength, input.firstChild.textContent.length),
-            );
-            range.collapse(true);
-            selection.removeAllRanges();
-            selection.addRange(range);
-          }
+          range.setStart(input, 0);
+          range.collapse(true);
+          selection.removeAllRanges();
+          selection.addRange(range);
+        } else if (input.firstChild) {
+          // For non-empty content, position cursor at end
+          const range = document.createRange();
+          const selection = window.getSelection();
+          const textLength = inputValue.length;
+          range.setStart(
+            input.firstChild,
+            Math.min(textLength, input.firstChild.textContent.length)
+          );
+          range.collapse(true);
+          selection.removeAllRanges();
+          selection.addRange(range);
         }
       }, 10);
     }
@@ -480,84 +459,17 @@ export default function MathInputTemplate({
     if (input.dataset.inserting === 'true') return;
     input.dataset.inserting = 'true';
 
-    // Ensure the input is focused first
-    input.focus();
-
-    // Get current text and cursor position
-    const currentText = getTextContent(input);
-    let currentPos = cursorPosition;
-
-    // If cursor position seems wrong, try to get it from DOM
-    try {
-      const selection = window.getSelection();
-      if (selection.rangeCount > 0) {
-        const range = selection.getRangeAt(0);
-        const preRange = document.createRange();
-        preRange.selectNodeContents(input);
-        preRange.setEnd(range.startContainer, range.startOffset);
-        const detectedPos = preRange.toString().replace(/\|/g, '').length;
-        // Use detected position if it seems reasonable
-        if (detectedPos >= 0 && detectedPos <= currentText.length) {
-          currentPos = detectedPos;
-        }
-      }
-    } catch (error) {
-      console.warn('Could not detect cursor position, using state value');
-    }
-
-    // Ensure cursor position is within bounds
-    currentPos = Math.max(0, Math.min(currentPos, currentText.length));
-
-    // Insert text at cursor position
-    const newText =
-      currentText.substring(0, currentPos) +
-      symbol +
-      currentText.substring(currentPos);
-    const newCursorPos = currentPos + symbol.length;
-
-    // Update content
-    input.textContent = newText;
-
-    // Set cursor position after inserted text
-    try {
-      const range = document.createRange();
-      const selection = window.getSelection();
-
-      if (input.firstChild && input.firstChild.nodeType === Node.TEXT_NODE) {
-        const maxOffset = Math.min(
-          newCursorPos,
-          input.firstChild.textContent.length,
-        );
-        range.setStart(input.firstChild, maxOffset);
-      } else {
-        // Create text node if needed
-        if (!input.firstChild) {
-          input.appendChild(document.createTextNode(newText));
-        }
-        if (input.firstChild) {
-          const maxOffset = Math.min(
-            newCursorPos,
-            input.firstChild.textContent.length,
-          );
-          range.setStart(input.firstChild, maxOffset);
-        }
-      }
-
-      range.collapse(true);
-      selection.removeAllRanges();
-      selection.addRange(range);
-    } catch (error) {
-      console.warn('Could not set cursor position after insert:', error);
-    }
+    // Use contentEditable text insertion with improved helper and echo prevention
+    insertTextAtCursor(input, symbol, true);
 
     // Update local state without triggering additional events
-    setInputValue(newText);
-    setStudentAnswer(newText);
-    setCursorPosition(newCursorPos);
+    const newValue = getTextContent(input);
+    setInputValue(newValue);
+    setStudentAnswer(newValue);
 
     // Add to history
     if (!inputHistory.includes(symbol)) {
-      setInputHistory((prev) => [symbol, ...prev.slice(0, 9)]); // Keep last 10
+      setInputHistory((prev) => [symbol, ...prev.slice(0, 9)]);
     }
 
     // Show cursor indicator at new position
@@ -602,57 +514,77 @@ export default function MathInputTemplate({
     const input = inputRef.current;
     if (!input) return;
 
-    // Ensure input is focused
-    input.focus();
+    // Get current text and selection
+    const text = input.textContent || '';
+    const selection = window.getSelection();
 
-    // Use the helper function for consistent behavior
-    deleteAtCursor(input, 1, true);
+    if (selection.rangeCount === 0) return;
 
-    // Update local state
-    const newValue = getTextContent(input);
-    setInputValue(newValue);
-    setStudentAnswer(newValue);
+    const range = selection.getRangeAt(0);
+    const cursorPos = getCursorPosition(input);
 
-    // Update cursor position state
-    setTimeout(() => {
-      const newPos = getCursorPosition(input);
-      setCursorPosition(newPos);
-    }, 10);
+    if (cursorPos > 0) {
+      // Remove one character before cursor
+      const newText = text.slice(0, cursorPos - 1) + text.slice(cursorPos);
+
+      // Update content
+      input.textContent = newText;
+      setInputValue(newText);
+      setStudentAnswer(newText);
+
+      // Set cursor position manually
+      setTimeout(() => {
+        const newRange = document.createRange();
+        const textNode = input.firstChild;
+
+        if (textNode && textNode.nodeType === Node.TEXT_NODE) {
+          const newPos = Math.max(0, cursorPos - 1);
+          newRange.setStart(
+            textNode,
+            Math.min(newPos, textNode.textContent.length),
+          );
+          newRange.collapse(true);
+          selection.removeAllRanges();
+          selection.addRange(newRange);
+        } else if (newText.length === 0) {
+          // Empty content, create text node and set cursor
+          const emptyTextNode = document.createTextNode('');
+          input.appendChild(emptyTextNode);
+          newRange.setStart(emptyTextNode, 0);
+          newRange.collapse(true);
+          selection.removeAllRanges();
+          selection.addRange(newRange);
+        }
+
+        // Show cursor indicator
+        showCursorIndicator(input);
+      }, 10);
+    }
   };
 
-  // Cursor navigation functions using helper utilities
+  // Cursor navigation functions with visual feedback
   const moveCursorLeft = () => {
     const input = inputRef.current;
     if (!input) return;
-
-    // Ensure input is focused
-    input.focus();
-
-    // Use the helper function with visual indicator
     moveCursor(input, 'left', true);
 
-    // Update cursor position state
+    // Show cursor indicator for visual feedback
     setTimeout(() => {
-      const newPos = getCursorPosition(input);
-      setCursorPosition(newPos);
-    }, 10);
+      showCursorIndicator(input);
+      setTimeout(() => removeCursorIndicator(input), 1500);
+    }, 50);
   };
 
   const moveCursorRight = () => {
     const input = inputRef.current;
     if (!input) return;
-
-    // Ensure input is focused
-    input.focus();
-
-    // Use the helper function with visual indicator
     moveCursor(input, 'right', true);
 
-    // Update cursor position state
+    // Show cursor indicator for visual feedback
     setTimeout(() => {
-      const newPos = getCursorPosition(input);
-      setCursorPosition(newPos);
-    }, 10);
+      showCursorIndicator(input);
+      setTimeout(() => removeCursorIndicator(input), 1500);
+    }, 50);
   };
 
   const handleKeyDown = (e) => {

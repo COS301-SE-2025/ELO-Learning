@@ -122,7 +122,7 @@ router.post('/singleplayer', async (req, res) => {
           oldRank: currentRank ?? 'Unranked',
           newRank: newRank,
           isPromotion: true,
-          rankDirection: 'up'
+          rankDirection: 'up',
         };
       } else if (newIndex < oldIndex) {
         rankDown = true;
@@ -130,7 +130,7 @@ router.post('/singleplayer', async (req, res) => {
           oldRank: currentRank ?? 'Unranked',
           newRank: newRank,
           isPromotion: false,
-          rankDirection: 'down'
+          rankDirection: 'down',
         };
       }
 

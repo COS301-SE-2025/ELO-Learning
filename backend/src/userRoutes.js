@@ -49,7 +49,7 @@ router.get('/user/:id', verifyToken, async (req, res) => {
 // Debug endpoint for progress tracking (no auth required)
 router.get('/users/:id/debug', async (req, res) => {
   const { id } = req.params;
-  
+
   try {
     const { data, error } = await supabase
       .from('Users')

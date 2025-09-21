@@ -33,9 +33,13 @@ export default function RankNotification({
       bg: 'bg-gradient-to-r from-[#bd86f8] to-[#7d32ce]', // vector-violet-light to vector-violet
       border: 'border-[#bd86f8]',
       glow: 'shadow-[#bd86f8]/50',
-      icon: isPromotion ? <TrendingUp className="w-6 h-6" /> : <TrendingDown className="w-6 h-6" />,
+      icon: isPromotion ? (
+        <TrendingUp className="w-6 h-6" />
+      ) : (
+        <TrendingDown className="w-6 h-6" />
+      ),
       text: isPromotion ? 'Rank Up!' : 'Rank Change',
-      emoji: isPromotion ? '🎉' : '📊'
+      emoji: isPromotion ? '🎉' : '📊',
     };
   };
 
@@ -45,7 +49,11 @@ export default function RankNotification({
     <div
       className={`
         fixed top-4 right-4 z-50 transition-all duration-500 ease-out transform
-        ${isVisible ? 'translate-x-0 opacity-100 scale-100' : 'translate-x-full opacity-0 scale-95'}
+        ${
+          isVisible
+            ? 'translate-x-0 opacity-100 scale-100'
+            : 'translate-x-full opacity-0 scale-95'
+        }
       `}
       role="alert"
       aria-live="polite"
@@ -60,19 +68,17 @@ export default function RankNotification({
         `}
       >
         {/* Animated background gradient */}
-        <div 
+        <div
           className="absolute inset-0 bg-gradient-to-r from-white/10 to-transparent opacity-0 transition-opacity duration-1000"
           style={{
             opacity: isVisible ? 1 : 0,
-            animation: isVisible ? 'shimmer 2s ease-in-out infinite' : 'none'
+            animation: isVisible ? 'shimmer 2s ease-in-out infinite' : 'none',
           }}
         />
 
         {/* Header */}
         <div className="flex items-center gap-3 mb-3">
-          <div className="flex-shrink-0 text-white">
-            {colors.icon}
-          </div>
+          <div className="flex-shrink-0 text-white">{colors.icon}</div>
           <div className="flex-1">
             <h3 className="text-lg font-bold text-white leading-tight">
               {colors.emoji} {colors.text}
@@ -102,7 +108,11 @@ export default function RankNotification({
 
           {/* Arrow */}
           <div className="flex flex-col items-center">
-            <div className={`text-2xl text-white font-bold transition-transform duration-500 ${isVisible ? 'scale-110' : 'scale-100'}`}>
+            <div
+              className={`text-2xl text-white font-bold transition-transform duration-500 ${
+                isVisible ? 'scale-110' : 'scale-100'
+              }`}
+            >
               →
             </div>
           </div>
@@ -119,10 +129,9 @@ export default function RankNotification({
         {/* Congratulatory message */}
         <div className="text-center mt-3">
           <p className="text-sm text-white/90 font-medium">
-            {isPromotion 
-              ? `Congratulations on reaching ${newRank}!` 
-              : `You are now in ${newRank}`
-            }
+            {isPromotion
+              ? `Congratulations on reaching ${newRank}!`
+              : `You are now in ${newRank}`}
           </p>
         </div>
 
@@ -150,7 +159,8 @@ export default function RankNotification({
       {/* CSS for animations */}
       <style jsx>{`
         @keyframes twinkle {
-          0%, 100% {
+          0%,
+          100% {
             opacity: 0.3;
             transform: scale(1);
           }
@@ -159,7 +169,7 @@ export default function RankNotification({
             transform: scale(1.5);
           }
         }
-        
+
         @keyframes shimmer {
           0% {
             transform: translateX(-100%);

@@ -187,9 +187,12 @@ router.post('/multiplayer', idempotencyMiddleware, async (req, res) => {
           oldRank: player1.rank ?? 'Unranked',
           newRank: newRank1,
           isPromotion: newIndex > oldIndex,
-          rankDirection: newIndex > oldIndex ? 'up' : 'down'
+          rankDirection: newIndex > oldIndex ? 'up' : 'down',
         };
-        console.log(`🏆 RANK CHANGE DETECTED for Player 1 (${player1_id}):`, player1RankChange);
+        console.log(
+          `🏆 RANK CHANGE DETECTED for Player 1 (${player1_id}):`,
+          player1RankChange,
+        );
       }
     }
 
@@ -209,9 +212,12 @@ router.post('/multiplayer', idempotencyMiddleware, async (req, res) => {
           oldRank: player2.rank ?? 'Unranked',
           newRank: newRank2,
           isPromotion: newIndex > oldIndex,
-          rankDirection: newIndex > oldIndex ? 'up' : 'down'
+          rankDirection: newIndex > oldIndex ? 'up' : 'down',
         };
-        console.log(`🏆 RANK CHANGE DETECTED for Player 2 (${player2_id}):`, player2RankChange);
+        console.log(
+          `🏆 RANK CHANGE DETECTED for Player 2 (${player2_id}):`,
+          player2RankChange,
+        );
       }
     }
 

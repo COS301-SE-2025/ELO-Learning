@@ -64,7 +64,7 @@ export default function RootLayout({ children }) {
 
             {/* Achievement notifications - appears above all content */}
             <AchievementNotificationManager />
-            
+
             {/* Rank change notifications - appears above all content */}
             <RankNotificationManager />
           </Providers>

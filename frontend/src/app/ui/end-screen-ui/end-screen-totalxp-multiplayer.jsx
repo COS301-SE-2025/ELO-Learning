@@ -236,12 +236,21 @@ export default function TotalXPMP({ onLoadComplete, onResults }) {
             // 🎯 Handle rank change notifications from API response
             if (userResults.rankChange) {
               try {
-                console.log('🏆 Rank change detected in multiplayer:', userResults.rankChange);
-                
+                console.log(
+                  '🏆 Rank change detected in multiplayer:',
+                  userResults.rankChange,
+                );
+
                 // Show rank notification using global function
-                if (typeof window !== 'undefined' && window.showRankNotification) {
+                if (
+                  typeof window !== 'undefined' &&
+                  window.showRankNotification
+                ) {
                   window.showRankNotification(userResults.rankChange);
-                  console.log('🏆 Rank notification triggered:', userResults.rankChange);
+                  console.log(
+                    '🏆 Rank notification triggered:',
+                    userResults.rankChange,
+                  );
                 } else {
                   console.warn('⚠️ Rank notification system not available');
                 }

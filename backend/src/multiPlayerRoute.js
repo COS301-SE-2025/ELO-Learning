@@ -181,7 +181,17 @@ router.post('/multiplayer', async (req, res) => {
       .insert(inserts);
 
     if (insertError) {
-      return res.status(500).json({ error: 'Error saving attempts' });
+      if (insertError.code === '23505') {
+        // Unique violation in Postgres
+        //console.warn('Duplicate multiplayer attempt prevented at DB level');
+        // Skip duplicate instead of failing the whole match
+      } else {
+        console.error('Error saving multiplayer attempts:', insertError);
+        return res.status(500).json({
+          error: 'Failed to save match results',
+          details: insertError.message,
+        });
+      }
     }
 
     // 🎯 Check for match achievements (both players participated in a match)

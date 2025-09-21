@@ -4,12 +4,11 @@ import { submitMultiplayerResult } from '@/services/api';
 import { handleGameplayAchievements } from '@/utils/gameplayAchievementHandler';
 import { useSession } from 'next-auth/react';
 import { useEffect, useState } from 'react';
-//import { cache, CACHE_KEYS } from '@/utils/cache';
 
 export default function TotalXPMP({ onLoadComplete, onResults }) {
-  const [xpEarned, setXPEarned] = useState(null);
+  const [xpEarned, setXpEarned] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [hasProcessed, setHasProcessed] = useState(false); // Prevent duplicate processing
+  const [hasProcessed, setHasProcessed] = useState(false);
   const { data: session, update: updateSession } = useSession();
 
   // Function to update user data after multiplayer results
@@ -22,6 +21,7 @@ export default function TotalXPMP({ onLoadComplete, onResults }) {
         currentLevel: results.currentLevel,
         rank: results.currentRank,
         eloRating: results.newElo,
+        elo_rating: results.newElo, // Add both variants for compatibility
       };
 
       // Update NextAuth session
@@ -34,6 +34,17 @@ export default function TotalXPMP({ onLoadComplete, onResults }) {
             ...latestUserData,
           },
         });
+
+        // Give the session update time to propagate
+        await new Promise((resolve) => setTimeout(resolve, 100));
+        console.log('NextAuth session updated successfully');
+
+        // Dispatch a custom event to notify other components
+        window.dispatchEvent(
+          new CustomEvent('eloUpdated', {
+            detail: { newElo: results.newElo, userId: user_id },
+          }),
+        );
       }
 
       // Update cache
@@ -85,12 +96,18 @@ export default function TotalXPMP({ onLoadComplete, onResults }) {
 
       try {
         setIsLoading(true);
-        setHasProcessed(true); // Mark as processing to prevent duplicates
+        setHasProcessed(true);
 
         // Get match data from localStorage
-        const matchData = JSON.parse(
-          localStorage.getItem('multiplayerGameData'),
-        );
+        const matchDataRaw = localStorage.getItem('multiplayerGameData');
+        if (!matchDataRaw) {
+          console.error('No multiplayer game data found');
+          if (onLoadComplete) onLoadComplete();
+          setIsLoading(false);
+          return;
+        }
+
+        const matchData = JSON.parse(matchDataRaw);
         if (!matchData) {
           console.error('No multiplayer game data found');
           if (onLoadComplete) onLoadComplete();
@@ -98,19 +115,10 @@ export default function TotalXPMP({ onLoadComplete, onResults }) {
           return;
         }
 
-        // Check if results have already been processed (additional protection)
-        const resultsKey = `mp_results_${matchData.players[0]}_${matchData.players[1]}_${matchData.score1}`;
-        const existingResults = sessionStorage.getItem(resultsKey);
-        if (existingResults) {
-          console.log(
-            '🔄 FRONTEND DEDUP: Results found in session storage, using cached data...',
-          );
-          const cachedData = JSON.parse(existingResults);
-          setXPEarned(cachedData.xpEarned);
-          if (onLoadComplete) onLoadComplete();
-          setIsLoading(false);
-          return;
-        }
+        // REMOVE: timestamp-based resultsKey (causes no dedup)
+        // const resultsKey = `mp_results_${matchData.players[0]}_${matchData.players[1]}_${matchData.score1}_${Date.now()}`;
+        // const existingResults = sessionStorage.getItem(resultsKey);
+        // if (existingResults) { ... }
 
         // Get current user ID
         let userId = session?.user?.id;
@@ -119,30 +127,48 @@ export default function TotalXPMP({ onLoadComplete, onResults }) {
             .split('; ')
             .find((row) => row.startsWith('user='));
           if (userCookie) {
-            const userData = JSON.parse(
-              decodeURIComponent(userCookie.split('=')[1]),
-            );
-            userId = userData.id;
+            try {
+              const userData = JSON.parse(
+                decodeURIComponent(userCookie.split('=')[1]),
+              );
+              userId = userData.id;
+            } catch (cookieError) {
+              console.error('Error parsing user cookie:', cookieError);
+            }
           }
         }
 
         if (!userId) {
           console.error('User not authenticated');
+          setXpEarned(50);
           setIsLoading(false);
+          if (onResults) {
+            onResults({
+              newElo: 0,
+              eloChange: 0,
+              currentRank: 'Bronze',
+            });
+          }
           return;
         }
 
-        // Calculate XP from correct answers (for display)
+        // Calculate XP from correct answers (for display fallback)
         const isPlayer1 = matchData.players[0] === userId;
         const playerResults = isPlayer1
           ? matchData.player1Results
           : matchData.player2Results;
-        const parsedResults =
-          typeof playerResults === 'string'
-            ? JSON.parse(playerResults)
-            : playerResults;
 
-        // Calculate total XP from correct answers only
+        let parsedResults = [];
+        try {
+          parsedResults =
+            typeof playerResults === 'string'
+              ? JSON.parse(playerResults)
+              : playerResults;
+        } catch (parseError) {
+          console.error('Error parsing player results:', parseError);
+          parsedResults = [];
+        }
+
         const totalXPSum = Array.isArray(parsedResults)
           ? parsedResults.reduce(
               (sum, q) =>
@@ -151,52 +177,129 @@ export default function TotalXPMP({ onLoadComplete, onResults }) {
             )
           : 0;
 
-        console.log(
-          `🎯 FRONTEND: Submitting multiplayer results for match fingerprint: ${matchData.players[0]}-${matchData.players[1]}-${matchData.score1}-${matchData.totalXP}`,
+        // Normalize xpTotal to be > 0 to satisfy backend validation
+        const xpToSend = Math.max(
+          1, // ensure positive
+          Number.isFinite(Number(matchData.totalXP))
+            ? Number(matchData.totalXP)
+            : 0,
+          Number.isFinite(totalXPSum) ? totalXPSum : 0,
         );
 
-        // Submit results for both players (but only process once per match)
-        const response = await submitMultiplayerResult({
-          player1_id: matchData.players[0],
-          player2_id: matchData.players[1],
-          score1: matchData.score1,
-          xpTotal: matchData.totalXP,
-        });
+        // Stable dedup key (no timestamp) to prevent instant double-submit
+        const playersSorted = [...matchData.players].map(String).sort();
+        const resultsKey = `mp_results_${playersSorted[0]}_${playersSorted[1]}_${matchData.score1}_${xpToSend}`;
 
-        // Check if we got an error response
-        if (response.error) {
-          console.error(
-            'Error in multiplayer result submission:',
-            response.message,
+        // Check if results have already been processed (session storage)
+        const existingResults = sessionStorage.getItem(resultsKey);
+        if (existingResults) {
+          console.log(
+            '🔄 FRONTEND DEDUP: Results found in session storage, using cached data...',
           );
-          // Show fallback XP value
-          setXPEarned(totalXPSum || 50);
+          const cachedData = JSON.parse(existingResults);
+          setXpEarned(cachedData.xpEarned || 0);
+          if (onResults) {
+            onResults({
+              newElo: cachedData.newElo || 0,
+              eloChange: cachedData.eloChange || 0,
+              currentRank: cachedData.currentRank || 'Bronze',
+            });
+          }
+          if (onLoadComplete) onLoadComplete();
+          setIsLoading(false);
+          return;
+        }
+
+        console.log(
+          `🎯 FRONTEND: Submitting multiplayer results - ${matchData.players[0]} vs ${matchData.players[1]}, score: ${matchData.score1}, totalXP(normalized): ${xpToSend}`,
+        );
+
+        // Submit results with normalized xpTotal
+        let response;
+        try {
+          response = await submitMultiplayerResult({
+            player1_id: matchData.players[0],
+            player2_id: matchData.players[1],
+            score1: matchData.score1,
+            xpTotal: xpToSend,
+          });
+
+          console.log('✅ Multiplayer API response:', response);
+        } catch (submitError) {
+          console.error('Error submitting multiplayer result:', submitError);
+          setXpEarned(totalXPSum || 50);
+          if (onResults) {
+            onResults({
+              newElo: 0,
+              eloChange: 0,
+              currentRank: 'Bronze',
+            });
+          }
+          if (onLoadComplete) onLoadComplete();
+          setIsLoading(false);
+          return;
+        }
+
+        // Process response
+        if (
+          response?.error ||
+          !response?.players ||
+          !Array.isArray(response.players)
+        ) {
+          console.error('Invalid response format:', response);
+          setXpEarned(totalXPSum || 50);
+          if (onResults) {
+            onResults({
+              newElo: 0,
+              eloChange: 0,
+              currentRank: 'Bronze',
+            });
+          }
         } else {
-          // Find current user's results from the response
           const userResults = response.players?.find((p) => p.id === userId);
           if (userResults) {
-            setXPEarned(userResults.xpEarned);
+            console.log('✅ Found user results:', userResults);
+
+            const validatedXP = isNaN(userResults.xpEarned)
+              ? totalXPSum || 50
+              : userResults.xpEarned;
+            const validatedEloChange = isNaN(userResults.eloChange)
+              ? 0
+              : userResults.eloChange;
+            const validatedNewElo = isNaN(userResults.newElo)
+              ? 0
+              : userResults.newElo;
+
+            setXpEarned(validatedXP);
 
             if (onResults) {
               onResults({
-                newElo: userResults.newElo,
-                eloChange: userResults.eloChange,
-                currentRank: userResults.currentRank,
+                newElo: validatedNewElo,
+                eloChange: validatedEloChange,
+                currentRank: userResults.currentRank || 'Bronze',
               });
             }
 
-            await updateUserDataAfterMultiplayer(userId, userResults);
+            await updateUserDataAfterMultiplayer(userId, {
+              ...userResults,
+              xpEarned: validatedXP,
+              eloChange: validatedEloChange,
+              newElo: validatedNewElo,
+            });
 
-            // Cache the results to prevent duplicate processing
+            // Simple cache without complex fingerprinting
             sessionStorage.setItem(
               resultsKey,
               JSON.stringify({
-                xpEarned: userResults.xpEarned,
+                xpEarned: validatedXP,
+                newElo: validatedNewElo,
+                eloChange: validatedEloChange,
+                currentRank: userResults.currentRank || 'Bronze',
                 timestamp: Date.now(),
               }),
             );
 
-            // Handle achievements from API response for current user
+            // Handle achievements
             if (
               userResults.achievements &&
               userResults.achievements.length > 0
@@ -221,28 +324,43 @@ export default function TotalXPMP({ onLoadComplete, onResults }) {
               }
             }
           } else {
-            // Fallback if user results not found
             console.warn('User results not found in API response');
-            setXPEarned(totalXPSum || 50);
+            setXpEarned(totalXPSum || 50);
+            if (onResults) {
+              onResults({
+                newElo: 0,
+                eloChange: 0,
+                currentRank: 'Bronze',
+              });
+            }
           }
         }
 
         // Clean up
         localStorage.removeItem('multiplayerGameData');
+        console.log('🧹 Cleaned up localStorage multiplayerGameData');
 
         if (onLoadComplete) onLoadComplete();
       } catch (error) {
         console.error('Error processing multiplayer results:', error);
         setHasProcessed(false); // Reset on error to allow retry
+        setXpEarned(50);
+        if (onResults) {
+          onResults({
+            newElo: 0,
+            eloChange: 0,
+            currentRank: 'Bronze',
+          });
+        }
       } finally {
         setIsLoading(false);
       }
     };
 
-    // Add delay to ensure all data is ready
+    // Process results with a short delay
     const timer = setTimeout(processMultiplayerResults, 300);
     return () => clearTimeout(timer);
-  }, [session?.user?.id, onLoadComplete, hasProcessed]); // Add hasProcessed to dependencies
+  }, [session?.user?.id, onLoadComplete, hasProcessed]);
 
   // Loading state
   if (isLoading || xpEarned === null) {

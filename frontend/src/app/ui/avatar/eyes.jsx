@@ -1,6 +1,8 @@
 'use client';
 
+import { useAvatarUnlockables } from '@/hooks/useAvatarUnlockables';
 import Image from 'next/image';
+import { LockIndicator, ProgressIndicator } from './lock-indicator';
 
 export const EyeTypes = {
   EYE_1: 'Eye 1',
@@ -38,40 +40,79 @@ export const EyeTypes = {
 };
 
 export function EyeSelector({ selectedEyes, onEyesChange }) {
-  const eyes = Object.values(EyeTypes).map((eyeType) => ({
+  const { isItemUnlocked, getLockedItemInfo, loading } = useAvatarUnlockables();
+
+  const eyes = Object.entries(EyeTypes).map(([key, eyeType]) => ({
     id: eyeType,
     name: eyeType,
+    key: key, // EYE_1, EYE_2, etc.
     src: `/eyes/${eyeType}.svg`,
   }));
+
+  if (loading) {
+    return (
+      <div className="space-y-4">
+        <h3 className="text-lg font-semibold text-white">Eyes</h3>
+        <div className="text-gray-400">Loading eye options...</div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-4">
       <h3 className="text-lg font-semibold text-white">Eyes</h3>
       <div className="grid grid-cols-3 md:grid-cols-4 gap-3">
-        {eyes.map((eye) => (
-          <button
-            key={eye.id}
-            onClick={() => onEyesChange(eye.id)}
-            className={`p-3 rounded-lg border-2 transition-all aspect-square ${
-              selectedEyes === eye.id
-                ? 'border-[#4d5ded] bg-[#201F1F] bg-opacity-20'
-                : 'border-gray-600 bg-gray-700 hover:border-[#4d5ded]'
-            }`}
-          >
-            <div className="w-full h-20 relative mb-2 flex items-center justify-center">
-              <Image
-                src={eye.src}
-                alt={eye.name}
-                fill
-                className="object-contain"
-                priority
+        {eyes.map((eye) => {
+          const isUnlocked = isItemUnlocked(eye.key);
+          const lockedInfo = getLockedItemInfo(eye.key);
+
+          return (
+            <button
+              key={eye.id}
+              onClick={() => isUnlocked && onEyesChange(eye.id)}
+              disabled={!isUnlocked}
+              className={`p-3 rounded-lg border-2 transition-all aspect-square relative ${
+                selectedEyes === eye.id && isUnlocked
+                  ? 'border-[#4d5ded] bg-[#201F1F] bg-opacity-20'
+                  : isUnlocked
+                    ? 'border-gray-600 bg-gray-700 hover:border-[#4d5ded] hover:cursor-pointer'
+                    : 'border-gray-700 bg-gray-800 cursor-not-allowed opacity-75'
+              }`}
+              title={
+                !isUnlocked
+                  ? `Unlock by completing: ${
+                      lockedInfo?.achievementName || 'Achievement'
+                    }`
+                  : eye.name
+              }
+            >
+              <div className="w-full h-20 relative mb-2 flex items-center justify-center">
+                <Image
+                  src={eye.src}
+                  alt={eye.name}
+                  fill
+                  className={`object-contain transition-all ${
+                    !isUnlocked ? 'grayscale opacity-50' : ''
+                  }`}
+                  priority
+                />
+              </div>
+
+              {/* Lock overlay for locked items */}
+              <LockIndicator
+                isLocked={!isUnlocked}
+                achievement={lockedInfo}
+                progress={lockedInfo?.progressPercentage}
+                size="small"
               />
-            </div>
-            {/* <div className="text-xs font-medium text-white text-center">
-              {eye.name}
-            </div> */}
-          </button>
-        ))}
+
+              {/* Progress indicator for partially completed achievements */}
+              {!isUnlocked && lockedInfo?.progressPercentage > 0 && (
+                <ProgressIndicator progress={lockedInfo.progressPercentage} />
+              )}
+            </button>
+          );
+        })}
       </div>
     </div>
   );

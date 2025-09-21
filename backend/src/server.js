@@ -8,6 +8,7 @@ import { Server } from 'socket.io';
 
 import achievementRoutes from './achievementRoutes.js';
 import answerRoutes from './answerRoutes.js';
+import avatarUnlockablesRoutes from './avatarUnlockablesRoutes.js';
 import baselineRoutes from './baselineRoutes.js';
 import multiPlayerRoutes from './multiPlayerRoute.js';
 import oauthRoutes from './oauthRoutes.js';
@@ -58,6 +59,7 @@ app.use('/', validateRoutes);
 app.use('/', singlePlayerRoutes);
 app.use('/', multiPlayerRoutes);
 app.use('/', achievementRoutes);
+app.use('/api/avatar-unlockables', avatarUnlockablesRoutes);
 app.use('/', oauthRoutes);
 app.use('/', baselineRoutes);
 app.use('/', analysisRoutes);

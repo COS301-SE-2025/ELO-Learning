@@ -955,25 +955,6 @@ export async function updateUserElo(userId, finalElo) {
   }
 }
 
-<<<<<<< HEAD
-//Analysis endpoints
-// Analysis endpoints
-export async function fetchUserAccuracy(userId) {
-  try {
-    const res = await axiosInstance.get(`/accuracy/${userId}`);
-
-    if (!res.data || !res.data.success) {
-      throw new Error('Failed to fetch accuracy data');
-    }
-
-    return res.data.accuracy; // returns an array of accuracy by day
-  } catch (err) {
-    console.error('fetchUserAccuracy error:', err);
-    throw new Error(
-      'Failed to fetch user accuracy: ' +
-        (err.response?.data?.error || err.message),
-    );
-=======
 // ========== STREAK FUNCTIONS ==========
 
 /**
@@ -1011,6 +992,5 @@ export async function updateUserStreak(userId) {
   } catch (error) {
     console.error('Failed to update user streak:', error);
     throw error;
->>>>>>> c54786f1ca45a909bd82c6752f57755c16dfc057
   }
 }

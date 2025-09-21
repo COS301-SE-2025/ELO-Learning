@@ -167,6 +167,54 @@ router.post('/multiplayer', idempotencyMiddleware, async (req, res) => {
         supabase,
       });
 
+    // 🎯 Check for rank changes for both players
+    let player1RankChange = null;
+    let player2RankChange = null;
+
+    // Player 1 rank change detection
+    if (player1.rank !== newRank1) {
+      const { data: allRanks } = await supabase
+        .from('Ranks')
+        .select('rank, min_elo')
+        .order('min_elo', { ascending: true });
+
+      const rankIndex = (rank) => allRanks.findIndex((r) => r.rank === rank);
+      const oldIndex = rankIndex(player1.rank ?? 'Unranked');
+      const newIndex = rankIndex(newRank1 ?? 'Unranked');
+
+      if (newIndex !== oldIndex) {
+        player1RankChange = {
+          oldRank: player1.rank ?? 'Unranked',
+          newRank: newRank1,
+          isPromotion: newIndex > oldIndex,
+          rankDirection: newIndex > oldIndex ? 'up' : 'down'
+        };
+        console.log(`🏆 RANK CHANGE DETECTED for Player 1 (${player1_id}):`, player1RankChange);
+      }
+    }
+
+    // Player 2 rank change detection
+    if (player2.rank !== newRank2) {
+      const { data: allRanks } = await supabase
+        .from('Ranks')
+        .select('rank, min_elo')
+        .order('min_elo', { ascending: true });
+
+      const rankIndex = (rank) => allRanks.findIndex((r) => r.rank === rank);
+      const oldIndex = rankIndex(player2.rank ?? 'Unranked');
+      const newIndex = rankIndex(newRank2 ?? 'Unranked');
+
+      if (newIndex !== oldIndex) {
+        player2RankChange = {
+          oldRank: player2.rank ?? 'Unranked',
+          newRank: newRank2,
+          isPromotion: newIndex > oldIndex,
+          rankDirection: newIndex > oldIndex ? 'up' : 'down'
+        };
+        console.log(`🏆 RANK CHANGE DETECTED for Player 2 (${player2_id}):`, player2RankChange);
+      }
+    }
+
     //update players' data in the database
     await supabase
       .from('Users')
@@ -616,6 +664,7 @@ router.post('/multiplayer', idempotencyMiddleware, async (req, res) => {
           newElo: newElo1,
           currentLevel: newLevel1,
           currentRank: newRank1,
+          rankChange: player1RankChange, // 🎯 New: Rank change data for notifications
           achievements: player1AchievementResponse?.achievements || [],
           achievementSummary:
             player1AchievementResponse?.achievementSummary || null,
@@ -628,6 +677,7 @@ router.post('/multiplayer', idempotencyMiddleware, async (req, res) => {
           newElo: newElo2,
           currentLevel: newLevel2,
           currentRank: newRank2,
+          rankChange: player2RankChange, // 🎯 New: Rank change data for notifications
           achievements: player2AchievementResponse?.achievements || [],
           achievementSummary:
             player2AchievementResponse?.achievementSummary || null,

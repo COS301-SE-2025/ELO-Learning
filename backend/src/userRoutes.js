@@ -49,33 +49,26 @@ router.get('/user/:id', verifyToken, async (req, res) => {
 // Debug endpoint for progress tracking (no auth required)
 router.get('/users/:id/debug', async (req, res) => {
   const { id } = req.params;
-
+  
   try {
-    // Fetch user progress data for debugging
     const { data, error } = await supabase
       .from('Users')
-      .select(
-        'id,elo_rating,best_elo_rating,last_session_elo,consecutive_improvements,last_elo_drop,daily_streak',
-      )
+      .select('*')
       .eq('id', id)
       .single();
 
-    if (error) {
-      if (error.code === 'PGRST116') {
-        return res.status(404).json({ error: "User doesn't exist" });
-      }
-      console.error('Error fetching user debug data:', error.message);
-      return res.status(500).json({ error: 'Failed to fetch user debug data' });
-    }
+    if (error) throw error;
 
-    res.status(200).json({
-      ...data,
-      debug_info: {
-        progress_fields_status: {
-          best_elo_rating: data.best_elo_rating !== null ? 'SET' : 'NULL',
-          last_session_elo: data.last_session_elo !== null ? 'SET' : 'NULL',
-          consecutive_improvements:
-            data.consecutive_improvements !== null ? 'SET' : 'NULL',
+    res.json({
+      user: {
+        id: data.id,
+        username: data.username,
+        elo_rating: data.elo_rating,
+        rank: data.rank,
+        progress_tracking: {
+          best_elo_rating: data.best_elo_rating,
+          last_session_elo: data.last_session_elo,
+          consecutive_improvements: data.consecutive_improvements,
           last_elo_drop: data.last_elo_drop !== null ? 'SET' : 'NULL',
         },
       },

@@ -363,6 +363,23 @@ export default function TotalXP({ onLoadComplete }) {
               }
             }
 
+            // 🎯 Handle rank change notifications from API response
+            if (response.rankChange) {
+              try {
+                console.log(`🏆 Rank change detected for question ${questionId}:`, response.rankChange);
+                
+                // Show rank notification using global function
+                if (typeof window !== 'undefined' && window.showRankNotification) {
+                  window.showRankNotification(response.rankChange);
+                  console.log('🏆 Rank notification triggered:', response.rankChange);
+                } else {
+                  console.warn('⚠️ Rank notification system not available');
+                }
+              } catch (rankError) {
+                console.error('🏆 Error handling rank change:', rankError);
+              }
+            }
+
             console.log(
               `Submitted question ${questionId}: earned ${q.xpEarned} XP (Total: ${totalXP})`,
             );

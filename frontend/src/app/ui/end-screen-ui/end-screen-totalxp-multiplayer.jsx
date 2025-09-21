@@ -227,9 +227,26 @@ export default function TotalXPMP({ onLoadComplete, onResults }) {
                 );
               } catch (achievementError) {
                 console.error(
-                  '🏆 Error handling multiplayer achievements:',
+                  '🏆 Error handling achievements:',
                   achievementError,
                 );
+              }
+            }
+
+            // 🎯 Handle rank change notifications from API response
+            if (userResults.rankChange) {
+              try {
+                console.log('🏆 Rank change detected in multiplayer:', userResults.rankChange);
+                
+                // Show rank notification using global function
+                if (typeof window !== 'undefined' && window.showRankNotification) {
+                  window.showRankNotification(userResults.rankChange);
+                  console.log('🏆 Rank notification triggered:', userResults.rankChange);
+                } else {
+                  console.warn('⚠️ Rank notification system not available');
+                }
+              } catch (rankError) {
+                console.error('🏆 Error handling rank change:', rankError);
               }
             }
           } else {

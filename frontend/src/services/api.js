@@ -979,7 +979,7 @@ export async function fetchUserStreakInfo(userId) {
     };
   }
 }
-
+//---
 /**
  * Update user's streak (typically called on login or daily activity)
  * @param {string} userId - User ID

@@ -23,7 +23,7 @@
     "express": "^5.1.0",
     "jsonwebtoken": "^9.0.2",
     "mathjs": "^13.2.3",
-    "openai": "^5.20.3",
+    "openai": "^5.22.0",
     "socket.io": "^4.8.1",
     "uuid": "^11.1.0"
   },

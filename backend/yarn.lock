@@ -2979,10 +2979,10 @@ onetime@^5.1.2:
   dependencies:
     mimic-fn "^2.1.0"
 
-openai@^5.20.3:
-  version "5.20.3"
-  resolved "https://registry.npmjs.org/openai/-/openai-5.20.3.tgz"
-  integrity sha512-8V0KgAcPFppDIP8uMBOkhRrhDBuxNQYQxb9IovP4NN4VyaYGISAzYexyYYuAwVul2HB75Wpib0xDboYJqRMNow==
+openai@^5.22.0:
+  version "5.22.0"
+  resolved "https://registry.npmjs.org/openai/-/openai-5.22.0.tgz"
+  integrity sha512-uSsYZ+vw9JxUwnMTcT9bj5sGM5qY/4du2BIf1KSqDRZF9nhSlJYsBLPRwBZTOW+HNyjwGviR0SsoDPv5lpPrBw==
 
 optionator@^0.9.3:
   version "0.9.4"

@@ -1,4 +1,5 @@
 // services/firebase.js
+/* Firebase configuration and initialization */
 import { initializeApp } from 'firebase/app';
 import { getMessaging, getToken, onMessage } from 'firebase/messaging';
 

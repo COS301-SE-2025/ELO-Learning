@@ -36,11 +36,11 @@ export default function QuestionsTracker({
   const [answer, setAnswer] = useState('');
   const [isAnswerCorrect, setIsAnswerCorrect] = useState(false);
   const [numLives, setNumLives] = useState(() => {
-    // Reset lives to 5 and clear localStorage (only in browser)
+    // Reset lives to 20 and clear localStorage (only in browser)
     if (typeof window !== 'undefined') {
-      localStorage.setItem('lives', '5');
+      localStorage.setItem('lives', '20');
     }
-    return 5;
+    return 20;
   });
 
   // Listen for life loss events from match questions

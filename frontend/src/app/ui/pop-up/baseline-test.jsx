@@ -25,7 +25,7 @@ export default function BaselineTestPopup({ user_id, onClose }) {
     try {
       // Set baseLineTest to true since user confirmed they want to take the test
       const response = await confirmBaselineTest(user_id);
-      console.log('✅ confirmBaselineTest response:', response);
+      console.log(' confirmBaselineTest response:', response);
 
       // Update session with the returned user data
       if (response.user) {
@@ -35,16 +35,16 @@ export default function BaselineTestPopup({ user_id, onClose }) {
             ...response.user, // Use the complete updated user data from backend
           },
         });
-        console.log('✅ Session updated with backend response');
+        console.log(' Session updated with backend response');
       } else {
         // Fallback: just update baseLineTest field
         await update({
           user: {
             ...session.user,
-            baseLineTest: true,
+            base_line_test: true,
           },
         });
-        console.log('✅ Session updated with fallback baseLineTest');
+        console.log(' Session updated with fallback baseLineTest');
       }
 
       // Navigate to baseline test

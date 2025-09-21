@@ -15,7 +15,7 @@ import {
   moveCursor,
   removeCursorIndicator,
   setTextContent,
-  showCursorIndicator
+  showCursorIndicator,
 } from '@/utils/contentEditableHelpers';
 import {
   getMathValidationMessage,
@@ -43,7 +43,9 @@ export default function MathInputTemplate({
   const [activeTab, setActiveTab] = useState('basic');
   const [showHistory, setShowHistory] = useState(false);
   const [inputHistory, setInputHistory] = useState([]);
-  const [cursorPosition, setCursorPosition] = useState((studentAnswer || '').length);
+  const [cursorPosition, setCursorPosition] = useState(
+    (studentAnswer || '').length,
+  );
   const [suggestions, setSuggestions] = useState([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [showHelper, setShowHelper] = useState(false);
@@ -285,7 +287,7 @@ export default function MathInputTemplate({
   useEffect(() => {
     // Normalize studentAnswer (handle null/undefined as empty string)
     const normalizedStudentAnswer = studentAnswer || '';
-    
+
     // Always sync when studentAnswer prop changes
     setInputValue(normalizedStudentAnswer);
 
@@ -304,10 +306,10 @@ export default function MathInputTemplate({
     const input = inputRef.current;
     if (input) {
       setTextContent(input, normalizedStudentAnswer, true, true);
-      
+
       // Set cursor position to end of content
       setCursorPosition(normalizedStudentAnswer.length);
-      
+
       // Update DOM cursor position
       setTimeout(() => {
         if (normalizedStudentAnswer === '') {
@@ -325,7 +327,7 @@ export default function MathInputTemplate({
           const textLength = normalizedStudentAnswer.length;
           range.setStart(
             input.firstChild,
-            Math.min(textLength, input.firstChild.textContent.length)
+            Math.min(textLength, input.firstChild.textContent.length),
           );
           range.collapse(true);
           selection.removeAllRanges();
@@ -347,7 +349,7 @@ export default function MathInputTemplate({
     const input = inputRef.current;
     if (input && getTextContent(input) !== inputValue) {
       setTextContent(input, inputValue, true, true);
-      
+
       // Set cursor position to end for better UX
       setTimeout(() => {
         if (inputValue === '') {
@@ -365,7 +367,7 @@ export default function MathInputTemplate({
           const textLength = inputValue.length;
           range.setStart(
             input.firstChild,
-            Math.min(textLength, input.firstChild.textContent.length)
+            Math.min(textLength, input.firstChild.textContent.length),
           );
           range.collapse(true);
           selection.removeAllRanges();

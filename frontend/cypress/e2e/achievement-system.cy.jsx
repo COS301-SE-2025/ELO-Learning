@@ -128,10 +128,17 @@ describe('Achievement System E2E', () => {
   });
 
   // Helper function to wait for achievement system to be ready
-  const waitForAchievementSystem = () => {
+  const waitForAchievementSystem = (timeout = 20000) => {
     cy.window().then((win) => {
-      return new Cypress.Promise((resolve) => {
+      return new Cypress.Promise((resolve, reject) => {
+        const start = Date.now();
+        const log = (...args) => {
+          // eslint-disable-next-line no-console
+          console.log('[CYPRESS][waitForAchievementSystem]', ...args);
+        };
+        log('Waiting for achievement system...');
         if (win.showAchievement && typeof win.showAchievement === 'function') {
+          log('showAchievement is ready');
           resolve();
         } else {
           const checkReady = () => {
@@ -139,16 +146,31 @@ describe('Achievement System E2E', () => {
               win.showAchievement &&
               typeof win.showAchievement === 'function'
             ) {
+              log(
+                'showAchievement became ready after',
+                Date.now() - start,
+                'ms',
+              );
               resolve();
+            } else if (Date.now() - start > timeout) {
+              log('Timeout waiting for achievement system');
+              reject(new Error('Timeout waiting for achievement system'));
             } else {
               setTimeout(checkReady, 100);
             }
           };
 
           // Listen for the ready event
-          win.addEventListener('achievementSystemReady', resolve, {
-            once: true,
-          });
+          win.addEventListener(
+            'achievementSystemReady',
+            () => {
+              log('achievementSystemReady event fired');
+              resolve();
+            },
+            {
+              once: true,
+            },
+          );
 
           // Also poll in case we missed the event
           checkReady();

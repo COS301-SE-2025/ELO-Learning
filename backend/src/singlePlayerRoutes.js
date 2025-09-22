@@ -60,7 +60,7 @@ router.post('/singleplayer', async (req, res) => {
 
     const { data: questionData, error: qError } = await supabase
       .from('Questions')
-      .select('xpGain, elo_rating')
+      .select('xpGain, elo_rating, type, topic')
       .eq('Q_id', question_id)
       .single();
 
@@ -133,6 +133,8 @@ router.post('/singleplayer', async (req, res) => {
         eloChange,
         attemptDate: new Date(),
         attemptType: 'single',
+        q_type: questionData.type ?? null,
+        q_topic: questionData.topic ?? null,
       },
     ]);
 

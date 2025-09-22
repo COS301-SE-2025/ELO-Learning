@@ -116,8 +116,16 @@ async function insertQuestion(questionObj) {
   questionObj.Q_id = await getNextQid();
   // Ensure topic_id matches topic name
   questionObj.topic_id = getTopicIdForTopic(questionObj.topic);
+  console.log(
+    'Full question object before insert:',
+    JSON.stringify(questionObj, null, 2),
+  );
   // Remove answerChoices and correctAnswer before inserting into Questions
   const { answerChoices, correctAnswer, ...questionFields } = questionObj;
+  console.log(
+    'Inserting into Questions:',
+    JSON.stringify(questionFields, null, 2),
+  );
   const { error } = await supabase.from('Questions').insert([questionFields]);
   if (error) throw error;
 
@@ -129,16 +137,22 @@ async function insertQuestion(questionObj) {
     normalizedType,
     correctAnswer,
     Q_id: questionObj.Q_id,
+    answerChoices,
   });
   if (normalizedType === 'multiple-choice' && Array.isArray(answerChoices)) {
     for (const choice of answerChoices) {
-      const { data, error } = await supabase.from('Answers').insert([
-        {
-          question_id: questionObj.Q_id,
-          answer_text: choice.text,
-          isCorrect: !!choice.isCorrect,
-        },
-      ]);
+      const answerPayload = {
+        question_id: questionObj.Q_id,
+        answer_text: choice.text,
+        isCorrect: !!choice.isCorrect,
+      };
+      console.log(
+        'Attempting to insert into Answers:',
+        JSON.stringify(answerPayload, null, 2),
+      );
+      const { data, error } = await supabase
+        .from('Answers')
+        .insert([answerPayload]);
       console.log('Answers insert result:', {
         data,
         error,
@@ -155,13 +169,18 @@ async function insertQuestion(questionObj) {
       typeof correctAnswer === 'string' &&
       correctAnswer.trim().length > 0
     ) {
-      const { data, error } = await supabase.from('Answers').insert([
-        {
-          question_id: questionObj.Q_id,
-          answer_text: correctAnswer,
-          isCorrect: true,
-        },
-      ]);
+      const answerPayload = {
+        question_id: questionObj.Q_id,
+        answer_text: correctAnswer,
+        isCorrect: true,
+      };
+      console.log(
+        'Attempting to insert into Answers:',
+        JSON.stringify(answerPayload, null, 2),
+      );
+      const { data, error } = await supabase
+        .from('Answers')
+        .insert([answerPayload]);
       console.log('Answers insert result:', {
         data,
         error,

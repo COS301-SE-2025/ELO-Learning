@@ -103,7 +103,8 @@ router.post('/singleplayer', async (req, res) => {
     });
 
     let rankUp = false,
-      rankDown = false;
+      rankDown = false,
+      rankChange = null;
 
     if (currentRank !== newRank) {
       const { data: allRanks } = await supabase
@@ -115,8 +116,28 @@ router.post('/singleplayer', async (req, res) => {
       const oldIndex = rankIndex(currentRank ?? 'Unranked');
       const newIndex = rankIndex(newRank ?? 'Unranked');
 
-      if (newIndex > oldIndex) rankUp = true;
-      else if (newIndex < oldIndex) rankDown = true;
+      if (newIndex > oldIndex) {
+        rankUp = true;
+        rankChange = {
+          oldRank: currentRank ?? 'Unranked',
+          newRank: newRank,
+          isPromotion: true,
+          rankDirection: 'up',
+        };
+      } else if (newIndex < oldIndex) {
+        rankDown = true;
+        rankChange = {
+          oldRank: currentRank ?? 'Unranked',
+          newRank: newRank,
+          isPromotion: false,
+          rankDirection: 'down',
+        };
+      }
+
+      // Log rank change for debugging
+      if (rankChange) {
+        console.log(`🏆 RANK CHANGE DETECTED for user ${user_id}:`, rankChange);
+      }
     }
 
     await supabase.from('QuestionAttempts').insert([
@@ -296,6 +317,7 @@ router.post('/singleplayer', async (req, res) => {
       newRank,
       rankUp,
       rankDown,
+      rankChange, // 🎯 New: Structured rank change data for notifications
       totalXP: newXP,
       newLevel,
       unlockedAchievements: unlockedAchievements, // 🎯 Include achievements in response

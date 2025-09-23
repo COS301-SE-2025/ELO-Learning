@@ -17,6 +17,14 @@ describe('Achievement System E2E', () => {
     );
     cy.setCookie('token', 'mock-jwt-token');
 
+    // Catch-all intercepts for SSR and client-side API requests
+    cy.intercept('GET', '/api/*', { statusCode: 200, body: {} }).as(
+      'catchAllApi',
+    );
+    cy.intercept('POST', '/api/*', { statusCode: 200, body: {} }).as(
+      'catchAllApiPost',
+    );
+
     // Mock achievement-related API endpoints
     cy.intercept('GET', '/api/achievements/user/**', {
       statusCode: 200,

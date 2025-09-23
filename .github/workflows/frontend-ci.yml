@@ -26,6 +26,12 @@ jobs:
         working-directory: frontend
         run: yarn install --frozen-lockfile
 
+      - name: Run Snyk security test
+        working-directory: frontend
+        run: npx snyk test --all-projects
+        env:
+          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+
       - name: Cypress Tests
         uses: cypress-io/github-action@v6
         with:

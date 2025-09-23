@@ -1109,16 +1109,8 @@ router.get('/user/:id/community-leaderboard', verifyToken, async (req, res) => {
       hasLocation: false,
     });
   }
-  const hasInstitution = !!user.academic_institution;
-  const hasLocation = !!user.location;
-  if (!hasInstitution || !hasLocation) {
-    return res.status(200).json({
-      message: 'Add your institution and location to see more rankings!',
-      hasInstitution,
-      hasLocation,
-      leaderboard: [],
-    });
-  }
+  // Institution and location are not relevant for this leaderboard
+  // Do not block leaderboard if institution/location are missing
   // Get all accepted friends
   const { data: friends, error: friendsError } = await supabase
     .from('friends')
@@ -1126,9 +1118,7 @@ router.get('/user/:id/community-leaderboard', verifyToken, async (req, res) => {
     .or(`user_id.eq.${id},friend_id.eq.${id}`)
     .eq('status', 'accepted');
   if (friendsError)
-    return res
-      .status(500)
-      .json({ error: 'Failed to fetch friends', hasInstitution, hasLocation });
+    return res.status(500).json({ error: 'Failed to fetch friends' });
 
   // Collect all IDs (me + friends)
   const friendIds = [
@@ -1139,22 +1129,18 @@ router.get('/user/:id/community-leaderboard', verifyToken, async (req, res) => {
     ),
   ];
 
-  // Get leaderboard data
+  // Get leaderboard data (no institution/location filter)
   const { data: leaderboard, error: lbError } = await supabase
     .from('Users')
     .select('id,username,elo_rating,avatar,xp,academic_institution,location')
     .in('id', friendIds)
-    .eq('academic_institution', user.academic_institution)
-    .eq('location', user.location)
     .order('xp', { ascending: false });
   if (lbError)
     return res.status(500).json({
       error: 'Failed to fetch leaderboard',
-      hasInstitution,
-      hasLocation,
     });
 
-  res.json({ leaderboard, hasInstitution, hasLocation });
+  res.json({ leaderboard });
 });
 
 // GET /user/:id/location-leaderboard

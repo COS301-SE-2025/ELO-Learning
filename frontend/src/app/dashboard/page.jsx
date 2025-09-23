@@ -65,10 +65,13 @@ export default function Page() {
           return;
         }
 
-        const [mainData, communityData] = await Promise.all([
+        const [mainData, communityDataRaw] = await Promise.all([
           fetchUsersByRank(session.user.rank),
           fetchCommunityLeaderboard(session.user.id, session.token),
         ]);
+
+        // Use leaderboard array from response
+        const communityData = communityDataRaw?.leaderboard ?? [];
 
         timeoutId = setTimeout(async () => {
           if (mounted) {

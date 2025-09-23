@@ -1,8 +1,8 @@
 docker run -d `
 
-> > -p 5000:8080 `-p 50000:50000`
-> > --name jenkins `-v jenkins_home:/var/jenkins_home`
-> > jenkins/jenkins:lts
+-p 5000:8080 `-p 50000:50000`
+--name jenkins `-v jenkins_home:/var/jenkins_home`
+jenkins/jenkins:lts
 
 command to start up Jenkins
 

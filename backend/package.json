@@ -23,7 +23,7 @@
     "debug": "^4.4.1",
     "dotenv": "^16.5.0",
     "express": "^5.1.0",
-    "firebase": "^12.1.0",
+    "firebase": "^12.3.0",
     "firebase-admin": "^13.4.0",
     "jsonwebtoken": "^9.0.2",
     "mathjs": "^13.2.3",

@@ -256,30 +256,10 @@ function DashboardContent() {
   );
 }
 
-// Loading component for Suspense fallback
-function DashboardLoading() {
-  return (
-    <div className="flex items-center justify-center min-h-screen">
-      <div className="text-center">
-        <div className="flex flex-row items-center justify-center gap-5 mb-4">
-          {[0, 150, 300].map((delay) => (
-            <div
-              key={delay}
-              className="animate-bounce rounded-full h-5 w-5 bg-[#FF6E99]"
-              style={{ animationDelay: `${delay}ms` }}
-            ></div>
-          ))}
-        </div>
-        <div className="text-lg font-bold">Loading Dashboard...</div>
-      </div>
-    </div>
-  );
-}
-
-// Main page component with Suspense wrapper
+// Main page component with Suspense boundary
 export default function Page() {
   return (
-    <Suspense fallback={<DashboardLoading />}>
+    <Suspense fallback={<div>Loading...</div>}>
       <DashboardContent />
     </Suspense>
   );

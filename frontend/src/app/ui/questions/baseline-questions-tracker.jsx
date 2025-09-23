@@ -13,7 +13,7 @@ export default function QuestionsTracker({ questions, userId, onComplete }) {
   const router = useRouter();
   //Normal JS variables
   const allQuestions = questions || [];
-  const totalSteps = 15; // Fixed to 15 questions for base test
+  const totalSteps = 12; // Reduced from 15 to 12 questions for base test
   const { data: session, update } = useSession();
 
   //React hooks
@@ -27,6 +27,10 @@ export default function QuestionsTracker({ questions, userId, onComplete }) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [loadingNextQuestion, setLoadingNextQuestion] = useState(false);
   const [isInitializing, setIsInitializing] = useState(true); // NEW: Track initial loading
+  const [correctAnswersCount, setCorrectAnswersCount] = useState(0); // Track performance
+  const [levelHistory, setLevelHistory] = useState([5]); // Track level changes for bounce detection
+  const [consecutiveAtLevel1Wrong, setConsecutiveAtLevel1Wrong] = useState(0); // Track level 1 failures
+  const [consecutiveAtLevel10Right, setConsecutiveAtLevel10Right] = useState(0); // Track level 10 successes
 
   // loading component
   const LoadingComponent = useMemo(
@@ -41,10 +45,8 @@ export default function QuestionsTracker({ questions, userId, onComplete }) {
             ></div>
           ))}
         </div>
-        <p className="text-lg text-gray-600 dark:text-gray-300">
-          {isInitializing
-            ? 'Loading Baseline Test...'
-            : 'Loading next question...'}
+        <p className="text-lg font-bold text-gray-800 dark:text-gray-200">
+          {isInitializing ? 'Loading Baseline Test...' : 'Next question...'}
         </p>
       </div>
     ),
@@ -66,18 +68,20 @@ export default function QuestionsTracker({ questions, userId, onComplete }) {
       try {
         let firstQuestion;
 
-        // Try to fetch a random question at level 5 first
-        try {
-          console.log(' Fetching initial baseline question at level 5...');
-          firstQuestion = await fetchNextRandomBaselineQuestion(5);
-          console.log(' Initial question fetched from API:', firstQuestion);
-        } catch (apiError) {
-          console.log(' API fetch failed, using fallback questions:', apiError);
-          // Fallback to provided questions if API fails
-          if (allQuestions.length > 0) {
-            firstQuestion = allQuestions[0];
-            console.log(' Using fallback question:', firstQuestion);
-          } else {
+        // Use provided questions first, only fetch from API if none available
+        if (allQuestions.length > 0) {
+          firstQuestion = allQuestions[0];
+          console.log(' Using provided question:', firstQuestion);
+        } else {
+          // Only fetch from API if no questions were provided
+          try {
+            console.log(
+              ' No provided questions, fetching from API at level 5...',
+            );
+            firstQuestion = await fetchNextRandomBaselineQuestion(5);
+            console.log(' Initial question fetched from API:', firstQuestion);
+          } catch (apiError) {
+            console.log(' API fetch failed:', apiError);
             throw new Error('No questions available');
           }
         }
@@ -104,6 +108,45 @@ export default function QuestionsTracker({ questions, userId, onComplete }) {
     }
   }, [allQuestions, userId, currQuestion, isInitializing]);
 
+  // Function to detect if user is bouncing between levels
+  const detectLevelBouncing = (newLevel, history) => {
+    const updatedHistory = [...history, newLevel];
+    setLevelHistory(updatedHistory);
+
+    // Need at least 7 entries to detect 3 bounces (including initial level)
+    if (updatedHistory.length < 7) return false;
+
+    // Check last 6 level changes for bouncing pattern
+    const recentLevels = updatedHistory.slice(-6);
+
+    // Pattern: A -> B -> A -> B -> A -> B (3 complete bounces)
+    const bouncePattern = [];
+    for (let i = 1; i < recentLevels.length; i++) {
+      bouncePattern.push(
+        recentLevels[i] !== recentLevels[i - 1] ? 'change' : 'same',
+      );
+    }
+
+    // Check if we have alternating pattern (change, change, change, change, change)
+    const hasAlternatingPattern = bouncePattern.every(
+      (change) => change === 'change',
+    );
+
+    // Additional check: ensure we're actually bouncing between just 2 levels
+    const uniqueLevels = [...new Set(recentLevels)];
+    const isBouncing = hasAlternatingPattern && uniqueLevels.length === 2;
+
+    if (isBouncing) {
+      console.log('🎯 Bounce pattern detected!', {
+        recentLevels,
+        bouncePattern,
+        uniqueLevels,
+      });
+    }
+
+    return isBouncing;
+  };
+
   const setLocalStorage = () => {
     const questionsObj =
       JSON.parse(localStorage.getItem('baselineQuestionsObj')) || [];
@@ -122,23 +165,109 @@ export default function QuestionsTracker({ questions, userId, onComplete }) {
   const submitAnswer = async () => {
     setLocalStorage();
 
+    // Track correct answers for performance calculation
+    if (isAnswerCorrect) {
+      setCorrectAnswersCount((prev) => prev + 1);
+    }
+
     // Update level based on answer
     const nextLevel = isAnswerCorrect
       ? Math.min(currentLevel + 1, 10)
       : Math.max(currentLevel - 1, 1);
     setCurrentLevel(nextLevel);
 
-    // Check if this was the last question BEFORE incrementing
-    if (currentStep >= totalSteps) {
+    // Track edge case patterns
+    if (currentLevel === 1 && !isAnswerCorrect) {
+      setConsecutiveAtLevel1Wrong((prev) => prev + 1);
+    } else {
+      setConsecutiveAtLevel1Wrong(0); // Reset if not at level 1 or got it right
+    }
+
+    if (currentLevel === 10 && isAnswerCorrect) {
+      setConsecutiveAtLevel10Right((prev) => prev + 1);
+    } else {
+      setConsecutiveAtLevel10Right(0); // Reset if not at level 10 or got it wrong
+    }
+
+    // Check for bouncing pattern
+    const isBouncing = detectLevelBouncing(nextLevel, levelHistory);
+
+    // Check edge case termination conditions
+    const level1Failure = consecutiveAtLevel1Wrong >= 1; // 2 wrong at level 1 (including current)
+    const level10Success = consecutiveAtLevel10Right >= 1; // 2 right at level 10 (including current)
+
+    // Early termination conditions
+    const shouldEndTest =
+      currentStep >= totalSteps ||
+      isBouncing ||
+      level1Failure ||
+      level10Success;
+
+    if (shouldEndTest) {
       setIsSubmitting(true);
+
+      const endReason = isBouncing
+        ? 'bounce_detection'
+        : level1Failure
+          ? 'level_1_failure'
+          : level10Success
+            ? 'level_10_mastery'
+            : 'completed_all_questions';
+
+      console.log(`🏁 Baseline test ending due to: ${endReason}`, {
+        currentStep,
+        totalSteps,
+        isBouncing,
+        level1Failure,
+        level10Success,
+        consecutiveAtLevel1Wrong:
+          consecutiveAtLevel1Wrong +
+          (currentLevel === 1 && !isAnswerCorrect ? 1 : 0),
+        consecutiveAtLevel10Right:
+          consecutiveAtLevel10Right +
+          (currentLevel === 10 && isAnswerCorrect ? 1 : 0),
+        levelHistory: [...levelHistory, nextLevel],
+      });
+
       try {
         // Update user's ELO rating and baseline test status
         console.log(' Baseline test completed! Updating user ELO...', {
           userId,
           finalLevel: nextLevel,
+          performance: {
+            correctAnswers: correctAnswersCount,
+            totalQuestions: totalSteps,
+          },
         });
 
-        const response = await updateUserElo(userId, nextLevel);
+        // Calculate final performance data (adjust for early termination)
+        const actualQuestionsAttempted = currentStep; // Current step represents questions attempted
+        const finalCorrectCount = isAnswerCorrect
+          ? correctAnswersCount + 1
+          : correctAnswersCount;
+
+        const testPerformance = {
+          correctAnswers: finalCorrectCount,
+          totalQuestions: actualQuestionsAttempted,
+          endReason: endReason,
+          levelHistory: [...levelHistory, nextLevel],
+          edgeCaseData: {
+            consecutiveAtLevel1Wrong:
+              consecutiveAtLevel1Wrong +
+              (currentLevel === 1 && !isAnswerCorrect ? 1 : 0),
+            consecutiveAtLevel10Right:
+              consecutiveAtLevel10Right +
+              (currentLevel === 10 && isAnswerCorrect ? 1 : 0),
+          },
+        };
+
+        console.log('📊 Final test performance:', testPerformance);
+
+        const response = await updateUserElo(
+          userId,
+          nextLevel,
+          testPerformance,
+        );
         console.log(' User ELO updated successfully:', response);
 
         // Update session with the returned user data
@@ -187,19 +316,14 @@ export default function QuestionsTracker({ questions, userId, onComplete }) {
     setAnswer('');
     setIsAnswerCorrect(false);
 
-    // Show loading animation
-    setLoadingNextQuestion(true);
-
+    // Remove loading state - fetch next question immediately
     try {
       //fetch next random question from the database
       console.log('Fetching next question for step:', currentStep + 1);
       const nextQuestion = await fetchNextRandomBaselineQuestion(nextLevel);
       console.log('Next question fetched:', nextQuestion);
 
-      // Add minimum delay to show loading animation
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-
-      // Find next question at appropriate level
+      // Set next question immediately without delay
       setCurrQuestion(nextQuestion);
       setCurrAnswers(nextQuestion.answers || []);
     } catch (error) {
@@ -212,13 +336,11 @@ export default function QuestionsTracker({ questions, userId, onComplete }) {
           fallbackQuestion.answers || fallbackQuestion.Answers || [],
         );
       }
-    } finally {
-      setLoadingNextQuestion(false); // Hide loading
     }
   };
 
-  // Show loading screen during initialization or when loading next question
-  if (isInitializing || loadingNextQuestion) {
+  // Show loading screen only during initialization
+  if (isInitializing) {
     return LoadingComponent;
   }
 

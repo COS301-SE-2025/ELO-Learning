@@ -185,7 +185,7 @@ router.get('/baseline/questions', async (req, res) => {
  * Body: { user_id, finalElo } - finalElo is actually the final level achieved
  */
 router.post('/baseline/complete', async (req, res) => {
-  const { user_id, finalElo } = req.body;
+  const { user_id, finalElo, testPerformance } = req.body; // Add testPerformance
 
   if (!user_id || finalElo == null) {
     return res.status(400).json({ error: 'Missing fields' });
@@ -211,16 +211,86 @@ router.post('/baseline/complete', async (req, res) => {
     const baseXP = levelData.minXP;
     console.log(`Level ${finalElo} corresponds to ${baseXP} XP`);
 
-    // Step 2: Apply 75% reduction for baseline test (you can adjust this percentage)
-    const baselineMultiplier = 0.75; // 75% of the level's minXP
+    // Step 2: Enhanced ELO calculation with adaptive multipliers
+
+    // Base reduction: 55%
+    let baselineMultiplier = 0.55;
+
+    // Adaptive multiplier based on achievement level
+    const adaptiveBonus =
+      finalElo <= 3
+        ? -0.1 // 45% for low achievement
+        : finalElo <= 6
+          ? 0.0 // 55% for medium achievement
+          : finalElo <= 8
+            ? 0.1
+            : 0.2; // 65-75% for high achievement
+
+    // Performance multiplier (if test performance data is available)
+    let performanceMultiplier = 1.0;
+    if (testPerformance) {
+      const accuracy =
+        testPerformance.correctAnswers / testPerformance.totalQuestions;
+      performanceMultiplier = 0.9 + accuracy * 0.2; // Range: 0.9 to 1.1
+
+      // Additional multipliers based on termination reason
+      let terminationBonus = 0;
+      switch (testPerformance.endReason) {
+        case 'level_10_mastery':
+          terminationBonus = 0.1; // 10% bonus for achieving mastery
+          break;
+        case 'level_1_failure':
+          terminationBonus = -0.05; // 5% penalty for struggling at basic level
+          break;
+        case 'bounce_detection':
+          terminationBonus = 0; // No bonus/penalty for consistent performance
+          break;
+        case 'completed_all_questions':
+          terminationBonus = 0.05; // 5% bonus for completing full test
+          break;
+      }
+
+      performanceMultiplier += terminationBonus;
+      performanceMultiplier = Math.max(
+        0.8,
+        Math.min(1.2, performanceMultiplier),
+      ); // Cap between 0.8 and 1.2
+
+      console.log(`📊 Test Performance Analysis:
+      🎯 Correct Answers: ${testPerformance.correctAnswers}/${
+        testPerformance.totalQuestions
+      }
+      📈 Accuracy: ${(accuracy * 100).toFixed(1)}%
+      🔧 Performance Multiplier: ${performanceMultiplier.toFixed(2)} (base: ${(
+        0.9 +
+        accuracy * 0.2
+      ).toFixed(2)}, bonus: ${terminationBonus.toFixed(2)})
+      🏁 End Reason: ${testPerformance.endReason || 'completed_all_questions'}
+      📊 Level History: ${
+        testPerformance.levelHistory
+          ? testPerformance.levelHistory.join(' → ')
+          : 'N/A'
+      }
+      🎯 Edge Cases: L1 Wrong=${
+        testPerformance.edgeCaseData?.consecutiveAtLevel1Wrong || 0
+      }, L10 Right=${
+        testPerformance.edgeCaseData?.consecutiveAtLevel10Right || 0
+      }`);
+    }
+
+    const finalMultiplier = baselineMultiplier + adaptiveBonus;
     const calculatedElo = Math.max(
       100,
-      Math.round(baseXP * baselineMultiplier),
-    ); // Minimum 100 ELO
+      Math.round(baseXP * finalMultiplier * performanceMultiplier),
+    );
+
     console.log(
-      `⚡ Calculated ELO (${
-        baselineMultiplier * 100
-      }% of ${baseXP}, min 100): ${calculatedElo}`,
+      `⚡ Enhanced ELO calculation:
+      📈 Base XP: ${baseXP}
+      🎯 Base multiplier: ${baselineMultiplier} (55%)
+      🔧 Adaptive bonus: ${adaptiveBonus} (level ${finalElo})
+      📊 Performance multiplier: ${performanceMultiplier.toFixed(2)}
+      🏆 Final ELO: ${calculatedElo}`,
     );
 
     // Step 3: Determine rank based on calculated ELO

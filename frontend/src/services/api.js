@@ -938,6 +938,28 @@ export async function skipBaselineTest(userId) {
   }
 }
 
+//permanent skip
+export const skipBaselineTestPermanently = async (userId) => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/baseline/skip/${userId}`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    console.error('Error skipping baseline test:', error);
+    throw error;
+  }
+};
+
 export async function fetchBaselineQuestion(level) {
   try {
     const res = await axiosInstance.get(`/baseline/questions/${level}`);
@@ -951,12 +973,19 @@ export async function fetchBaselineQuestion(level) {
   }
 }
 
-export async function updateUserElo(userId, finalElo) {
+export async function updateUserElo(userId, finalElo, testPerformance = null) {
   try {
-    const res = await axiosInstance.post('/baseline/complete', {
+    const requestBody = {
       user_id: userId,
       finalElo,
-    });
+    };
+
+    // Add performance data if provided
+    if (testPerformance) {
+      requestBody.testPerformance = testPerformance;
+    }
+
+    const res = await axiosInstance.post('/baseline/complete', requestBody);
     return res.data;
   } catch (err) {
     console.error('Failed to update user level:', err);

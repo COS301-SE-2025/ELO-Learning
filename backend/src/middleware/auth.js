@@ -9,27 +9,33 @@ import jwt from 'jsonwebtoken';
  */
 export function verifyToken(req, res, next) {
   const authHeader = req.headers.authorization;
+  console.log('[verifyToken] Authorization header:', authHeader);
 
   if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    console.log('[verifyToken] No valid token provided.');
     return res.status(401).json({
       error: 'Access denied. No valid token provided.',
     });
   }
 
   const token = authHeader.substring(7); // Remove 'Bearer ' prefix
+  console.log('[verifyToken] Extracted token:', token);
 
   try {
     // Verify the JWT token
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    console.log('[verifyToken] Decoded JWT:', decoded);
 
     // Add user info to request object for use in route handlers
     req.user = {
       id: decoded.id,
       email: decoded.email,
+      username: decoded.username,
     };
 
     next();
   } catch (error) {
+    console.error('[verifyToken] Token verification error:', error);
     if (error.name === 'TokenExpiredError') {
       return res.status(401).json({
         error: 'Token has expired. Please log in again.',
@@ -39,7 +45,6 @@ export function verifyToken(req, res, next) {
         error: 'Invalid token.',
       });
     } else {
-      console.error('Token verification error:', error);
       return res.status(500).json({
         error: 'Internal server error during authentication.',
       });

@@ -2,6 +2,39 @@ import axios from 'axios';
 import { getSession } from 'next-auth/react';
 import { CACHE_DURATIONS, performanceCache } from '../utils/performanceCache';
 
+// ========== OPENAI ADMIN DASHBOARD FUNCTIONS ==========
+
+/**
+ * Generate a question/answer using OpenAI (admin only)
+ */
+export async function generateOpenAIQuestion() {
+  const session = await getSession();
+  console.log('Admin OpenAI: session', session);
+  console.log('Admin OpenAI: token', session?.backendToken);
+  if (!session?.backendToken) throw new Error('Not authenticated');
+  const res = await axios.post(
+    `${BASE_URL}/api/openai/generate`,
+    { prompt: 'Generate a math question and answer.' },
+    { headers: { Authorization: `Bearer ${session.backendToken}` } },
+  );
+  // Expecting { question, answer }
+  return res.data;
+}
+
+/**
+ * Approve and save a question/answer to the DB (admin only)
+ */
+export async function approveOpenAIQuestion({ full }) {
+  const session = await getSession();
+  if (!session?.backendToken) throw new Error('Not authenticated');
+  const res = await axios.post(
+    `${BASE_URL}/api/openai/approve`,
+    { full },
+    { headers: { Authorization: `Bearer ${session.backendToken}` } },
+  );
+  return res.data;
+}
+
 // Environment-aware base URL with CI support
 const getBaseURL = () => {
   // Use a dedicated test/CI API URL if provided
@@ -9,13 +42,11 @@ const getBaseURL = () => {
     return (
       process.env.NEXT_PUBLIC_API_TEST_URL ||
       process.env.NEXT_PUBLIC_API_URL ||
-      'https://api.your-production-domain.com'
+      'https://elo-learning.co.za'
     );
   }
   // Default to production API URL
-  return (
-    process.env.NEXT_PUBLIC_API_URL || 'https://api.your-production-domain.com'
-  );
+  return process.env.NEXT_PUBLIC_API_URL || 'https://elo-learning.co.za';
 };
 
 const BASE_URL = getBaseURL();

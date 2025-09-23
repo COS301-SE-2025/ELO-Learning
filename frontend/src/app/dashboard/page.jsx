@@ -2,11 +2,13 @@
 import { fetchUsersByRank } from '@/services/api';
 import { initializeAchievementTracking } from '@/utils/gameplayAchievementHandler';
 import { useSession } from 'next-auth/react';
+import { useRouter } from 'next/navigation';
 import { useEffect, useMemo, useState } from 'react';
 import LeaderboardTable from '../ui/leaderboard-table';
 import BaselineTestPopup from '../ui/pop-up/baseline-test';
 
 export default function Page() {
+  const router = useRouter();
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -14,12 +16,24 @@ export default function Page() {
   const { data: session, status, update: updateSession } = useSession();
   const [showPopup, setShowPopup] = useState(false);
 
-  // Initialize achievement tracking when user logs in (no notifications)
+  // Redirect admin to admin dashboard
   useEffect(() => {
-    if (status === 'authenticated' && session?.user?.id) {
+    if (
+      status === 'authenticated' &&
+      session?.user?.email === 'admin@gmail.com' &&
+      session?.user?.username === 'admin'
+    ) {
+      router.replace('/dashboard/admin');
+    } else if (status === 'authenticated' && session?.user?.id) {
       initializeAchievementTracking(session.user.id);
     }
-  }, [status, session?.user?.id]);
+  }, [
+    status,
+    session?.user?.id,
+    session?.user?.email,
+    session?.user?.username,
+    router,
+  ]);
 
   // Function to update session with leaderboard data
   const updateSessionWithLeaderboardData = async (leaderboardData) => {

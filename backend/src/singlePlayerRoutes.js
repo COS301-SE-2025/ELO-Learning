@@ -13,6 +13,7 @@ import { updateSinglePlayerEloPair } from './utils/eloCalculator.js';
 import { formatAchievementsForResponse } from './utils/gameplayAchievementNotifier.js';
 import { updateUserStreak } from './utils/streakCalculator.js';
 import { checkAndUpdateRankAndLevel } from './utils/userProgression.js';
+import pushNotificationService from './services/pushNotificationService.js';
 import { calculateSinglePlayerXP } from './utils/xpCalculator.js';
 
 const router = express.Router();

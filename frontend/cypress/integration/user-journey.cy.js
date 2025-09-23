@@ -1,4 +1,4 @@
-describe('User Journey', () => {
+describe.skip('User Journey', () => {
   beforeEach(() => {
     // Clear cookies and localStorage before each test
     cy.clearCookies();

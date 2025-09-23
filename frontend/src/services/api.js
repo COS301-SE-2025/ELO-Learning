@@ -994,3 +994,22 @@ export async function updateUserStreak(userId) {
     throw error;
   }
 }
+
+// ========== ANALYSIS AND FEEDBACK FUNCTIONS ==========
+
+export const fetchUserAccuracy = async (userId) => {
+  const response = await axiosInstance.get(`/accuracy/${userId}`);
+  return response.data;
+};
+
+export const fetchUserEloSummary = async (userId, start, end) => {
+  const response = await axiosInstance.get(
+    `/elo-summary/${userId}?start=${start}&end=${end}`,
+  );
+  return response.data;
+};
+
+export const fetchUserTopicStats = async (userId) => {
+  const response = await axiosInstance.get(`/topic-stats/${userId}`);
+  return response.data; // { success: true, bestTopics: [...], worstTopics: [...] }
+};

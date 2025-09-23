@@ -56,4 +56,51 @@ router.get('/elo-summary/:userId', async (req, res) => {
   }
 });
 
+// GET /topic-stats/:userId
+// GET /topic-stats/:userId
+router.get('/topic-stats/:userId', async (req, res) => {
+  const { userId } = req.params;
+
+  try {
+    // Fetch attempts for this user
+    const { data, error } = await supabase
+      .from('QuestionAttempts')
+      .select('q_topic,isCorrect')
+      .eq('user_id', userId);
+
+    if (error) throw error;
+
+    if (!data || data.length === 0) {
+      return res.json({ success: true, bestTopics: [], worstTopics: [] });
+    }
+
+    // Group by topic and compute accuracy
+    const topicMap = {};
+    data.forEach(({ q_topic, isCorrect }) => {
+      if (!q_topic) return;
+      if (!topicMap[q_topic]) topicMap[q_topic] = { correct: 0, total: 0 };
+      topicMap[q_topic].total += 1;
+      topicMap[q_topic].correct += isCorrect ? 1 : 0;
+    });
+
+    const topicStats = Object.entries(topicMap).map(
+      ([topic, { correct, total }]) => ({
+        topic,
+        accuracy: total > 0 ? (correct / total) * 100 : 0,
+      }),
+    );
+
+    // Sort for best/worst
+    const sorted = topicStats.sort((a, b) => b.accuracy - a.accuracy);
+
+    const bestTopics = sorted.slice(0, 3);
+    const worstTopics = sorted.slice(-3).reverse();
+
+    res.json({ success: true, bestTopics, worstTopics });
+  } catch (err) {
+    console.error('Error fetching topic stats:', err);
+    res.status(500).json({ success: false, message: 'Internal server error' });
+  }
+});
+
 export default router;

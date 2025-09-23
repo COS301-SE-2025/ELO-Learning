@@ -2,6 +2,8 @@ import AchievementNotificationManager from '@/app/ui/achievements/achievement-no
 import AchievementSessionManager from '@/app/ui/achievements/achievement-session-manager';
 import RankNotificationManager from '@/app/ui/notifications/rank-notification-manager';
 import ErrorBoundary from '@/components/ErrorBoundary';
+import { Toaster } from 'react-hot-toast';
+import { Geist, Geist_Mono } from 'next/font/google';
 import { Nunito } from 'next/font/google';
 import './globals.css';
 import Providers from './providers';
@@ -60,6 +62,7 @@ export default function RootLayout({ children }) {
           <Providers>
             <PWALifecycle />
             <AchievementSessionManager />
+            <Toaster position="top-right" />
             {children}
 
             {/* Achievement notifications - appears above all content */}

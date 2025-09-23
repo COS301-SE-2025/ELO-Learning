@@ -23,9 +23,12 @@
     "debug": "^4.4.1",
     "dotenv": "^16.5.0",
     "express": "^5.1.0",
+    "firebase": "^12.3.0",
+    "firebase-admin": "^13.4.0",
     "jsonwebtoken": "^9.0.2",
     "mathjs": "^13.2.3",
     "socket.io": "^4.8.1",
+    "supabase": "^2.34.3",
     "uuid": "^11.1.0"
   },
   "devDependencies": {

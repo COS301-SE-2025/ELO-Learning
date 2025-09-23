@@ -211,25 +211,11 @@ export default function AnalysisFeedbackPage() {
           </aside>
 
           <main className="flex-1">
-            {/* Wrapper: horizontal scroll between Accuracy and Topics */}
             <div className="relative">
-              {/* Left arrow */}
-              <button
-                onClick={() => {
-                  document.getElementById('analysis-scroll')?.scrollBy({
-                    left: -window.innerWidth,
-                    behavior: 'smooth',
-                  });
-                }}
-                className="absolute left-0 top-1/2 transform -translate-y-1/2 z-10 bg-[#7d32ce] text-white p-2 rounded-full shadow-lg hover:bg-[#651fa0]"
-              >
-                ←
-              </button>
-
-              {/* Scrollable content */}
+              {/* Scrollable content with extra bottom padding so overlay doesn't overlap */}
               <div
                 id="analysis-scroll"
-                className="flex overflow-x-auto scroll-smooth w-full h-full snap-x snap-mandatory"
+                className="flex overflow-x-auto scroll-smooth w-full h-full snap-x snap-mandatory pb-24"
                 style={{ scrollbarWidth: 'none' }}
               >
                 {/* Accuracy Section */}
@@ -337,19 +323,12 @@ export default function AnalysisFeedbackPage() {
                     )}
                   </div>
 
-                  {/* Feedback below the chart */}
+                  {/* Feedback below the chart (button removed to avoid duplication) */}
                   {feedback && (
                     <div className="mt-4 text-center">
-                      <p className="text-xl md:text-2xl font-semibold text-pink-400 mb-4">
+                      <p className="text-xl md:text-2xl font-semibold text-pink-400 mb-0">
                         {feedback}
                       </p>
-
-                      <button
-                        onClick={() => router.push('/practice')}
-                        className="px-6 py-3 bg-[#7d32ce] hover:bg-[#651fa0] text-white font-semibold rounded-lg transition-colors"
-                      >
-                        Practice Now
-                      </button>
                     </div>
                   )}
                 </section>
@@ -446,17 +425,39 @@ export default function AnalysisFeedbackPage() {
                   </div>
                 </section>
               </div>
+              {/* Left arrow: lowered */}
+              <button
+                onClick={() => {
+                  document.getElementById('analysis-scroll')?.scrollBy({
+                    left: -window.innerWidth,
+                    behavior: 'smooth',
+                  });
+                }}
+                className="absolute left-4 bottom-3 z-20 bg-[#7d32ce] text-white p-2 rounded-full shadow-lg hover:bg-[#651fa0]"
+                aria-label="Scroll left"
+              >
+                ←
+              </button>
 
-              {/* Right arrow */}
+              {/* Right arrow: lowered */}
               <button
                 onClick={() => {
                   document
                     .getElementById('analysis-scroll')
                     ?.scrollBy({ left: window.innerWidth, behavior: 'smooth' });
                 }}
-                className="absolute right-0 top-1/2 transform -translate-y-1/2 z-10 bg-[#7d32ce] text-white p-2 rounded-full shadow-lg hover:bg-[#651fa0]"
+                className="absolute right-4 bottom-3 z-20 bg-[#7d32ce] text-white p-2 rounded-full shadow-lg hover:bg-[#651fa0]"
+                aria-label="Scroll right"
               >
                 →
+              </button>
+
+              {/* Persistent Practice Now button (visible on all sections) */}
+              <button
+                onClick={() => router.push('/practice')}
+                className="absolute left-1/2 -translate-x-1/2 bottom-3 z-20 px-6 py-3 bg-[#7d32ce] hover:bg-[#651fa0] text-white font-semibold rounded-lg transition-colors"
+              >
+                Practice Now
               </button>
             </div>
           </main>

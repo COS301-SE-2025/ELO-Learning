@@ -216,12 +216,10 @@ export default function AnalysisFeedbackPage() {
               {/* Left arrow */}
               <button
                 onClick={() => {
-                  document
-                    .getElementById('analysis-scroll')
-                    ?.scrollBy({
-                      left: -window.innerWidth,
-                      behavior: 'smooth',
-                    });
+                  document.getElementById('analysis-scroll')?.scrollBy({
+                    left: -window.innerWidth,
+                    behavior: 'smooth',
+                  });
                 }}
                 className="absolute left-0 top-1/2 transform -translate-y-1/2 z-10 bg-[#7d32ce] text-white p-2 rounded-full shadow-lg hover:bg-[#651fa0]"
               >

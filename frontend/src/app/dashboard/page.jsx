@@ -1,15 +1,21 @@
 'use client';
-import { fetchUsersByRank, fetchUserById } from '@/services/api';
+import {
+  fetchUsersByRank,
+  fetchCommunityLeaderboard,
+  fetchUserById,
+} from '@/services/api';
 import { initializeAchievementTracking } from '@/utils/gameplayAchievementHandler';
 import { useSession } from 'next-auth/react';
 import { useEffect, useMemo, useState, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import LeaderboardTable from '../ui/leaderboard-table';
+import { NotificationSettings } from '@/components/NotificationSettings';
 import BaselineTestPopup from '../ui/pop-up/baseline-test';
 
 // Component to handle search params
 function DashboardContent() {
   const [users, setUsers] = useState([]);
+  const [communityLeaderboard, setCommunityLeaderboard] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [sortType, setSortType] = useState('xp');
@@ -89,21 +95,26 @@ function DashboardContent() {
         // Only fetch leaderboard if user has a rank
         if (session?.user?.rank == null) {
           setUsers([]);
+          setCommunityLeaderboard([]);
           setLoading(false);
           return;
         }
 
-        const data = await fetchUsersByRank(session.user.rank);
+        const [mainData, communityDataRaw] = await Promise.all([
+          fetchUsersByRank(session.user.rank),
+          fetchCommunityLeaderboard(session.user.id, session.token),
+        ]);
 
-        // Use setTimeout to defer sorting and avoid blocking the UI
+        // Use leaderboard array from response
+        const communityData = communityDataRaw?.leaderboard ?? [];
+
         timeoutId = setTimeout(async () => {
           if (mounted) {
-            const sortedData = sortUsers([...data], sortType);
+            const sortedData = sortUsers([...mainData], sortType);
             setUsers(sortedData);
+            setCommunityLeaderboard(communityData);
             setLoading(false);
-
-            // Update session with fresh leaderboard data
-            await updateSessionWithLeaderboardData(data);
+            await updateSessionWithLeaderboardData(mainData);
           }
         }, 0);
       } catch (error) {
@@ -117,7 +128,6 @@ function DashboardContent() {
 
     async function checkBaselineTest() {
       if (!session?.user?.id) return;
-
       try {
         console.log('🔍 Checking baseline test status...', {
           baseLineTest: session.user.baseLineTest,
@@ -148,7 +158,6 @@ function DashboardContent() {
     }
 
     if (status === 'loading') return;
-
     if (status === 'authenticated') {
       refreshFromBaseline().then(() => {
         checkBaselineTest();
@@ -231,26 +240,56 @@ function DashboardContent() {
         />
       )}
 
-      <div>
-        <h1 className="text-3xl text-center md:py-5 mt-30 md:mt-0">
-          Leaderboard
-        </h1>
-        {session?.user?.rank != null ? (
-          <h2 className="text-center text-2xl font-bold pb-5">
-            Rank: <span className="text-[#FF6E99]">{session.user.rank}</span>
+      <div className="flex flex-col md:flex-row gap-8 w-full items-center md:items-start">
+        {/* Main leaderboard */}
+        <div className="flex-1 flex flex-col items-center md:items-start w-full">
+          <h1 className="text-3xl text-center md:py-5 mt-30 md:mt-0">
+            Leaderboard
+          </h1>
+          {session?.user?.rank != null ? (
+            <h2 className="text-center text-2xl font-bold pb-5">
+              Rank: <span className="text-[#FF6E99]">{session.user.rank}</span>
+            </h2>
+          ) : (
+            <p className="text-center text-md pb-5 text-[#FF6E99]">
+              Answer some questions to get ranked!
+            </p>
+          )}
+          {session?.user?.rank != null && (
+            <div className="w-full pb-8 md:pb-0">
+              <LeaderboardTable
+                users={users}
+                sortType={sortType}
+                onSortTypeChange={handleSortTypeChange}
+              />
+            </div>
+          )}
+        </div>
+        {/* Community leaderboard */}
+        <div className="flex-1 flex flex-col items-center md:items-start w-full">
+          <h1 className="text-3xl text-center mt-2 md:py-5 md:mt-0">
+            Community Leaderboard
+          </h1>
+          <h2
+            className="text-center text-lg font-bold pb-6 text-white"
+            style={{ letterSpacing: '1px' }}
+          >
+            Amongst your mates!
           </h2>
-        ) : (
-          <p className="text-center text-md pb-5 text-[#FF6E99]">
-            Answer some questions to get ranked!
-          </p>
-        )}
-        {session?.user?.rank != null && (
-          <LeaderboardTable
-            users={users}
-            sortType={sortType}
-            onSortTypeChange={handleSortTypeChange}
-          />
-        )}
+          {communityLeaderboard && communityLeaderboard.length > 0 ? (
+            <div className="w-full pb-8 md:pb-0">
+              <LeaderboardTable
+                users={[...communityLeaderboard].sort(
+                  (a, b) => (b.xp ?? 0) - (a.xp ?? 0),
+                )}
+              />
+            </div>
+          ) : (
+            <p className="text-center text-md pb-5 text-[#FF6E99]">
+              No community leaderboard available.
+            </p>
+          )}
+        </div>
       </div>
     </>
   );

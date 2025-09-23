@@ -36,7 +36,7 @@ export default function MathInputTemplate({
   setIsValidExpression,
   studentAnswer = '',
 }) {
-  const [inputValue, setInputValue] = useState(studentAnswer);
+  const [inputValue, setInputValue] = useState(studentAnswer || '');
   const [validationMessage, setValidationMessage] = useState('');
   const [localIsValidExpression, setLocalIsValidExpression] = useState(true);
   const [showErrorMessage, setShowErrorMessage] = useState(false);
@@ -44,7 +44,9 @@ export default function MathInputTemplate({
   const [activeTab, setActiveTab] = useState('basic');
   const [showHistory, setShowHistory] = useState(false);
   const [inputHistory, setInputHistory] = useState([]);
-  const [cursorPosition, setCursorPosition] = useState(0);
+  const [cursorPosition, setCursorPosition] = useState(
+    (studentAnswer || '').length,
+  );
   const [suggestions, setSuggestions] = useState([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [showHelper, setShowHelper] = useState(false);
@@ -53,6 +55,16 @@ export default function MathInputTemplate({
 
   // Initialize keyboard manager for Math Input questions
   const keyboard = useKeyboardManager(QUESTION_TYPES.MATH_INPUT);
+
+  // Initialize DOM content on component mount
+  useEffect(() => {
+    const input = inputRef.current;
+    if (input) {
+      const initialValue = studentAnswer || '';
+      setTextContent(input, initialValue, true, true);
+      setCursorPosition(initialValue.length);
+    }
+  }, []); // Run only once on mount
 
   // Math symbol categories (same as before)
   const mathCategories = {
@@ -86,8 +98,38 @@ export default function MathInputTemplate({
         { symbol: '8', label: '8', description: 'Eight' },
         { symbol: '9', label: '9', description: 'Nine' },
         { symbol: '.', label: '.', description: 'Decimal point' },
+      ],
+    },
+    alphabet: {
+      label: 'Letters',
+      icon: 'Abc',
+      symbols: [
+        { symbol: 'a', label: 'a', description: 'Variable a' },
+        { symbol: 'b', label: 'b', description: 'Variable b' },
+        { symbol: 'c', label: 'c', description: 'Variable c' },
+        { symbol: 'd', label: 'd', description: 'Variable d' },
+        { symbol: 'e', label: 'e', description: 'Variable e' },
+        { symbol: 'f', label: 'f', description: 'Variable f' },
+        { symbol: 'g', label: 'g', description: 'Variable g' },
+        { symbol: 'h', label: 'h', description: 'Variable h' },
+        { symbol: 'i', label: 'i', description: 'Variable i' },
+        { symbol: 'j', label: 'j', description: 'Variable j' },
+        { symbol: 'k', label: 'k', description: 'Variable k' },
+        { symbol: 'l', label: 'l', description: 'Variable l' },
+        { symbol: 'm', label: 'm', description: 'Variable m' },
+        { symbol: 'n', label: 'n', description: 'Variable n' },
+        { symbol: 'o', label: 'o', description: 'Variable o' },
+        { symbol: 'p', label: 'p', description: 'Variable p' },
+        { symbol: 'q', label: 'q', description: 'Variable q' },
+        { symbol: 'r', label: 'r', description: 'Variable r' },
+        { symbol: 's', label: 's', description: 'Variable s' },
+        { symbol: 't', label: 't', description: 'Variable t' },
+        { symbol: 'u', label: 'u', description: 'Variable u' },
+        { symbol: 'v', label: 'v', description: 'Variable v' },
+        { symbol: 'w', label: 'w', description: 'Variable w' },
         { symbol: 'x', label: 'x', description: 'Variable x' },
         { symbol: 'y', label: 'y', description: 'Variable y' },
+        { symbol: 'z', label: 'z', description: 'Variable z' },
       ],
     },
     functions: {
@@ -104,19 +146,59 @@ export default function MathInputTemplate({
     },
   };
 
-  // Sync with parent studentAnswer prop
+  // Sync with parent studentAnswer prop - SIMPLIFIED to prevent race conditions
   useEffect(() => {
-    setInputValue(studentAnswer);
+    // Normalize studentAnswer (handle null/undefined as empty string)
+    const normalizedStudentAnswer = studentAnswer || '';
 
-    // Update contentEditable div content if it exists
-    const input = inputRef.current;
-    if (input && input.contentEditable !== undefined) {
-      // Use safer text content setting to avoid echoing
-      if (getTextContent(input) !== studentAnswer) {
-        setTextContent(input, studentAnswer, true, true);
-      }
+    // Always sync when studentAnswer prop changes
+    setInputValue(normalizedStudentAnswer);
+
+    // Clear all related state when resetting to empty
+    if (normalizedStudentAnswer === '') {
+      setInputHistory([]);
+      setShowHistory(false);
+      setShowSuggestions(false);
+      setSuggestions([]);
+      setValidationMessage('');
+      setShowErrorMessage(false);
+      setLocalIsValidExpression(true);
     }
-  }, [studentAnswer]);
+
+    // Update DOM content
+    const input = inputRef.current;
+    if (input) {
+      setTextContent(input, normalizedStudentAnswer, true, true);
+
+      // Set cursor position to end of content
+      setCursorPosition(normalizedStudentAnswer.length);
+
+      // Update DOM cursor position
+      setTimeout(() => {
+        if (normalizedStudentAnswer === '') {
+          // For empty content, position cursor at start
+          const range = document.createRange();
+          const selection = window.getSelection();
+          range.setStart(input, 0);
+          range.collapse(true);
+          selection.removeAllRanges();
+          selection.addRange(range);
+        } else if (input.firstChild) {
+          // For non-empty content, position cursor at end
+          const range = document.createRange();
+          const selection = window.getSelection();
+          const textLength = normalizedStudentAnswer.length;
+          range.setStart(
+            input.firstChild,
+            Math.min(textLength, input.firstChild.textContent.length),
+          );
+          range.collapse(true);
+          selection.removeAllRanges();
+          selection.addRange(range);
+        }
+      }, 10);
+    }
+  }, [studentAnswer]); // Only depend on studentAnswer prop
 
   // Handle non-passive touch events for Android keyboard prevention
   useEffect(() => {
@@ -140,11 +222,13 @@ export default function MathInputTemplate({
   // Real-time validation
   useEffect(() => {
     const validateExpression = async () => {
-      if (!inputValue.trim()) {
+      if (!inputValue || !inputValue.trim()) {
         setValidationMessage('');
         setLocalIsValidExpression(true);
         setShowErrorMessage(false);
         setIsValidExpression?.(true);
+        setSuggestions([]);
+        setShowSuggestions(false);
         return;
       }
 
@@ -433,10 +517,7 @@ export default function MathInputTemplate({
             const input = inputRef.current;
             if (input) removeCursorIndicator(input);
           }}
-          // Prevent text echoing by removing dangerouslySetInnerHTML usage
-        >
-          {inputValue}
-        </div>
+        />
 
         {/* Validation indicator */}
         <div className="absolute right-3 top-4">
@@ -547,7 +628,13 @@ export default function MathInputTemplate({
 
           {/* Symbol grid */}
           <div className="p-4">
-            <div className="grid gap-3 grid-cols-3 sm:grid-cols-4 md:grid-cols-5">
+            <div
+              className={`grid gap-3 ${
+                activeTab === 'numbers' || activeTab === 'alphabet'
+                  ? 'grid-cols-5'
+                  : 'grid-cols-3 sm:grid-cols-4 md:grid-cols-5'
+              }`}
+            >
               {mathCategories[activeTab].symbols.map((item, index) => (
                 <button
                   key={index}

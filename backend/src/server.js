@@ -25,6 +25,7 @@ import baselineRoutes from './baselineRoutes.js';
 import multiPlayerRoutes from './multiPlayerRoute.js';
 import oauthRoutes from './oauthRoutes.js';
 import practiceRoutes from './practiceRoutes.js';
+import pushNotificationRoutes from './pushNotificationRoutes.js';
 import questionRoutes from './questionRoutes.js';
 import singlePlayerRoutes from './singlePlayerRoutes.js';
 import socketsHandlers from './sockets.js';
@@ -48,6 +49,7 @@ app.use(
   cors({
     origin: process.env.NEXT_PUBLIC_FRONTEND_URL || 'http://localhost:8080',
     credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'],
   }),
 );
 app.use(express.json());
@@ -73,6 +75,7 @@ app.use('/', achievementRoutes);
 app.use('/api/avatar-unlockables', avatarUnlockablesRoutes);
 app.use('/', oauthRoutes);
 app.use('/', baselineRoutes);
+app.use('/notifications', pushNotificationRoutes);
 
 // Simple health check route
 app.get('/', (req, res) => {

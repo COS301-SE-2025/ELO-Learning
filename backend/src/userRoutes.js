@@ -617,7 +617,8 @@ router.get(
         .eq('status', 'pending');
       if (error) {
         console.error(
-          `[PENDING FRIEND REQUESTS] Error for user id=${id}:`,
+          '[PENDING FRIEND REQUESTS] Error for user id=%s:',
+          id,
           error,
         );
         return res.status(500).json({
@@ -658,7 +659,8 @@ router.get(
       res.status(200).json({ pendingRequests });
     } catch (err) {
       console.error(
-        `[PENDING FRIEND REQUESTS] Unexpected error for user id=${id}:`,
+        '[PENDING FRIEND REQUESTS] Unexpected error for user id=%s:',
+        id,
         err,
       );
       res.status(500).json({
@@ -829,7 +831,7 @@ router.put('/user/:id/community', verifyToken, async (req, res) => {
     }
     res.status(200).json({ message: 'Community data updated', user: data });
   } catch (err) {
-    console.error(`[COMMUNITY PUT] Unexpected error for user id=${id}:`, err);
+    console.error('[COMMUNITY PUT] Unexpected error for user id=%s:', id, err);
     res
       .status(500)
       .json({ error: 'Failed to update community data', details: err.message });
@@ -854,7 +856,8 @@ router.post('/user/:id/friend-request', verifyToken, async (req, res) => {
       .single();
     if (friendError || !friend) {
       console.error(
-        `[FRIEND REQUEST] Friend lookup failed for email=${friend_email}. Error:`,
+        '[FRIEND REQUEST] Friend lookup failed for email=%s. Error:',
+        friend_email,
         friendError,
         'Friend:',
         friend,
@@ -882,7 +885,9 @@ router.post('/user/:id/friend-request', verifyToken, async (req, res) => {
 
     if (existingError) {
       console.error(
-        `[FRIEND REQUEST] Lookup for existing request failed for user_id=${id}, friend_id=${friend.id}. Error:`,
+        '[FRIEND REQUEST] Lookup for existing request failed for user_id=%s, friend_id=%s. Error:',
+        id,
+        friend.id,
         existingError,
       );
       return res.status(500).json({
@@ -941,9 +946,7 @@ router.post('/user/:id/friend-request', verifyToken, async (req, res) => {
     res.status(201).json({ message: 'Friend request sent', request });
   } catch (err) {
     console.error(
-      '[FRIEND REQUEST] Unexpected error for sender id=%s, friend_email=%s:',
-      id,
-      req.body?.friend_email,
+      `[FRIEND REQUEST] Unexpected error for sender id=${id}, friend_email=${req.body?.friend_email}:`,
       err,
     );
     res

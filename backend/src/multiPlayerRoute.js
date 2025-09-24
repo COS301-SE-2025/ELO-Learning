@@ -144,7 +144,8 @@ router.post('/multiplayer', async (req, res) => {
           rankDirection: newIndex > oldIndex ? 'up' : 'down',
         };
         console.log(
-          `🏆 RANK CHANGE DETECTED for Player 1 (${player1_id}):`,
+          '🏆 RANK CHANGE DETECTED for Player 1 (%s):',
+          player1_id,
           player1RankChange,
         );
       }
@@ -169,7 +170,8 @@ router.post('/multiplayer', async (req, res) => {
           rankDirection: newIndex > oldIndex ? 'up' : 'down',
         };
         console.log(
-          `🏆 RANK CHANGE DETECTED for Player 2 (${player2_id}):`,
+          '🏆 RANK CHANGE DETECTED for Player 2 (%s):',
+          player2_id,
           player2RankChange,
         );
       }

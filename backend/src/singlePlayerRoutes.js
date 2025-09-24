@@ -137,7 +137,11 @@ router.post('/singleplayer', async (req, res) => {
 
       // Log rank change for debugging
       if (rankChange) {
-        console.log(`🏆 RANK CHANGE DETECTED for user ${user_id}:`, rankChange);
+        console.log(
+          '🏆 RANK CHANGE DETECTED for user %s:',
+          user_id,
+          rankChange,
+        );
       }
     }
 

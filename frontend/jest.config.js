@@ -47,6 +47,11 @@ const customJestConfig = {
       statements: 70,
     },
   },
+  transformIgnorePatterns: [
+    'node_modules/(?!(msw|@mswjs|@bundled-es-modules|until-async|rettime|@open-draft)/)',
+  ],
+  moduleFileExtensions: ['js', 'jsx', 'ts', 'tsx', 'json'],
+  extensionsToTreatAsEsm: ['.ts', '.tsx'],
 };
 
 // createJestConfig is exported this way to ensure that next/jest can load the Next.js config which is async

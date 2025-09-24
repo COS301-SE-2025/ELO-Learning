@@ -86,7 +86,10 @@ router.post('/oauth/user', async (req, res) => {
         // Ensure final username doesn't exceed 15 characters
         const counterStr = counter.toString();
         const maxBaseLength = 15 - counterStr.length;
-        const adjustedBaseUsername = truncatedBaseUsername.substring(0, maxBaseLength);
+        const adjustedBaseUsername = truncatedBaseUsername.substring(
+          0,
+          maxBaseLength,
+        );
         username = `${adjustedBaseUsername}${counter}`;
         counter++;
       }

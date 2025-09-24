@@ -6,8 +6,8 @@ export default function UsernameBlock({
 }) {
   return (
     <div className="m-4">
-      <h2 
-        className="text-2xl font-bold py-2 uppercase truncate max-w-full overflow-hidden text-ellipsis whitespace-nowrap" 
+      <h2
+        className="text-2xl font-bold py-2 uppercase truncate max-w-full overflow-hidden text-ellipsis whitespace-nowrap"
         title={username}
       >
         {username}

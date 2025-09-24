@@ -58,7 +58,7 @@ const UserRow = memo(function UserRow({
         </span>
       </td>
       <td className="text-left p-2">
-        <span 
+        <span
           className="truncate block max-w-[120px] overflow-hidden text-ellipsis whitespace-nowrap"
           title={user.username}
         >

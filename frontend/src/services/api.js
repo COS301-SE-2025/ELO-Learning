@@ -1013,3 +1013,8 @@ export const fetchUserTopicStats = async (userId) => {
   const response = await axiosInstance.get(`/topic-stats/${userId}`);
   return response.data; // { success: true, bestTopics: [...], worstTopics: [...] }
 };
+
+export const fetchUserTopicDepth = async (userId) => {
+  const response = await axiosInstance.get(`/topic-depth/${userId}`);
+  return response.data;
+};

@@ -6,7 +6,11 @@ import { useSession } from 'next-auth/react';
 import NavLinks from '../ui/nav-links';
 import NavBar from '../ui/nav-bar';
 import Back from '../ui/back'; // added import
-import { fetchUserAccuracy, fetchUserTopicStats } from '@/services/api';
+import {
+  fetchUserAccuracy,
+  fetchUserTopicStats,
+  fetchUserTopicDepth,
+} from '@/services/api';
 import {
   LineChart,
   Line,
@@ -33,6 +37,8 @@ export default function AnalysisFeedbackPage() {
   });
   const [bestTopicFeedback, setBestTopicFeedback] = useState('');
   const [worstTopicFeedback, setWorstTopicFeedback] = useState('');
+  const [topicDepth, setTopicDepth] = useState(null);
+  const [coverageFeedback, setCoverageFeedback] = useState('');
 
   // Helper: normalize / format incoming accuracy items
   function normalizeAndSortAccuracy(raw) {
@@ -119,6 +125,12 @@ export default function AnalysisFeedbackPage() {
         const res = await fetchUserAccuracy(userId);
         const topicRes = await fetchUserTopicStats(userId);
         setTopicStats(topicRes);
+        const topicDepthRes = await fetchUserTopicDepth(userId); // new API endpoint
+
+        if (topicDepthRes?.success) {
+          setTopicDepth(topicDepthRes.topicDepth || []);
+          setCoverageFeedback(topicDepthRes.depthFeedback || '');
+        }
 
         // Generate topic feedback
         if (topicRes.bestTopics?.length > 0) {
@@ -142,7 +154,8 @@ export default function AnalysisFeedbackPage() {
               .slice(0, 3)
               .map(
                 (t, i) =>
-                  `${i === 0 ? 'your best' : i === 1 ? 'followed by' : 'and'
+                  `${
+                    i === 0 ? 'your best' : i === 1 ? 'followed by' : 'and'
                   } "${t.topic}" with ${t.accuracy.toFixed(1)}%`,
               );
             setBestTopicFeedback(
@@ -170,7 +183,8 @@ export default function AnalysisFeedbackPage() {
               .slice(0, 3)
               .map(
                 (t, i) =>
-                  `${i === 0 ? 'your weakest' : i === 1 ? 'then' : 'and'} "${t.topic
+                  `${i === 0 ? 'your weakest' : i === 1 ? 'then' : 'and'} "${
+                    t.topic
                   }" with ${t.accuracy.toFixed(1)}%`,
               );
             setWorstTopicFeedback(
@@ -486,6 +500,71 @@ export default function AnalysisFeedbackPage() {
                     <div className="mt-4 text-center">
                       <p className="text-lg md:text-xl font-semibold text-red-400 whitespace-pre-line">
                         {worstTopicFeedback}
+                      </p>
+                    </div>
+                  )}
+                </section>
+
+                {/* Topic Depth Section */}
+                <section className="min-w-full snap-center px-6">
+                  <h2 className="text-lg font-semibold mb-2 text-white text-center">
+                    Topic Depth
+                  </h2>
+                  <div className="bg-gray-900 rounded-xl p-4">
+                    {!topicDepth || topicDepth.length === 0 ? (
+                      <p className="text-gray-400 text-center">No data yet.</p>
+                    ) : (
+                      <div className="overflow-x-auto">
+                        <table className="min-w-full table-auto border-collapse border border-gray-700 text-white">
+                          <thead>
+                            <tr>
+                              <th className="border border-gray-600 px-2 py-1">
+                                Topic
+                              </th>
+                              <th className="border border-gray-600 px-2 py-1">
+                                Attempts
+                              </th>
+                              <th className="border border-gray-600 px-2 py-1">
+                                Unique Questions
+                              </th>
+                              <th className="border border-gray-600 px-2 py-1">
+                                Unique Types
+                              </th>
+                              <th className="border border-gray-600 px-2 py-1">
+                                Avg Accuracy
+                              </th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {topicDepth.map((t) => (
+                              <tr key={t.topic}>
+                                <td className="border border-gray-600 px-2 py-1">
+                                  {t.topic}
+                                </td>
+                                <td className="border border-gray-600 px-2 py-1">
+                                  {t.attempts}
+                                </td>
+                                <td className="border border-gray-600 px-2 py-1">
+                                  {t.uniqueQuestions}
+                                </td>
+                                <td className="border border-gray-600 px-2 py-1">
+                                  {t.uniqueTypes}
+                                </td>
+                                <td className="border border-gray-600 px-2 py-1">
+                                  {t.avgAccuracy.toFixed(1)}%
+                                </td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    )}
+                  </div>
+
+                  {coverageFeedback && (
+                    <div className="mt-4 text-center">
+                      <p className="text-lg md:text-xl font-semibold text-yellow-400 whitespace-pre-line">
+                        {coverageFeedback}
                       </p>
                     </div>
                   )}

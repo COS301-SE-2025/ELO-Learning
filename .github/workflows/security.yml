@@ -1,0 +1,41 @@
+name: Snyk Security Scan
+
+on:
+  push:
+    branches:
+      - main
+      - development
+      - '**'
+  pull_request:
+    branches:
+      - main
+      - development
+      - '**'
+permissions:
+  contents: read
+
+jobs:
+  snyk-security:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Use Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Install dependencies (frontend)
+        working-directory: frontend
+        run: yarn install --frozen-lockfile
+      - name: Install dependencies (backend)
+        working-directory: backend
+        run: npm ci
+      - name: Snyk Test Frontend
+        run: npx snyk test
+        working-directory: frontend
+        env:
+          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+      - name: Snyk Test Backend
+        run: npx snyk test
+        working-directory: backend
+        env:
+          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}

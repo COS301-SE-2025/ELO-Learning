@@ -1,3 +1,434 @@
+/**
+ * Fetch community leaderboard (me + friends)
+ * @param {string|number} userId - User ID
+ * @param {string} token - JWT token
+ * @returns {Promise<object[]>} Leaderboard data
+ */
+export async function fetchCommunityLeaderboard(userId, token) {
+  try {
+    const res = await axiosInstance.get(
+      `/user/${userId}/community-leaderboard`,
+      {
+        headers: {
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+      },
+    );
+    // Return full response including hasInstitution, hasLocation, message, leaderboard
+    return res.data;
+  } catch (error) {
+    if (error.response) {
+      console.error(
+        '❌ Backend error fetching community leaderboard:',
+        error.response.data,
+      );
+      if (error.response.status === 404) {
+        return { leaderboard: [], hasInstitution: false, hasLocation: false };
+      }
+      return {
+        error:
+          error.response.data?.error || 'Failed to fetch community leaderboard',
+        details: error.response.data,
+      };
+    } else {
+      console.error(
+        '❌ Network/other error fetching community leaderboard:',
+        error.message,
+      );
+      return {
+        error: error.message || 'Failed to fetch community leaderboard',
+      };
+    }
+  }
+}
+
+/**
+ * Fetch location leaderboards for user
+ * @param {string|number} userId - User ID
+ * @param {string} token - JWT token
+ * @returns {Promise<object>} Leaderboards by location
+ */
+export async function fetchLocationLeaderboards(userId, token) {
+  try {
+    const res = await axiosInstance.get(
+      `/user/${userId}/location-leaderboard`,
+      {
+        headers: {
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+      },
+    );
+    return res.data.leaderboards || {};
+  } catch (error) {
+    console.error('❌ Failed to fetch location leaderboards:', error);
+    return {};
+  }
+}
+
+/**
+ * Fetch institution leaderboard for user
+ * @param {string|number} userId - User ID
+ * @param {string} token - JWT token
+ * @returns {Promise<object[]>} Leaderboard data
+ */
+export async function fetchInstitutionLeaderboard(userId, token) {
+  try {
+    const res = await axiosInstance.get(
+      `/user/${userId}/institution-leaderboard`,
+      {
+        headers: {
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+      },
+    );
+    // Return the full response object so the frontend can access both leaderboard and institution name
+    return res.data;
+  } catch (error) {
+    console.error('❌ Failed to fetch institution leaderboard:', error);
+    return { leaderboard: [], institution: '' };
+  }
+}
+/**
+ * Remove an accepted friend for a user
+ * @param {string|number} userId - User ID
+ * @param {string|number} friendId - Friend's user ID to remove
+ * @param {string} token - JWT token
+ * @returns {Promise<object>} API response
+ */
+export async function removeAcceptedFriend(userId, friendId, token) {
+  try {
+    console.log(
+      '[FRONTEND] Sending DELETE /user/' + userId + '/friend with friend_id:',
+      friendId,
+    );
+    const res = await axiosInstance.delete(`/user/${userId}/friend`, {
+      headers: {
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      },
+      data: { friend_id: friendId },
+    });
+    console.log('[FRONTEND] Remove friend response:', res.data);
+    return res.data;
+  } catch (error) {
+    console.error('❌ Failed to remove accepted friend:', error);
+    if (error.response) {
+      console.error('❌ Backend response:', error.response.data);
+    }
+    return { error: error.message || 'Failed to remove accepted friend' };
+  }
+}
+// Fetch incoming friend requests for a user, including sender info
+export async function fetchIncomingFriendRequests(userId, token) {
+  try {
+    // Get incoming requests
+    const res = await axiosInstance.get(
+      `/user/${userId}/incoming-friend-requests`,
+      {
+        headers: {
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+      },
+    );
+    const requests = res.data.incomingRequests || [];
+    if (requests.length === 0) return [];
+    // Get sender IDs
+    const senderIds = requests.map((r) => r.user_id);
+    // Fetch sender info in one call
+    const senderRes = await axiosInstance.get(`/users`, {
+      headers: {
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      },
+    });
+    const allUsers = senderRes.data || [];
+    // Attach sender info to each request
+    return requests.map((r) => {
+      const sender = allUsers.find((u) => u.id === r.user_id);
+      return {
+        request_id: r.id,
+        sender_id: r.user_id,
+        sender_name: sender?.name || '',
+        sender_surname: sender?.surname || '',
+        sender_email: sender?.email || '',
+        status: r.status,
+        created_at: r.created_at,
+      };
+    });
+  } catch (error) {
+    if (error.response) {
+      console.error(
+        '❌ Failed to fetch incoming friend requests:',
+        error.response.data,
+        error.response.status,
+        error.response.headers,
+      );
+      return {
+        error:
+          error.response.data?.error ||
+          error.response.data?.message ||
+          'Failed to fetch incoming friend requests',
+        details: error.response.data,
+      };
+    } else {
+      console.error(
+        '❌ Failed to fetch incoming friend requests:',
+        error.message,
+      );
+      return {
+        error: error.message || 'Failed to fetch incoming friend requests',
+      };
+    }
+  }
+}
+/**
+ * Remove a friend for a user (delete or reject relationship)
+ * @param {string|number} userId - User ID
+ * @param {string} friendEmail - Friend's email to remove
+ * @param {string} token - JWT token
+ * @returns {Promise<object>} API response
+ */
+export async function removeFriend(userId, friendEmail, token) {
+  try {
+    // Fetch community data to get friend object
+    const community = await fetchCommunityData(userId);
+    const friendObj = (community.friends || []).find(
+      (f) => f.email === friendEmail,
+    );
+    if (!friendObj || !friendObj.request_id) {
+      throw new Error('Friend not found');
+    }
+    // Send reject request to backend using the correct request_id
+    const res = await axiosInstance.post(
+      `/user/${userId}/friend-reject`,
+      { request_id: friendObj.request_id },
+      {
+        headers: {
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+      },
+    );
+    return res.data;
+  } catch (error) {
+    console.error('❌ Failed to remove friend:', error);
+    return { error: error.message || 'Failed to remove friend' };
+  }
+}
+
+// Fetch pending friend requests for a user
+export async function fetchPendingFriendRequests(userId, token) {
+  try {
+    const res = await axiosInstance.get(
+      `/user/${userId}/pending-friend-requests`,
+      {
+        headers: {
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+      },
+    );
+    return res.data.pendingRequests;
+  } catch (error) {
+    if (error.response) {
+      console.error(
+        '❌ Failed to fetch pending friend requests:',
+        error.response.data,
+        error.response.status,
+        error.response.headers,
+      );
+      return {
+        error:
+          error.response.data?.error ||
+          error.response.data?.message ||
+          'Failed to fetch friend requests',
+        details: error.response.data,
+      };
+    } else {
+      console.error(
+        '❌ Failed to fetch pending friend requests:',
+        error.message,
+      );
+      return { error: error.message || 'Failed to fetch friend requests' };
+    }
+  }
+}
+
+/**
+ * Accept a friend request for a user
+ * @param {string|number} userId - User ID
+ * @param {string|number} requestId - Friend request ID
+ * @param {string} token - JWT token
+ * @returns {Promise<object>} API response
+ */
+export async function apiAcceptFriendRequest(userId, requestId, token) {
+  try {
+    const res = await axiosInstance.post(
+      `/user/${userId}/friend-accept`,
+      { request_id: requestId },
+      {
+        headers: {
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+      },
+    );
+    return res.data;
+  } catch (error) {
+    if (error.response) {
+      console.error(
+        '❌ Failed to accept friend request:',
+        error.response.data,
+        error.response.status,
+        error.response.headers,
+      );
+      return {
+        error:
+          error.response.data?.error ||
+          error.response.data?.message ||
+          'Failed to accept friend request',
+        details: error.response.data,
+      };
+    } else {
+      console.error('❌ Failed to accept friend request:', error.message);
+      return { error: error.message || 'Failed to accept friend request' };
+    }
+  }
+}
+
+/**
+ * Reject a friend request for a user
+ * @param {string|number} userId - User ID
+ * @param {string|number} requestId - Friend request ID
+ * @param {string} token - JWT token
+ * @returns {Promise<object>} API response
+ */
+export async function apiRejectFriendRequest(userId, requestId, token) {
+  try {
+    const res = await axiosInstance.post(
+      `/user/${userId}/friend-reject`,
+      { request_id: requestId },
+      {
+        headers: {
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+      },
+    );
+    return res.data;
+  } catch (error) {
+    if (error.response) {
+      console.error(
+        '❌ Failed to reject friend request:',
+        error.response.data,
+        error.response.status,
+        error.response.headers,
+      );
+      return {
+        error:
+          error.response.data?.error ||
+          error.response.data?.message ||
+          'Failed to reject friend request',
+        details: error.response.data,
+      };
+    } else {
+      console.error('❌ Failed to reject friend request:', error.message);
+      return { error: error.message || 'Failed to reject friend request' };
+    }
+  }
+}
+// Update community data for a user (PUT)
+// Update community data for a user (PUT)
+// (Removed duplicate signature)
+export async function updateCommunityData(
+  userId,
+  institution,
+  locations,
+  token,
+) {
+  const API_BASE = getBaseURL();
+  token = token || '';
+  try {
+    const payload = {
+      academic_institution: institution,
+      location: locations,
+    };
+    const res = await axiosInstance.put(`/user/${userId}/community`, payload, {
+      headers: {
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      },
+    });
+    return res.data;
+  } catch (error) {
+    // Log full error details for debugging
+    if (error.response) {
+      console.error(
+        '❌ Failed to update community data:',
+        error.response.data,
+        error.response.status,
+        error.response.headers,
+      );
+      return {
+        error:
+          error.response.data?.error ||
+          error.response.data?.message ||
+          'Failed to update community data',
+        details: error.response.data,
+      };
+    } else {
+      console.error('❌ Failed to update community data:', error.message);
+      return { error: error.message || 'Failed to update community data' };
+    }
+  }
+}
+
+// Send a friend request (POST)
+export async function sendFriendRequest(userId, friend_email) {
+  try {
+    const res = await axiosInstance.post(`/user/${userId}/friend-request`, {
+      friend_email,
+    });
+    return res.data;
+  } catch (error) {
+    console.error('❌ Failed to send friend request:', error);
+    throw error;
+  }
+}
+export async function fetchCommunityData(userId) {
+  try {
+    const res = await axiosInstance.get(`/user/${userId}/community`);
+    return res.data;
+  } catch (error) {
+    console.error('❌ Failed to fetch community data:', error);
+    throw error;
+  }
+}
+/**
+ * Remove a location for a user and update community data
+ * @param {string|number} userId - User ID
+ * @param {string} locationToRemove - City to remove
+ * @param {string} token - JWT token
+ * @returns {Promise<object>} Updated community data response
+ */
+export async function removeLocation(userId, locationToRemove, token) {
+  try {
+    // Fetch current community data
+    const community = await fetchCommunityData(userId);
+    const currentLocations = Array.isArray(community.location)
+      ? community.location
+      : typeof community.location === 'string' && community.location.length > 0
+        ? community.location.split(',').map((city) => city.trim())
+        : [];
+    // Remove the specified location
+    const updatedLocations = currentLocations.filter(
+      (city) => city !== locationToRemove,
+    );
+    // Update community data
+    return await updateCommunityData(
+      userId,
+      community.academic_institution,
+      updatedLocations,
+      token,
+    );
+  } catch (error) {
+    console.error('❌ Failed to remove location:', error);
+    return { error: error.message || 'Failed to remove location' };
+  }
+}
 import axios from 'axios';
 import { getSession } from 'next-auth/react';
 import { CACHE_DURATIONS, performanceCache } from '../utils/performanceCache';
@@ -131,7 +562,6 @@ axiosInstance.interceptors.request.use(async (config) => {
   // In test environment, add mock auth and continue
   if (process.env.NODE_ENV === 'test' || process.env.CI) {
     config.headers.Authorization = 'Bearer mock-test-token';
-    console.log('🧪 Test mode: Using mock auth token');
     return config;
   }
 
@@ -173,33 +603,23 @@ axiosInstance.interceptors.request.use(async (config) => {
       const session = await getSession();
       if (session?.backendToken) {
         token = session.backendToken;
-        console.log('🔐 Using NextAuth backend token');
       } else {
         // 🔄 FALLBACK: Check localStorage
         token =
           localStorage.getItem('token') || localStorage.getItem('oauth_token');
-        console.log(
-          '🔐 Using localStorage token:',
-          token ? 'Found' : 'Not found',
-        );
       }
     } catch (error) {
-      console.warn('🔐 Token retrieval failed:', error);
-
       // Final fallback to localStorage only
       try {
         token =
           localStorage.getItem('token') || localStorage.getItem('oauth_token');
       } catch (storageError) {
-        console.warn('localStorage access failed:', storageError);
+        // localStorage access failed
       }
     }
 
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
-      console.log('🔐 Authorization header set');
-    } else {
-      console.warn('🚫 No authentication token available for:', config.url);
     }
   }
 
@@ -230,7 +650,6 @@ export async function fetchAllUsers() {
       if (cached) return cached;
     }
 
-    console.log('🌐 Fetching fresh users data...');
     const res = await axiosInstance.get('/users');
 
     // Don't cache in tests
@@ -257,7 +676,6 @@ export async function fetchAllQuestions() {
       if (cached) return cached;
     }
 
-    console.log('🌐 Fetching fresh questions data...');
     const res = await axiosInstance.get('/questions');
 
     if (process.env.NODE_ENV !== 'test') {
@@ -277,26 +695,19 @@ export async function fetchAllQuestions() {
 //  LOGIN - Keep your caching fixes
 export async function loginUser(email, password) {
   try {
-    console.log('🚀 Starting login...');
-
     const res = await axiosInstance.post('/login', { email, password });
-
-    console.log('✅ Login API response:', res.data);
 
     // SIMPLE, DIRECT STORAGE (your fix for caching issues)
     if (res.data.token) {
       localStorage.setItem('token', res.data.token);
-      console.log('✅ Token stored');
     }
 
     if (res.data.user) {
       localStorage.setItem('user', JSON.stringify(res.data.user));
-      console.log('✅ User data stored:', res.data.user);
     }
 
     localStorage.setItem('auth_provider', 'credentials');
 
-    console.log('🎉 Login completed successfully');
     return res.data;
   } catch (error) {
     console.error('❌ Login failed:', error);
@@ -342,8 +753,6 @@ export async function registerUser(
   daily_streak,
 ) {
   try {
-    console.log('🚀 Starting registration...');
-
     const res = await axiosInstance.post('/register', {
       name,
       surname,
@@ -357,22 +766,17 @@ export async function registerUser(
       rank,
     });
 
-    console.log('✅ Registration API response:', res.data);
-
     // SIMPLE, DIRECT STORAGE - No complex caching (your fix)
     if (res.data.token) {
       localStorage.setItem('token', res.data.token);
-      console.log('✅ Token stored');
     }
 
     if (res.data.user) {
       localStorage.setItem('user', JSON.stringify(res.data.user));
-      console.log('✅ User data stored:', res.data.user);
     }
 
     localStorage.setItem('auth_provider', 'credentials');
 
-    console.log('🎉 Registration completed successfully');
     return res.data;
   } catch (error) {
     console.error('❌ Registration failed:', error);
@@ -410,7 +814,6 @@ export async function logoutUser() {
     // Clear performance cache (your fix for caching issues)
     performanceCache.clear();
 
-    console.log('🧹 Logout cleanup completed (auth + cache cleared)');
     return true;
   } catch (error) {
     console.error('Logout cleanup failed:', error);
@@ -457,12 +860,6 @@ export async function fetchRandomQuestions(level) {
       const cached = performanceCache.get(cacheKey, CACHE_DURATIONS.MEDIUM);
       if (cached) return cached;
     }
-
-    console.log(`🌐 Fetching random questions for level ${level}...`);
-    console.log(`🌐 Fetching random questions for level ${level}...`);
-    console.log('fetchRandomQuestions called with level:', level);
-    console.log('BASE_URL:', BASE_URL);
-    console.log('isServer:', typeof window === 'undefined');
 
     const res = await axiosInstance.get('/questions/random', {
       params: { level },
@@ -581,7 +978,7 @@ export async function submitSinglePlayerAttempt(data) {
 export async function submitMultiplayerResult(data) {
   try {
     const res = await axiosInstance.post('/multiplayer', data, {
-      timeout: 30000, // Extended timeout for multiplayer
+      timeout: 60000, // Extended timeout for multiplayer
       retries: 2, // Allow retries
     });
     return res.data;

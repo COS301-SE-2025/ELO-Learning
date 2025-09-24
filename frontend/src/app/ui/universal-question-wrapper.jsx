@@ -4,6 +4,7 @@
 
 import MathInputTemplate from '@/app/ui/math-keyboard/math-input-template';
 import ProgressBar from '@/app/ui/progress-bar';
+import KeyboardWrapper from '@/components/KeyboardWrapper';
 import { showAchievementNotificationsWhenReady } from '@/utils/achievementNotifications';
 import { submitQuestionAnswer } from '@/utils/api';
 import { showAchievementWithFallback } from '@/utils/fallbackAchievementNotifications';
@@ -25,30 +26,31 @@ export default function UniversalQuestionWrapper({ questions, numLives = 5 }) {
   const allQuestions = questions || [];
   const totalSteps = allQuestions.length;
 
-  console.log(
-    '🔥 UniversalQuestionWrapper - Received questions:',
-    allQuestions,
-  );
-  console.log('🔥 UniversalQuestionWrapper - Total questions:', totalSteps);
-
   //  Safe initialization
   const [currQuestion, setCurrQuestion] = useState(allQuestions[0] || null);
   const [currAnswers, setCurrAnswers] = useState(currQuestion?.answers || []);
   const [currentStep, setCurrentStep] = useState(1);
   const [isDisabled, setIsDisabled] = useState(true);
 
-  //  Debug logging
-  console.log('UniversalQuestionWrapper - currQuestion:', currQuestion);
-  console.log(
-    'UniversalQuestionWrapper - currQuestion.type:',
-    currQuestion?.type,
-  );
-  console.log('UniversalQuestionWrapper - currAnswers:', currAnswers);
-
   // Universal answer state - can handle any answer type
   const [answer, setAnswer] = useState(null);
   const [isAnswerCorrect, setIsAnswerCorrect] = useState(false);
   const [isValidExpression, setIsValidExpression] = useState(true);
+
+  // Keyboard state management
+  const [keyboardState, setKeyboardState] = useState({
+    isCustomKeyboardActive: false,
+    isNativeKeyboardVisible: false,
+    shouldUseCustomKeyboard: false,
+    shouldUseNativeKeyboard: false,
+    isMobile: false,
+    keyboardHeight: 0,
+  });
+
+  // Handle keyboard state changes
+  const handleKeyboardStateChange = (newState) => {
+    setKeyboardState(newState);
+  };
 
   // Feedback state
   const [showFeedback, setShowFeedback] = useState(false);
@@ -144,7 +146,6 @@ export default function UniversalQuestionWrapper({ questions, numLives = 5 }) {
       // Fallback to NextAuth session if no localStorage user
       if (!userId && session?.user?.id) {
         userId = session.user.id;
-        console.log('🔍 Using userId from NextAuth session:', userId);
       }
 
       if (!userId) {
@@ -162,40 +163,15 @@ export default function UniversalQuestionWrapper({ questions, numLives = 5 }) {
         gameMode: 'practice',
       });
 
-      console.log('🔍 REAL GAME DEBUG - Full API response:', result);
-      console.log('🔍 REAL GAME DEBUG - Result success:', result.success);
-      console.log('🔍 REAL GAME DEBUG - Result data:', result.data);
-
       if (result.success) {
         setFeedbackMessage(result.data.message);
         setShowFeedback(true);
-
-        console.log(
-          '🔍 REAL GAME DEBUG - Checking for achievements in result.data...',
-        );
-        console.log(
-          '🔍 REAL GAME DEBUG - unlockedAchievements exists:',
-          !!result.data.unlockedAchievements,
-        );
-        console.log(
-          '🔍 REAL GAME DEBUG - unlockedAchievements type:',
-          typeof result.data.unlockedAchievements,
-        );
-        console.log(
-          '🔍 REAL GAME DEBUG - unlockedAchievements value:',
-          result.data.unlockedAchievements,
-        );
 
         // 🎉 Handle achievement unlocks!
         if (
           result.data.unlockedAchievements &&
           result.data.unlockedAchievements.length > 0
         ) {
-          console.log(
-            '🏆 Achievements unlocked:',
-            result.data.unlockedAchievements,
-          );
-
           // Try the main achievement system first, then fallback
           Promise.race([
             showAchievementNotificationsWhenReady(
@@ -206,21 +182,16 @@ export default function UniversalQuestionWrapper({ questions, numLives = 5 }) {
             ),
           ])
             .then(() => {
-              console.log(
-                '✅ Achievement notifications displayed successfully',
-              );
+              // Achievement notifications displayed successfully
             })
             .catch((error) => {
               console.error('❌ Main achievement system failed:', error);
-              console.log('🔄 Using fallback notification system...');
               showAchievementWithFallback(result.data.unlockedAchievements);
             });
-        } else {
-          console.log('🤷 No achievements unlocked this time');
         }
 
         if (result.data.isCorrect && result.data.xpAwarded > 0) {
-          console.log(`Awarded ${result.data.xpAwarded} XP!`);
+          // XP awarded
         }
       }
 
@@ -320,10 +291,6 @@ export default function UniversalQuestionWrapper({ questions, numLives = 5 }) {
 
       case 'Match Question':
       case 'Matching':
-        console.log(
-          '🔥 UniversalQuestionWrapper - Rendering MatchQuestionTemplate!',
-          currQuestion,
-        );
         return <MatchQuestionTemplate {...commonProps} />;
 
       case 'True/False':
@@ -362,7 +329,35 @@ export default function UniversalQuestionWrapper({ questions, numLives = 5 }) {
       </div>
 
       {/* Main Content */}
-      <div className="pb-35 md:pb-50 pt-24">
+      <KeyboardWrapper
+        question={currQuestion}
+        onKeyboardStateChange={handleKeyboardStateChange}
+        className="pb-35 md:pb-50 pt-24"
+      >
+        {/* Mobile keyboard status indicator */}
+        {keyboardState.isMobile && (
+          <div className="px-4 mb-4">
+            <div
+              className={`text-xs text-center py-2 px-3 rounded-lg ${
+                keyboardState.shouldUseCustomKeyboard
+                  ? 'bg-purple-50 text-purple-700 border border-purple-200'
+                  : keyboardState.shouldUseNativeKeyboard
+                    ? 'bg-green-50 text-green-700 border border-green-200'
+                    : 'bg-gray-50 text-gray-700 border border-gray-200'
+              }`}
+            >
+              {keyboardState.shouldUseCustomKeyboard
+                ? '📱 Custom Keyboard Mode'
+                : keyboardState.shouldUseNativeKeyboard
+                  ? '⌨️ Native Keyboard Mode'
+                  : '🔧 Keyboard Mode: Auto'}
+              {keyboardState.isCustomKeyboardActive && ' (Active)'}
+              {keyboardState.isNativeKeyboardVisible &&
+                ` (H:${keyboardState.keyboardHeight}px)`}
+            </div>
+          </div>
+        )}
+
         {/* Question Section */}
         <div className="">
           <h2 className="text-2xl font-bold text-center leading-relaxed">
@@ -388,10 +383,23 @@ export default function UniversalQuestionWrapper({ questions, numLives = 5 }) {
             </div>
           </div>
         )}
-      </div>
+      </KeyboardWrapper>
 
       {/* Submit Button */}
-      <div className="flex fixed bottom-0 left-0 w-full z-10 px-4 py-4 bg-[#201F1F]">
+      <div
+        className={`flex fixed left-0 w-full z-10 px-4 py-4 bg-[#201F1F] ${
+          keyboardState.isMobile && keyboardState.isNativeKeyboardVisible
+            ? 'bottom-0' // Position above native keyboard
+            : 'bottom-0'
+        }`}
+        style={{
+          bottom:
+            keyboardState.isMobile && keyboardState.isNativeKeyboardVisible
+              ? `${keyboardState.keyboardHeight}px`
+              : '0px',
+          transition: 'bottom 0.3s ease-in-out',
+        }}
+      >
         <div className="flex flex-col justify-center md:m-auto max-w-2xl mx-auto">
           <button
             type="button"

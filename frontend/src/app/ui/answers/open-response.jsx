@@ -1,6 +1,8 @@
-// ui/answers/open-response.jsx - Themed version
+// ui/answers/open-response.jsx - Themed version with native keyboard support
 'use client';
 
+import { useKeyboardManager } from '@/hooks/useKeyboardManager';
+import { QUESTION_TYPES } from '@/utils/questionTypeDetection';
 import { useEffect, useState } from 'react';
 
 export default function OpenResponseTemplate({
@@ -9,6 +11,9 @@ export default function OpenResponseTemplate({
   setIsAnswerCorrect,
 }) {
   const [inputValue, setInputValue] = useState('');
+
+  // Force native keyboard for open response questions
+  const keyboard = useKeyboardManager(QUESTION_TYPES.OPEN_RESPONSE, true);
 
   // Reset input when answer prop changes (new question) or when it's empty
   useEffect(() => {
@@ -33,14 +38,16 @@ export default function OpenResponseTemplate({
   return (
     <div className="w-full space-y-4">
       <div className="space-y-2">
-        {/* Text Area with enhanced styling */}
+        {/* Text Area with enhanced styling and native keyboard support */}
         <textarea
-          value={inputValue}
-          onChange={handleInputChange}
-          placeholder="Write your answer"
-          className="w-full p-4 resize-none text-sm min-h-[200px]
-                     focus:outline-none
-                     transition-all duration-200 text-[var(--color-foreground)]"
+          {...keyboard.getInputProps({
+            value: inputValue,
+            onChange: handleInputChange,
+            placeholder: 'Write your answer',
+            className:
+              'w-full p-4 resize-none text-sm min-h-[200px] focus:outline-none transition-all duration-200 text-[var(--color-foreground)]',
+            rows: 8,
+          })}
           style={{
             border: '1px solid var(--grey)',
             borderRadius: '5px',
@@ -54,7 +61,6 @@ export default function OpenResponseTemplate({
             e.target.style.border = '1px solid var(--color-foreground)';
             e.target.style.boxShadow = '0 0 0 1px rgba(255, 255, 255, 0.8)';
           }}
-          rows={8}
         />
 
         {/* Character count or word count (optional) */}

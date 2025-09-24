@@ -5,7 +5,3 @@ node_modules/
 .vscode/
 .env
 .DS_Store
-
-# Large package-lock files
-frontend/package-lock.json
-backend/package-lock.json

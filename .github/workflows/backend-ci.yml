@@ -18,7 +18,7 @@ jobs:
       - name: Use Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 18
+          node-version: 20
           cache: npm
           cache-dependency-path: backend/package-lock.json
 
@@ -26,15 +26,16 @@ jobs:
         working-directory: backend
         run: npm ci
 
-      - name: Run Snyk security test
-        working-directory: backend
-        run: npx snyk test --all-projects
-        env:
-          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
-
-      # - name: Run ESLint
+      # Temporarily disabled - Snyk authentication required
+      # - name: Run Snyk security test
       #   working-directory: backend
-      #   run: npm run lint
+      #   run: npx snyk test --all-projects
+      #   env:
+      #     SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+
+      - name: Run ESLint
+        working-directory: backend
+        run: npm run lint
 
       - name: Run Tests
         working-directory: backend

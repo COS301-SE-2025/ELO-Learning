@@ -65,7 +65,9 @@ router.post('/oauth/user', async (req, res) => {
     // Generate username from email (fallback if name parsing fails)
     const baseUsername =
       name.replace(/\s+/g, '').toLowerCase() || email.split('@')[0];
-    let username = baseUsername;
+    // Ensure base username doesn't exceed character limit (leave room for counter)
+    let truncatedBaseUsername = baseUsername.substring(0, 12); // Leave 3 chars for potential counter
+    let username = truncatedBaseUsername;
 
     // Check if username is already taken and make it unique if needed
     let usernameExists = true;
@@ -81,7 +83,11 @@ router.post('/oauth/user', async (req, res) => {
       if (!usernameCheck) {
         usernameExists = false;
       } else {
-        username = `${baseUsername}${counter}`;
+        // Ensure final username doesn't exceed 15 characters
+        const counterStr = counter.toString();
+        const maxBaseLength = 15 - counterStr.length;
+        const adjustedBaseUsername = truncatedBaseUsername.substring(0, maxBaseLength);
+        username = `${adjustedBaseUsername}${counter}`;
         counter++;
       }
     }

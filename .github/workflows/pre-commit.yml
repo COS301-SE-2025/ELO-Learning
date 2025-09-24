@@ -25,8 +25,13 @@ jobs:
         with:
           node-version: 20
 
-      # Pre-commit hooks don't require project dependencies
-      # Only installing Node.js for prettier support
+      - name: Install frontend dependencies
+        working-directory: frontend
+        run: yarn install --frozen-lockfile
+
+      - name: Install backend dependencies
+        working-directory: backend
+        run: npm ci
 
       - name: Install pre-commit
         run: |

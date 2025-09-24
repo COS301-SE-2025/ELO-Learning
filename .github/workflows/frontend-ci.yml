@@ -18,7 +18,7 @@ jobs:
       - name: Use Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 23
           cache: yarn
           cache-dependency-path: frontend/yarn.lock
 
@@ -26,12 +26,11 @@ jobs:
         working-directory: frontend
         run: yarn install --frozen-lockfile
 
-      # Temporarily disabled - Snyk authentication required
-      # - name: Run Snyk security test
-      #   working-directory: frontend
-      #   run: npx snyk test --all-projects
-      #   env:
-      #     SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+      - name: Run Snyk security test
+        working-directory: frontend
+        run: npx snyk test --all-projects
+        env:
+          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
 
       - name: Cypress Tests
         uses: cypress-io/github-action@v6

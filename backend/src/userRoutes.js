@@ -941,7 +941,9 @@ router.post('/user/:id/friend-request', verifyToken, async (req, res) => {
     res.status(201).json({ message: 'Friend request sent', request });
   } catch (err) {
     console.error(
-      `[FRIEND REQUEST] Unexpected error for sender id=${id}, friend_email=${req.body?.friend_email}:`,
+      '[FRIEND REQUEST] Unexpected error for sender id=%s, friend_email=%s:',
+      id,
+      req.body?.friend_email,
       err,
     );
     res

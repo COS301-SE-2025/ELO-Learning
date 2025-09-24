@@ -9,6 +9,7 @@ import jwt from 'jsonwebtoken';
  */
 export function verifyToken(req, res, next) {
   const authHeader = req.headers.authorization;
+  console.log('[verifyToken] Authorization header:', authHeader);
   console.log(
     `[AUTH] verifyToken middleware entered. Authorization header:`,
     authHeader,
@@ -22,20 +23,23 @@ export function verifyToken(req, res, next) {
   }
 
   const token = authHeader.substring(7); // Remove 'Bearer ' prefix
+  console.log('[verifyToken] Extracted token:', token);
 
   try {
     // Verify the JWT token
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    console.log(`[AUTH] JWT verified. Decoded:`, decoded);
+    console.log('[verifyToken] Decoded JWT:', decoded);
 
     // Add user info to request object for use in route handlers
     req.user = {
       id: decoded.id,
       email: decoded.email,
+      username: decoded.username,
     };
 
     next();
   } catch (error) {
+    console.error('[verifyToken] Token verification error:', error);
     if (error.name === 'TokenExpiredError') {
       console.warn(`[AUTH] Token expired. Error:`, error);
       return res.status(401).json({

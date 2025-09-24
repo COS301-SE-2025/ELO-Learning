@@ -31,6 +31,8 @@ export default function AnalysisFeedbackPage() {
     bestTopics: [],
     worstTopics: [],
   });
+  const [bestTopicFeedback, setBestTopicFeedback] = useState('');
+  const [worstTopicFeedback, setWorstTopicFeedback] = useState('');
 
   // Helper: normalize / format incoming accuracy items
   function normalizeAndSortAccuracy(raw) {
@@ -117,6 +119,67 @@ export default function AnalysisFeedbackPage() {
         const res = await fetchUserAccuracy(userId);
         const topicRes = await fetchUserTopicStats(userId);
         setTopicStats(topicRes);
+
+        // Generate topic feedback
+        if (topicRes.bestTopics?.length > 0) {
+          const best = topicRes.bestTopics;
+          const topAcc = best[0].accuracy;
+
+          // Find all topics tied with topAcc
+          const tied = best.filter((t) => t.accuracy === topAcc);
+
+          if (tied.length > 1) {
+            // Multiple topics tied for best
+            const names = tied.map((t) => `"${t.topic}"`).join(' and ');
+            setBestTopicFeedback(
+              `Awesome! You're strongest in ${names}, each with ${topAcc.toFixed(
+                1,
+              )}%. Keep it up!`,
+            );
+          } else {
+            // Mention all 3 if available
+            const parts = best
+              .slice(0, 3)
+              .map(
+                (t, i) =>
+                  `${i === 0 ? 'your best' : i === 1 ? 'followed by' : 'and'
+                  } "${t.topic}" with ${t.accuracy.toFixed(1)}%`,
+              );
+            setBestTopicFeedback(
+              `You did best in ${parts.join(', ')}. Great work!`,
+            );
+          }
+        }
+
+        if (topicRes.worstTopics?.length > 0) {
+          const worst = topicRes.worstTopics;
+          const bottomAcc = worst[0].accuracy;
+
+          // Find all tied for worst
+          const tied = worst.filter((t) => t.accuracy === bottomAcc);
+
+          if (tied.length > 1) {
+            const names = tied.map((t) => `"${t.topic}"`).join(' and ');
+            setWorstTopicFeedback(
+              `Your weakest areas are ${names}, all with ${bottomAcc.toFixed(
+                1,
+              )}%.\n💡 Tips:\n• Review notes on these topics.\n• Practice small problems daily.\n• Revisit mistakes from past attempts.`,
+            );
+          } else {
+            const parts = worst
+              .slice(0, 3)
+              .map(
+                (t, i) =>
+                  `${i === 0 ? 'your weakest' : i === 1 ? 'then' : 'and'} "${t.topic
+                  }" with ${t.accuracy.toFixed(1)}%`,
+              );
+            setWorstTopicFeedback(
+              `You need to work on ${parts.join(
+                ', ',
+              )}.\n💡 Tips:\n• Review notes\n• Practice daily\n• Revisit mistakes`,
+            );
+          }
+        }
 
         // Accept either an array response or { accuracy: [...] }
         const dataArray = Array.isArray(res) ? res : res?.accuracy || [];
@@ -215,7 +278,7 @@ export default function AnalysisFeedbackPage() {
               {/* Scrollable content with extra bottom padding so overlay doesn't overlap */}
               <div
                 id="analysis-scroll"
-                className="flex overflow-x-auto scroll-smooth w-full h-full snap-x snap-mandatory pb-24"
+                className="flex overflow-x-auto scroll-smooth h-full snap-x snap-mandatory pb-24"
                 style={{ scrollbarWidth: 'none' }}
               >
                 {/* Accuracy Section */}
@@ -251,7 +314,7 @@ export default function AnalysisFeedbackPage() {
                       <ResponsiveContainer width="100%" height="100%">
                         <LineChart
                           data={accuracyData}
-                          margin={{ top: 0, right: 0, left: 48, bottom: 28 }}
+                          margin={{ top: 0, right: 0, left: 0, bottom: 24 }}
                         >
                           <CartesianGrid
                             strokeDasharray="3 3"
@@ -280,18 +343,6 @@ export default function AnalysisFeedbackPage() {
                             tickFormatter={yTickFormatter}
                             stroke="rgba(255,255,255,0.85)"
                             tick={{ fill: '#ffffffcc', fontSize: 12 }}
-                            label={{
-                              value: 'accuracy',
-                              angle: -90,
-                              position: 'left',
-                              offset: 0,
-                              dx: -12,
-                              style: {
-                                fontSize: 14,
-                                fontWeight: '700',
-                                fill: '#fff',
-                              },
-                            }}
                           />
                           <Tooltip
                             labelFormatter={formatDate}
@@ -377,19 +428,27 @@ export default function AnalysisFeedbackPage() {
                       </div>
                     )}
                   </div>
+
+                  {bestTopicFeedback && (
+                    <div className="mt-4 text-center">
+                      <p className="text-lg md:text-xl font-semibold text-green-400">
+                        {bestTopicFeedback}
+                      </p>
+                    </div>
+                  )}
                 </section>
 
                 {/* Worst Topics Section */}
                 <section className="min-w-full snap-center px-6">
                   <h2 className="text-lg font-semibold mb-2 text-white text-center">
-                    Worst Topics
+                    Weaker Topics
                   </h2>
                   <div className="bg-gray-900 rounded-xl p-4">
                     {topicStats.worstTopics.length === 0 ? (
                       <p className="text-gray-400 text-center">No data yet.</p>
                     ) : (
                       <div className="h-64">
-                        <ResponsiveContainer width="100%" height="100%">
+                        <ResponsiveContainer width="90%" height="100%">
                           <BarChart
                             data={topicStats.worstTopics}
                             margin={{ top: 8, right: 8, left: 8, bottom: 24 }}
@@ -423,6 +482,13 @@ export default function AnalysisFeedbackPage() {
                       </div>
                     )}
                   </div>
+                  {worstTopicFeedback && (
+                    <div className="mt-4 text-center">
+                      <p className="text-lg md:text-xl font-semibold text-red-400 whitespace-pre-line">
+                        {worstTopicFeedback}
+                      </p>
+                    </div>
+                  )}
                 </section>
               </div>
               {/* Left arrow: lowered */}
@@ -433,7 +499,7 @@ export default function AnalysisFeedbackPage() {
                     behavior: 'smooth',
                   });
                 }}
-                className="absolute left-4 bottom-3 z-20 bg-[#7d32ce] text-white p-2 rounded-full shadow-lg hover:bg-[#651fa0]"
+                className="absolute left-4 bottom-0 z-20 bg-[#7d32ce] text-white p-2 rounded-full shadow-lg hover:bg-[#651fa0]"
                 aria-label="Scroll left"
               >
                 ←
@@ -446,7 +512,7 @@ export default function AnalysisFeedbackPage() {
                     .getElementById('analysis-scroll')
                     ?.scrollBy({ left: window.innerWidth, behavior: 'smooth' });
                 }}
-                className="absolute right-4 bottom-3 z-20 bg-[#7d32ce] text-white p-2 rounded-full shadow-lg hover:bg-[#651fa0]"
+                className="absolute right-4 bottom-0 z-20 bg-[#7d32ce] text-white p-2 rounded-full shadow-lg hover:bg-[#651fa0]"
                 aria-label="Scroll right"
               >
                 →
@@ -455,7 +521,7 @@ export default function AnalysisFeedbackPage() {
               {/* Persistent Practice Now button (visible on all sections) */}
               <button
                 onClick={() => router.push('/practice')}
-                className="absolute left-1/2 -translate-x-1/2 bottom-3 z-20 px-6 py-3 bg-[#7d32ce] hover:bg-[#651fa0] text-white font-semibold rounded-lg transition-colors"
+                className="absolute left-1/2 -translate-x-1/2 bottom-0 z-20 px-6 py-3 bg-[#7d32ce] hover:bg-[#651fa0] text-white font-semibold rounded-lg transition-colors"
               >
                 Practice Now
               </button>

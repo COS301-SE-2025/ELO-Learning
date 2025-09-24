@@ -57,7 +57,14 @@ const UserRow = memo(function UserRow({
           {initial}
         </span>
       </td>
-      <td className="text-left p-2">{user.username}</td>
+      <td className="text-left p-2">
+        <span 
+          className="truncate block max-w-[120px] overflow-hidden text-ellipsis whitespace-nowrap"
+          title={user.username}
+        >
+          {user.username}
+        </span>
+      </td>
       <td className="text-right p-2">
         {formattedValue} {valueLabel}
       </td>
@@ -222,19 +229,19 @@ const LeaderboardTable = memo(function LeaderboardTable({
 
   return (
     <div
-      className="border rounded-lg p-4 mx-4 mb-15 md:mx-0"
+      className="border rounded-lg p-4 mx-4 mb-15 md:mx-0 overflow-x-auto"
       style={{
         maxHeight: '100%',
         overflowY: dropdownOpen ? 'visible' : 'auto',
         overflow: dropdownOpen ? 'visible' : undefined,
       }}
     >
-      <table className="table-auto w-full text-center">
+      <table className="table-auto w-full text-center min-w-0">
         <thead>
           <tr>
-            <th className=" w-0.5/5">#</th>
+            <th className="w-0.5/5">#</th>
             <th className="w-1.5/5"></th>
-            <th className="text-left px-3 w-1/5">Username</th>
+            <th className="text-left px-3 w-1/5 min-w-0">Username</th>
             <th className="text-right px-3 w-2/5 relative">
               <DropdownSort
                 sortType={sortType}

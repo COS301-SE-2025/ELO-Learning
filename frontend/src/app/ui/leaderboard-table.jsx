@@ -28,14 +28,19 @@ const UserRow = memo(function UserRow({
   isCurrent,
   userRowRef,
   sortType,
+  showXP = false,
 }) {
   const colorClass = useMemo(() => getColor(user.username), [user.username]);
   const initial = useMemo(() => user.username.charAt(0), [user.username]);
   const formattedValue = useMemo(() => {
-    if (sortType === 'elo')
-      return user.elo?.toFixed?.(0) || user.elo_rating || '-';
-    return user.xp.toFixed(0);
-  }, [user.xp, user.elo, sortType]);
+    if (sortType === 'elo') {
+      if (typeof user.elo === 'number') return user.elo.toFixed(0);
+      if (typeof user.elo_rating === 'number')
+        return user.elo_rating.toFixed(0);
+      return '-';
+    }
+    return typeof user.xp === 'number' ? user.xp.toFixed(0) : '-';
+  }, [user.xp, user.elo, user.elo_rating, sortType]);
   const valueLabel = sortType === 'elo' ? '' : 'XP';
 
   return (
@@ -52,10 +57,22 @@ const UserRow = memo(function UserRow({
           {initial}
         </span>
       </td>
-      <td className="text-left p-2">{user.username}</td>
+      <td className="text-left p-2">
+        <span
+          className="truncate block max-w-[120px] overflow-hidden text-ellipsis whitespace-nowrap"
+          title={user.username}
+        >
+          {user.username}
+        </span>
+      </td>
       <td className="text-right p-2">
         {formattedValue} {valueLabel}
       </td>
+      {showXP && (
+        <td className="text-right p-2">
+          {typeof user.xp === 'number' ? user.xp.toFixed(0) : '-'} XP
+        </td>
+      )}
     </tr>
   );
 });
@@ -162,6 +179,7 @@ const LeaderboardTable = memo(function LeaderboardTable({
   users = [],
   sortType = 'xp',
   onSortTypeChange,
+  showXP = false,
 }) {
   const { data: session } = useSession();
   const [currentUser, setCurrentUser] = useState(null);
@@ -203,26 +221,27 @@ const LeaderboardTable = memo(function LeaderboardTable({
           isCurrent={isCurrent}
           userRowRef={isCurrent ? currentUserRowRef : null}
           sortType={sortType}
+          showXP={showXP}
         />
       );
     });
-  }, [users, currentUser, sortType]);
+  }, [users, currentUser, sortType, showXP]);
 
   return (
     <div
-      className="border rounded-lg p-4 mx-4 mb-15 md:mx-0"
+      className="border rounded-lg p-4 mx-4 mb-15 md:mx-0 overflow-x-auto"
       style={{
         maxHeight: '100%',
         overflowY: dropdownOpen ? 'visible' : 'auto',
         overflow: dropdownOpen ? 'visible' : undefined,
       }}
     >
-      <table className="table-auto w-full text-center">
+      <table className="table-auto w-full text-center min-w-0">
         <thead>
           <tr>
-            <th className=" w-0.5/5">#</th>
+            <th className="w-0.5/5">#</th>
             <th className="w-1.5/5"></th>
-            <th className="text-left px-3 w-1/5">Username</th>
+            <th className="text-left px-3 w-1/5 min-w-0">Username</th>
             <th className="text-right px-3 w-2/5 relative">
               <DropdownSort
                 sortType={sortType}
@@ -230,6 +249,7 @@ const LeaderboardTable = memo(function LeaderboardTable({
                 onOpenChange={setDropdownOpen}
               />
             </th>
+            {showXP && <th className="text-right px-3 w-2/5">XP</th>}
           </tr>
         </thead>
         <tbody>{renderedRows}</tbody>

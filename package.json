@@ -1,0 +1,5 @@
+{
+  "dependencies": {
+    "@firebase/ai": "1.x"
+  }
+}

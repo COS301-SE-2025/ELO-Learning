@@ -241,10 +241,26 @@ router.post('/user/:id/avatar', async (req, res) => {
 
 // Register new user
 router.post('/register', async (req, res) => {
-  const { name, surname, username, email, password, joinDate } = req.body;
+  const {
+    name,
+    surname,
+    username,
+    email,
+    password,
+    joinDate,
+    location,
+    academic_institution,
+  } = req.body;
 
   if (!name || !surname || !username || !email || !password) {
     return res.status(400).json({ error: 'All fields are required' });
+  }
+
+  // Validate username length
+  if (username.length > 15) {
+    return res
+      .status(400)
+      .json({ error: 'Username must be 15 characters or less' });
   }
 
   // Check if user already exists
@@ -298,6 +314,8 @@ router.post('/register', async (req, res) => {
         elo_rating: eloRating,
         rank: defaultRank,
         daily_streak: default_daily_streak,
+        location: location || null,
+        academic_institution: academic_institution || null,
       },
     ])
     .select()
@@ -589,4 +607,603 @@ router.get('/verify-reset-token/:token', async (req, res) => {
   }
 });
 
+// --- FRIEND REQUEST ENDPOINTS ---
+// GET /user/:id/pending-friend-requests
+// Returns all pending friend requests for the consulting user (where friend_id = id and status = 'pending')
+router.get(
+  '/user/:id/pending-friend-requests',
+  verifyToken,
+  async (req, res) => {
+    const { id } = req.params;
+    try {
+      // Find all pending requests where this user is the recipient
+      const { data: requests, error } = await supabase
+        .from('friends')
+        .select('id, user_id, friend_id, status, created_at')
+        .eq('friend_id', id)
+        .eq('status', 'pending');
+      if (error) {
+        console.error(
+          '[PENDING FRIEND REQUESTS] Error for user id=%s:',
+          id,
+          error,
+        );
+        return res.status(500).json({
+          error: 'Failed to fetch pending friend requests',
+          details: error,
+        });
+      }
+      // Fetch sender info for each request
+      let senders = [];
+      if (requests.length > 0) {
+        const senderIds = requests.map((r) => r.user_id);
+        const { data: senderUsers, error: senderError } = await supabase
+          .from('Users')
+          .select('id, name, surname, email, avatar')
+          .in('id', senderIds);
+        if (senderError) {
+          console.error(
+            `[PENDING FRIEND REQUESTS] Failed to fetch sender info:`,
+            senderError,
+          );
+        }
+        senders = senderUsers || [];
+      }
+      // Attach sender info to each request
+      const pendingRequests = requests.map((r) => {
+        const sender = senders.find((u) => u.id === r.user_id);
+        return {
+          request_id: r.id,
+          sender_id: r.user_id,
+          sender_name: sender?.name || '',
+          sender_surname: sender?.surname || '',
+          sender_email: sender?.email || '',
+          sender_avatar: sender?.avatar || null,
+          status: r.status,
+          created_at: r.created_at,
+        };
+      });
+      res.status(200).json({ pendingRequests });
+    } catch (err) {
+      console.error(
+        '[PENDING FRIEND REQUESTS] Unexpected error for user id=%s:',
+        id,
+        err,
+      );
+      res.status(500).json({
+        error: 'Failed to fetch pending friend requests',
+        details: err.message,
+      });
+    }
+  },
+);
+// --- COMMUNITY ENDPOINTS ---
+
+// GET /user/:id/community
+// Returns { friends, institution, locations }
+router.get('/user/:id/community', verifyToken, async (req, res) => {
+  const { id } = req.params;
+  console.log('[COMMUNITY] Route entered for user id=%s', id);
+  try {
+    // Get academic_institution and location(s) from Users table
+    const { data: user, error: userError } = await supabase
+      .from('Users')
+      .select('academic_institution, location')
+      .eq('id', id)
+      .single();
+    if (userError || !user) {
+      console.error(
+        '[COMMUNITY] User lookup failed for id=%s. Error:',
+        id,
+        userError,
+        'User:',
+        user,
+      );
+      return res
+        .status(404)
+        .json({ error: 'User not found', details: { userError, user } });
+    }
+
+    // Get all friend requests (pending + accepted) for this user
+    const { data: friendRows, error: friendError } = await supabase
+      .from('friends')
+      .select('id, user_id, friend_id, status')
+      .or(`user_id.eq.${id},friend_id.eq.${id}`)
+      .in('status', ['pending', 'accepted']);
+    if (friendError) {
+      console.error(
+        '[COMMUNITY] Failed to fetch friends for user id=%s. Error:',
+        id,
+        friendError,
+      );
+      return res
+        .status(500)
+        .json({ error: 'Failed to fetch friends', details: friendError });
+    }
+
+    // Get the friend IDs (other user in each relationship)
+    const friendIds = [
+      ...new Set(
+        friendRows.map((f) =>
+          f.user_id === Number(id) ? f.friend_id : f.user_id,
+        ),
+      ),
+    ];
+    let friends = [];
+    if (friendIds.length > 0) {
+      // Fetch names, surnames, emails for each friend
+      const { data: friendUsers, error: friendUserError } = await supabase
+        .from('Users')
+        .select('id, name, surname, email')
+        .in('id', friendIds);
+      if (friendUserError) {
+        console.error(
+          '[COMMUNITY] Failed to fetch friend details for ids=%s. Error:',
+          friendIds,
+          friendUserError,
+        );
+      }
+      if (!friendUserError && friendUsers) {
+        friends = friendRows.map((f) => {
+          const friendId = f.user_id === Number(id) ? f.friend_id : f.user_id;
+          const friendUser = friendUsers.find((u) => u.id === friendId);
+          return {
+            id: friendUser?.id || friendId,
+            name: friendUser?.name || '',
+            surname: friendUser?.surname || '',
+            email: friendUser?.email || 'unknown',
+            status: f.status,
+            request_id: f.id ?? f.request_id, // Always include request_id
+          };
+        });
+      }
+    }
+
+    console.log('[COMMUNITY GET] user.location value:', user.location);
+    // Robust normalization for location field
+    let normalizedLocation = [];
+    if (Array.isArray(user.location)) {
+      normalizedLocation = user.location;
+    } else if (
+      typeof user.location === 'string' &&
+      user.location.trim().startsWith('[') &&
+      user.location.trim().endsWith(']')
+    ) {
+      // Stringified array, e.g., '["Pretoria"]'
+      try {
+        const parsed = JSON.parse(user.location);
+        if (Array.isArray(parsed)) {
+          normalizedLocation = parsed;
+        }
+      } catch (e) {
+        normalizedLocation = [];
+      }
+    } else if (typeof user.location === 'string' && user.location.length > 0) {
+      normalizedLocation = user.location.split(',').map((city) => city.trim());
+    }
+    res.status(200).json({
+      friends,
+      academic_institution: user.academic_institution || '',
+      location: normalizedLocation,
+    });
+  } catch (err) {
+    console.error('[COMMUNITY] Unexpected error for user id=%s:', id, err);
+    res
+      .status(500)
+      .json({ error: 'Failed to fetch community data', details: err.message });
+  }
+});
+
+// PUT /user/:id/community
+// Updates institution and locations for user
+router.put('/user/:id/community', verifyToken, async (req, res) => {
+  // Debug log to guarantee payload
+  console.log('[COMMUNITY PUT] Received payload:', req.body);
+  const { id } = req.params;
+  // Use correct field names from frontend and DB
+  const { academic_institution, location } = req.body;
+  try {
+    // Update institution and locations in Users table
+    const { data: userExists, error: userError } = await supabase
+      .from('Users')
+      .select('id')
+      .eq('id', id)
+      .single();
+    if (userError || !userExists) {
+      console.error(
+        '[COMMUNITY PUT] User not found for id=%s. Error:',
+        id,
+        userError,
+        'User:',
+        userExists,
+      );
+      return res
+        .status(404)
+        .json({ error: 'User not found', details: { userError, userExists } });
+    }
+
+    const { data, error: updateError } = await supabase
+      .from('Users')
+      .update({ academic_institution, location })
+      .eq('id', id)
+      .select()
+      .single();
+    if (updateError) {
+      console.error(
+        '[COMMUNITY PUT] Failed to update academic_institution/location for user id=%s. Error:',
+        id,
+        updateError,
+        'Payload:',
+        { academic_institution, location },
+      );
+      return res.status(500).json({
+        error: 'Failed to update community data',
+        details: updateError,
+      });
+    }
+    res.status(200).json({ message: 'Community data updated', user: data });
+  } catch (err) {
+    console.error('[COMMUNITY PUT] Unexpected error for user id=%s:', id, err);
+    res
+      .status(500)
+      .json({ error: 'Failed to update community data', details: err.message });
+  }
+});
+
+// Send a friend request
+router.post('/user/:id/friend-request', verifyToken, async (req, res) => {
+  try {
+    // Use user ID from URL params, matching avatar endpoint logic
+    const { id } = req.params;
+    const { friend_email } = req.body;
+    console.log(
+      `[FRIEND REQUEST] Sender ID: ${id}, Friend Email: ${friend_email}`,
+    );
+
+    // Find friend by email
+    const { data: friend, error: friendError } = await supabase
+      .from('Users')
+      .select('id, email')
+      .eq('email', friend_email)
+      .single();
+    if (friendError || !friend) {
+      console.error(
+        '[FRIEND REQUEST] Friend lookup failed for email=%s. Error:',
+        friend_email,
+        friendError,
+        'Friend:',
+        friend,
+      );
+      return res
+        .status(404)
+        .json({ error: 'Friend not found', details: { friendError, friend } });
+    }
+    // Prohibit sending friend request to self
+    if (Number(id) === Number(friend.id)) {
+      return res.status(400).json({
+        error: 'Add your other mates pal, good self love though! Self bestie!',
+      });
+    }
+    console.log(`[FRIEND REQUEST] Found friend:`, friend);
+
+    // Check if there's already a pending request
+    const { data: existingRequest, error: existingError } = await supabase
+      .from('friends')
+      .select('*')
+      .eq('user_id', Number(id))
+      .eq('friend_id', Number(friend.id))
+      .eq('status', 'pending')
+      .maybeSingle(); // <-- returns null if not found
+
+    if (existingError) {
+      console.error(
+        '[FRIEND REQUEST] Lookup for existing request failed for user_id=%s, friend_id=%s. Error:',
+        id,
+        friend.id,
+        existingError,
+      );
+      return res.status(500).json({
+        error: 'Error checking existing requests',
+        details: existingError,
+      });
+    }
+
+    if (existingRequest) {
+      console.log(
+        `[FRIEND REQUEST] Duplicate request blocked:`,
+        existingRequest,
+      );
+      return res.status(400).json({
+        error: 'Friend request already sent',
+        details: existingRequest,
+      });
+    }
+
+    // Insert friend request
+    const friendRequestPayload = {
+      user_id: Number(id),
+      friend_id: Number(friend.id),
+      status: 'pending',
+      created_at: new Date().toISOString(),
+    };
+    console.log(
+      `[FRIEND REQUEST] Inserting friend request:`,
+      friendRequestPayload,
+    );
+    const { data: request, error: reqError } = await supabase
+      .from('friends')
+      .insert([friendRequestPayload])
+      .select()
+      .single();
+    if (reqError) {
+      console.error(
+        `[FRIEND REQUEST] Insert failed for payload:`,
+        friendRequestPayload,
+        'Error:',
+        reqError,
+        'Data:',
+        request,
+      );
+      return res.status(500).json({
+        error: 'Failed to send friend request',
+        details: {
+          data: request,
+          error: reqError,
+          payload: friendRequestPayload,
+        },
+      });
+    }
+    console.log(`[FRIEND REQUEST] Success. Request:`, request);
+    // TODO: Trigger push notification to friend
+    res.status(201).json({ message: 'Friend request sent', request });
+  } catch (err) {
+    console.error(
+      '[FRIEND REQUEST] Unexpected error for sender id=%s, friend_email=%s:',
+      id,
+      req.body?.friend_email,
+      err,
+    );
+    res
+      .status(500)
+      .json({ error: 'Internal server error', details: err.message });
+  }
+});
+
+// Accept a friend request
+// Usage: POST /user/:id/friend-accept
+// :id is the acceptor's user ID (the one accepting the request)
+// Body: { "request_id": <id of the friend request row> }
+router.post('/user/:id/friend-accept', verifyToken, async (req, res) => {
+  const { id } = req.params; // acceptor's user ID
+  const { request_id } = req.body; // unique id of the friend request row
+  console.log(`[FRIEND-ACCEPT] Payload:`, { id, request_id });
+  // Fetch the friend request row before update
+  const { data: requestRow, error: fetchError } = await supabase
+    .from('friends')
+    .select('*')
+    .eq('id', request_id)
+    .single();
+  console.log(`[FRIEND-ACCEPT] DB row before update:`, requestRow);
+  if (fetchError || !requestRow) {
+    console.error(
+      `[FRIEND-ACCEPT] Could not find friend request row for id=${request_id}`,
+    );
+    return res
+      .status(404)
+      .json({ error: 'Friend request not found', details: fetchError });
+  }
+  // Only accept the request if the friend_id matches the acceptor's ID
+  const { data, error } = await supabase
+    .from('friends')
+    .update({ status: 'accepted' })
+    .eq('id', request_id)
+    .eq('friend_id', id)
+    .select()
+    .single();
+  console.log(`[FRIEND-ACCEPT] DB row after update:`, data);
+  if (error) {
+    console.error(`[FRIEND-ACCEPT] Update error:`, error);
+    return res
+      .status(500)
+      .json({ error: 'Failed to accept friend request', details: error });
+  }
+  res.status(200).json({ message: 'Friend request accepted', data });
+});
+
+// Reject a friend request
+// Usage: POST /user/:id/friend-reject
+// :id is the acceptor's user ID (the one rejecting the request)
+// Body: { "request_id": <id of the friend request row> }
+router.post('/user/:id/friend-reject', verifyToken, async (req, res) => {
+  const { id } = req.params; // acceptor's user ID
+  const { request_id } = req.body; // unique id of the friend request row
+  // Only reject the request if the friend_id matches the acceptor's ID
+  const { data, error } = await supabase
+    .from('friends')
+    .update({ status: 'rejected' })
+    .eq('id', request_id)
+    .eq('friend_id', id)
+    .select()
+    .single();
+  if (error) {
+    return res.status(500).json({ error: 'Failed to reject friend request' });
+  }
+  res.status(200).json({ message: 'Friend request rejected', data });
+});
+
+// List friends
+router.get('/user/:id/friends', verifyToken, async (req, res) => {
+  const { id } = req.params;
+  const { data, error } = await supabase
+    .from('friends')
+    .select('friend_id, user_id, status')
+    .or(`user_id.eq.${id},friend_id.eq.${id}`)
+    .eq('status', 'accepted');
+  if (error) {
+    return res.status(500).json({ error: 'Failed to fetch friends' });
+  }
+  res.status(200).json({ friends: data });
+});
+
+router.get(
+  '/user/:id/incoming-friend-requests',
+  verifyToken,
+  async (req, res) => {
+    const { id } = req.params;
+    try {
+      const { data, error } = await supabase
+        .from('friends')
+        .select('id, user_id, friend_id, status, created_at')
+        .eq('friend_id', id)
+        .eq('status', 'pending');
+      if (error) {
+        console.error('Error fetching incoming friend requests:', error);
+        return res
+          .status(500)
+          .json({ error: 'Failed to fetch incoming friend requests' });
+      }
+      res.status(200).json({ incomingRequests: data });
+    } catch (err) {
+      console.error('Unexpected error fetching incoming friend requests:', err);
+      res.status(500).json({ error: 'Internal server error' });
+    }
+  },
+);
+
+// Remove an accepted friend relationship
+// Usage: DELETE /user/:id/friend
+// Body: { friend_id: <id of the friend to remove> }
+router.delete('/user/:id/friend', verifyToken, async (req, res) => {
+  const { id } = req.params; // current user
+  console.log('[REMOVE FRIEND] req.params:', req.params);
+  console.log('[REMOVE FRIEND] req.body:', req.body);
+  const { friend_id } = req.body;
+  if (!friend_id) {
+    console.error('[REMOVE FRIEND] friend_id missing in body');
+    return res.status(400).json({ error: 'friend_id is required' });
+  }
+  try {
+    // Delete the relationship in either direction where status is accepted
+    const { error } = await supabase
+      .from('friends')
+      .delete()
+      .or(
+        `and(user_id.eq.${id},friend_id.eq.${friend_id},status.eq.accepted),and(friend_id.eq.${id},user_id.eq.${friend_id},status.eq.accepted)`,
+      );
+    if (error) {
+      console.error('[REMOVE FRIEND] Error:', error);
+      return res
+        .status(500)
+        .json({ error: 'Failed to remove friend', details: error });
+    }
+    res.status(200).json({ message: 'Friend removed successfully' });
+  } catch (err) {
+    console.error('[REMOVE FRIEND] Unexpected error:', err);
+    res
+      .status(500)
+      .json({ error: 'Internal server error', details: err.message });
+  }
+});
+
+// GET /user/:id/community-leaderboard
+router.get('/user/:id/community-leaderboard', verifyToken, async (req, res) => {
+  const { id } = req.params;
+  // Fetch user info
+  const { data: user, error: userError } = await supabase
+    .from('Users')
+    .select('id, academic_institution, location')
+    .eq('id', id)
+    .single();
+  if (userError || !user) {
+    return res.status(404).json({
+      error: 'User not found',
+      hasInstitution: false,
+      hasLocation: false,
+    });
+  }
+  // Institution and location are not relevant for this leaderboard
+  // Do not block leaderboard if institution/location are missing
+  // Get all accepted friends
+  const { data: friends, error: friendsError } = await supabase
+    .from('friends')
+    .select('user_id, friend_id')
+    .or(`user_id.eq.${id},friend_id.eq.${id}`)
+    .eq('status', 'accepted');
+  if (friendsError)
+    return res.status(500).json({ error: 'Failed to fetch friends' });
+
+  // Collect all IDs (me + friends)
+  const friendIds = [
+    ...new Set(
+      friends
+        .map((f) => (f.user_id === Number(id) ? f.friend_id : f.user_id))
+        .concat(Number(id)),
+    ),
+  ];
+
+  // Get leaderboard data (no institution/location filter)
+  const { data: leaderboard, error: lbError } = await supabase
+    .from('Users')
+    .select('id,username,elo_rating,avatar,xp,academic_institution,location')
+    .in('id', friendIds)
+    .order('xp', { ascending: false });
+  if (lbError)
+    return res.status(500).json({
+      error: 'Failed to fetch leaderboard',
+    });
+
+  res.json({ leaderboard });
+});
+
+// GET /user/:id/location-leaderboard
+router.get('/user/:id/location-leaderboard', verifyToken, async (req, res) => {
+  const { id } = req.params;
+  // Get user's locations
+  const { data: user, error: userError } = await supabase
+    .from('Users')
+    .select('location')
+    .eq('id', id)
+    .single();
+  if (userError || !user) return res.json({ leaderboards: {} });
+
+  let locations = [];
+  if (Array.isArray(user.location)) locations = user.location;
+  else if (typeof user.location === 'string' && user.location.length > 0)
+    locations = user.location.split(',').map((l) => l.trim());
+
+  // For each location, get leaderboard
+  const leaderboards = {};
+  for (const loc of locations) {
+    const { data: lb } = await supabase
+      .from('Users')
+      .select('id,username,elo_rating,avatar,xp')
+      .ilike('location', `%${loc}%`)
+      .order('elo_rating', { ascending: false });
+    leaderboards[loc] = lb || [];
+  }
+  res.json({ leaderboards });
+});
+
+// GET /user/:id/institution-leaderboard
+router.get(
+  '/user/:id/institution-leaderboard',
+  verifyToken,
+  async (req, res) => {
+    const { id } = req.params;
+    const { data: user, error: userError } = await supabase
+      .from('Users')
+      .select('academic_institution')
+      .eq('id', id)
+      .single();
+    if (userError || !user || !user.academic_institution)
+      return res.json({ leaderboard: [], institution: null });
+
+    const { data: leaderboard } = await supabase
+      .from('Users')
+      .select('id,username,elo_rating,avatar,xp')
+      .eq('academic_institution', user.academic_institution)
+      .order('elo_rating', { ascending: false });
+    res.json({ leaderboard, institution: user.academic_institution });
+  },
+);
 export default router;

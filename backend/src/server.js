@@ -13,6 +13,7 @@ import baselineRoutes from './baselineRoutes.js';
 import multiPlayerRoutes from './multiPlayerRoute.js';
 import oauthRoutes from './oauthRoutes.js';
 import practiceRoutes from './practiceRoutes.js';
+import pushNotificationRoutes from './pushNotificationRoutes.js';
 import questionRoutes from './questionRoutes.js';
 import singlePlayerRoutes from './singlePlayerRoutes.js';
 import socketsHandlers from './sockets.js';
@@ -20,11 +21,16 @@ import userRoutes from './userRoutes.js';
 import validateRoutes from './validateRoutes.js';
 import analysisRoutes from './analysisRoutes.js';
 
+import rateLimit from 'express-rate-limit'; //to prevent brute-force and DDoS attacks
 // Load environment variables
 dotenv.config();
 
 const app = express();
 const PORT = process.env.PORT || 3000;
+const limiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 100, // limit each IP to 100 requests per windowMs
+});
 
 // Use the frontend URL from env or fallback to localhost:8080 for dev
 const FRONTEND_URL =
@@ -37,9 +43,12 @@ app.use(
   cors({
     origin: process.env.NEXT_PUBLIC_FRONTEND_URL || 'http://localhost:8080',
     credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'],
   }),
 );
 app.use(express.json());
+
+app.use(limiter); // Apply rate limiting to all requests
 
 // Health check endpoint
 app.get('/health', (req, res) => {
@@ -63,6 +72,7 @@ app.use('/api/avatar-unlockables', avatarUnlockablesRoutes);
 app.use('/', oauthRoutes);
 app.use('/', baselineRoutes);
 app.use('/', analysisRoutes);
+app.use('/notifications', pushNotificationRoutes);
 
 // Simple health check route
 app.get('/', (req, res) => {

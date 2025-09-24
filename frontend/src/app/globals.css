@@ -4,6 +4,11 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+/* Ensure input-field class has border styling */
+.input-field {
+  border: 0.5px solid #696969; /* matches border-gray-300 */
+  border-radius: 0.375rem; /* matches rounded-md */
+}
 
 /* Root variables */
 :root {

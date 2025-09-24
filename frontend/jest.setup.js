@@ -1,3 +1,12 @@
+// Mock firebase-admin to avoid real Firebase initialization in tests
+jest.mock('firebase-admin', () => ({
+  initializeApp: jest.fn(),
+  messaging: jest.fn(() => ({
+    send: jest.fn(),
+    sendToDevice: jest.fn(),
+    // Add any other methods you use
+  })),
+}));
 import '@testing-library/jest-dom';
 
 // Polyfills for Node.js environment

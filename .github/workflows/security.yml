@@ -11,6 +11,8 @@ on:
       - main
       - development
       - '**'
+permissions:
+  contents: read
 
 jobs:
   snyk-security:

@@ -30,6 +30,7 @@ const PORT = process.env.PORT || 3000;
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
   max: 100, // limit each IP to 100 requests per windowMs
+  skip: (req) => req.path.startsWith('/users/') && req.path.endsWith('/streak'),
 });
 
 // Use the frontend URL from env or fallback to localhost:8080 for dev

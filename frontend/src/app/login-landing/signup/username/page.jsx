@@ -1,12 +1,13 @@
 'use client';
-import { useState } from 'react';
 import ProgressBar from '@/app/ui/progress-bar';
-import Link from 'next/link';
 import { X } from 'lucide-react';
-import { setRegistration, getRegistration } from '../registrationUtils';
+import Link from 'next/link';
+import { useState } from 'react';
+import { getRegistration, setRegistration } from '../registrationUtils';
 
 const currentStep = 2;
 const totalSteps = 6;
+const MAX_USERNAME_LENGTH = 15; // Character limit for usernames
 
 export default function Page() {
   const [username, setUsername] = useState(getRegistration().username || '');
@@ -18,8 +19,20 @@ export default function Page() {
       setError('Please enter a username.');
       return;
     }
+    if (username.length > MAX_USERNAME_LENGTH) {
+      setError(`Username must be ${MAX_USERNAME_LENGTH} characters or less.`);
+      return;
+    }
     setRegistration({ username });
     window.location.href = '/login-landing/signup/age';
+  };
+
+  const handleUsernameChange = (e) => {
+    const value = e.target.value;
+    if (value.length <= MAX_USERNAME_LENGTH) {
+      setUsername(value);
+      setError(''); // Clear error when user fixes it
+    }
   };
 
   return (
@@ -42,9 +55,13 @@ export default function Page() {
                 placeholder="Username"
                 className="input-field md:w-1/2 single_form_input"
                 value={username}
-                onChange={(e) => setUsername(e.target.value)}
+                onChange={handleUsernameChange}
+                maxLength={MAX_USERNAME_LENGTH}
                 required
               />
+              <div className="text-sm text-gray-500 mt-1">
+                {username.length}/{MAX_USERNAME_LENGTH} characters
+              </div>
               {error && <p className="text-red-500">{error}</p>}
               <div className="break_small"></div>
               <button className="signup-button  px-2 py-8" type="submit">

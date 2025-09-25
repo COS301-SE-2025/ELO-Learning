@@ -20,12 +20,17 @@ import singlePlayerRoutes from './singlePlayerRoutes.js';
 import socketsHandlers from './sockets.js';
 import userRoutes from './userRoutes.js';
 import validateRoutes from './validateRoutes.js';
-
+import rateLimit from 'express-rate-limit'; //to prevent brute-force and DDoS attacks
 // Load environment variables
 dotenv.config();
 
 const app = express();
 const PORT = process.env.PORT || 3000;
+const limiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 100, // limit each IP to 100 requests per windowMs
+  skip: (req) => req.path.startsWith('/users/') && req.path.endsWith('/streak'),
+});
 
 // Use the frontend URL from env or fallback to localhost:8080 for dev
 const FRONTEND_URL =
@@ -42,6 +47,8 @@ app.use(
   }),
 );
 app.use(express.json());
+
+app.use(limiter); // Apply rate limiting to all requests
 
 // Health check endpoint
 app.get('/health', (req, res) => {

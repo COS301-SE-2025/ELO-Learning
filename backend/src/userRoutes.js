@@ -249,11 +249,18 @@ router.post('/register', async (req, res) => {
     password,
     joinDate,
     location,
-    institution,
+    academic_institution,
   } = req.body;
 
   if (!name || !surname || !username || !email || !password) {
     return res.status(400).json({ error: 'All fields are required' });
+  }
+
+  // Validate username length
+  if (username.length > 15) {
+    return res
+      .status(400)
+      .json({ error: 'Username must be 15 characters or less' });
   }
 
   // Check if user already exists
@@ -308,7 +315,7 @@ router.post('/register', async (req, res) => {
         rank: defaultRank,
         daily_streak: default_daily_streak,
         location: location || null,
-        institution: institution || null,
+        academic_institution: academic_institution || null,
       },
     ])
     .select()
@@ -617,7 +624,8 @@ router.get(
         .eq('status', 'pending');
       if (error) {
         console.error(
-          `[PENDING FRIEND REQUESTS] Error for user id=${id}:`,
+          '[PENDING FRIEND REQUESTS] Error for user id=%s:',
+          id,
           error,
         );
         return res.status(500).json({
@@ -658,7 +666,8 @@ router.get(
       res.status(200).json({ pendingRequests });
     } catch (err) {
       console.error(
-        `[PENDING FRIEND REQUESTS] Unexpected error for user id=${id}:`,
+        '[PENDING FRIEND REQUESTS] Unexpected error for user id=%s:',
+        id,
         err,
       );
       res.status(500).json({
@@ -674,7 +683,7 @@ router.get(
 // Returns { friends, institution, locations }
 router.get('/user/:id/community', verifyToken, async (req, res) => {
   const { id } = req.params;
-  console.log(`[COMMUNITY] Route entered for user id=${id}`);
+  console.log('[COMMUNITY] Route entered for user id=%s', id);
   try {
     // Get academic_institution and location(s) from Users table
     const { data: user, error: userError } = await supabase
@@ -684,7 +693,8 @@ router.get('/user/:id/community', verifyToken, async (req, res) => {
       .single();
     if (userError || !user) {
       console.error(
-        `[COMMUNITY] User lookup failed for id=${id}. Error:`,
+        '[COMMUNITY] User lookup failed for id=%s. Error:',
+        id,
         userError,
         'User:',
         user,
@@ -702,7 +712,8 @@ router.get('/user/:id/community', verifyToken, async (req, res) => {
       .in('status', ['pending', 'accepted']);
     if (friendError) {
       console.error(
-        `[COMMUNITY] Failed to fetch friends for user id=${id}. Error:`,
+        '[COMMUNITY] Failed to fetch friends for user id=%s. Error:',
+        id,
         friendError,
       );
       return res
@@ -727,7 +738,8 @@ router.get('/user/:id/community', verifyToken, async (req, res) => {
         .in('id', friendIds);
       if (friendUserError) {
         console.error(
-          `[COMMUNITY] Failed to fetch friend details for ids=${friendIds}. Error:`,
+          '[COMMUNITY] Failed to fetch friend details for ids=%s. Error:',
+          friendIds,
           friendUserError,
         );
       }
@@ -775,7 +787,7 @@ router.get('/user/:id/community', verifyToken, async (req, res) => {
       location: normalizedLocation,
     });
   } catch (err) {
-    console.error(`[COMMUNITY] Unexpected error for user id=${id}:`, err);
+    console.error('[COMMUNITY] Unexpected error for user id=%s:', id, err);
     res
       .status(500)
       .json({ error: 'Failed to fetch community data', details: err.message });
@@ -799,7 +811,8 @@ router.put('/user/:id/community', verifyToken, async (req, res) => {
       .single();
     if (userError || !userExists) {
       console.error(
-        `[COMMUNITY PUT] User not found for id=${id}. Error:`,
+        '[COMMUNITY PUT] User not found for id=%s. Error:',
+        id,
         userError,
         'User:',
         userExists,
@@ -817,7 +830,8 @@ router.put('/user/:id/community', verifyToken, async (req, res) => {
       .single();
     if (updateError) {
       console.error(
-        `[COMMUNITY PUT] Failed to update academic_institution/location for user id=${id}. Error:`,
+        '[COMMUNITY PUT] Failed to update academic_institution/location for user id=%s. Error:',
+        id,
         updateError,
         'Payload:',
         { academic_institution, location },
@@ -829,7 +843,7 @@ router.put('/user/:id/community', verifyToken, async (req, res) => {
     }
     res.status(200).json({ message: 'Community data updated', user: data });
   } catch (err) {
-    console.error(`[COMMUNITY PUT] Unexpected error for user id=${id}:`, err);
+    console.error('[COMMUNITY PUT] Unexpected error for user id=%s:', id, err);
     res
       .status(500)
       .json({ error: 'Failed to update community data', details: err.message });
@@ -854,7 +868,8 @@ router.post('/user/:id/friend-request', verifyToken, async (req, res) => {
       .single();
     if (friendError || !friend) {
       console.error(
-        `[FRIEND REQUEST] Friend lookup failed for email=${friend_email}. Error:`,
+        '[FRIEND REQUEST] Friend lookup failed for email=%s. Error:',
+        friend_email,
         friendError,
         'Friend:',
         friend,
@@ -882,7 +897,9 @@ router.post('/user/:id/friend-request', verifyToken, async (req, res) => {
 
     if (existingError) {
       console.error(
-        `[FRIEND REQUEST] Lookup for existing request failed for user_id=${id}, friend_id=${friend.id}. Error:`,
+        '[FRIEND REQUEST] Lookup for existing request failed for user_id=%s, friend_id=%s. Error:',
+        id,
+        friend.id,
         existingError,
       );
       return res.status(500).json({
@@ -941,7 +958,9 @@ router.post('/user/:id/friend-request', verifyToken, async (req, res) => {
     res.status(201).json({ message: 'Friend request sent', request });
   } catch (err) {
     console.error(
-      `[FRIEND REQUEST] Unexpected error for sender id=${id}, friend_email=${req.body?.friend_email}:`,
+      '[FRIEND REQUEST] Unexpected error for sender id=%s, friend_email=%s:',
+      id,
+      req.body?.friend_email,
       err,
     );
     res

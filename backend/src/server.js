@@ -5,7 +5,7 @@ import express from 'express';
 
 import { createServer } from 'http';
 import { Server } from 'socket.io';
-
+import classroomWars from './classroomWars.js';
 import achievementRoutes from './achievementRoutes.js';
 import openaiRoutes from './openaiRoutes.js';
 import answerRoutes from './answerRoutes.js';
@@ -73,7 +73,7 @@ app.use('/api/avatar-unlockables', avatarUnlockablesRoutes);
 app.use('/', oauthRoutes);
 app.use('/', baselineRoutes);
 app.use('/notifications', pushNotificationRoutes);
-
+app.use('/', classroomWars);
 // Simple health check route
 app.get('/', (req, res) => {
   res.send('API is running successfully!');

@@ -1,3 +1,56 @@
+// ========== CLASSROOM WARS FUNCTIONS ==========
+/**
+ * Create a new Classroom War room
+ */
+export async function createClassroomWarRoom(creatorId, roomName) {
+  return axiosInstance.post('/classroom-wars/create', { creatorId, roomName });
+}
+
+/**
+ * Join an existing Classroom War room
+ */
+export async function joinClassroomWarRoom(userId, roomName) {
+  return axiosInstance.post('/classroom-wars/join', { userId, roomName });
+}
+
+/**
+ * Start the Classroom War game (only creator can start)
+ */
+export async function startClassroomWarGame(userId, roomName) {
+  return axiosInstance.post('/classroom-wars/start', { userId, roomName });
+}
+
+/**
+ * Get info for a Classroom War room
+ */
+export async function getClassroomWarRoom(roomName) {
+  return axiosInstance.get(`/classroom-wars/room/${roomName}`);
+}
+
+/**
+ * List all open Classroom War rooms
+ */
+export async function listClassroomWarRooms() {
+  return axiosInstance.get('/classroom-wars/rooms');
+}
+
+/**
+ * Submit answer for Classroom Wars game
+ */
+export async function submitClassroomWarAnswer({ roomName, userId, correct }) {
+  return axiosInstance.post('/classroom-wars/submit-answer', {
+    roomName,
+    userId,
+    correct,
+  });
+}
+
+/**
+ * End Classroom Wars game and get leaderboard
+ */
+export async function endClassroomWarGame({ roomName }) {
+  return axiosInstance.post('/classroom-wars/end', { roomName });
+}
 /**
  * Fetch community leaderboard (me + friends)
  * @param {string|number} userId - User ID

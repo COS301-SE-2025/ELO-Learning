@@ -28,7 +28,7 @@
     "firebase-admin": "^13.4.0",
     "jsonwebtoken": "^9.0.2",
     "mathjs": "^13.2.3",
-    "openai": "^5.22.1",
+    "openai": "^5.23.0",
     "socket.io": "^4.8.1",
     "supabase": "^2.34.3",
     "uuid": "^11.1.0"

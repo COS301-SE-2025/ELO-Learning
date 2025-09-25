@@ -248,11 +248,18 @@ router.post('/register', async (req, res) => {
     password,
     joinDate,
     location,
-    institution,
+    academic_institution,
   } = req.body;
 
   if (!name || !surname || !username || !email || !password) {
     return res.status(400).json({ error: 'All fields are required' });
+  }
+
+  // Validate username length
+  if (username.length > 15) {
+    return res
+      .status(400)
+      .json({ error: 'Username must be 15 characters or less' });
   }
 
   // Check if user already exists
@@ -307,7 +314,7 @@ router.post('/register', async (req, res) => {
         rank: defaultRank,
         daily_streak: default_daily_streak,
         location: location || null,
-        institution: institution || null,
+        academic_institution: academic_institution || null,
       },
     ])
     .select()

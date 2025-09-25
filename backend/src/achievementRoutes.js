@@ -381,7 +381,7 @@ export async function triggerAchievementProgress(
     // Only exclude ELO-specific types if they are being passed to this function
     let query = supabase
       .from('Achievements')
-      .select('id, condition_type, condition_value')
+      .select('name, id, condition_type, condition_value')
       .eq('condition_type', conditionType);
 
     // Don't apply the exclusion filter - let each achievement type be processed

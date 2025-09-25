@@ -1,89 +1,71 @@
-'use client';
 import QuestionsTracker from '@/app/ui/questions/questions-tracker';
-import { useSession } from 'next-auth/react';
-import { useParams, useRouter } from 'next/navigation';
+import { authOptions } from '@/lib/auth';
 import { fetchQuestionsByLevelAndTopic } from '@/services/api';
+import { getServerSession } from 'next-auth/next';
 import Link from 'next/link';
-import { useEffect, useState } from 'react';
+import { redirect } from 'next/navigation';
 
-export const dynamic = 'force-dynamic';
+export default async function PracticeTopic({ params }) {
+  const { topic } = await params;
+  const session = await getServerSession(authOptions);
 
-export default function PracticeTopic() {
-  const { topic } = useParams();
-  const { data: session, status } = useSession();
-  const router = useRouter();
-  const [questions, setQuestions] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  if (!session?.user) {
+    redirect('/api/auth/signin');
+  }
 
-  useEffect(() => {
-    if (status === 'loading') return;
+  const level = session.user.currentLevel || 1;
+  const apiResponse = await fetchQuestionsByLevelAndTopic(level, topic);
 
-    if (!session?.user) {
-      router.push('/api/auth/signin');
-      return;
-    }
-
-    const loadQuestions = async () => {
-      try {
-        const level = session.user.currentLevel || 1;
-        const apiResponse = await fetchQuestionsByLevelAndTopic(level, topic);
-
-        console.log('API Response:', apiResponse);
-        setQuestions(apiResponse);
-      } catch (err) {
-        console.error('Failed to fetch questions:', err);
-        setError(err.message);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    loadQuestions();
-  }, [topic, session, status, router]);
+  // Debug: Log what we're getting from the API
+  console.log('API Response:', apiResponse);
+  console.log('Type of response:', typeof apiResponse);
+  console.log('Is array:', Array.isArray(apiResponse));
 
   const submitCallback = async () => {
-    router.push('/end-screen?mode=practice');
+    'use server';
+    redirect('/end-screen?mode=practice');
   };
 
-  if (status === 'loading' || loading) {
-    return <div>Loading...</div>;
+  // Handle different response formats
+  let questions = [];
+  if (Array.isArray(apiResponse)) {
+    questions = apiResponse;
+  } else if (apiResponse && typeof apiResponse === 'object') {
+    // Maybe the questions are nested in the response object
+    questions = apiResponse.questions || apiResponse.data || [];
   }
 
-  if (error) {
+  // Defensive check
+  if (!questions || !Array.isArray(questions) || questions.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-screen">
-        <h1 className="text-2xl font-bold mb-4">Error Loading Questions</h1>
-        <p className="text-red-600 mb-4">{error}</p>
-        <Link href="/practice" className="text-blue-500 hover:underline">
-          ← Back to Practice
-        </Link>
+      <div className="h-full flex items-center justify-center">
+        <div className="text-center">
+          <h2 className="text-2xl font-bold mb-4 text-[#7d32ce]">
+            No Questions Available
+          </h2>
+          <p className="mb-4">
+            No questions found for this topic at level {level}.
+          </p>
+          <Link href="/practice" className="main-button py-2 px-4">
+            <button className="py-2 px-4">Back to Practice</button>
+          </Link>
+        </div>
       </div>
     );
   }
 
-  if (!questions || questions.length === 0) {
-    return (
-      <div className="flex flex-col items-center justify-center min-h-screen">
-        <h1 className="text-2xl font-bold mb-4">No Questions Available</h1>
-        <p className="mb-4">
-          There are no questions available for {decodeURIComponent(topic)} at
-          your current level.
-        </p>
-        <Link href="/practice" className="text-blue-500 hover:underline">
-          ← Back to Practice
-        </Link>
-      </div>
-    );
-  }
+  // Shuffle questions and limit to reasonable number
+  const shuffledQuestions = questions
+    .sort(() => 0.5 - Math.random())
+    .slice(0, 10);
 
   return (
     <div className="full-screen w-full h-full flex flex-col justify-between">
       <QuestionsTracker
-        questions={questions}
-        userId={session.user.id}
-        gameType="practice"
+        questions={shuffledQuestions}
         submitCallback={submitCallback}
+        lives={5}
+        mode="practice"
       />
     </div>
   );

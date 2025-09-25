@@ -1,6 +1,6 @@
 'use client';
 import { useRouter } from 'next/navigation';
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { skipBaselineTest } from '@/services/api'; // Keep the existing import
 import { useSession } from 'next-auth/react';
 
@@ -13,9 +13,37 @@ export default function BaselineTestOption({
   const [showConfirmDialog, setShowConfirmDialog] = useState(false);
   const [loading, setLoading] = useState(false);
 
+  // Loading component matching the baseline test style
+  const LoadingComponent = useMemo(
+    () => (
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur">
+        <div className="flex flex-col items-center justify-center">
+          <div className="flex space-x-2 mb-4">
+            {[0, 150, 300].map((delay) => (
+              <div
+                key={delay}
+                className="animate-bounce rounded-full h-5 w-5 bg-[#FF6E99] mb-4"
+                style={{ animationDelay: `${delay}ms` }}
+              ></div>
+            ))}
+          </div>
+          <p className="text-lg font-bold text-white">
+            Skipping Baseline...
+          </p>
+        </div>
+      </div>
+    ),
+    [],
+  );
+
   // Don't show this component if user has already taken the baseline test
   if (userHasTakenBaseline) {
     return null;
+  }
+
+  // Show loading screen when skipping
+  if (loading) {
+    return LoadingComponent;
   }
 
   const handleTakeBaselineTest = () => {
@@ -53,6 +81,18 @@ export default function BaselineTestOption({
       setShowConfirmDialog(false);
     } catch (error) {
       console.error('Failed to skip baseline test:', error);
+      
+      // Handle specific error types
+      if (error.response?.status === 429) {
+        alert('Too many requests. Please wait a moment and try again.');
+      } else if (error.response?.status >= 500) {
+        alert('Server error. Please try again later.');
+      } else {
+        alert('Failed to skip baseline test. Please try again.');
+      }
+      
+      // Keep the confirmation dialog open on error so user can retry
+      // Don't close the dialog here - let user decide to cancel or retry
     } finally {
       setLoading(false);
     }
@@ -112,7 +152,7 @@ export default function BaselineTestOption({
                 onClick={handleConfirmSkip}
                 disabled={loading}
               >
-                {loading ? 'Skipping...' : 'Yes, Skip Forever'}
+                Yes, Skip Forever
               </button>
               <button
                 className="flex-1 py-2 font-bold rounded-lg bg-[var(--vector-violet)] text-white hover:bg-[var(--blueprint-blue)] disabled:opacity-50"

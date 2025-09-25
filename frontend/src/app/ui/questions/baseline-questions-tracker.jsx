@@ -31,6 +31,7 @@ export default function QuestionsTracker({ questions, userId, onComplete }) {
   const [levelHistory, setLevelHistory] = useState([5]); // Track level changes for bounce detection
   const [consecutiveAtLevel1Wrong, setConsecutiveAtLevel1Wrong] = useState(0); // Track level 1 failures
   const [consecutiveAtLevel10Right, setConsecutiveAtLevel10Right] = useState(0); // Track level 10 successes
+  const [askedQuestionIds, setAskedQuestionIds] = useState(new Set()); // Track asked questions to prevent repeats
 
   // loading component
   const LoadingComponent = useMemo(
@@ -92,6 +93,10 @@ export default function QuestionsTracker({ questions, userId, onComplete }) {
 
           setCurrQuestion(firstQuestion);
           setCurrAnswers(firstQuestion.answers || firstQuestion.Answers || []);
+          
+          // Track this question as asked to prevent repeats
+          setAskedQuestionIds(prev => new Set([...prev, firstQuestion.Q_id || firstQuestion.id]));
+          
           console.log(' First question initialized');
         }
       } catch (error) {
@@ -160,6 +165,53 @@ export default function QuestionsTracker({ questions, userId, onComplete }) {
     });
 
     localStorage.setItem('baselineQuestionsObj', JSON.stringify(questionsObj));
+  };
+
+  // Function to fetch a unique question (not asked before)
+  const fetchUniqueQuestion = async (level, maxAttempts = 10) => {
+    let attempts = 0;
+    let question = null;
+    
+    while (attempts < maxAttempts) {
+      try {
+        const fetchedQuestion = await fetchNextRandomBaselineQuestion(level);
+        const questionId = fetchedQuestion.Q_id || fetchedQuestion.id;
+        
+        // Check if we've already asked this question
+        if (!askedQuestionIds.has(questionId)) {
+          question = fetchedQuestion;
+          break;
+        }
+        
+        console.log(`Question ${questionId} already asked, fetching another...`);
+        attempts++;
+      } catch (error) {
+        console.error(`Attempt ${attempts + 1} failed:`, error);
+        attempts++;
+      }
+    }
+    
+    if (!question) {
+      console.warn('Could not find unique question, using fallback from provided questions');
+      // Fallback: use provided questions if available
+      const unusedQuestions = allQuestions.filter(q => 
+        !askedQuestionIds.has(q.Q_id || q.id) && q.level === level
+      );
+      
+      if (unusedQuestions.length > 0) {
+        question = unusedQuestions[Math.floor(Math.random() * unusedQuestions.length)];
+      } else {
+        // Final fallback: use any unused question from provided questions
+        const anyUnusedQuestions = allQuestions.filter(q => 
+          !askedQuestionIds.has(q.Q_id || q.id)
+        );
+        if (anyUnusedQuestions.length > 0) {
+          question = anyUnusedQuestions[Math.floor(Math.random() * anyUnusedQuestions.length)];
+        }
+      }
+    }
+    
+    return question;
   };
 
   const submitAnswer = async () => {
@@ -270,6 +322,9 @@ export default function QuestionsTracker({ questions, userId, onComplete }) {
         );
         console.log(' User ELO updated successfully:', response);
 
+        // Clear the popup interaction flag since user has now completed the test
+        localStorage.removeItem(`baseline_popup_seen_${userId}`);
+
         // Update session with the returned user data
         if (response.user) {
           await update({
@@ -318,19 +373,33 @@ export default function QuestionsTracker({ questions, userId, onComplete }) {
 
     // Remove loading state - fetch next question immediately
     try {
-      //fetch next random question from the database
-      console.log('Fetching next question for step:', currentStep + 1);
-      const nextQuestion = await fetchNextRandomBaselineQuestion(nextLevel);
-      console.log('Next question fetched:', nextQuestion);
-
-      // Set next question immediately without delay
-      setCurrQuestion(nextQuestion);
-      setCurrAnswers(nextQuestion.answers || []);
+      //fetch next random question from the database (ensuring no repeats)
+      console.log('Fetching next unique question for step:', currentStep + 1, 'at level:', nextLevel);
+      const nextQuestion = await fetchUniqueQuestion(nextLevel);
+      
+      if (nextQuestion) {
+        console.log('Next unique question fetched:', nextQuestion);
+        
+        // Track this question as asked
+        const questionId = nextQuestion.Q_id || nextQuestion.id;
+        setAskedQuestionIds(prev => new Set([...prev, questionId]));
+        
+        // Set next question immediately without delay
+        setCurrQuestion(nextQuestion);
+        setCurrAnswers(nextQuestion.answers || []);
+      } else {
+        throw new Error('No unique question available');
+      }
     } catch (error) {
-      console.error(' Failed to fetch next question:', error);
+      console.error('Failed to fetch next unique question:', error);
       // Fallback to using static questions if available
       if (allQuestions.length > currentStep) {
         const fallbackQuestion = allQuestions[currentStep];
+        const questionId = fallbackQuestion.Q_id || fallbackQuestion.id;
+        
+        // Track this question as asked
+        setAskedQuestionIds(prev => new Set([...prev, questionId]));
+        
         setCurrQuestion(fallbackQuestion);
         setCurrAnswers(
           fallbackQuestion.answers || fallbackQuestion.Answers || [],
@@ -367,6 +436,7 @@ export default function QuestionsTracker({ questions, userId, onComplete }) {
         <BaselineQuestionHeader
           currentStep={currentStep}
           totalSteps={totalSteps}
+          userId={userId}
         />
         <div>
           <QuestionTemplate question={currQuestion.questionText} />

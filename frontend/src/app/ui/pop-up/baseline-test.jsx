@@ -1,5 +1,5 @@
 'use client';
-import { confirmBaselineTest } from '@/services/api';
+
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
@@ -10,6 +10,9 @@ export default function BaselineTestPopup({ user_id, onClose }) {
   const [loading, setLoading] = useState(false);
 
   const handleNo = async () => {
+    // Mark that user has interacted with the popup
+    localStorage.setItem(`baseline_popup_seen_${user_id}`, 'true');
+    
     // Just close the popup without updating the database
     // The option to take the baseline test will appear in the profile page
     onClose();
@@ -21,41 +24,15 @@ export default function BaselineTestPopup({ user_id, onClose }) {
       return;
     }
 
-    setLoading(true);
-    try {
-      // Set baseLineTest to true since user confirmed they want to take the test
-      const response = await confirmBaselineTest(user_id);
-      console.log(' confirmBaselineTest response:', response);
+    // Mark that user has interacted with the popup
+    localStorage.setItem(`baseline_popup_seen_${user_id}`, 'true');
+    
+    // Close the popup before navigating
+    onClose();
 
-      // Update session with the returned user data
-      if (response.user) {
-        await update({
-          user: {
-            ...session.user,
-            ...response.user, // Use the complete updated user data from backend
-          },
-        });
-        console.log(' Session updated with backend response');
-      } else {
-        // Fallback: just update baseLineTest field
-        await update({
-          user: {
-            ...session.user,
-            base_line_test: true,
-          },
-        });
-        console.log(' Session updated with fallback baseLineTest');
-      }
-
-      // Navigate to baseline test
-      router.push('/baseline-game');
-    } catch (err) {
-      console.error('Error confirming baseline test:', err);
-      // Still navigate to test even if confirmation fails
-      router.push('/baseline-game');
-    } finally {
-      setLoading(false);
-    }
+    // Don't set base_line_test to true yet - only when test is completed
+    // Just navigate to the baseline test directly
+    router.push('/baseline-game');
   };
 
   return (

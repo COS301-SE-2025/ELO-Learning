@@ -136,6 +136,14 @@ function DashboardContent() {
 
         // Only show popup for newly registered users (within 24 hours) who haven't taken the baseline test
         if (session.user.baseLineTest === false && session.user.joinDate) {
+          // Check if user has already interacted with the popup
+          const hasInteractedWithPopup = localStorage.getItem(`baseline_popup_seen_${session.user.id}`) === 'true';
+          
+          if (hasInteractedWithPopup) {
+            console.log(' User has already interacted with baseline popup, not showing again');
+            return;
+          }
+
           const joinDate = new Date(session.user.joinDate);
           const now = new Date();
           const hoursSinceJoin = (now - joinDate) / (1000 * 60 * 60); // Convert to hours

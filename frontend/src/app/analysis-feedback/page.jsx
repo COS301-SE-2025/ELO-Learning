@@ -307,10 +307,10 @@ export default function AnalysisFeedbackPage() {
               <div
                 id="analysis-scroll"
                 className="flex overflow-x-auto scroll-smooth h-full snap-x snap-mandatory pb-24"
-                style={{ scrollbarWidth: 'none' }}
+                style={{ width: '100vw' }}
               >
                 {/* Accuracy Section */}
-                <section className="min-w-full snap-center px-6">
+                <section className="w-screen snap-center flex-shrink-0 px-6">
                   <h2 className="text-lg font-semibold mb-2 text-white text-center">
                     Accuracy Over Time
                   </h2>
@@ -413,7 +413,7 @@ export default function AnalysisFeedbackPage() {
                 </section>
 
                 {/* Best Topics Section */}
-                <section className="min-w-full snap-center px-6">
+                <section className="w-screen snap-center flex-shrink-0 px-6">
                   <h2 className="text-lg font-semibold mb-2 text-white text-center">
                     Best Topics
                   </h2>
@@ -467,7 +467,7 @@ export default function AnalysisFeedbackPage() {
                 </section>
 
                 {/* Worst Topics Section */}
-                <section className="min-w-full snap-center px-6">
+                <section className="w-screen snap-center flex-shrink-0 px-6">
                   <h2 className="text-lg font-semibold mb-2 text-white text-center">
                     Weaker Topics
                   </h2>
@@ -520,7 +520,7 @@ export default function AnalysisFeedbackPage() {
                 </section>
 
                 {/* Topic Depth Section */}
-                <section className="min-w-full snap-center px-6">
+                <section className="w-screen snap-center flex-shrink-0 px-6">
                   <h2 className="text-lg font-semibold mb-2 text-white text-center">
                     Topic Depth
                   </h2>
@@ -584,7 +584,7 @@ export default function AnalysisFeedbackPage() {
                   )}
                 </section>
 
-                <section className="min-w-full snap-center px-6">
+                <section className="w-screen snap-center flex-shrink-0 px-6">
                   <h2 className="text-lg font-semibold mb-2 text-white text-center">
                     Motivation & Tips
                   </h2>

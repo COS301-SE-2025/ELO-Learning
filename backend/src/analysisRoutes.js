@@ -84,12 +84,12 @@ router.get('/topic-stats/:userId', async (req, res) => {
       topicMap[q_topic].correct += isCorrect ? 1 : 0;
     });
 
-    const topicStats = Object.entries(topicMap).map(
-      ([topic, { correct, total }]) => ({
+    const topicStats = Object.entries(topicMap)
+      .filter(([_, { total }]) => total > 0) // only keep topics with attempts
+      .map(([topic, { correct, total }]) => ({
         topic,
-        accuracy: total > 0 ? (correct / total) * 100 : 0,
-      }),
-    );
+        accuracy: (correct / total) * 100,
+      }));
 
     // Sort for best/worst
     const sorted = topicStats.sort((a, b) => b.accuracy - a.accuracy);

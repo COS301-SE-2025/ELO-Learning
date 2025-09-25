@@ -1449,3 +1449,9 @@ export const fetchUserTopicDepth = async (userId) => {
   const response = await axiosInstance.get(`/topic-depth/${userId}`);
   return response.data;
 };
+
+export const fetchUserMotivationTips = async (userId) => {
+  const response = await axiosInstance.get(`/motivation-tips/${userId}`);
+  return response.data;
+  // { success: true, motivation: string, tips: string[] }
+};

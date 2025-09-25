@@ -10,6 +10,7 @@ import {
   fetchUserAccuracy,
   fetchUserTopicStats,
   fetchUserTopicDepth,
+  fetchUserMotivationTips,
 } from '@/services/api';
 import {
   LineChart,
@@ -39,6 +40,10 @@ export default function AnalysisFeedbackPage() {
   const [worstTopicFeedback, setWorstTopicFeedback] = useState('');
   const [topicDepth, setTopicDepth] = useState(null);
   const [coverageFeedback, setCoverageFeedback] = useState('');
+  const [motivationData, setMotivationData] = useState({
+    motivation: '',
+    tips: [],
+  });
 
   // Helper: normalize / format incoming accuracy items
   function normalizeAndSortAccuracy(raw) {
@@ -130,6 +135,15 @@ export default function AnalysisFeedbackPage() {
         if (topicDepthRes?.success) {
           setTopicDepth(topicDepthRes.topicDepth || []);
           setCoverageFeedback(topicDepthRes.depthFeedback || '');
+        }
+
+        const motivationRes = await fetchUserMotivationTips(userId);
+
+        if (motivationRes?.success) {
+          setMotivationData({
+            motivation: motivationRes.motivation || '',
+            tips: motivationRes.tips || [],
+          });
         }
 
         // Generate topic feedback
@@ -568,6 +582,30 @@ export default function AnalysisFeedbackPage() {
                       </p>
                     </div>
                   )}
+                </section>
+
+                <section className="min-w-full snap-center px-6">
+                  <h2 className="text-lg font-semibold mb-2 text-white text-center">
+                    Motivation & Tips
+                  </h2>
+                  <div className="bg-gray-900 rounded-xl p-4">
+                    {motivationData.motivation ? (
+                      <div>
+                        <p className="text-xl md:text-2xl font-semibold text-pink-400 mb-4 text-center">
+                          {motivationData.motivation}
+                        </p>
+                        <ul className="list-disc pl-5 text-white space-y-1">
+                          {motivationData.tips.map((tip, i) => (
+                            <li key={i}>{tip}</li>
+                          ))}
+                        </ul>
+                      </div>
+                    ) : (
+                      <p className="text-gray-400 text-center">
+                        No motivation tips yet.
+                      </p>
+                    )}
+                  </div>
                 </section>
               </div>
               {/* Left arrow: lowered */}

@@ -1,5 +1,6 @@
 import express from 'express';
 import { supabase } from '../database/supabaseClient.js';
+import { generateMotivationTips } from './utils/motivationTips.js';
 
 const router = express.Router();
 
@@ -207,6 +208,39 @@ router.get('/topic-depth/:userId', async (req, res) => {
     return res
       .status(500)
       .json({ success: false, message: 'Internal server error' });
+  }
+});
+
+router.get('/motivation-tips/:userId', async (req, res) => {
+  try {
+    const userId = parseInt(req.params.userId, 10);
+    if (!Number.isFinite(userId)) {
+      return res
+        .status(400)
+        .json({ success: false, message: 'Invalid userId' });
+    }
+
+    // Fetch relevant data from existing routes / tables
+    const { data: accuracyData } = await supabase
+      .from('QuestionAttempts')
+      .select('q_topic, isCorrect, timeSpent')
+      .eq('user_id', userId);
+
+    const { data: topicStats } = await supabase
+      .from('QuestionAttempts')
+      .select('q_topic, isCorrect')
+      .eq('user_id', userId);
+
+    // Generate personalized messages
+    const { motivation, tips } = generateMotivationTips({
+      accuracyData,
+      topicStats,
+    });
+
+    res.json({ success: true, motivation, tips });
+  } catch (err) {
+    console.error('Error generating motivation & tips:', err);
+    res.status(500).json({ success: false, message: 'Internal server error' });
   }
 });
 

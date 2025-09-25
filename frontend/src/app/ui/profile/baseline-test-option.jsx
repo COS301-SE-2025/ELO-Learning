@@ -27,9 +27,7 @@ export default function BaselineTestOption({
               ></div>
             ))}
           </div>
-          <p className="text-lg font-bold text-white">
-            Skipping Baseline...
-          </p>
+          <p className="text-lg font-bold text-white">Skipping Baseline...</p>
         </div>
       </div>
     ),
@@ -81,7 +79,7 @@ export default function BaselineTestOption({
       setShowConfirmDialog(false);
     } catch (error) {
       console.error('Failed to skip baseline test:', error);
-      
+
       // Handle specific error types
       if (error.response?.status === 429) {
         alert('Too many requests. Please wait a moment and try again.');
@@ -90,7 +88,7 @@ export default function BaselineTestOption({
       } else {
         alert('Failed to skip baseline test. Please try again.');
       }
-      
+
       // Keep the confirmation dialog open on error so user can retry
       // Don't close the dialog here - let user decide to cancel or retry
     } finally {

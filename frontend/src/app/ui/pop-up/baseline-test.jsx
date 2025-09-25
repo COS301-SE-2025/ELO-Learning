@@ -12,7 +12,7 @@ export default function BaselineTestPopup({ user_id, onClose }) {
   const handleNo = async () => {
     // Mark that user has interacted with the popup
     localStorage.setItem(`baseline_popup_seen_${user_id}`, 'true');
-    
+
     // Just close the popup without updating the database
     // The option to take the baseline test will appear in the profile page
     onClose();
@@ -26,7 +26,7 @@ export default function BaselineTestPopup({ user_id, onClose }) {
 
     // Mark that user has interacted with the popup
     localStorage.setItem(`baseline_popup_seen_${user_id}`, 'true');
-    
+
     // Close the popup before navigating
     onClose();
 

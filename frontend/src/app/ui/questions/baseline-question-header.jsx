@@ -3,7 +3,11 @@ import { X } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 
-export default function BaselineQuestionHeader({ currentStep, totalSteps, userId }) {
+export default function BaselineQuestionHeader({
+  currentStep,
+  totalSteps,
+  userId,
+}) {
   const router = useRouter();
   const [showExitDialog, setShowExitDialog] = useState(false);
 
@@ -16,12 +20,12 @@ export default function BaselineQuestionHeader({ currentStep, totalSteps, userId
     localStorage.removeItem('baselineQuestionsObj');
     localStorage.removeItem('baselineFinalElo');
     localStorage.removeItem('baselineAssignedRank');
-    
+
     // Clear the popup interaction flag so user can see the popup again if needed
     if (userId) {
       localStorage.removeItem(`baseline_popup_seen_${userId}`);
     }
-    
+
     // Navigate back to dashboard
     router.push('/dashboard');
   };
@@ -34,7 +38,10 @@ export default function BaselineQuestionHeader({ currentStep, totalSteps, userId
     <>
       <div className="fixed top-0 left-0 w-full z-20 bg-[#201F1F] p-5">
         <div className="flex flex-row items-center justify-between w-full py-2 gap-2">
-          <button onClick={handleExitClick} className="text-white hover:text-gray-300">
+          <button
+            onClick={handleExitClick}
+            className="text-white hover:text-gray-300"
+          >
             <X size={24} />
           </button>
           <div className="flex-1">
@@ -49,7 +56,8 @@ export default function BaselineQuestionHeader({ currentStep, totalSteps, userId
           <div className="bg-[var(--background)] rounded-xl shadow-lg p-6 w-[90%] max-w-md">
             <h2 className="text-2xl font-bold">Exit Baseline Test?</h2>
             <p className="mt-2">
-              Are you sure you want to exit the baseline test? Your progress will be lost and you can take the test again later.
+              Are you sure you want to exit the baseline test? Your progress
+              will be lost and you can take the test again later.
             </p>
 
             <div className="mt-6 flex gap-4">

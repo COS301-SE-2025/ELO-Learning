@@ -131,9 +131,9 @@ router.post('/classroom-wars/start', async (req, res) => {
 });
 
 // Submit answer (update lives, XP, accuracy)
-// Expects: { roomName, userId, correct (bool) }
+// Expects: { roomName, userId, answer, questionIdx }
 router.post('/classroom-wars/submit-answer', (req, res) => {
-  const { roomName, userId, correct } = req.body;
+  const { roomName, userId, answer, questionIdx } = req.body;
   const room = classroomWarsRooms.get(roomName);
   if (!room || !room.started) {
     return res.status(404).json({ error: 'Room not found or not started' });
@@ -145,7 +145,16 @@ router.post('/classroom-wars/submit-answer', (req, res) => {
       .json({ error: 'Player not found or already finished' });
   }
   player.answered++;
-  if (correct) {
+  // Validate answer against correct answer for current question
+  const question = room.gameState.questions[questionIdx];
+  let isCorrect = false;
+  if (question && question.correctAnswer !== undefined) {
+    // Accept string or number match, case-insensitive
+    isCorrect =
+      String(answer).trim().toLowerCase() ===
+      String(question.correctAnswer).trim().toLowerCase();
+  }
+  if (isCorrect) {
     player.correct++;
     player.xp += 10; // Simple XP for correct answer
   } else {
@@ -166,6 +175,7 @@ router.post('/classroom-wars/submit-answer', (req, res) => {
     xp: player.xp,
     accuracy: player.accuracy,
     finished: player.finished,
+    isCorrect,
   });
 });
 

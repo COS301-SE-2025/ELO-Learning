@@ -27,19 +27,45 @@ export default function ClassroomWarsPage() {
   const [leaderboard, setLeaderboard] = useState([]);
   const [questions, setQuestions] = useState([]);
 
+  // Debug info: log relevant state changes to console
+  useEffect(() => {
+    if (
+      gameStarted ||
+      gameState?.playerStates?.[userId]?.finished ||
+      answer !== '' ||
+      !currentRoom?.name
+    ) {
+      console.log(
+        `[ClassroomWars Debug] gameStarted=${gameStarted}, currentRoom.name=${currentRoom?.name}, finished=${gameState?.playerStates?.[userId]?.finished}, answer=${answer}`,
+      );
+    }
+  }, [
+    gameStarted,
+    currentRoom?.name,
+    gameState?.playerStates?.[userId]?.finished,
+    answer,
+  ]);
+
   useEffect(() => {
     // Listen for game started event
     const gameStartedHandler = (data) => {
       console.log(
         `[Socket] classroomWarsGameStarted received for room: ${data.roomName}`,
       );
-      if (!currentRoom || !currentRoom.name) return;
-      if (data.roomName === currentRoom.name) {
-        setGameStarted(true);
-        setQuestions(data.questions || []);
-        setQuestionIdx(0);
-        handleGetRoomInfo(data.roomName);
-      }
+      if (!data.roomName) return;
+      setCurrentRoom((prev) => ({
+        ...prev,
+        name: data.roomName,
+        players: data.players,
+        started: true,
+        gameState: prev?.gameState || {},
+      }));
+      setGameStarted(true);
+      setQuestions(data.questions || []);
+      setQuestionIdx(0);
+      // Directly set roomName state for answer submission
+      setRoomName(data.roomName);
+      handleGetRoomInfo(data.roomName);
     };
     classroomWarsSocket.on('classroomWarsGameStarted', gameStartedHandler);
     // Cleanup listener on unmount
@@ -94,15 +120,24 @@ export default function ClassroomWarsPage() {
 
   // Start game
   const handleStartGame = async () => {
+    console.log(
+      'Calling startClassroomWarGame with:',
+      userId,
+      currentRoom?.name,
+    );
     try {
       const res = await startClassroomWarGame(userId, currentRoom.name);
       setGameStarted(true);
       setError('');
       // Fetch initial game state and show game UI for all users
       const info = await getClassroomWarRoom(currentRoom.name);
+      // Always preserve room name
+      setCurrentRoom((prev) => ({
+        ...info.data,
+        name: info.data.name || prev?.name || currentRoom.name,
+      }));
       setGameState(info.data.gameState);
       setPlayers(info.data.players);
-      setCurrentRoom(info.data); // Ensure currentRoom is updated for all users
       fetchRooms();
     } catch (err) {
       setError(err.response?.data?.error || 'Failed to start game');
@@ -113,7 +148,11 @@ export default function ClassroomWarsPage() {
   const handleGetRoomInfo = async (name) => {
     try {
       const res = await getClassroomWarRoom(name);
-      setCurrentRoom(res.data);
+      // Always preserve room name
+      setCurrentRoom((prev) => ({
+        ...res.data,
+        name: res.data.name || prev?.name || name,
+      }));
       setPlayers(res.data.players);
       setGameStarted(res.data.started);
       setGameState(res.data.gameState);
@@ -125,11 +164,24 @@ export default function ClassroomWarsPage() {
 
   // Submit answer for current question
   const handleSubmitAnswer = async (isCorrect) => {
+    if (!currentRoom?.name) {
+      setError('No room name found. Please rejoin the room.');
+      return;
+    }
+    console.log(
+      'Submitting answer for room:',
+      currentRoom?.name,
+      'user:',
+      userId,
+      'gameStarted:',
+      gameStarted,
+    );
     try {
       const res = await submitClassroomWarAnswer({
         roomName: currentRoom.name,
         userId,
-        correct: isCorrect,
+        answer,
+        questionIdx,
       });
       // Update local game state
       setGameState((prev) => {
@@ -137,6 +189,15 @@ export default function ClassroomWarsPage() {
         updated.playerStates[userId] = res.data;
         return updated;
       });
+      // Show feedback for correct/incorrect
+      if (res.data.isCorrect !== undefined) {
+        if (res.data.isCorrect) {
+          setError('✅ Correct!');
+        } else {
+          setError('❌ Incorrect!');
+        }
+        setTimeout(() => setError(''), 1200);
+      }
       // Next question or end
       if (res.data.finished) {
         handleEndGame();
@@ -279,11 +340,17 @@ export default function ClassroomWarsPage() {
             disabled={gameState.playerStates[userId]?.finished}
           />
           <button
-            onClick={() =>
-              handleSubmitAnswer(answer.trim().toLowerCase() === 'correct')
-            }
+            onClick={() => {
+              console.log('Submit button clicked');
+              handleSubmitAnswer(answer.trim().toLowerCase() === 'correct');
+            }}
             className="main-button bg-blue-600 text-white px-4 py-2 rounded"
-            disabled={gameState.playerStates[userId]?.finished || !answer}
+            disabled={
+              !gameStarted ||
+              !currentRoom?.name ||
+              gameState.playerStates[userId]?.finished ||
+              !answer
+            }
           >
             Submit Answer
           </button>
@@ -291,28 +358,47 @@ export default function ClassroomWarsPage() {
       )}
       {/* Leaderboard UI */}
       {showLeaderboard && (
-        <div className="mb-4 border p-4 rounded bg-yellow-50">
-          <h4 className="font-bold mb-2">Leaderboard</h4>
-          <table className="w-full border">
-            <thead>
+        <div className="mb-4 border p-4 rounded bg-gradient-to-br from-blue-100 to-purple-200 shadow-lg">
+          <h4 className="font-bold mb-4 text-xl text-purple-900">
+            🏆 Final Leaderboard
+          </h4>
+          <table className="w-full border rounded overflow-hidden">
+            <thead className="bg-gradient-to-r from-blue-600 to-purple-600">
               <tr>
-                <th className="border px-2 py-1">Player</th>
-                <th className="border px-2 py-1">XP</th>
-                <th className="border px-2 py-1">Accuracy</th>
-                <th className="border px-2 py-1">Answered</th>
-                <th className="border px-2 py-1">Correct</th>
+                <th className="border px-3 py-2 text-white">Rank</th>
+                <th className="border px-3 py-2 text-white">Player</th>
+                <th className="border px-3 py-2 text-white">XP</th>
+                <th className="border px-3 py-2 text-white">Accuracy</th>
+                <th className="border px-3 py-2 text-white">Answered</th>
+                <th className="border px-3 py-2 text-white">Correct</th>
               </tr>
             </thead>
             <tbody>
-              {leaderboard.map((entry) => (
-                <tr key={entry.userId}>
-                  <td className="border px-2 py-1">{entry.userId}</td>
-                  <td className="border px-2 py-1">{entry.xp}</td>
-                  <td className="border px-2 py-1">
+              {leaderboard.map((entry, idx) => (
+                <tr
+                  key={entry.userId}
+                  className={
+                    idx === 0
+                      ? 'bg-blue-300 font-bold text-blue-900'
+                      : idx === 1
+                        ? 'bg-purple-200 font-semibold text-purple-900'
+                        : idx === 2
+                          ? 'bg-blue-100 text-blue-900'
+                          : 'bg-white'
+                  }
+                >
+                  <td className="border px-3 py-2 text-center">{idx + 1}</td>
+                  <td className="border px-3 py-2">{entry.userId}</td>
+                  <td className="border px-3 py-2 text-center">{entry.xp}</td>
+                  <td className="border px-3 py-2 text-center">
                     {(entry.accuracy * 100).toFixed(1)}%
                   </td>
-                  <td className="border px-2 py-1">{entry.answered}</td>
-                  <td className="border px-2 py-1">{entry.correct}</td>
+                  <td className="border px-3 py-2 text-center">
+                    {entry.answered}
+                  </td>
+                  <td className="border px-3 py-2 text-center">
+                    {entry.correct}
+                  </td>
                 </tr>
               ))}
             </tbody>

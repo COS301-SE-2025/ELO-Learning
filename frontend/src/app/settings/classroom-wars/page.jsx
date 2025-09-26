@@ -1,5 +1,6 @@
 'use client';
 import { useState, useEffect } from 'react';
+import classroomWarsSocket from '@/utils/classroomWarsSocket';
 import {
   createClassroomWarRoom,
   joinClassroomWarRoom,
@@ -24,6 +25,28 @@ export default function ClassroomWarsPage() {
   const [answer, setAnswer] = useState('');
   const [showLeaderboard, setShowLeaderboard] = useState(false);
   const [leaderboard, setLeaderboard] = useState([]);
+  const [questions, setQuestions] = useState([]);
+
+  useEffect(() => {
+    // Listen for game started event
+    const gameStartedHandler = (data) => {
+      console.log(
+        `[Socket] classroomWarsGameStarted received for room: ${data.roomName}`,
+      );
+      if (!currentRoom || !currentRoom.name) return;
+      if (data.roomName === currentRoom.name) {
+        setGameStarted(true);
+        setQuestions(data.questions || []);
+        setQuestionIdx(0);
+        handleGetRoomInfo(data.roomName);
+      }
+    };
+    classroomWarsSocket.on('classroomWarsGameStarted', gameStartedHandler);
+    // Cleanup listener on unmount
+    return () => {
+      classroomWarsSocket.off('classroomWarsGameStarted', gameStartedHandler);
+    };
+  }, [currentRoom, userId]);
 
   // Fetch open rooms
   const fetchRooms = async () => {
@@ -43,6 +66,9 @@ export default function ClassroomWarsPage() {
       setIsCreator(true);
       setPlayers([userId]);
       setError('');
+      // Ensure creator joins socket room immediately
+      console.log(`[Socket] Creator emitting joinRoom for ${roomName}`);
+      classroomWarsSocket.emit('joinRoom', roomName);
       fetchRooms();
     } catch (err) {
       setError(err.response?.data?.error || 'Failed to create room');
@@ -57,6 +83,9 @@ export default function ClassroomWarsPage() {
       setIsCreator(false);
       setPlayers(res.data.players);
       setError('');
+      // Join socket room after successful API join
+      console.log(`[Socket] Emitting joinRoom for ${name}`);
+      classroomWarsSocket.emit('joinRoom', name);
       fetchRooms();
     } catch (err) {
       setError(err.response?.data?.error || 'Failed to join room');
@@ -200,6 +229,12 @@ export default function ClassroomWarsPage() {
               onClick={async () => {
                 setError('');
                 setGameStarted(false);
+                if (!userId || !players.includes(userId)) {
+                  setError(
+                    'Enter your User ID and join the room before starting the game.',
+                  );
+                  return;
+                }
                 try {
                   await handleStartGame();
                 } catch (err) {
@@ -207,6 +242,7 @@ export default function ClassroomWarsPage() {
                 }
               }}
               className="main-button w-full sm:w-auto px-4 py-2 rounded mt-2 text-base sm:text-lg"
+              disabled={!userId || !players.includes(userId)}
             >
               Start Game
             </button>
@@ -214,36 +250,39 @@ export default function ClassroomWarsPage() {
         </div>
       )}
       {/* Game UI */}
-      {gameStarted && gameState && !showLeaderboard && (
-        <div className="mb-4 border p-4 rounded bg-gray-50">
-          <h4 className="font-bold mb-2">Game In Progress</h4>
-          <div className="mb-2">
+      {gameStarted && gameState && !showLeaderboard && questions.length > 0 && (
+        <div className="flex flex-col border border-[#696969] rounded-lg bg-[#18162a] p-4">
+          <h4 className="font-bold mb-2 text-white">Question Battle</h4>
+          <div className="mb-2 text-white">
             Lives: {gameState.playerStates[userId]?.lives ?? 0}
           </div>
-          <div className="mb-2">
+          <div className="mb-2 text-white">
             XP: {gameState.playerStates[userId]?.xp ?? 0}
           </div>
-          <div className="mb-2">
+          <div className="mb-2 text-white">
             Accuracy:{' '}
             {((gameState.playerStates[userId]?.accuracy ?? 0) * 100).toFixed(1)}
             %
           </div>
-          <div className="mb-2">
-            Question {questionIdx + 1} of {gameState.questions}
+          <div className="mb-2 text-white">
+            Question {questionIdx + 1} of {questions.length}
+          </div>
+          <div className="mb-2 font-semibold text-white">
+            {questions[questionIdx]?.questionText || 'No question'}
           </div>
           <input
             type="text"
             placeholder="Your Answer"
             value={answer}
             onChange={(e) => setAnswer(e.target.value)}
-            className="border p-2 mr-2"
+            className="w-full bg-transparent border-none focus:ring-0 text-white placeholder-gray-400 mb-2"
             disabled={gameState.playerStates[userId]?.finished}
           />
           <button
             onClick={() =>
               handleSubmitAnswer(answer.trim().toLowerCase() === 'correct')
             }
-            className="bg-blue-600 text-white px-4 py-2 rounded"
+            className="main-button bg-blue-600 text-white px-4 py-2 rounded"
             disabled={gameState.playerStates[userId]?.finished || !answer}
           >
             Submit Answer

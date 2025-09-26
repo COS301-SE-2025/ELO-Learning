@@ -94,6 +94,15 @@ const io = new Server(server, {
   },
 });
 
+// Attach io and supabase to app for use in classroomWars.js
+import { createClient } from '@supabase/supabase-js';
+const supabase = createClient(
+  process.env.SUPABASE_URL,
+  process.env.SUPABASE_KEY,
+);
+app.set('io', io);
+app.set('supabase', supabase);
+
 io.on('connection', (socket) => {
   console.log('New client connected:', socket.id);
   socketsHandlers(io, socket);

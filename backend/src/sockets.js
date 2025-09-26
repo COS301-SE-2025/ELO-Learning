@@ -663,6 +663,14 @@ export default (io, socket) => {
     }
   });
 
+  // Classroom Wars: joinRoom event handler
+  socket.on('joinRoom', (roomName) => {
+    console.log(
+      `[ClassroomWars] Socket ${socket.id} joining room: ${roomName}`,
+    );
+    socket.join(roomName);
+  });
+
   socket.on('queue', (data) => queueForGame(data?.userData));
   socket.on('cancelQueue', cancelQueue);
   socket.on('startMatch', (data) => startMatch(data.game, data.level));

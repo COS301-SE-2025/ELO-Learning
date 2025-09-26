@@ -130,7 +130,7 @@ export default function GameClient({ game, level }) {
     <div>
       {gameErrorMessage && (
         <div className="flex flex-col items-center justify-center min-h-screen">
-          <div className="text-red-500 text-lg font-bold">
+          <div className="text-red-500 text-lg text-center font-bold">
             {gameErrorMessage}
           </div>
         </div>

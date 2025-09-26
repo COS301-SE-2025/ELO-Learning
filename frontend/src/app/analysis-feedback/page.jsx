@@ -1,29 +1,85 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
-import { useRouter } from 'next/navigation';
-import { useSession } from 'next-auth/react';
-import NavLinks from '../ui/nav-links';
-import NavBar from '../ui/nav-bar';
-import Back from '../ui/back'; // added import
 import {
   fetchUserAccuracy,
-  fetchUserTopicStats,
-  fetchUserTopicDepth,
   fetchUserMotivationTips,
+  fetchUserTopicDepth,
+  fetchUserTopicStats,
 } from '@/services/api';
-import {
-  LineChart,
-  Line,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  Legend,
-  ResponsiveContainer,
-  BarChart,
-  Bar,
-} from 'recharts';
+import { useSession } from 'next-auth/react';
+import { useRouter } from 'next/navigation';
+import { useEffect, useState } from 'react';
+import AccuracyChart from '../ui/analytics/accuracy-chart';
+import BestTopicsChart from '../ui/analytics/best-topics-chart';
+import MotivationTips from '../ui/analytics/motivation-tips';
+import TopicDepthTable from '../ui/analytics/topic-depth-table';
+import WorstTopicsChart from '../ui/analytics/worst-topics-chart';
+import Back from '../ui/back'; // added import
+
+// Helper: normalize / format incoming accuracy items
+function normalizeAndSortAccuracy(raw) {
+  if (!Array.isArray(raw)) return [];
+
+  const normalized = raw
+    .map((item) => {
+      // Accept multiple possible field names
+      const rawDate =
+        item.date || item.attemptDate || item.timestamp || item.day || null;
+
+      // Accept backend's accuracy_percentage and also derive from correct/total attempts
+      let rawAcc =
+        item.accuracy ??
+        item.accuracy_pct ??
+        item.percentage ??
+        item.accuracy_percentage ??
+        item.value ??
+        item.score ??
+        null;
+
+      // If explicit accuracy not provided, try compute from attempts
+      if (
+        rawAcc === null &&
+        item.correct_attempts != null &&
+        item.total_attempts != null
+      ) {
+        const total = Number(item.total_attempts);
+        const correct = Number(item.correct_attempts);
+        if (Number.isFinite(total) && total > 0 && Number.isFinite(correct)) {
+          rawAcc = (correct / total) * 100;
+        } else {
+          rawAcc = 0;
+        }
+      }
+
+      if (rawAcc === null || rawDate === null) return null;
+
+      if (typeof rawAcc === 'string') {
+        const parsed = parseFloat(rawAcc.replace('%', '').trim());
+        if (!Number.isFinite(parsed)) return null;
+        rawAcc = parsed;
+      }
+
+      // If value looks like 0..1 convert to 0..100
+      if (typeof rawAcc === 'number' && rawAcc <= 1 && rawAcc >= 0) {
+        rawAcc = rawAcc * 100;
+      }
+
+      const parsedDate = new Date(rawDate);
+      if (isNaN(parsedDate.getTime())) return null;
+
+      // Use ISO date for stable X-axis labels
+      const date = parsedDate.toISOString().split('T')[0];
+
+      return {
+        date,
+        accuracy: Math.max(0, Math.min(100, Number(rawAcc))),
+      };
+    })
+    .filter(Boolean)
+    .sort((a, b) => new Date(a.date) - new Date(b.date));
+
+  return normalized;
+}
 
 export default function AnalysisFeedbackPage() {
   const router = useRouter();
@@ -44,71 +100,6 @@ export default function AnalysisFeedbackPage() {
     motivation: '',
     tips: [],
   });
-
-  // Helper: normalize / format incoming accuracy items
-  function normalizeAndSortAccuracy(raw) {
-    if (!Array.isArray(raw)) return [];
-
-    const normalized = raw
-      .map((item) => {
-        // Accept multiple possible field names
-        const rawDate =
-          item.date || item.attemptDate || item.timestamp || item.day || null;
-
-        // Accept backend's accuracy_percentage and also derive from correct/total attempts
-        let rawAcc =
-          item.accuracy ??
-          item.accuracy_pct ??
-          item.percentage ??
-          item.accuracy_percentage ??
-          item.value ??
-          item.score ??
-          null;
-
-        // If explicit accuracy not provided, try compute from attempts
-        if (
-          rawAcc === null &&
-          item.correct_attempts != null &&
-          item.total_attempts != null
-        ) {
-          const total = Number(item.total_attempts);
-          const correct = Number(item.correct_attempts);
-          if (Number.isFinite(total) && total > 0 && Number.isFinite(correct)) {
-            rawAcc = (correct / total) * 100;
-          } else {
-            rawAcc = 0;
-          }
-        }
-
-        if (rawAcc === null || rawDate === null) return null;
-
-        if (typeof rawAcc === 'string') {
-          const parsed = parseFloat(rawAcc.replace('%', '').trim());
-          if (!Number.isFinite(parsed)) return null;
-          rawAcc = parsed;
-        }
-
-        // If value looks like 0..1 convert to 0..100
-        if (typeof rawAcc === 'number' && rawAcc <= 1 && rawAcc >= 0) {
-          rawAcc = rawAcc * 100;
-        }
-
-        const parsedDate = new Date(rawDate);
-        if (isNaN(parsedDate.getTime())) return null;
-
-        // Use ISO date for stable X-axis labels
-        const date = parsedDate.toISOString().split('T')[0];
-
-        return {
-          date,
-          accuracy: Math.max(0, Math.min(100, Number(rawAcc))),
-        };
-      })
-      .filter(Boolean)
-      .sort((a, b) => new Date(a.date) - new Date(b.date));
-
-    return normalized;
-  }
 
   useEffect(() => {
     async function loadData() {
@@ -156,25 +147,22 @@ export default function AnalysisFeedbackPage() {
 
           if (tied.length > 1) {
             // Multiple topics tied for best
-            const names = tied.map((t) => `"${t.topic}"`).join(' and ');
-            setBestTopicFeedback(
-              `Awesome! You're strongest in ${names}, each with ${topAcc.toFixed(
-                1,
-              )}%. Keep it up!`,
+            const sentences = tied.map(
+              (t) =>
+                `You're strongest in "${t.topic}" with ${topAcc.toFixed(1)}%.`,
             );
+            setBestTopicFeedback(`${sentences.join(' ')} Keep it up!`);
           } else {
             // Mention all 3 if available
-            const parts = best
+            const sentences = best
               .slice(0, 3)
               .map(
                 (t, i) =>
-                  `${
-                    i === 0 ? 'your best' : i === 1 ? 'followed by' : 'and'
-                  } "${t.topic}" with ${t.accuracy.toFixed(1)}%`,
+                  `You did well in "${t.topic}" with ${t.accuracy.toFixed(
+                    1,
+                  )}%.`,
               );
-            setBestTopicFeedback(
-              `You did best in ${parts.join(', ')}. Great work!`,
-            );
+            setBestTopicFeedback(`${sentences.join(' ')} Great work!`);
           }
         }
 
@@ -286,356 +274,78 @@ export default function AnalysisFeedbackPage() {
     value !== undefined && value !== null ? `${Math.round(value)}%` : value;
 
   return (
-    <div className="max-w-7xl mx-auto p-0 pb-20">
+    <div
+      className=""
+      style={{ minHeight: '100vh', height: '100vh', position: 'relative' }}
+    >
       {/* Header: sticky, bordered to match other pages */}
 
       <Back pagename="Statistics" />
 
-      <div className="p-6">
-        <div className="flex gap-6">
-          <main className="flex-1">
-            <div className="relative">
-              {/* Scrollable content with extra bottom padding so overlay doesn't overlap */}
-              <div
-                id="analysis-scroll"
-                className="flex overflow-x-auto scroll-smooth h-full snap-x snap-mandatory pb-24"
-                style={{ width: '100vw' }}
-              >
-                {/* Accuracy Section */}
-                <section className="w-screen snap-center flex-shrink-0 px-6">
-                  <h2 className="text-lg font-semibold mb-2 text-white text-center">
-                    Accuracy Over Time
-                  </h2>
-                  <div
-                    className="h-64 rounded-xl p-4"
-                    style={{
-                      background: 'var(--color-background)',
-                      border: '1px solid rgba(255,255,255,0.12)',
-                      boxShadow: '0 6px 18px rgba(0,0,0,0.08)',
-                    }}
-                  >
-                    {loading ? (
-                      <div className="flex items-center justify-center h-full">
-                        <span className="text-sm text-gray-500">
-                          Loading...
-                        </span>
-                      </div>
-                    ) : error ? (
-                      <div className="flex items-center justify-center h-full">
-                        <span className="text-sm text-red-500">{error}</span>
-                      </div>
-                    ) : accuracyData.length === 0 ? (
-                      <div className="flex items-center justify-center h-full">
-                        <span className="text-sm text-gray-500">
-                          No accuracy data yet.
-                        </span>
-                      </div>
-                    ) : (
-                      <ResponsiveContainer width="100%" height="100%">
-                        <LineChart
-                          data={accuracyData}
-                          margin={{ top: 0, right: 0, left: 0, bottom: 24 }}
-                        >
-                          <CartesianGrid
-                            strokeDasharray="3 3"
-                            stroke="rgba(255,255,255,0.06)"
-                          />
-                          <XAxis
-                            dataKey="date"
-                            tickFormatter={formatDate}
-                            stroke="rgba(255,255,255,0.85)"
-                            tick={{ fill: '#ffffffcc', fontSize: 12 }}
-                            label={{
-                              value: 'day',
-                              position: 'bottom',
-                              offset: 0,
-                              dy: 8,
-                              style: {
-                                fontSize: 14,
-                                fontWeight: '700',
-                                fill: '#fff',
-                              },
-                            }}
-                            padding={{ left: 10, right: 10 }}
-                          />
-                          <YAxis
-                            domain={[0, 100]}
-                            tickFormatter={yTickFormatter}
-                            stroke="rgba(255,255,255,0.85)"
-                            tick={{ fill: '#ffffffcc', fontSize: 12 }}
-                          />
-                          <Tooltip
-                            labelFormatter={formatDate}
-                            formatter={tooltipFormatter}
-                            contentStyle={{
-                              background: 'rgba(255,255,255,0.06)',
-                              border: 'none',
-                              color: '#fff',
-                              borderRadius: 8,
-                            }}
-                            labelStyle={{ color: '#fff', fontWeight: 600 }}
-                            itemStyle={{ color: '#fff' }}
-                          />
-                          <Legend
-                            wrapperStyle={{ color: '#fff' }}
-                            verticalAlign="top"
-                            align="center"
-                          />
-                          <Line
-                            type="monotone"
-                            dataKey="accuracy"
-                            stroke="#FF6E99"
-                            strokeWidth={3}
-                            dot={{ r: 4, stroke: '#fff', strokeWidth: 1 }}
-                            isAnimationActive={false}
-                          />
-                        </LineChart>
-                      </ResponsiveContainer>
-                    )}
-                  </div>
+      <div className="">
+        <div className="">
+          {/* Scrollable content with extra bottom padding so overlay doesn't overlap */}
+          <div
+            id="analysis-scroll"
+            className="overflow-y-auto h-full pb-32"
+            style={{
+              width: '100%',
+              maxHeight: '100vh',
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+            }}
+          >
+            {/* Accuracy Section */}
+            <AccuracyChart
+              loading={loading}
+              error={error}
+              accuracyData={accuracyData}
+              feedback={feedback}
+              formatDate={formatDate}
+              yTickFormatter={yTickFormatter}
+              tooltipFormatter={tooltipFormatter}
+            />
+            <div className="border border-[#696969] my-8 h-2 w-[90vw]"></div>
 
-                  {/* Feedback below the chart (button removed to avoid duplication) */}
-                  {feedback && (
-                    <div className="mt-4 text-center">
-                      <p className="text-xl md:text-2xl font-semibold text-pink-400 mb-0">
-                        {feedback}
-                      </p>
-                    </div>
-                  )}
-                </section>
+            {/* Best Topics Section */}
+            <BestTopicsChart
+              bestTopics={topicStats.bestTopics}
+              bestTopicFeedback={bestTopicFeedback}
+            />
+            <div className="border border-[#696969] my-8 h-2 w-[90vw]"></div>
 
-                {/* Best Topics Section */}
-                <section className="w-screen snap-center flex-shrink-0 px-6">
-                  <h2 className="text-lg font-semibold mb-2 text-white text-center">
-                    Best Topics
-                  </h2>
-                  <div className="bg-gray-900 rounded-xl p-4">
-                    {topicStats.bestTopics.length === 0 ? (
-                      <p className="text-gray-400 text-center">No data yet.</p>
-                    ) : (
-                      <div className="h-64">
-                        <ResponsiveContainer width="100%" height="100%">
-                          <BarChart
-                            data={topicStats.bestTopics}
-                            margin={{ top: 8, right: 8, left: 8, bottom: 24 }}
-                          >
-                            <CartesianGrid
-                              strokeDasharray="3 3"
-                              stroke="rgba(255,255,255,0.1)"
-                            />
-                            <XAxis
-                              dataKey="topic"
-                              tick={{ fill: '#fff', fontSize: 11 }}
-                              angle={-30}
-                              textAnchor="end"
-                              height={50}
-                            />
-                            <YAxis
-                              domain={[0, 100]}
-                              tick={{ fill: '#fff', fontSize: 12 }}
-                              tickFormatter={(v) => `${Math.round(v)}%`}
-                            />
-                            <Tooltip
-                              formatter={(val) => `${Number(val).toFixed(1)}%`}
-                            />
-                            <Bar
-                              dataKey="accuracy"
-                              fill="#34d399"
-                              radius={[6, 6, 0, 0]}
-                            />
-                          </BarChart>
-                        </ResponsiveContainer>
-                      </div>
-                    )}
-                  </div>
+            {/* Worst Topics Section */}
+            <WorstTopicsChart
+              worstTopics={topicStats.worstTopics}
+              worstTopicFeedback={worstTopicFeedback}
+            />
 
-                  {bestTopicFeedback && (
-                    <div className="mt-4 text-center">
-                      <p className="text-lg md:text-xl font-semibold text-green-400">
-                        {bestTopicFeedback}
-                      </p>
-                    </div>
-                  )}
-                </section>
+            <div className="border border-[#696969] my-8 h-2 w-[90vw]"></div>
 
-                {/* Worst Topics Section */}
-                <section className="w-screen snap-center flex-shrink-0 px-6">
-                  <h2 className="text-lg font-semibold mb-2 text-white text-center">
-                    Weaker Topics
-                  </h2>
-                  <div className="bg-gray-900 rounded-xl p-4">
-                    {topicStats.worstTopics.length === 0 ? (
-                      <p className="text-gray-400 text-center">No data yet.</p>
-                    ) : (
-                      <div className="h-64">
-                        <ResponsiveContainer width="90%" height="100%">
-                          <BarChart
-                            data={topicStats.worstTopics}
-                            margin={{ top: 8, right: 8, left: 8, bottom: 24 }}
-                          >
-                            <CartesianGrid
-                              strokeDasharray="3 3"
-                              stroke="rgba(255,255,255,0.1)"
-                            />
-                            <XAxis
-                              dataKey="topic"
-                              tick={{ fill: '#fff', fontSize: 11 }}
-                              angle={-30}
-                              textAnchor="end"
-                              height={50}
-                            />
-                            <YAxis
-                              domain={[0, 100]}
-                              tick={{ fill: '#fff', fontSize: 12 }}
-                              tickFormatter={(v) => `${Math.round(v)}%`}
-                            />
-                            <Tooltip
-                              formatter={(val) => `${Number(val).toFixed(1)}%`}
-                            />
-                            <Bar
-                              dataKey="accuracy"
-                              fill="#f87171"
-                              radius={[6, 6, 0, 0]}
-                            />
-                          </BarChart>
-                        </ResponsiveContainer>
-                      </div>
-                    )}
-                  </div>
-                  {worstTopicFeedback && (
-                    <div className="mt-4 text-center">
-                      <p className="text-lg md:text-xl font-semibold text-red-400 whitespace-pre-line">
-                        {worstTopicFeedback}
-                      </p>
-                    </div>
-                  )}
-                </section>
+            {/* Topic Depth Section */}
+            <TopicDepthTable
+              topicDepth={topicDepth}
+              coverageFeedback={coverageFeedback}
+            />
 
-                {/* Topic Depth Section */}
-                <section className="w-screen snap-center flex-shrink-0 px-6">
-                  <h2 className="text-lg font-semibold mb-2 text-white text-center">
-                    Topic Depth
-                  </h2>
-                  <div className="bg-gray-900 rounded-xl p-4">
-                    {!topicDepth || topicDepth.length === 0 ? (
-                      <p className="text-gray-400 text-center">No data yet.</p>
-                    ) : (
-                      <div className="overflow-x-auto">
-                        <table className="min-w-full table-auto border-collapse border border-gray-700 text-white">
-                          <thead>
-                            <tr>
-                              <th className="border border-gray-600 px-2 py-1">
-                                Topic
-                              </th>
-                              <th className="border border-gray-600 px-2 py-1">
-                                Attempts
-                              </th>
-                              <th className="border border-gray-600 px-2 py-1">
-                                Unique Questions
-                              </th>
-                              <th className="border border-gray-600 px-2 py-1">
-                                Unique Types
-                              </th>
-                              <th className="border border-gray-600 px-2 py-1">
-                                Avg Accuracy
-                              </th>
-                            </tr>
-                          </thead>
-                          <tbody>
-                            {topicDepth.map((t) => (
-                              <tr key={t.topic}>
-                                <td className="border border-gray-600 px-2 py-1">
-                                  {t.topic}
-                                </td>
-                                <td className="border border-gray-600 px-2 py-1">
-                                  {t.attempts}
-                                </td>
-                                <td className="border border-gray-600 px-2 py-1">
-                                  {t.uniqueQuestions}
-                                </td>
-                                <td className="border border-gray-600 px-2 py-1">
-                                  {t.uniqueTypes}
-                                </td>
-                                <td className="border border-gray-600 px-2 py-1">
-                                  {t.avgAccuracy.toFixed(1)}%
-                                </td>
-                              </tr>
-                            ))}
-                          </tbody>
-                        </table>
-                      </div>
-                    )}
-                  </div>
+            <div className="border border-[#696969] my-8 h-2 w-[90vw]"></div>
 
-                  {coverageFeedback && (
-                    <div className="mt-4 text-center">
-                      <p className="text-lg md:text-xl font-semibold text-yellow-400 whitespace-pre-line">
-                        {coverageFeedback}
-                      </p>
-                    </div>
-                  )}
-                </section>
-
-                <section className="w-screen snap-center flex-shrink-0 px-6">
-                  <h2 className="text-lg font-semibold mb-2 text-white text-center">
-                    Motivation & Tips
-                  </h2>
-                  <div className="bg-gray-900 rounded-xl p-4">
-                    {motivationData.motivation ? (
-                      <div>
-                        <p className="text-xl md:text-2xl font-semibold text-pink-400 mb-4 text-center">
-                          {motivationData.motivation}
-                        </p>
-                        <ul className="list-disc pl-5 text-white space-y-1">
-                          {motivationData.tips.map((tip, i) => (
-                            <li key={i}>{tip}</li>
-                          ))}
-                        </ul>
-                      </div>
-                    ) : (
-                      <p className="text-gray-400 text-center">
-                        No motivation tips yet.
-                      </p>
-                    )}
-                  </div>
-                </section>
-              </div>
-              {/* Left arrow: lowered */}
+            {/* Motivation & Tips Section */}
+            <MotivationTips motivationData={motivationData} />
+          </div>
+          {/* Practice Now button styled like question footer */}
+          <div className="flex fixed bottom-0 left-0 w-full z-10 px-4 py-4 bg-[var(--color-background)]">
+            <div className="flex flex-col justify-center md:m-auto max-w-2xl mx-auto">
               <button
-                onClick={() => {
-                  document.getElementById('analysis-scroll')?.scrollBy({
-                    left: -window.innerWidth,
-                    behavior: 'smooth',
-                  });
-                }}
-                className="absolute left-4 bottom-0 z-20 bg-[#7d32ce] text-white p-2 rounded-full shadow-lg hover:bg-[#651fa0]"
-                aria-label="Scroll left"
-              >
-                ←
-              </button>
-
-              {/* Right arrow: lowered */}
-              <button
-                onClick={() => {
-                  document
-                    .getElementById('analysis-scroll')
-                    ?.scrollBy({ left: window.innerWidth, behavior: 'smooth' });
-                }}
-                className="absolute right-4 bottom-0 z-20 bg-[#7d32ce] text-white p-2 rounded-full shadow-lg hover:bg-[#651fa0]"
-                aria-label="Scroll right"
-              >
-                →
-              </button>
-
-              {/* Persistent Practice Now button (visible on all sections) */}
-              <button
+                type="button"
                 onClick={() => router.push('/practice')}
-                className="absolute left-1/2 -translate-x-1/2 bottom-0 z-20 px-6 py-3 bg-[#7d32ce] hover:bg-[#651fa0] text-white font-semibold rounded-lg transition-colors"
+                className="w-full md:m-auto main-button"
               >
                 Practice Now
               </button>
             </div>
-          </main>
+          </div>
         </div>
       </div>
     </div>

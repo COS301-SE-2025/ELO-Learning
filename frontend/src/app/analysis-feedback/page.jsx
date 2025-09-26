@@ -1,0 +1,651 @@
+'use client';
+
+import { useState, useEffect, useRef } from 'react';
+import { useRouter } from 'next/navigation';
+import { useSession } from 'next-auth/react';
+import NavLinks from '../ui/nav-links';
+import NavBar from '../ui/nav-bar';
+import Back from '../ui/back'; // added import
+import {
+  fetchUserAccuracy,
+  fetchUserTopicStats,
+  fetchUserTopicDepth,
+  fetchUserMotivationTips,
+} from '@/services/api';
+import {
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  Legend,
+  ResponsiveContainer,
+  BarChart,
+  Bar,
+} from 'recharts';
+
+export default function AnalysisFeedbackPage() {
+  const router = useRouter();
+  const { data: session, status } = useSession();
+  const [accuracyData, setAccuracyData] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [feedback, setFeedback] = useState('');
+  const [topicStats, setTopicStats] = useState({
+    bestTopics: [],
+    worstTopics: [],
+  });
+  const [bestTopicFeedback, setBestTopicFeedback] = useState('');
+  const [worstTopicFeedback, setWorstTopicFeedback] = useState('');
+  const [topicDepth, setTopicDepth] = useState(null);
+  const [coverageFeedback, setCoverageFeedback] = useState('');
+  const [motivationData, setMotivationData] = useState({
+    motivation: '',
+    tips: [],
+  });
+
+  // Helper: normalize / format incoming accuracy items
+  function normalizeAndSortAccuracy(raw) {
+    if (!Array.isArray(raw)) return [];
+
+    const normalized = raw
+      .map((item) => {
+        // Accept multiple possible field names
+        const rawDate =
+          item.date || item.attemptDate || item.timestamp || item.day || null;
+
+        // Accept backend's accuracy_percentage and also derive from correct/total attempts
+        let rawAcc =
+          item.accuracy ??
+          item.accuracy_pct ??
+          item.percentage ??
+          item.accuracy_percentage ??
+          item.value ??
+          item.score ??
+          null;
+
+        // If explicit accuracy not provided, try compute from attempts
+        if (
+          rawAcc === null &&
+          item.correct_attempts != null &&
+          item.total_attempts != null
+        ) {
+          const total = Number(item.total_attempts);
+          const correct = Number(item.correct_attempts);
+          if (Number.isFinite(total) && total > 0 && Number.isFinite(correct)) {
+            rawAcc = (correct / total) * 100;
+          } else {
+            rawAcc = 0;
+          }
+        }
+
+        if (rawAcc === null || rawDate === null) return null;
+
+        if (typeof rawAcc === 'string') {
+          const parsed = parseFloat(rawAcc.replace('%', '').trim());
+          if (!Number.isFinite(parsed)) return null;
+          rawAcc = parsed;
+        }
+
+        // If value looks like 0..1 convert to 0..100
+        if (typeof rawAcc === 'number' && rawAcc <= 1 && rawAcc >= 0) {
+          rawAcc = rawAcc * 100;
+        }
+
+        const parsedDate = new Date(rawDate);
+        if (isNaN(parsedDate.getTime())) return null;
+
+        // Use ISO date for stable X-axis labels
+        const date = parsedDate.toISOString().split('T')[0];
+
+        return {
+          date,
+          accuracy: Math.max(0, Math.min(100, Number(rawAcc))),
+        };
+      })
+      .filter(Boolean)
+      .sort((a, b) => new Date(a.date) - new Date(b.date));
+
+    return normalized;
+  }
+
+  useEffect(() => {
+    async function loadData() {
+      setLoading(true);
+      setError(null);
+
+      // Wait until auth status resolves
+      if (status === 'loading') return;
+
+      try {
+        if (status !== 'authenticated' || !session?.user?.id) {
+          // Not authenticated -> nothing to load
+          setAccuracyData([]);
+          setLoading(false);
+          return;
+        }
+
+        const userId = session.user.id;
+        const res = await fetchUserAccuracy(userId);
+        const topicRes = await fetchUserTopicStats(userId);
+        setTopicStats(topicRes);
+        const topicDepthRes = await fetchUserTopicDepth(userId); // new API endpoint
+
+        if (topicDepthRes?.success) {
+          setTopicDepth(topicDepthRes.topicDepth || []);
+          setCoverageFeedback(topicDepthRes.depthFeedback || '');
+        }
+
+        const motivationRes = await fetchUserMotivationTips(userId);
+
+        if (motivationRes?.success) {
+          setMotivationData({
+            motivation: motivationRes.motivation || '',
+            tips: motivationRes.tips || [],
+          });
+        }
+
+        // Generate topic feedback
+        if (topicRes.bestTopics?.length > 0) {
+          const best = topicRes.bestTopics;
+          const topAcc = best[0].accuracy;
+
+          // Find all topics tied with topAcc
+          const tied = best.filter((t) => t.accuracy === topAcc);
+
+          if (tied.length > 1) {
+            // Multiple topics tied for best
+            const names = tied.map((t) => `"${t.topic}"`).join(' and ');
+            setBestTopicFeedback(
+              `Awesome! You're strongest in ${names}, each with ${topAcc.toFixed(
+                1,
+              )}%. Keep it up!`,
+            );
+          } else {
+            // Mention all 3 if available
+            const parts = best
+              .slice(0, 3)
+              .map(
+                (t, i) =>
+                  `${
+                    i === 0 ? 'your best' : i === 1 ? 'followed by' : 'and'
+                  } "${t.topic}" with ${t.accuracy.toFixed(1)}%`,
+              );
+            setBestTopicFeedback(
+              `You did best in ${parts.join(', ')}. Great work!`,
+            );
+          }
+        }
+
+        if (topicRes.worstTopics?.length > 0) {
+          const worst = topicRes.worstTopics;
+          const bottomAcc = worst[0].accuracy;
+
+          // Find all tied for worst
+          const tied = worst.filter((t) => t.accuracy === bottomAcc);
+
+          if (tied.length > 1) {
+            const names = tied.map((t) => `"${t.topic}"`).join(' and ');
+            setWorstTopicFeedback(
+              `Your weakest areas are ${names}, all with ${bottomAcc.toFixed(
+                1,
+              )}%.\n💡 Tips:\n• Review notes on these topics.\n• Practice small problems daily.\n• Revisit mistakes from past attempts.`,
+            );
+          } else {
+            const parts = worst
+              .slice(0, 3)
+              .map(
+                (t, i) =>
+                  `${i === 0 ? 'your weakest' : i === 1 ? 'then' : 'and'} "${
+                    t.topic
+                  }" with ${t.accuracy.toFixed(1)}%`,
+              );
+            setWorstTopicFeedback(
+              `You need to work on ${parts.join(
+                ', ',
+              )}.\n💡 Tips:\n• Review notes\n• Practice daily\n• Revisit mistakes`,
+            );
+          }
+        }
+
+        // Accept either an array response or { accuracy: [...] }
+        const dataArray = Array.isArray(res) ? res : res?.accuracy || [];
+
+        // Normalize, convert fractions to percentages, sort by date
+        const normalized = normalizeAndSortAccuracy(dataArray);
+
+        setAccuracyData(normalized);
+
+        // --- FEEDBACK LOGIC ---
+        if (normalized.length === 0) {
+          setFeedback(
+            'No data yet. Start answering questions to see your progress!',
+          );
+        } else {
+          const first = normalized[0].accuracy;
+          const last = normalized[normalized.length - 1].accuracy;
+          const avg =
+            normalized.reduce((sum, item) => sum + item.accuracy, 0) /
+            normalized.length;
+
+          if (last > first && last >= 80) {
+            setFeedback(
+              `Great job! Your accuracy has improved from ${first.toFixed(
+                1,
+              )}% to ${last.toFixed(1)}%!`,
+            );
+          } else if (last < first) {
+            setFeedback(
+              `Your accuracy dropped from ${first.toFixed(
+                1,
+              )}% to ${last.toFixed(1)}%. Keep practicing!`,
+            );
+          } else if (avg >= 80) {
+            setFeedback(
+              `You're consistent with high accuracy (${avg.toFixed(1)}%)!`,
+            );
+          } else {
+            setFeedback(
+              `Your average accuracy is ${avg.toFixed(
+                1,
+              )}%. Keep practicing to improve!`,
+            );
+          }
+        }
+      } catch (err) {
+        console.error('Error fetching accuracy data:', err);
+        setError('Failed to load accuracy data.');
+        setAccuracyData([]);
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    loadData();
+  }, [status, session?.user?.id]);
+
+  // Helper: format ISO date -> "11 Sep 2025"
+  function formatDate(dateStr) {
+    try {
+      // If already a Date object, use it; otherwise construct Date from string
+      const d = dateStr instanceof Date ? dateStr : new Date(dateStr);
+      if (isNaN(d.getTime())) return dateStr;
+      return d.toLocaleDateString('en-GB', {
+        day: '2-digit',
+        month: 'short',
+      });
+    } catch (e) {
+      return dateStr;
+    }
+  }
+
+  // Small formatters
+  const yTickFormatter = (val) => `${Math.round(val)}%`;
+  const tooltipFormatter = (value) =>
+    value !== undefined && value !== null ? `${Math.round(value)}%` : value;
+
+  return (
+    <div className="max-w-7xl mx-auto p-0 pb-20">
+      {/* Header: sticky, bordered to match other pages */}
+      <div
+        className="sticky top-0 z-10 px-4 py-4 border-b border-gray-700"
+        style={{ background: 'var(--color-background)' }}
+      >
+        <Back pagename="Statistics" />
+      </div>
+
+      <div className="p-6">
+        <div className="flex gap-6">
+          <aside className="hidden md:block md:w-56">
+            <NavLinks />
+          </aside>
+
+          <main className="flex-1">
+            <div className="relative">
+              {/* Scrollable content with extra bottom padding so overlay doesn't overlap */}
+              <div
+                id="analysis-scroll"
+                className="flex overflow-x-auto scroll-smooth h-full snap-x snap-mandatory pb-24"
+                style={{ width: '100vw' }}
+              >
+                {/* Accuracy Section */}
+                <section className="w-screen snap-center flex-shrink-0 px-6">
+                  <h2 className="text-lg font-semibold mb-2 text-white text-center">
+                    Accuracy Over Time
+                  </h2>
+                  <div
+                    className="h-64 rounded-xl p-4"
+                    style={{
+                      background: 'var(--color-background)',
+                      border: '1px solid rgba(255,255,255,0.12)',
+                      boxShadow: '0 6px 18px rgba(0,0,0,0.08)',
+                    }}
+                  >
+                    {loading ? (
+                      <div className="flex items-center justify-center h-full">
+                        <span className="text-sm text-gray-500">
+                          Loading...
+                        </span>
+                      </div>
+                    ) : error ? (
+                      <div className="flex items-center justify-center h-full">
+                        <span className="text-sm text-red-500">{error}</span>
+                      </div>
+                    ) : accuracyData.length === 0 ? (
+                      <div className="flex items-center justify-center h-full">
+                        <span className="text-sm text-gray-500">
+                          No accuracy data yet.
+                        </span>
+                      </div>
+                    ) : (
+                      <ResponsiveContainer width="100%" height="100%">
+                        <LineChart
+                          data={accuracyData}
+                          margin={{ top: 0, right: 0, left: 0, bottom: 24 }}
+                        >
+                          <CartesianGrid
+                            strokeDasharray="3 3"
+                            stroke="rgba(255,255,255,0.06)"
+                          />
+                          <XAxis
+                            dataKey="date"
+                            tickFormatter={formatDate}
+                            stroke="rgba(255,255,255,0.85)"
+                            tick={{ fill: '#ffffffcc', fontSize: 12 }}
+                            label={{
+                              value: 'day',
+                              position: 'bottom',
+                              offset: 0,
+                              dy: 8,
+                              style: {
+                                fontSize: 14,
+                                fontWeight: '700',
+                                fill: '#fff',
+                              },
+                            }}
+                            padding={{ left: 10, right: 10 }}
+                          />
+                          <YAxis
+                            domain={[0, 100]}
+                            tickFormatter={yTickFormatter}
+                            stroke="rgba(255,255,255,0.85)"
+                            tick={{ fill: '#ffffffcc', fontSize: 12 }}
+                          />
+                          <Tooltip
+                            labelFormatter={formatDate}
+                            formatter={tooltipFormatter}
+                            contentStyle={{
+                              background: 'rgba(255,255,255,0.06)',
+                              border: 'none',
+                              color: '#fff',
+                              borderRadius: 8,
+                            }}
+                            labelStyle={{ color: '#fff', fontWeight: 600 }}
+                            itemStyle={{ color: '#fff' }}
+                          />
+                          <Legend
+                            wrapperStyle={{ color: '#fff' }}
+                            verticalAlign="top"
+                            align="center"
+                          />
+                          <Line
+                            type="monotone"
+                            dataKey="accuracy"
+                            stroke="#FF6E99"
+                            strokeWidth={3}
+                            dot={{ r: 4, stroke: '#fff', strokeWidth: 1 }}
+                            isAnimationActive={false}
+                          />
+                        </LineChart>
+                      </ResponsiveContainer>
+                    )}
+                  </div>
+
+                  {/* Feedback below the chart (button removed to avoid duplication) */}
+                  {feedback && (
+                    <div className="mt-4 text-center">
+                      <p className="text-xl md:text-2xl font-semibold text-pink-400 mb-0">
+                        {feedback}
+                      </p>
+                    </div>
+                  )}
+                </section>
+
+                {/* Best Topics Section */}
+                <section className="w-screen snap-center flex-shrink-0 px-6">
+                  <h2 className="text-lg font-semibold mb-2 text-white text-center">
+                    Best Topics
+                  </h2>
+                  <div className="bg-gray-900 rounded-xl p-4">
+                    {topicStats.bestTopics.length === 0 ? (
+                      <p className="text-gray-400 text-center">No data yet.</p>
+                    ) : (
+                      <div className="h-64">
+                        <ResponsiveContainer width="100%" height="100%">
+                          <BarChart
+                            data={topicStats.bestTopics}
+                            margin={{ top: 8, right: 8, left: 8, bottom: 24 }}
+                          >
+                            <CartesianGrid
+                              strokeDasharray="3 3"
+                              stroke="rgba(255,255,255,0.1)"
+                            />
+                            <XAxis
+                              dataKey="topic"
+                              tick={{ fill: '#fff', fontSize: 11 }}
+                              angle={-30}
+                              textAnchor="end"
+                              height={50}
+                            />
+                            <YAxis
+                              domain={[0, 100]}
+                              tick={{ fill: '#fff', fontSize: 12 }}
+                              tickFormatter={(v) => `${Math.round(v)}%`}
+                            />
+                            <Tooltip
+                              formatter={(val) => `${Number(val).toFixed(1)}%`}
+                            />
+                            <Bar
+                              dataKey="accuracy"
+                              fill="#34d399"
+                              radius={[6, 6, 0, 0]}
+                            />
+                          </BarChart>
+                        </ResponsiveContainer>
+                      </div>
+                    )}
+                  </div>
+
+                  {bestTopicFeedback && (
+                    <div className="mt-4 text-center">
+                      <p className="text-lg md:text-xl font-semibold text-green-400">
+                        {bestTopicFeedback}
+                      </p>
+                    </div>
+                  )}
+                </section>
+
+                {/* Worst Topics Section */}
+                <section className="w-screen snap-center flex-shrink-0 px-6">
+                  <h2 className="text-lg font-semibold mb-2 text-white text-center">
+                    Weaker Topics
+                  </h2>
+                  <div className="bg-gray-900 rounded-xl p-4">
+                    {topicStats.worstTopics.length === 0 ? (
+                      <p className="text-gray-400 text-center">No data yet.</p>
+                    ) : (
+                      <div className="h-64">
+                        <ResponsiveContainer width="90%" height="100%">
+                          <BarChart
+                            data={topicStats.worstTopics}
+                            margin={{ top: 8, right: 8, left: 8, bottom: 24 }}
+                          >
+                            <CartesianGrid
+                              strokeDasharray="3 3"
+                              stroke="rgba(255,255,255,0.1)"
+                            />
+                            <XAxis
+                              dataKey="topic"
+                              tick={{ fill: '#fff', fontSize: 11 }}
+                              angle={-30}
+                              textAnchor="end"
+                              height={50}
+                            />
+                            <YAxis
+                              domain={[0, 100]}
+                              tick={{ fill: '#fff', fontSize: 12 }}
+                              tickFormatter={(v) => `${Math.round(v)}%`}
+                            />
+                            <Tooltip
+                              formatter={(val) => `${Number(val).toFixed(1)}%`}
+                            />
+                            <Bar
+                              dataKey="accuracy"
+                              fill="#f87171"
+                              radius={[6, 6, 0, 0]}
+                            />
+                          </BarChart>
+                        </ResponsiveContainer>
+                      </div>
+                    )}
+                  </div>
+                  {worstTopicFeedback && (
+                    <div className="mt-4 text-center">
+                      <p className="text-lg md:text-xl font-semibold text-red-400 whitespace-pre-line">
+                        {worstTopicFeedback}
+                      </p>
+                    </div>
+                  )}
+                </section>
+
+                {/* Topic Depth Section */}
+                <section className="w-screen snap-center flex-shrink-0 px-6">
+                  <h2 className="text-lg font-semibold mb-2 text-white text-center">
+                    Topic Depth
+                  </h2>
+                  <div className="bg-gray-900 rounded-xl p-4">
+                    {!topicDepth || topicDepth.length === 0 ? (
+                      <p className="text-gray-400 text-center">No data yet.</p>
+                    ) : (
+                      <div className="overflow-x-auto">
+                        <table className="min-w-full table-auto border-collapse border border-gray-700 text-white">
+                          <thead>
+                            <tr>
+                              <th className="border border-gray-600 px-2 py-1">
+                                Topic
+                              </th>
+                              <th className="border border-gray-600 px-2 py-1">
+                                Attempts
+                              </th>
+                              <th className="border border-gray-600 px-2 py-1">
+                                Unique Questions
+                              </th>
+                              <th className="border border-gray-600 px-2 py-1">
+                                Unique Types
+                              </th>
+                              <th className="border border-gray-600 px-2 py-1">
+                                Avg Accuracy
+                              </th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {topicDepth.map((t) => (
+                              <tr key={t.topic}>
+                                <td className="border border-gray-600 px-2 py-1">
+                                  {t.topic}
+                                </td>
+                                <td className="border border-gray-600 px-2 py-1">
+                                  {t.attempts}
+                                </td>
+                                <td className="border border-gray-600 px-2 py-1">
+                                  {t.uniqueQuestions}
+                                </td>
+                                <td className="border border-gray-600 px-2 py-1">
+                                  {t.uniqueTypes}
+                                </td>
+                                <td className="border border-gray-600 px-2 py-1">
+                                  {t.avgAccuracy.toFixed(1)}%
+                                </td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    )}
+                  </div>
+
+                  {coverageFeedback && (
+                    <div className="mt-4 text-center">
+                      <p className="text-lg md:text-xl font-semibold text-yellow-400 whitespace-pre-line">
+                        {coverageFeedback}
+                      </p>
+                    </div>
+                  )}
+                </section>
+
+                <section className="w-screen snap-center flex-shrink-0 px-6">
+                  <h2 className="text-lg font-semibold mb-2 text-white text-center">
+                    Motivation & Tips
+                  </h2>
+                  <div className="bg-gray-900 rounded-xl p-4">
+                    {motivationData.motivation ? (
+                      <div>
+                        <p className="text-xl md:text-2xl font-semibold text-pink-400 mb-4 text-center">
+                          {motivationData.motivation}
+                        </p>
+                        <ul className="list-disc pl-5 text-white space-y-1">
+                          {motivationData.tips.map((tip, i) => (
+                            <li key={i}>{tip}</li>
+                          ))}
+                        </ul>
+                      </div>
+                    ) : (
+                      <p className="text-gray-400 text-center">
+                        No motivation tips yet.
+                      </p>
+                    )}
+                  </div>
+                </section>
+              </div>
+              {/* Left arrow: lowered */}
+              <button
+                onClick={() => {
+                  document.getElementById('analysis-scroll')?.scrollBy({
+                    left: -window.innerWidth,
+                    behavior: 'smooth',
+                  });
+                }}
+                className="absolute left-4 bottom-0 z-20 bg-[#7d32ce] text-white p-2 rounded-full shadow-lg hover:bg-[#651fa0]"
+                aria-label="Scroll left"
+              >
+                ←
+              </button>
+
+              {/* Right arrow: lowered */}
+              <button
+                onClick={() => {
+                  document
+                    .getElementById('analysis-scroll')
+                    ?.scrollBy({ left: window.innerWidth, behavior: 'smooth' });
+                }}
+                className="absolute right-4 bottom-0 z-20 bg-[#7d32ce] text-white p-2 rounded-full shadow-lg hover:bg-[#651fa0]"
+                aria-label="Scroll right"
+              >
+                →
+              </button>
+
+              {/* Persistent Practice Now button (visible on all sections) */}
+              <button
+                onClick={() => router.push('/practice')}
+                className="absolute left-1/2 -translate-x-1/2 bottom-0 z-20 px-6 py-3 bg-[#7d32ce] hover:bg-[#651fa0] text-white font-semibold rounded-lg transition-colors"
+              >
+                Practice Now
+              </button>
+            </div>
+          </main>
+        </div>
+      </div>
+    </div>
+  );
+}

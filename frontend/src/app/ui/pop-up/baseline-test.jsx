@@ -1,5 +1,5 @@
 'use client';
-import { updateUserElo } from '@/services/api';
+
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
@@ -10,32 +10,29 @@ export default function BaselineTestPopup({ user_id, onClose }) {
   const [loading, setLoading] = useState(false);
 
   const handleNo = async () => {
+    // Mark that user has interacted with the popup
+    localStorage.setItem(`baseline_popup_seen_${user_id}`, 'true');
+
+    // Just close the popup without updating the database
+    // The option to take the baseline test will appear in the profile page
+    onClose();
+  };
+
+  const handleYes = async () => {
     if (!user_id) {
       console.error('No user_id provided to BaselineTestPopup');
       return;
     }
-    setLoading(true);
-    try {
-      // Call skip endpoint
-      await updateUserElo(user_id, 5);
-      update({
-        user: {
-          ...session.user,
-          currentLevel: 5,
-          baseLineTest: true, // Set baseLineTest to true
-        },
-      });
-      onClose(); // Close the popup
-    } catch (err) {
-      console.error('Error skipping baseline test:', err);
-    } finally {
-      setLoading(false);
-    }
-  };
 
-  const handleYes = async () => {
-    //just go to the test, do not set baseLineTest to true yet.
-    router.push('/baseline');
+    // Mark that user has interacted with the popup
+    localStorage.setItem(`baseline_popup_seen_${user_id}`, 'true');
+
+    // Close the popup before navigating
+    onClose();
+
+    // Don't set base_line_test to true yet - only when test is completed
+    // Just navigate to the baseline test directly
+    router.push('/baseline-game');
   };
 
   return (

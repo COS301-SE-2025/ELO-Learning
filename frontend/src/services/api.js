@@ -818,7 +818,7 @@ export async function loginUser(email, password) {
           },
           elo_rating: 5.0,
           rank: 'Bronze',
-          baseLineTest: true,
+          base_line_test: true,
           daily_streak: 0,
         },
       };
@@ -839,7 +839,7 @@ export async function registerUser(
   avatar,
   elo_rating,
   rank,
-  baseLineTest,
+  base_line_test,
   daily_streak,
 ) {
   try {
@@ -884,8 +884,7 @@ export async function registerUser(
           avatar,
           elo_rating,
           rank,
-          baseLineTest,
-          daily_streak: 0,
+          base_line_test,
         },
       };
     }
@@ -1425,6 +1424,27 @@ export async function fetchNextRandomBaselineQuestion(level) {
   }
 }
 
+export async function confirmBaselineTest(userId) {
+  try {
+    console.log('🎯 Calling confirmBaselineTest for user:', userId);
+
+    const res = await axiosInstance.post('/baseline/confirm', {
+      user_id: userId,
+    });
+
+    console.log('✅ confirmBaselineTest response:', res.data);
+    return res.data;
+  } catch (err) {
+    console.error('❌ Failed to confirm baseline test:', {
+      error: err.message,
+      status: err.response?.status,
+      data: err.response?.data,
+      userId: userId,
+    });
+    throw err;
+  }
+}
+
 export async function skipBaselineTest(userId) {
   if (!userId) throw new Error('Missing userId');
   try {
@@ -1439,16 +1459,27 @@ export async function skipBaselineTest(userId) {
   }
 }
 
-// Submit baseline result
-export async function submitBaselineResult(userId, finalLevel) {
-  const res = await fetch('/baseline/complete', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ user_id: userId, finalLevel }),
-  });
-  const data = await res.json();
-  return data;
-}
+//permanent skip
+export const skipBaselineTestPermanently = async (userId) => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/baseline/skip/${userId}`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    console.error('Error skipping baseline test:', error);
+    throw error;
+  }
+};
 
 export async function fetchBaselineQuestion(level) {
   try {
@@ -1463,12 +1494,19 @@ export async function fetchBaselineQuestion(level) {
   }
 }
 
-export async function updateUserElo(userId, finalElo) {
+export async function updateUserElo(userId, finalElo, testPerformance = null) {
   try {
-    const res = await axiosInstance.post('/baseline/complete', {
+    const requestBody = {
       user_id: userId,
       finalElo,
-    });
+    };
+
+    // Add performance data if provided
+    if (testPerformance) {
+      requestBody.testPerformance = testPerformance;
+    }
+
+    const res = await axiosInstance.post('/baseline/complete', requestBody);
     return res.data;
   } catch (err) {
     console.error('Failed to update user level:', err);
@@ -1500,7 +1538,7 @@ export async function fetchUserStreakInfo(userId) {
     };
   }
 }
-
+//---
 /**
  * Update user's streak (typically called on login or daily activity)
  * @param {string} userId - User ID
@@ -1515,3 +1553,33 @@ export async function updateUserStreak(userId) {
     throw error;
   }
 }
+
+// ========== ANALYSIS AND FEEDBACK FUNCTIONS ==========
+
+export const fetchUserAccuracy = async (userId) => {
+  const response = await axiosInstance.get(`/accuracy/${userId}`);
+  return response.data;
+};
+
+export const fetchUserEloSummary = async (userId, start, end) => {
+  const response = await axiosInstance.get(
+    `/elo-summary/${userId}?start=${start}&end=${end}`,
+  );
+  return response.data;
+};
+
+export const fetchUserTopicStats = async (userId) => {
+  const response = await axiosInstance.get(`/topic-stats/${userId}`);
+  return response.data; // { success: true, bestTopics: [...], worstTopics: [...] }
+};
+
+export const fetchUserTopicDepth = async (userId) => {
+  const response = await axiosInstance.get(`/topic-depth/${userId}`);
+  return response.data;
+};
+
+export const fetchUserMotivationTips = async (userId) => {
+  const response = await axiosInstance.get(`/motivation-tips/${userId}`);
+  return response.data;
+  // { success: true, motivation: string, tips: string[] }
+};

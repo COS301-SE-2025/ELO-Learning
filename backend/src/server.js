@@ -1,4 +1,16 @@
 // server.js
+
+// Suppress specific deprecation warnings
+process.removeAllListeners('warning');
+process.on('warning', (warning) => {
+  // Suppress the url.parse() deprecation warning (DEP0169)
+  if (warning.code === 'DEP0169') {
+    return; // Ignore this specific warning
+  }
+  // Log other warnings
+  console.warn(warning.name, warning.message);
+});
+
 import cors from 'cors';
 import dotenv from 'dotenv';
 import express from 'express';
@@ -20,6 +32,8 @@ import singlePlayerRoutes from './singlePlayerRoutes.js';
 import socketsHandlers from './sockets.js';
 import userRoutes from './userRoutes.js';
 import validateRoutes from './validateRoutes.js';
+import analysisRoutes from './analysisRoutes.js';
+
 import rateLimit from 'express-rate-limit'; //to prevent brute-force and DDoS attacks
 // Load environment variables
 dotenv.config();
@@ -48,8 +62,6 @@ app.use(
 );
 app.use(express.json());
 
-app.use(limiter); // Apply rate limiting to all requests
-
 // Health check endpoint
 app.get('/health', (req, res) => {
   res.status(200).json({
@@ -72,6 +84,7 @@ app.use('/', openaiRoutes);
 app.use('/api/avatar-unlockables', avatarUnlockablesRoutes);
 app.use('/', oauthRoutes);
 app.use('/', baselineRoutes);
+app.use('/', analysisRoutes);
 app.use('/notifications', pushNotificationRoutes);
 app.use('/', classroomWars);
 // Simple health check route

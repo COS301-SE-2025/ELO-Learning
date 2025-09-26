@@ -9,7 +9,6 @@ import jwt from 'jsonwebtoken';
  */
 export function verifyToken(req, res, next) {
   const authHeader = req.headers.authorization;
-  console.log('[verifyToken] Authorization header:', authHeader);
   console.log(
     `[AUTH] verifyToken middleware entered. Authorization header:`,
     authHeader,
@@ -28,7 +27,7 @@ export function verifyToken(req, res, next) {
   try {
     // Verify the JWT token
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    console.log('[verifyToken] Decoded JWT:', decoded);
+    console.log(`[AUTH] JWT verified. Decoded:`, decoded);
 
     // Add user info to request object for use in route handlers
     req.user = {

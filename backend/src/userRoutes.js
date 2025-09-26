@@ -124,9 +124,8 @@ router.get('/users/:id/achievements', verifyToken, async (req, res) => {
       unlocked_at,
       Achievements (
         id,
-        name,
-        description,
-        condition_type,
+    // Always return 200 with an array (even if empty)
+    res.status(200).json(data || []);
         condition_value,
         icon_path,
         AchievementCategories (

@@ -4,10 +4,10 @@ export async function checkAndUpdateRankAndLevel({
   newElo,
   supabase,
 }) {
-  // Fetch current level
+  // Fetch current level and rank
   const { data: user, error: userError } = await supabase
     .from('Users')
-    .select('currentLevel')
+    .select('currentLevel, rank')
     .eq('id', user_id)
     .single();
 
@@ -31,13 +31,21 @@ export async function checkAndUpdateRankAndLevel({
   if (newElo !== null && newElo !== undefined) {
     const { data: rankData, error: rankError } = await supabase
       .from('Ranks')
-      .select('rank') // ← fix here
+      .select('rank')
       .lte('min_elo', newElo)
       .order('min_elo', { ascending: false })
       .limit(1)
       .single();
 
     newRank = rankData?.rank ?? 'Unranked';
+  }
+
+  // Prevent demotion below Iron
+  if (
+    (user.rank === 'Iron' || user.rank === null || user.rank === undefined) &&
+    newRank === 'Unranked'
+  ) {
+    newRank = 'Iron';
   }
 
   return {

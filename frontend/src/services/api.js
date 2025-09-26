@@ -1479,7 +1479,7 @@ export async function fetchUserStreakInfo(userId) {
     };
   }
 }
-
+//---
 /**
  * Update user's streak (typically called on login or daily activity)
  * @param {string} userId - User ID
@@ -1494,3 +1494,33 @@ export async function updateUserStreak(userId) {
     throw error;
   }
 }
+
+// ========== ANALYSIS AND FEEDBACK FUNCTIONS ==========
+
+export const fetchUserAccuracy = async (userId) => {
+  const response = await axiosInstance.get(`/accuracy/${userId}`);
+  return response.data;
+};
+
+export const fetchUserEloSummary = async (userId, start, end) => {
+  const response = await axiosInstance.get(
+    `/elo-summary/${userId}?start=${start}&end=${end}`,
+  );
+  return response.data;
+};
+
+export const fetchUserTopicStats = async (userId) => {
+  const response = await axiosInstance.get(`/topic-stats/${userId}`);
+  return response.data; // { success: true, bestTopics: [...], worstTopics: [...] }
+};
+
+export const fetchUserTopicDepth = async (userId) => {
+  const response = await axiosInstance.get(`/topic-depth/${userId}`);
+  return response.data;
+};
+
+export const fetchUserMotivationTips = async (userId) => {
+  const response = await axiosInstance.get(`/motivation-tips/${userId}`);
+  return response.data;
+  // { success: true, motivation: string, tips: string[] }
+};

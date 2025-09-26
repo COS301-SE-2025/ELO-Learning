@@ -32,6 +32,8 @@ import singlePlayerRoutes from './singlePlayerRoutes.js';
 import socketsHandlers from './sockets.js';
 import userRoutes from './userRoutes.js';
 import validateRoutes from './validateRoutes.js';
+import analysisRoutes from './analysisRoutes.js';
+
 import rateLimit from 'express-rate-limit'; //to prevent brute-force and DDoS attacks
 // Load environment variables
 dotenv.config();
@@ -82,6 +84,7 @@ app.use('/', openaiRoutes);
 app.use('/api/avatar-unlockables', avatarUnlockablesRoutes);
 app.use('/', oauthRoutes);
 app.use('/', baselineRoutes);
+app.use('/', analysisRoutes);
 app.use('/notifications', pushNotificationRoutes);
 
 // Simple health check route

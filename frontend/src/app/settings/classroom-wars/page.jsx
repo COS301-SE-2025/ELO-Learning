@@ -29,22 +29,13 @@ export default function ClassroomWarsPage() {
 
   // Debug info: log relevant state changes to console
   useEffect(() => {
-    if (
-      gameStarted ||
-      gameState?.playerStates?.[userId]?.finished ||
-      answer !== '' ||
-      !currentRoom?.name
-    ) {
+    const playerFinished = gameState?.playerStates?.[userId]?.finished;
+    if (gameStarted || playerFinished || answer !== '' || !currentRoom?.name) {
       console.log(
-        `[ClassroomWars Debug] gameStarted=${gameStarted}, currentRoom.name=${currentRoom?.name}, finished=${gameState?.playerStates?.[userId]?.finished}, answer=${answer}`,
+        `[ClassroomWars Debug] gameStarted=${gameStarted}, currentRoom.name=${currentRoom?.name}, finished=${playerFinished}, answer=${answer}`,
       );
     }
-  }, [
-    gameStarted,
-    currentRoom?.name,
-    gameState?.playerStates?.[userId]?.finished,
-    answer,
-  ]);
+  }, [gameStarted, currentRoom?.name, answer, gameState?.playerStates, userId]);
 
   useEffect(() => {
     // Listen for game started event
@@ -189,21 +180,23 @@ export default function ClassroomWarsPage() {
         updated.playerStates[userId] = res.data;
         return updated;
       });
-      // Show feedback for correct/incorrect
+      // Show feedback and correct answer
       if (res.data.isCorrect !== undefined) {
         if (res.data.isCorrect) {
           setError('✅ Correct!');
         } else {
-          setError('❌ Incorrect!');
+          setError(`❌ Incorrect! Correct answer: ${res.data.correctAnswer}`);
         }
-        setTimeout(() => setError(''), 1200);
+        setTimeout(() => setError(''), 2000);
       }
       // Next question or end
       if (res.data.finished) {
-        handleEndGame();
+        setTimeout(() => handleEndGame(), 2000);
       } else {
-        setQuestionIdx((idx) => idx + 1);
-        setAnswer('');
+        setTimeout(() => {
+          setQuestionIdx((idx) => idx + 1);
+          setAnswer('');
+        }, 2000);
       }
     } catch (err) {
       setError(err.response?.data?.error || 'Failed to submit answer');
@@ -342,7 +335,7 @@ export default function ClassroomWarsPage() {
           <button
             onClick={() => {
               console.log('Submit button clicked');
-              handleSubmitAnswer(answer.trim().toLowerCase() === 'correct');
+              handleSubmitAnswer();
             }}
             className="main-button bg-blue-600 text-white px-4 py-2 rounded"
             disabled={

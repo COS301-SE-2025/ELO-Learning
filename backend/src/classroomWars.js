@@ -97,13 +97,49 @@ router.post('/classroom-wars/start', async (req, res) => {
         .from('Questions')
         .select('*')
         .limit(DEFAULT_QUESTIONS);
-      if (!error && data) {
-        questions = data;
+      if (error) {
+        console.error('[ClassroomWars] Supabase DB error:', error);
+      } else {
+        console.log('[ClassroomWars] Supabase DB query result:', data);
+      }
+      if (!error && Array.isArray(data) && data.length > 0) {
+        questions = data.filter(
+          (q) => q.questionText && q.correctAnswer !== undefined,
+        );
+        if (questions.length < data.length) {
+          console.warn(
+            `[ClassroomWars] Some DB questions missing questionText or correctAnswer, filtered out. Loaded: ${questions.length}, Raw: ${data.length}`,
+          );
+        }
+      } else if (!error && Array.isArray(data) && data.length === 0) {
+        console.warn(
+          '[ClassroomWars] Supabase DB returned empty question list.',
+        );
       }
     } catch (err) {
-      // fallback: empty questions
+      console.error('[ClassroomWars] Exception during Supabase DB query:', err);
       questions = [];
     }
+  }
+  // Fallback sample questions if DB fails or returns empty
+  if (!questions || questions.length === 0) {
+    console.warn(
+      '[ClassroomWars] No valid questions loaded from DB, using fallback sample math questions.',
+    );
+    questions = [
+      { questionText: 'Solve for x: 2x + 3 = 11', correctAnswer: '4' },
+      { questionText: 'What is the derivative of x^2?', correctAnswer: '2x' },
+      {
+        questionText:
+          'If $1000 is invested at 5% annual interest, what is the value after 2 years (simple interest)?',
+        correctAnswer: '1100',
+      },
+      { questionText: 'Factor: x^2 - 9', correctAnswer: '(x-3)(x+3)' },
+      {
+        questionText: 'What is the solution to the equation x^2 = 16?',
+        correctAnswer: '4,-4',
+      },
+    ];
   }
   room.gameState.questions = questions;
   // Reset all player states for new game
@@ -176,6 +212,7 @@ router.post('/classroom-wars/submit-answer', (req, res) => {
     accuracy: player.accuracy,
     finished: player.finished,
     isCorrect,
+    correctAnswer: question?.correctAnswer ?? null,
   });
 });
 

@@ -37,11 +37,17 @@ export async function listClassroomWarRooms() {
 /**
  * Submit answer for Classroom Wars game
  */
-export async function submitClassroomWarAnswer({ roomName, userId, correct }) {
+export async function submitClassroomWarAnswer({
+  roomName,
+  userId,
+  answer,
+  questionIdx,
+}) {
   return axiosInstance.post('/classroom-wars/submit-answer', {
     roomName,
     userId,
-    correct,
+    answer,
+    questionIdx,
   });
 }
 

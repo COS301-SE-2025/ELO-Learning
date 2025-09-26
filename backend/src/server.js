@@ -60,9 +60,6 @@ app.use(
 );
 app.use(express.json());
 
-// Only apply rate limiting to login endpoint
-app.post('/auth/login', limiter);
-
 // Health check endpoint
 app.get('/health', (req, res) => {
   res.status(200).json({

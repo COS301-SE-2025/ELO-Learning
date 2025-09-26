@@ -5,6 +5,18 @@
       "@/*": ["frontend/src/*"]
     },
     "allowJs": true,
-    "skipLibCheck": true
-  }
+    "skipLibCheck": true,
+    "noEmit": true
+  },
+  "include": ["frontend/**/*"],
+  "exclude": [
+    "node_modules",
+    "backend",
+    "coverage",
+    "cypress",
+    ".next",
+    "out",
+    "build",
+    "dist"
+  ]
 }

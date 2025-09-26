@@ -6,6 +6,7 @@ import {
 } from '@/services/api';
 import { initializeAchievementTracking } from '@/utils/gameplayAchievementHandler';
 import { useSession } from 'next-auth/react';
+import { useRouter } from 'next/navigation';
 import { useEffect, useMemo, useState, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import LeaderboardTable from '../ui/leaderboard-table';
@@ -14,6 +15,7 @@ import BaselineTestPopup from '../ui/pop-up/baseline-test';
 
 // Component to handle search params
 function DashboardContent() {
+  const router = useRouter();
   const [users, setUsers] = useState([]);
   const [communityLeaderboard, setCommunityLeaderboard] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -23,12 +25,24 @@ function DashboardContent() {
   const [showPopup, setShowPopup] = useState(false);
   const searchParams = useSearchParams();
 
-  // Initialize achievement tracking when user logs in (no notifications)
+  // Redirect admin to admin dashboard
   useEffect(() => {
-    if (status === 'authenticated' && session?.user?.id) {
+    if (
+      status === 'authenticated' &&
+      session?.user?.email === 'admin@gmail.com' &&
+      session?.user?.username === 'admin'
+    ) {
+      router.replace('/dashboard/admin');
+    } else if (status === 'authenticated' && session?.user?.id) {
       initializeAchievementTracking(session.user.id);
     }
-  }, [status, session?.user?.id]);
+  }, [
+    status,
+    session?.user?.id,
+    session?.user?.email,
+    session?.user?.username,
+    router,
+  ]);
 
   // Function to update session with leaderboard data
   const updateSessionWithLeaderboardData = async (leaderboardData) => {

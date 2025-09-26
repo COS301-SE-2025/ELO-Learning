@@ -12,8 +12,34 @@ export default function Page() {
   const [opponent, setOpponent] = useState(null);
   const [gameId, setGameId] = useState(null);
   const router = useRouter();
+  const [gameErrorMessage, setGameErrorMessage] = useState('');
 
   // Initialize achievement tracking when user logs in (no notifications)
+  useEffect(() => {
+    if (!socket) return;
+
+    const onGameError = (data) => {
+      // Extract a meaningful message from the data
+      const message =
+        data?.error || data?.reason || 'Something went wrong with the match.';
+
+      // Update state to show message in the UI
+      setGameErrorMessage(message);
+
+      // Optional: log cleanly as a string
+      console.warn('Game error received:', message);
+
+      // Redirect to dashboard after short delay
+      setTimeout(() => router.push('/dashboard'), 2000);
+    };
+
+    socket.on('gameError', onGameError);
+
+    return () => {
+      socket.off('gameError', onGameError);
+    };
+  }, [socket, router]);
+
   useEffect(() => {
     if (status === 'authenticated' && session?.user?.id) {
       initializeAchievementTracking(session.user.id);
@@ -88,7 +114,12 @@ export default function Page() {
       setIsQueueing(false);
       setOpponent(null);
       setGameId(null);
+
       socket.emit('cancelQueue');
+    } else if (gameId && opponent) {
+      // Quit an active match
+      socket.emit('playerQuit', gameId); // notify backend
+      router.push('/dashboard');
     } else {
       router.push('/dashboard');
     }
@@ -142,6 +173,11 @@ export default function Page() {
               <p className="text-center text-sm text-[var(--color-foreground)]/70 mt-4">
                 Click "Start Game" when ready!
               </p>
+            </div>
+          )}
+          {gameErrorMessage && (
+            <div className="text-red-500 text-center mb-4">
+              {gameErrorMessage}
             </div>
           )}
 

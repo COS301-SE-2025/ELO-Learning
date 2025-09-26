@@ -121,7 +121,7 @@ export default function Page() {
           {!opponent && (
             <div className="flex flex-row items-center gap-2">
               <CircleSmall size={24} fill={color} stroke={color} />
-              <span className={`ml-2 text-[${color}]`}>
+              <span className="ml-2" style={{ color }}>
                 {!isQueueing && (isConnected ? 'Connected' : 'Connecting...')}
                 {isQueueing && 'Searching for an opponent...'}
               </span>

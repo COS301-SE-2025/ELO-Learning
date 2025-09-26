@@ -8,8 +8,11 @@ export function convertToLatex(expression) {
   let result = expression;
 
   // Handle absolute value functions - convert abs(...) to |...|
-  result = result.replace(/abs\s*\(\s*([^()]*(?:\([^()]*\)[^()]*)*)\s*\)/g, '|$1|');
-  
+  result = result.replace(
+    /abs\s*\(\s*([^()]*(?:\([^()]*\)[^()]*)*)\s*\)/g,
+    '|$1|',
+  );
+
   // Handle nested absolute values
   let hasAbsFunction = true;
   while (hasAbsFunction) {
@@ -38,8 +41,10 @@ export function convertToLatex(expression) {
     .replace(/\blog2\b/g, '\\log_{2}');
 
   // Handle square roots
-  result = result
-    .replace(/sqrt\s*\(\s*([^()]*(?:\([^()]*\)[^()]*)*)\s*\)/g, '\\sqrt{$1}');
+  result = result.replace(
+    /sqrt\s*\(\s*([^()]*(?:\([^()]*\)[^()]*)*)\s*\)/g,
+    '\\sqrt{$1}',
+  );
 
   // Handle exponents
   result = result
@@ -80,7 +85,7 @@ export function quickLatexConvert(expression) {
   return expression
     .replace(/abs\s*\(\s*([^()]+)\s*\)/g, '|$1|')
     .replace(/\basin\b/g, '\\arcsin')
-    .replace(/\bacos\b/g, '\\arccos') 
+    .replace(/\bacos\b/g, '\\arccos')
     .replace(/\batan\b/g, '\\arctan')
     .replace(/\bsin\b/g, '\\sin')
     .replace(/\bcos\b/g, '\\cos')

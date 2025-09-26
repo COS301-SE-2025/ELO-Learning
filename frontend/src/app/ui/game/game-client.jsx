@@ -15,6 +15,21 @@ export default function GameClient({ game, level }) {
     useState(false);
   const [error, setError] = useState(null);
   const [hasNavigated, setHasNavigated] = useState(false);
+  const [gameErrorMessage, setGameErrorMessage] = useState('');
+
+  useEffect(() => {
+    const handleBeforeUnload = (e) => {
+      if (socket && game) {
+        socket.emit('playerQuit', game);
+      }
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+
+    return () => {
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+    };
+  }, [socket, game]);
 
   useEffect(() => {
     if (status === 'loading') return; // Wait for session
@@ -46,8 +61,19 @@ export default function GameClient({ game, level }) {
     }
 
     function onGameError(data) {
-      console.error('Game error:', data);
-      setError(data.error || 'Unknown game error');
+      setGameErrorMessage(
+        data?.error || 'Something went wrong with the match.',
+      );
+      setTimeout(() => router.push('/dashboard'), 2000);
+    }
+
+    function onOpponentQuit(data) {
+      if (data?.gameId === game) {
+        setGameErrorMessage(
+          'Your opponent quit the game. Returning to dashboard...',
+        );
+        setTimeout(() => router.push('/dashboard'), 2000);
+      }
     }
 
     function onMatchEnd(data) {
@@ -68,14 +94,16 @@ export default function GameClient({ game, level }) {
 
     socket.on('gameReady', onGameReady);
     socket.on('gameError', onGameError);
+    socket.on('opponentQuit', onOpponentQuit);
     socket.on('matchEnd', onMatchEnd);
 
     return () => {
       socket.off('gameReady', onGameReady);
       socket.off('gameError', onGameError);
+      socket.off('opponentQuit', onOpponentQuit);
       socket.off('matchEnd', onMatchEnd);
     };
-  }, [game, level, socket, status]);
+  }, [game, level, socket, status, hasNavigated, router]);
 
   const submitCallback = () => {
     console.log('Submit callback triggered - Match ended');
@@ -100,6 +128,13 @@ export default function GameClient({ game, level }) {
 
   return (
     <div>
+      {gameErrorMessage && (
+        <div className="flex flex-col items-center justify-center min-h-screen">
+          <div className="text-red-500 text-lg font-bold">
+            {gameErrorMessage}
+          </div>
+        </div>
+      )}
       {error && (
         <div className="flex flex-col items-center justify-center min-h-screen">
           <div className="text-red-500 text-lg font-bold">Error: {error}</div>
@@ -120,7 +155,7 @@ export default function GameClient({ game, level }) {
         </div>
       )}
 
-      {!error && isWaitingForOpponentStart && (
+      {!error && isWaitingForOpponentStart && !gameErrorMessage && (
         <div>
           <div className="flex flex-col items-center justify-center min-h-screen">
             <div className="flex flex-row items-center justify-center gap-5">
@@ -144,7 +179,7 @@ export default function GameClient({ game, level }) {
         </div>
       )}
 
-      {!error && isWaitingForOpponentFinish && (
+      {!error && isWaitingForOpponentFinish && !gameErrorMessage && (
         <div className="flex flex-col items-center justify-center min-h-screen">
           <div className="flex flex-row items-center justify-center gap-5">
             <div

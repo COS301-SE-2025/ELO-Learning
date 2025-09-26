@@ -49,7 +49,7 @@ router.post('/multiplayer', async (req, res) => {
     // Fetch players' current XP + level
     const { data: playersData, error: playersError } = await supabase
       .from('Users')
-      .select('id, xp, currentLevel, elo_rating')
+      .select('id, xp, currentLevel, elo_rating, rank')
       .in('id', [player1_id, player2_id]);
 
     if (playersError || playersData.length !== 2) {

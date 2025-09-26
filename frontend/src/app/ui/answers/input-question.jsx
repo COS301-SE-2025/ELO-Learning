@@ -21,12 +21,26 @@ import {
   getMathValidationMessage,
   isValidMathExpression,
 } from '@/utils/frontendMathValidator';
+import { convertToLatex } from '@/utils/latexConverter';
 import { getPlatformClasses } from '@/utils/platformDetection';
 import { QUESTION_TYPES } from '@/utils/questionTypeDetection';
 import 'katex/dist/katex.min.css';
 import { ChevronDown, ChevronUp } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import { InlineMath } from 'react-katex';
+
+  // Auto-completion suggestions
+  const autoCompletions = [
+    { trigger: 'sin', completion: 'sin()', description: 'Sine function' },
+    { trigger: 'cos', completion: 'cos()', description: 'Cosine function' },
+    { trigger: 'tan', completion: 'tan()', description: 'Tangent function' },
+    { trigger: 'log', completion: 'log()', description: 'Logarithm' },
+    { trigger: 'ln', completion: 'ln()', description: 'Natural log' },
+    { trigger: 'sqrt', completion: 'sqrt()', description: 'Square root' },
+    { trigger: 'abs', completion: 'abs()', description: 'Absolute value' },
+    { trigger: 'pi', completion: 'π', description: 'Pi constant' },
+    { trigger: 'inf', completion: '∞', description: 'Infinity' },
+  ];
 
 export default function MathInputTemplate({
   correctAnswer,
@@ -50,6 +64,7 @@ export default function MathInputTemplate({
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [showHelper, setShowHelper] = useState(false);
   const [isHydrated, setIsHydrated] = useState(false);
+  const [isUppercase, setIsUppercase] = useState(false);
 
   const inputRef = useRef(null);
 
@@ -66,7 +81,7 @@ export default function MathInputTemplate({
       setTextContent(input, initialValue, true, true);
       setCursorPosition(initialValue.length);
     }
-  }, []); // Run only once on mount
+  }, [studentAnswer]); // Run only once on mount
 
   // Initialize keyboard manager for Math Input questions
   const keyboard = useKeyboardManager(QUESTION_TYPES.MATH_INPUT);
@@ -181,54 +196,22 @@ export default function MathInputTemplate({
         { symbol: 'infinity', label: '∞', description: 'Infinity' },
         { symbol: 'i', label: 'i', description: 'Imaginary unit' },
         { symbol: 'phi', label: 'φ', description: 'Golden ratio' },
-        { symbol: '±', label: '±', description: 'Plus or minus' },
-      ],
-    },
-    advanced: {
-      label: 'Advanced',
-      icon: '∫',
-      symbols: [
-        { symbol: 'derivative(', label: '∂/∂x', description: 'Derivative' },
-        { symbol: 'integral(', label: '∫', description: 'Integral' },
-        { symbol: 'sum(', label: 'Σ', description: 'Summation' },
-        { symbol: 'prod(', label: '∏', description: 'Product' },
-        { symbol: 'limit(', label: 'lim', description: 'Limit' },
-        { symbol: 'matrix(', label: '[]', description: 'Matrix' },
-        { symbol: '∈', label: '∈', description: 'Element of' },
-        { symbol: '∅', label: '∅', description: 'Empty set' },
-        { symbol: '∀', label: '∀', description: 'For all' },
-      ],
-    },
-    templates: {
-      label: 'Templates',
-      icon: '📐',
-      symbols: [
-        { symbol: 'frac{}{', label: 'a/b', description: 'Fraction template' },
-        { symbol: '^{}', label: 'xⁿ', description: 'Exponent template' },
-        { symbol: '_{', label: 'x₍ₙ₎', description: 'Subscript template' },
-        { symbol: 'sqrt{}', label: '√x', description: 'Square root template' },
-        { symbol: 'cbrt{}', label: '∛x', description: 'Cube root template' },
-        {
-          symbol: 'binom{}{',
-          label: '(n k)',
-          description: 'Binomial coefficient',
-        },
+        { symbol: 'theta', label: 'θ', description: 'Theta angle' },
+        { symbol: 'alpha', label: 'α', description: 'Alpha' },
+        { symbol: 'beta', label: 'β', description: 'Beta' },
       ],
     },
   };
 
-  // Auto-completion suggestions
-  const autoCompletions = [
-    { trigger: 'sin', completion: 'sin()', description: 'Sine function' },
-    { trigger: 'cos', completion: 'cos()', description: 'Cosine function' },
-    { trigger: 'tan', completion: 'tan()', description: 'Tangent function' },
-    { trigger: 'log', completion: 'log()', description: 'Logarithm' },
-    { trigger: 'ln', completion: 'ln()', description: 'Natural log' },
-    { trigger: 'sqrt', completion: 'sqrt()', description: 'Square root' },
-    { trigger: 'abs', completion: 'abs()', description: 'Absolute value' },
-    { trigger: 'pi', completion: 'π', description: 'Pi constant' },
-    { trigger: 'inf', completion: '∞', description: 'Infinity' },
-  ];
+  // Generate dynamic alphabet symbols based on case
+  const alphabetSymbols = mathCategories.alphabet.symbols.map(symbol => ({
+    ...symbol,
+    symbol: isUppercase ? symbol.symbol.toUpperCase() : symbol.symbol,
+    label: isUppercase ? symbol.label.toUpperCase() : symbol.label,
+    description: `Variable ${isUppercase ? symbol.symbol.toUpperCase() : symbol.symbol}`
+  }));
+
+
 
   // Real-time expression validation
   useEffect(() => {
@@ -884,87 +867,186 @@ export default function MathInputTemplate({
           {/* Tab headers */}
           <div className="flex bg-[#7D32CE]">
             {Object.entries(mathCategories).map(([key, category]) => (
-              <button
-                key={key}
-                onClick={() => setActiveTab(key)}
-                className={`flex-1 px-3 py-3 text-sm font-medium transition-colors flex items-center justify-center gap-2 ${
-                  activeTab === key
-                    ? 'bg-[#FF6E99] text-white'
-                    : ' hover:bg-[#4D5DED] hover:text-white'
-                }`}
-              >
-                <span className="text-lg">{category.icon}</span>
-                <span className="hidden sm:inline">{category.label}</span>
-              </button>
+              <div key={key} className="flex flex-1">
+                <button
+                  onClick={() => setActiveTab(key)}
+                  className={`flex-1 px-3 py-3 text-sm font-medium transition-colors flex items-center justify-center gap-2 ${
+                    activeTab === key
+                      ? 'bg-[#FF6E99] text-white'
+                      : ' hover:bg-[#4D5DED] hover:text-white'
+                  }`}
+                >
+                  <span className="text-lg">{category.icon}</span>
+                  <span className="hidden sm:inline">{category.label}</span>
+                </button>
+              </div>
             ))}
           </div>
 
-          {/* Symbol grid */}
-          <div className="p-4">
-            <div
-              className={`grid gap-3 ${
-                activeTab === 'numbers' || activeTab === 'alphabet'
-                  ? 'grid-cols-5'
-                  : 'grid-cols-3 sm:grid-cols-4 md:grid-cols-5'
-              }`}
-            >
-              {mathCategories[activeTab].symbols.map((item, index) => (
-                <button
-                  key={index}
-                  onClick={() => insertSymbol(item.symbol)}
-                  title={item.description}
-                  className="h-12 w-full bg-white text-black rounded-md hover:bg-[#4D5DED] hover:text-white active:bg-[#FF6E99] transition-colors text-lg font-bold flex items-center justify-center"
-                >
-                  {item.label}
-                </button>
-              ))}
-            </div>
+{/* Symbol grid */}
+<div className="p-4">
+  {activeTab === 'alphabet' ? (
+    <div className="space-y-3">
+      {/* First 25 letters in 5x5 grid */}
+      <div className="grid grid-cols-5 gap-3">
+        {alphabetSymbols.slice(0, 25).map((item, index) => (
+          <button
+            key={`mobile-${item.symbol}-${isUppercase}`}
+            onClick={() => insertSymbol(item.symbol)}
+            title={item.description}
+            className="h-12 w-full bg-white text-black rounded-md hover:bg-[#4D5DED] hover:text-white active:bg-[#FF6E99] transition-colors text-lg font-bold flex items-center justify-center"
+          >
+            {item.label}
+          </button>
+        ))}
+      </div>
+      
+      {/* Last row: Z + empty spaces + toggle button */}
+      <div className="grid grid-cols-5 gap-3">
+        <button
+          onClick={() => insertSymbol(alphabetSymbols[25].symbol)}
+          title={alphabetSymbols[25].description}
+          className="h-12 w-full bg-white text-black rounded-md hover:bg-[#4D5DED] hover:text-white active:bg-[#FF6E99] transition-colors text-lg font-bold flex items-center justify-center"
+        >
+          {alphabetSymbols[25].label}
+        </button>
+        <div></div>
+        <div></div>
+        <div></div>
+        
+        {/* Toggle button in bottom-right corner */}
+        <button
+          onClick={() => setIsUppercase(!isUppercase)}
+          className="h-12 w-full bg-[#FF6E99] hover:bg-[#4D5DED] text-white transition-colors flex items-center justify-center rounded-md"
+        >
+          <div className="flex flex-col items-center">
+            <span className="text-lg leading-none">
+              {isUppercase ? '↓' : '↑'}
+            </span>
+            <span className="text-xs leading-none">
+              {isUppercase ? 'abc' : 'ABC'}
+            </span>
           </div>
+        </button>
+      </div>
+    </div>
+  ) : (
+    // Regular grid for other tabs
+    <div className={`grid gap-3 ${
+      activeTab === 'numbers' 
+        ? 'grid-cols-5' 
+        : 'grid-cols-3 sm:grid-cols-4 md:grid-cols-5'
+    }`}>
+      {mathCategories[activeTab].symbols.map((item, index) => (
+        <button
+          key={`mobile-${index}`}
+          onClick={() => insertSymbol(item.symbol)}
+          title={item.description}
+          className="h-12 w-full bg-white text-black rounded-md hover:bg-[#4D5DED] hover:text-white active:bg-[#FF6E99] transition-colors text-lg font-bold flex items-center justify-center"
+        >
+          {item.label}
+        </button>
+      ))}
+    </div>
+  )}
+</div>
         </div>
       )}
 
       {/* Tabbed Symbol Categories - Always show on desktop or when not using custom keyboard */}
       {!keyboard.shouldUseCustomKeyboard && (
         <div className="w-full bg-[#421E68] rounded-lg overflow-hidden">
-          {/* Tab headers */}
-          <div className="flex bg-[#7D32CE]">
-            {Object.entries(mathCategories).map(([key, category]) => (
-              <button
-                key={key}
-                onClick={() => setActiveTab(key)}
-                className={`flex-1 px-3 py-3 text-sm font-medium transition-colors flex items-center justify-center gap-2 ${
-                  activeTab === key
-                    ? 'bg-[#FF6E99] text-white'
-                    : ' hover:bg-[#4D5DED] hover:text-white'
-                }`}
-              >
-                <span className="text-lg">{category.icon}</span>
-                <span className="hidden sm:inline">{category.label}</span>
-              </button>
-            ))}
-          </div>
+{/* Tab headers - Clean, no toggle button here */}
+<div className="flex bg-[#7D32CE]">
+  {Object.entries(mathCategories).map(([key, category]) => (
+    <button
+      key={key}
+      onClick={() => setActiveTab(key)}
+      className={`flex-1 px-3 py-3 text-sm font-medium transition-colors flex items-center justify-center gap-2 ${
+        activeTab === key
+          ? 'bg-[#FF6E99] text-white'
+          : ' hover:bg-[#4D5DED] hover:text-white'
+      }`}
+    >
+      <span className="text-lg">{category.icon}</span>
+      <span className="hidden sm:inline">{category.label}</span>
+    </button>
+  ))}
+</div>
 
-          {/* Symbol grid */}
-          <div className="p-4">
-            <div
-              className={`grid gap-3 ${
-                activeTab === 'numbers' || activeTab === 'alphabet'
-                  ? 'grid-cols-5'
-                  : 'grid-cols-3 sm:grid-cols-4 md:grid-cols-5'
-              }`}
-            >
-              {mathCategories[activeTab].symbols.map((item, index) => (
-                <button
-                  key={index}
-                  onClick={() => insertSymbol(item.symbol)}
-                  title={item.description}
-                  className="h-12 w-full bg-white text-black rounded-md hover:bg-[#4D5DED] hover:text-white active:bg-[#FF6E99] transition-colors text-lg font-bold flex items-center justify-center"
-                >
-                  {item.label}
-                </button>
-              ))}
-            </div>
+{/* Symbol grid */}
+<div className="p-4">
+  {activeTab === 'alphabet' ? (
+    <div className="space-y-3">
+      {/* First 25 letters in 5x5 grid */}
+      <div className="grid grid-cols-5 gap-3">
+        {alphabetSymbols.slice(0, 25).map((item, index) => (
+          <button
+            key={`${item.symbol}-${isUppercase}`}
+            onClick={() => insertSymbol(item.symbol)}
+            title={item.description}
+            className="h-12 w-full bg-white text-black rounded-md hover:bg-[#4D5DED] hover:text-white active:bg-[#FF6E99] transition-colors text-lg font-bold flex items-center justify-center"
+          >
+            {item.label}
+          </button>
+        ))}
+      </div>
+      
+      {/* Last row: Z + empty spaces + toggle button */}
+      <div className="grid grid-cols-5 gap-3">
+        <button
+          onClick={() => insertSymbol(alphabetSymbols[25].symbol)}
+          title={alphabetSymbols[25].description}
+          className="h-12 w-full bg-white text-black rounded-md hover:bg-[#4D5DED] hover:text-white active:bg-[#FF6E99] transition-colors text-lg font-bold flex items-center justify-center"
+        >
+          {alphabetSymbols[25].label}
+        </button>
+        <div></div>
+        <div></div>
+        <div></div>
+        
+        {/* Toggle button in bottom-right corner */}
+        <button
+          onClick={() => setIsUppercase(!isUppercase)}
+          className="h-12 w-full bg-[#FF6E99] hover:bg-[#4D5DED] text-white transition-colors flex items-center justify-center rounded-md"
+          title={`Switch to ${isUppercase ? 'lowercase' : 'uppercase'}`}
+        >
+          <div className="flex flex-col items-center">
+            <span className="text-lg leading-none">
+              {isUppercase ? '↓' : '↑'}
+            </span>
+            <span className="text-xs leading-none">
+              {isUppercase ? 'abc' : 'ABC'}
+            </span>
           </div>
+        </button>
+      </div>
+      
+      {/* Current mode indicator */}
+      <div className="text-center text-sm text-white">
+        Current mode: {isUppercase ? 'UPPERCASE' : 'lowercase'}
+      </div>
+    </div>
+  ) : (
+    // Regular grid for other tabs
+    <div className={`grid gap-3 ${
+      activeTab === 'numbers' 
+        ? 'grid-cols-5' 
+        : 'grid-cols-3 sm:grid-cols-4 md:grid-cols-5'
+    }`}>
+      {mathCategories[activeTab].symbols.map((item, index) => (
+        <button
+          key={index}
+          onClick={() => insertSymbol(item.symbol)}
+          title={item.description}
+          className="h-12 w-full bg-white text-black rounded-md hover:bg-[#4D5DED] hover:text-white active:bg-[#FF6E99] transition-colors text-lg font-bold flex items-center justify-center"
+        >
+          {item.label}
+        </button>
+      ))}
+    </div>
+  )}
+</div>
         </div>
       )}
 
@@ -973,7 +1055,7 @@ export default function MathInputTemplate({
         <div className="p-4 border border-[#696969] rounded-lg">
           <div className="text-sm mb-2 font-medium">Preview:</div>
           <div className="text-xl">
-            <InlineMath math={inputValue} />
+            <InlineMath math={convertToLatex(inputValue)} />
           </div>
         </div>
       )}

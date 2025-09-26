@@ -288,19 +288,11 @@ export default function AnalysisFeedbackPage() {
   return (
     <div className="max-w-7xl mx-auto p-0 pb-20">
       {/* Header: sticky, bordered to match other pages */}
-      <div
-        className="sticky top-0 z-10 px-4 py-4 border-b border-gray-700"
-        style={{ background: 'var(--color-background)' }}
-      >
-        <Back pagename="Statistics" />
-      </div>
+
+      <Back pagename="Statistics" />
 
       <div className="p-6">
         <div className="flex gap-6">
-          <aside className="hidden md:block md:w-56">
-            <NavLinks />
-          </aside>
-
           <main className="flex-1">
             <div className="relative">
               {/* Scrollable content with extra bottom padding so overlay doesn't overlap */}

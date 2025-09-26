@@ -1,6 +1,6 @@
 'use client';
 import ClickableAvatar from '@/app/ui/profile/clickable-avatar';
-import { fetchUserStreakInfo } from '@/services/api';
+import { fetchUserById, fetchUserStreakInfo } from '@/services/api';
 import { initializeAchievementTracking } from '@/utils/gameplayAchievementHandler';
 import { Cog } from 'lucide-react';
 import { useSession } from 'next-auth/react';
@@ -10,10 +10,9 @@ import { useAvatar } from '../context/avatar-context';
 import { avatarColors, gradients } from '../ui/avatar/avatar-colors';
 import Achievements from '../ui/profile/achievements';
 import BaselineTestOption from '../ui/profile/baseline-test-option';
-import MatchStats from '../ui/profile/match-stats';
+import MatchStatsPreview from '../ui/profile/match-stats-preview';
 import UserInfo from '../ui/profile/user-info';
 import UsernameBlock from '../ui/profile/username-block';
-import { fetchUserById } from '@/services/api';
 
 export default function Profile() {
   const { data: session, status, update: updateSession } = useSession();
@@ -187,7 +186,8 @@ export default function Profile() {
             ranking={user.rank || 'Unranked'}
             streak={streakData?.current_streak || 0}
           />
-          <MatchStats />
+          {/* Statistics preview block */}
+          <MatchStatsPreview />
           <Achievements />
         </div>
       </div>

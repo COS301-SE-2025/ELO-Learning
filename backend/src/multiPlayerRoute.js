@@ -49,7 +49,7 @@ router.post('/multiplayer', async (req, res) => {
     // Fetch players' current XP + level
     const { data: playersData, error: playersError } = await supabase
       .from('Users')
-      .select('id, xp, currentLevel, elo_rating')
+      .select('id, xp, currentLevel, elo_rating, rank')
       .in('id', [player1_id, player2_id]);
 
     if (playersError || playersData.length !== 2) {
@@ -74,7 +74,7 @@ router.post('/multiplayer', async (req, res) => {
     const actual2 = 1 - score1;
 
     // Update ELO ratings
-    const newElo1 = parseFloat(
+    let newElo1 = parseFloat(
       updateEloRating({
         rating: player1.elo_rating,
         expected: expected1,
@@ -82,13 +82,17 @@ router.post('/multiplayer', async (req, res) => {
       }),
     );
 
-    const newElo2 = parseFloat(
+    let newElo2 = parseFloat(
       updateEloRating({
         rating: player2.elo_rating,
         expected: expected2,
         actual: actual2,
       }),
     );
+
+    //clamp to above 100
+    if (newElo1 < 100) newElo1 = 100;
+    if (newElo2 < 100) newElo2 = 100;
 
     const eloChange1 = newElo1 - player1.elo_rating;
     const eloChange2 = newElo2 - player2.elo_rating;

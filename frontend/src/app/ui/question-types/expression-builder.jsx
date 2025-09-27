@@ -5,6 +5,7 @@ import 'katex/dist/katex.min.css';
 import { ChevronDown, ChevronUp } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { InlineMath } from 'react-katex';
+import { convertToLatex } from '../../../utils/latexConverter';
 
 export default function ExpressionBuilderTemplate({
   question,
@@ -130,30 +131,7 @@ export default function ExpressionBuilderTemplate({
     setSelectedTiles([]);
   };
 
-  // Convert expression to LaTeX format for proper rendering
-  const convertToLatex = (expression) => {
-    return expression
-      .replace(/×/g, ' \\times ')
-      .replace(/÷/g, ' \\div ')
-      .replace(/\^/g, '^')
-      .replace(/sqrt/g, '\\sqrt')
-      .replace(/π/g, '\\pi')
-      .replace(/θ/g, '\\theta')
-      .replace(/∞/g, '\\infty')
-      .replace(/±/g, '\\pm')
-      .replace(/°/g, '^\\circ')
-      .replace(/sin/g, '\\sin')
-      .replace(/cos/g, '\\cos')
-      .replace(/tan/g, '\\tan')
-      .replace(/sec/g, '\\sec')
-      .replace(/csc/g, '\\csc')
-      .replace(/cot/g, '\\cot')
-      .replace(/log/g, '\\log')
-      .replace(/ln/g, '\\ln')
-      .replace(/\|x\|/g, '|x|')
-      .replace(/a\/b/g, '\\frac{a}{b}')
-      .replace(/a₁/g, 'a_1');
-  };
+  // Note: Using imported convertToLatex function for enhanced math rendering
 
   return (
     <div className="w-full space-y-6">

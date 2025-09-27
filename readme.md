@@ -40,7 +40,7 @@ _Note: The application is fully deployed and ready for use during Demo 4._
 | [Architecture Diagram](https://drive.google.com/file/d/18XeSEwOtY41mC4Lcr6jvrzPMW5n9fRTW/view?usp=drive_link)                               | Diagram of system overview                       |
 | [Class Diagram](https://drive.google.com/file/d/16yyAfoXCBQyYV_wkpCMy29WbaI8auSaB/view?usp=drive_link)                                      | Visual representation of WEE structure           |
 | [Deployment Diagram](https://drive.google.com/file/d/113kGo7tnekoP_bN0uDI7ym5CjJaA8XVo/view?usp=drive_link)                                 | Plan for project deployment                      |
-| [Project Board](https://github.com/orgs/COS301-SE-2025/projects/120)                                                                       | Team organisation and progress tracking          |
+| [Project Board](https://github.com/orgs/COS301-SE-2025/projects/120)                                                                        | Team organisation and progress tracking          |
 | [Previous Documentation Iterations](https://drive.google.com/drive/folders/1H4omJ2xESlP8_STEu7QdVYtMf1rgsZ-S?usp=sharing)                   | See how our documentation has progressed         |
 
  <h1 align="center"> Demo Resources </h1>
@@ -53,7 +53,6 @@ _Note: The application is fully deployed and ready for use during Demo 4._
 | Demo 2 | [Demo 2 Video](https://drive.google.com/file/d/1fmjxiQVnpMjOAuttFO75xRElCkPtDDWh/view?usp=sharing)                                                                                                                                                           | [Demo 2 Slides](https://www.canva.com/design/DAGHjFa1XEo/w8trIf8dZMyJ7xtJLpWiag/edit?utm_content=DAGHjFa1XEo&utm_campaign=designshare&utm_medium=link2&utm_source=sharebutton) |
 | Demo 3 | [Demo 3 Video](https://drive.google.com/file/d/1HYXFZeAeoHbty9NBG3c9h86kCwD3qBhI/view?usp=drive_link)                                                                                                                                                        | [Demo 3 Slides](https://www.canva.com/design/DAGM5VQp7f0/MTP7vC8GpmNQX7k_ND45SQ/edit?utm_content=DAGM5VQp7f0&utm_campaign=designshare&utm_medium=link2&utm_source=sharebutton) |
 | Demo 4 | [Demo 4 Video](https://drive.google.com/file/d/1kIHoI6UXM2WT2x0QEtVY3sPKKny1Wo71/view?usp=drive_linkhttps://www.canva.com/design/DAGRe7Jg-ZE/ZPiYrEXpIPiLauxGehUgkQ/view?utm_content=DAGRe7Jg-ZE&utm_campaign=designshare&utm_medium=link&utm_source=editor) | [Demo 4 Slides](https://www.canva.com/design/DAGRe7Jg-ZE/ZPiYrEXpIPiLauxGehUgkQ/view?utm_content=DAGRe7Jg-ZE&utm_campaign=designshare&utm_medium=link&utm_source=editor)       |
-
 
 ## 👾 Tech Stack
 

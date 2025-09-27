@@ -84,8 +84,8 @@ router.post('/singleplayer', async (req, res) => {
     const newXP = currentXP + xpEarned;
 
     //ELO Calculation for player
-    const {
-      newPlayerElo: newElo,
+    let {
+      newPlayerElo,
       newQuestionElo,
       playerEloChange: eloChange,
       questionEloChange,
@@ -94,6 +94,10 @@ router.post('/singleplayer', async (req, res) => {
       questionRating: questionElo,
       isCorrect,
     });
+
+    // Clamp only if it goes below 100
+    const newElo = newPlayerElo < 100 ? 100 : newPlayerElo;
+    const clampedQuestionElo = newQuestionElo < 100 ? 100 : newQuestionElo;
 
     //Update user level and rank
     const { newLevel, newRank } = await checkAndUpdateRankAndLevel({
@@ -154,8 +158,8 @@ router.post('/singleplayer', async (req, res) => {
         ratingBefore: currentXP,
         ratingAfter: newXP,
         ratingChange: xpEarned,
-        eloBefore: currentElo,
-        eloAfter: newElo,
+        eloBefore: Math.max(100, currentElo),
+        eloAfter: newElo, // already clamped above
         eloChange,
         attemptDate: new Date(),
         attemptType: 'single',
@@ -286,15 +290,14 @@ router.post('/singleplayer', async (req, res) => {
       .update({
         xp: newXP,
         currentLevel: newLevel,
-        elo_rating: newElo,
+        elo_rating: newElo, // already clamped
         rank: newRank,
       })
       .eq('id', user_id);
 
-    // Update question ELO
     await supabase
       .from('Questions')
-      .update({ elo_rating: newQuestionElo })
+      .update({ elo_rating: clampedQuestionElo })
       .eq('Q_id', question_id);
 
     // 🎯 Format achievements for API response

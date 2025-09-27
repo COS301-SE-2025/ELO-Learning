@@ -9,6 +9,7 @@ import {
   shouldUseCustomKeyboard,
   shouldUseNativeKeyboard,
 } from '@/utils/platformDetection';
+import { preserveCursorPosition } from '@/utils/contentEditableHelpers';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 export const useKeyboardManager = (
@@ -109,32 +110,30 @@ export const useKeyboardManager = (
           );
         }, 150);
       } else if (behavior.isIOS) {
-        // iOS-specific: Much more aggressive approach
-        input.blur();
+        // IMPROVED: Don't blur - just prevent keyboard while preserving cursor
 
-        setTimeout(() => {
-          // Multiple layers of iOS prevention
-          input.contentEditable = 'false';
-          input.setAttribute('readonly', 'true');
-          input.setAttribute('inputmode', 'none');
+        // Set input mode immediately to prevent keyboard
+        input.setAttribute('inputmode', 'none');
+        input.setAttribute('contenteditable', 'false');
+
+        // Use cursor preservation for additional iOS prevention
+        preserveCursorPosition(input, () => {
+          // Additional iOS prevention without breaking cursor
           input.setAttribute('autocomplete', 'off');
           input.setAttribute('autocorrect', 'off');
           input.setAttribute('autocapitalize', 'off');
           input.setAttribute('spellcheck', 'false');
 
-          // iOS-specific styles that are harder to override
-          input.style.setProperty('-webkit-user-select', 'none', 'important');
-          input.style.setProperty('user-select', 'none', 'important');
+          // Only set the touch prevention styles (removed user-select none)
           input.style.setProperty('-webkit-touch-callout', 'none', 'important');
           input.style.setProperty(
             '-webkit-tap-highlight-color',
             'transparent',
             'important',
           );
-          // Removed pointer-events: none to allow click handling in component
+        });
 
-          console.log('iOS aggressive keyboard prevention applied');
-        }, 200); // Longer delay for iOS
+        console.log('iOS keyboard prevented with cursor preservation');
       } else {
         // Generic mobile or desktop
         input.contentEditable = 'false';

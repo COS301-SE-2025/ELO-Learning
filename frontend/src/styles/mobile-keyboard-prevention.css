@@ -230,19 +230,23 @@ div[contenteditable].math-input,
   -webkit-tap-highlight-color: transparent;
 }
 
-/* iOS keyboard prevention when custom keyboard is active */
+/* iOS keyboard prevention when custom keyboard is active - FIXED */
 .platform-ios .custom-keyboard-active .math-input[contenteditable='false'] {
-  /* iOS specific: Multiple layers of keyboard prevention */
-  -webkit-user-select: none !important;
-  user-select: none !important;
+  /* FIXED: Keep text selection enabled for cursor positioning */
+  -webkit-user-select: text !important;
+  user-select: text !important;
 
   /* Prevent any text input methods */
   pointer-events: auto !important;
 
-  /* iOS specific: Disable text editing capabilities while maintaining interaction */
-  -webkit-user-modify: read-only !important;
+  /* REMOVED: This was breaking cursor positioning */
+  /* -webkit-user-modify: read-only !important; */
 
-  /* Prevent context menus and selection */
+  /* Keep cursor visible and functional */
+  caret-color: #4d5ded !important;
+  cursor: text !important;
+
+  /* Prevent keyboard without breaking cursor */
   -webkit-touch-callout: none !important;
   -webkit-tap-highlight-color: transparent !important;
 
@@ -255,19 +259,22 @@ div[contenteditable].math-input,
   text-size-adjust: 100% !important;
 }
 
-/* iOS Safari specific overrides */
+/* iOS Safari specific overrides - FIXED */
 @supports (-webkit-appearance: none) {
   .platform-ios .custom-keyboard-active .math-input[contenteditable='false'] {
-    /* Force disable all input capabilities for iOS Safari */
-    -webkit-user-modify: read-only !important;
+    /* REMOVED: This was breaking cursor functionality */
+    /* -webkit-user-modify: read-only !important; */
+
     -webkit-appearance: none !important;
     appearance: none !important;
 
-    /* Prevent any focus behaviors that might trigger keyboard */
-    outline: none !important;
-
-    /* Maintain visual feedback */
+    /* Keep cursor visible and functional */
     cursor: text !important;
+    caret-color: #4d5ded !important;
+
+    /* Allow text selection for cursor positioning */
+    -webkit-user-select: text !important;
+    user-select: text !important;
   }
 
   .platform-ios
@@ -277,8 +284,13 @@ div[contenteditable].math-input,
     outline: 2px solid white !important;
     outline-offset: -2px;
 
-    /* Ensure focus doesn't trigger keyboard */
-    -webkit-user-modify: read-only !important;
+    /* REMOVED: This was preventing cursor positioning */
+    /* -webkit-user-modify: read-only !important; */
+
+    /* Maintain cursor functionality in focus state */
+    -webkit-user-select: text !important;
+    user-select: text !important;
+    cursor: text !important;
   }
 } /* Custom keyboard active state */
 .custom-keyboard-active .math-input {
@@ -364,4 +376,53 @@ div[contenteditable].math-input,
 .platform-android .math-input {
   -webkit-text-fill-color: white !important;
   color: white !important;
+}
+
+/* FORCE iOS cursor positioning to work */
+.platform-ios .math-input[contenteditable='false'] {
+  -webkit-user-modify: read-write !important;
+}
+
+.platform-ios .custom-keyboard-active .math-input[contenteditable='false'] {
+  -webkit-user-modify: read-write !important;
+}
+
+/* CRITICAL: iOS cursor positioning override - highest specificity */
+.platform-ios .custom-keyboard-active .math-input[contenteditable='false'],
+.platform-ios .custom-keyboard-active .math-input[contenteditable='true'] {
+  -webkit-user-modify: read-write !important;
+  -webkit-user-select: text !important;
+  user-select: text !important;
+  pointer-events: auto !important;
+  cursor: text !important;
+}
+
+/* iOS cursor positioning improvements */
+.platform-ios .math-input {
+  /* Ensure the entire content area is clickable */
+  position: relative;
+
+  /* Prevent outline from being selectable */
+  outline: none !important;
+}
+
+.platform-ios .math-input:focus {
+  /* Custom focus styling that doesn't interfere with cursor positioning */
+  outline: none !important;
+  box-shadow: 0 0 0 2px rgba(77, 93, 237, 0.5) !important;
+  border-color: #4d5ded !important;
+}
+
+/* Prevent any pseudo-elements from interfering with cursor positioning */
+.platform-ios .math-input::before,
+.platform-ios .math-input::after {
+  pointer-events: none !important;
+}
+
+/* Ensure text content area takes full space */
+.platform-ios .math-input {
+  padding: 16px !important;
+  display: block !important;
+  width: 100% !important;
+  box-sizing: border-box !important;
 }

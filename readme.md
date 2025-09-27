@@ -3,6 +3,8 @@
     <img src="https://drive.usercontent.google.com/download?id=1zazGq71UACnS8KEjIlrJ34Ms2zmbrmqC" width="300"/>
 </div>
 
+<div align="center">
+
 [![Issue Tracking](https://img.shields.io/badge/Issue_Tracking-GitHub_Issues-yellow)](https://github.com/COS301-SE-2025/ELO-Learning/issues)
 [![Build Status](https://img.shields.io/badge/Build_Status-GitHub_Actions-brightgreen)](https://github.com/COS301-SE-2025/ELO-Learning/actions/workflows/linter.yml)
 ![Uptime Robot status](https://img.shields.io/uptimerobot/status/m797015486-75c486778a8f87b141372bd7)
@@ -26,26 +28,23 @@ _Note: The application is fully deployed and ready for use during Demo 4._
 
 ## Documentation and Resources
 
-<div align="center" >
-
 | Resource                                                                                                                                    | Description                                      |
 | ------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------ |
-| [Software Requirements Specification](https://github.com/COS301-SE-2025/ELO-Learning/blob/338-documentation/docs/Requirements-Document.pdf) | Complete project requirements and specifications |
-| [User Manual](https://drive.google.com/file/d/1cYqBbYG7Q05_HZpL4xxfW74yTd5VWotS/view?usp=drive_link)                                        | System design overview                           |
-| [Technical Installation Manual](https://drive.google.com/file/d/1joJ745H270WYZFsyDwDsgYrCYzvT7b7z/view?usp=drive_link)                      | Guidelines to using WEE                          |
-| [Coding Standards](https://drive.google.com/file/d/1ZDje5oLLxuUHSR7mRGjzmekAQjT3vz9N/view?usp=drive_link)                                   | Instructions for system configuration            |
-| [Testing Policy Document](https://drive.google.com/file/d/1ej3eurY4W6VFi7GLRBxFbi3qc6opm3RE/view?usp=drive_link)                            | Guidelines for writing code                      |
-| [Quality Requirements & Testing](https://drive.google.com/file/d/14GK1PMEEvC90tCRgq2vfsNMf0_90r7yg/view?usp=drive_link)                     | Testing strategies and findings                  |
-| [Sprint Documentation](CONTRIBUTING.md)                                                                                                     | Guidelines for contributing to WEE               |
-| [Architecture Diagram](https://drive.google.com/file/d/18XeSEwOtY41mC4Lcr6jvrzPMW5n9fRTW/view?usp=drive_link)                               | Diagram of system overview                       |
-| [Class Diagram](https://drive.google.com/file/d/16yyAfoXCBQyYV_wkpCMy29WbaI8auSaB/view?usp=drive_link)                                      | Visual representation of WEE structure           |
-| [Deployment Diagram](https://drive.google.com/file/d/113kGo7tnekoP_bN0uDI7ym5CjJaA8XVo/view?usp=drive_link)                                 | Plan for project deployment                      |
+| [Software Requirements Specification](../ELO-Learning/docs/DEMO%204/Requirements-Document.pdf) | CComplete project requirements and specifications |
+| [User Manual](../ELO-Learning/docs/DEMO%204/User-Manual.pdf)                                        | Complete guide for end users                           |
+| [Technical Installation Manual](../ELO-Learning/docs/DEMO%204/Technical-Installation-Manual.pdf)                      | Instructions for system setup and deployment                          |
+| [Coding Standards](../ELO-Learning/docs/DEMO%204/Coding-Standards.pdf)                                   | Development conventions and best practices            |
+| [Testing Policy Document](https://drive.google.com/file/d/1ej3eurY4W6VFi7GLRBxFbi3qc6opm3RE/view?usp=drive_link)                            | Testing procedures and automated testing strategies                      |
+| [Quality Requirements](../ELO-Learning/docs/DEMO%204/Architectural-Requirements.pdf)                     | Non-functional requirements                  |
+| [Sprint Documentation](CONTRIBUTING.md)                                                                                                     | Project management from Demo 1 to Demo 4               |
+| [Architecture Diagram](../ELO-Learning/docs/DEMO%204/ELO%20Learning%20Architecture%20Diagram.pdf)                               | Diagram of system overview                       |
+| [Class Diagram](../ELO-Learning//docs/DEMO%204/ELO%20Learning%20Domain%20Model.pdf)                                      | Visual representation of WEE structure           |
+| [Deployment Diagram](../ELO-Learning/docs/DEMO%204/Deployment-Model-ELO-Learning.pdf)                                 | Deployment Diagram                     |
 | [Project Board](https://github.com/orgs/COS301-SE-2025/projects/120)                                                                        | Team organisation and progress tracking          |
 | [Previous Documentation Iterations](https://drive.google.com/drive/folders/1H4omJ2xESlP8_STEu7QdVYtMf1rgsZ-S?usp=sharing)                   | See how our documentation has progressed         |
 
 ## Demo Resources
 
-<div align="center" >
 
 | Demo   | Video                                                                                                                                                                                                                                                        | Slides                                                                                                                                                                         |
 | ------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
@@ -73,6 +72,8 @@ _Note: The application is fully deployed and ready for use during Demo 4._
 [![My Skills](https://skillicons.dev/icons?i=github,githubactions,yarn,npm,docker)](https://skillicons.dev)
 
 ## 👥 Meet team Zero Day
+
+</div>
 
 <div>
     <table style="width: 100%; border-collapse: collapse;">

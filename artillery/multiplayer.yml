@@ -1,0 +1,15 @@
+config:
+  target: 'http://localhost:3000'
+  phases:
+    - duration: 60
+      arrivalRate: 10
+scenarios:
+  - name: Submit Multiplayer Match
+    flow:
+      - post:
+          url: '/multiplayer'
+          json:
+            player1_id: '1'
+            player2_id: '2'
+            score1: 1
+            xpTotal: 100

@@ -1,0 +1,15 @@
+config:
+  target: 'http://localhost:3000'
+  phases:
+    - duration: 60
+      arrivalRate: 10
+scenarios:
+  - name: Submit Singleplayer Result
+    flow:
+      - post:
+          url: '/singleplayer'
+          json:
+            user_id: '1'
+            question_id: '101'
+            isCorrect: true
+            timeSpent: 15

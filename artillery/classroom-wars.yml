@@ -1,0 +1,42 @@
+config:
+  target: 'http://localhost:3000'
+  phases:
+    - duration: 60
+      arrivalRate: 10
+scenarios:
+  - name: Create Classroom War Room
+    flow:
+      - post:
+          url: '/classroom-wars/create'
+          json:
+            creatorId: '1'
+            roomName: 'testroom'
+  - name: Join Classroom War Room
+    flow:
+      - post:
+          url: '/classroom-wars/join'
+          json:
+            userId: '2'
+            roomName: 'testroom'
+  - name: Start Classroom War Game
+    flow:
+      - post:
+          url: '/classroom-wars/start'
+          json:
+            userId: '1'
+            roomName: 'testroom'
+  - name: Submit Classroom War Answer
+    flow:
+      - post:
+          url: '/classroom-wars/submit-answer'
+          json:
+            roomName: 'testroom'
+            userId: '1'
+            answer: '4'
+            questionIdx: 0
+  - name: End Classroom War Game
+    flow:
+      - post:
+          url: '/classroom-wars/end'
+          json:
+            roomName: 'testroom'

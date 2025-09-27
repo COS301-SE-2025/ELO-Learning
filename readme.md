@@ -28,23 +28,22 @@ _Note: The application is fully deployed and ready for use during Demo 4._
 
 ## Documentation and Resources
 
-| Resource                                                                                                                                    | Description                                      |
-| ------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------ |
-| [Software Requirements Specification](../ELO-Learning/docs/DEMO%204/Requirements-Document.pdf) | CComplete project requirements and specifications |
-| [User Manual](../ELO-Learning/docs/DEMO%204/User-Manual.pdf)                                        | Complete guide for end users                           |
-| [Technical Installation Manual](../ELO-Learning/docs/DEMO%204/Technical-Installation-Manual.pdf)                      | Instructions for system setup and deployment                          |
-| [Coding Standards](../ELO-Learning/docs/DEMO%204/Coding-Standards.pdf)                                   | Development conventions and best practices            |
-| [Testing Policy Document](https://drive.google.com/file/d/1ej3eurY4W6VFi7GLRBxFbi3qc6opm3RE/view?usp=drive_link)                            | Testing procedures and automated testing strategies                      |
-| [Quality Requirements](../ELO-Learning/docs/DEMO%204/Architectural-Requirements.pdf)                     | Non-functional requirements                  |
-| [Sprint Documentation](CONTRIBUTING.md)                                                                                                     | Project management from Demo 1 to Demo 4               |
-| [Architecture Diagram](../ELO-Learning/docs/DEMO%204/ELO%20Learning%20Architecture%20Diagram.pdf)                               | Diagram of system overview                       |
-| [Class Diagram](../ELO-Learning//docs/DEMO%204/ELO%20Learning%20Domain%20Model.pdf)                                      | Visual representation of WEE structure           |
-| [Deployment Diagram](../ELO-Learning/docs/DEMO%204/Deployment-Model-ELO-Learning.pdf)                                 | Deployment Diagram                     |
-| [Project Board](https://github.com/orgs/COS301-SE-2025/projects/120)                                                                        | Team organisation and progress tracking          |
-| [Previous Documentation Iterations](https://drive.google.com/drive/folders/1H4omJ2xESlP8_STEu7QdVYtMf1rgsZ-S?usp=sharing)                   | See how our documentation has progressed         |
+| Resource                                                                                                                  | Description                                         |
+| ------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------- |
+| [Software Requirements Specification](../ELO-Learning/docs/DEMO%204/Requirements-Document.pdf)                            | CComplete project requirements and specifications   |
+| [User Manual](../ELO-Learning/docs/DEMO%204/User-Manual.pdf)                                                              | Complete guide for end users                        |
+| [Technical Installation Manual](../ELO-Learning/docs/DEMO%204/Technical-Installation-Manual.pdf)                          | Instructions for system setup and deployment        |
+| [Coding Standards](../ELO-Learning/docs/DEMO%204/Coding-Standards.pdf)                                                    | Development conventions and best practices          |
+| [Testing Policy Document](https://drive.google.com/file/d/1ej3eurY4W6VFi7GLRBxFbi3qc6opm3RE/view?usp=drive_link)          | Testing procedures and automated testing strategies |
+| [Quality Requirements](../ELO-Learning/docs/DEMO%204/Architectural-Requirements.pdf)                                      | Non-functional requirements                         |
+| [Sprint Documentation](CONTRIBUTING.md)                                                                                   | Project management from Demo 1 to Demo 4            |
+| [Architecture Diagram](../ELO-Learning/docs/DEMO%204/ELO%20Learning%20Architecture%20Diagram.pdf)                         | Diagram of system overview                          |
+| [Class Diagram](../ELO-Learning//docs/DEMO%204/ELO%20Learning%20Domain%20Model.pdf)                                       | Visual representation of WEE structure              |
+| [Deployment Diagram](../ELO-Learning/docs/DEMO%204/Deployment-Model-ELO-Learning.pdf)                                     | Deployment Diagram                                  |
+| [Project Board](https://github.com/orgs/COS301-SE-2025/projects/120)                                                      | Team organisation and progress tracking             |
+| [Previous Documentation Iterations](https://drive.google.com/drive/folders/1H4omJ2xESlP8_STEu7QdVYtMf1rgsZ-S?usp=sharing) | See how our documentation has progressed            |
 
 ## Demo Resources
-
 
 | Demo   | Video                                                                                                                                                                                                                                                        | Slides                                                                                                                                                                         |
 | ------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |

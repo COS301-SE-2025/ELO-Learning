@@ -9,12 +9,13 @@ import {
   submitClassroomWarAnswer,
 } from '@/services/api';
 import classroomWarsSocket from '@/utils/classroomWarsSocket';
+import axios from 'axios';
 import { useEffect, useState } from 'react';
 import Back from '../../ui/back';
 import AnswerInput from '../../ui/classroom-wars/answer-input';
 import QuestionDisplay from '../../ui/classroom-wars/question-display';
 import RoomStats from '../../ui/classroom-wars/room-stats';
-import LeaderboardTable from '../../ui/leaderboard-table';
+import SimpleLeaderboard from '../../ui/classroom-wars/simple-leaderboard';
 
 export default function ClassroomWarsPage() {
   const [roomName, setRoomName] = useState('');
@@ -31,6 +32,17 @@ export default function ClassroomWarsPage() {
   const [showLeaderboard, setShowLeaderboard] = useState(false);
   const [leaderboard, setLeaderboard] = useState([]);
   const [questions, setQuestions] = useState([]);
+
+  // Delete room handler
+  const handleDeleteRoom = async (name) => {
+    try {
+      await axios.delete(`/classroom-wars/room/${name}`);
+      fetchRooms();
+      setError('');
+    } catch (err) {
+      setError(err.response?.data?.error || 'Failed to delete room');
+    }
+  };
 
   // Debug info: log relevant state changes to console
   useEffect(() => {
@@ -351,22 +363,14 @@ export default function ClassroomWarsPage() {
             )}
             {/* Leaderboard UI */}
             {showLeaderboard && (
-              <div className="p-6">
-                <div className="mb-4">
-                  <LeaderboardTable
-                    users={leaderboard.map((entry) => ({
-                      id: entry.userId,
-                      username: entry.userId,
-                      xp: entry.xp,
-                      elo: entry.elo,
-                      answered: entry.answered,
-                      correct: entry.correct,
-                      accuracy: entry.accuracy,
-                    }))}
-                    sortType="xp"
-                    showXP={true}
-                  />
-                </div>
+              <div className="mb-4">
+                <SimpleLeaderboard
+                  users={leaderboard.map((entry) => ({
+                    id: entry.userId,
+                    username: entry.userId,
+                    xp: entry.xp,
+                  }))}
+                />
               </div>
             )}
             {error && <div className="text-red-600 font-bold">{error}</div>}

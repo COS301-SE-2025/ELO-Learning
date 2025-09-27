@@ -77,17 +77,17 @@ export default function Achievements() {
   const hasMoreAchievements = unlockedAchievements.length > 3;
 
   return (
-    <div className="m-4" data-cy="achievements-section">
+    <div className="p-4 my-2" data-cy="achievements-section">
       <div className="flex items-center justify-between mb-3">
         <h3
-          className="text-xl uppercase font-bold"
+          className="text-2xl uppercase font-bold"
           data-cy="achievements-title"
         >
-          Achievements
+          ACHIEVEMENTS
         </h3>
         <Link
           href="/achievements"
-          className="text-sm font-bold uppercase"
+          className="text-lg font-bold uppercase"
           style={{ color: '#FF6E99' }}
           data-cy="view-all-achievements"
         >
@@ -96,10 +96,7 @@ export default function Achievements() {
       </div>
 
       {unlockedAchievements.length === 0 ? (
-        <div
-          className="dark:bg-[var(--midnight-theorem)] bg-[var(--vector-violet)] rounded-lg p-4"
-          data-cy="no-achievements"
-        >
+        <div className="rounded-xl p-4">
           <div className="flex justify-center items-center py-8">
             <div className="text-center">
               <div className="w-16 h-16 mx-auto mb-2 opacity-50">
@@ -112,43 +109,40 @@ export default function Achievements() {
                   />
                 </svg>
               </div>
-              <p className="text-gray-400 text-sm">No achievements yet</p>
-              <p className="text-gray-500 text-xs">
+              <p className="text-gray-400 text-lg">No achievements yet</p>
+              <p className="text-gray-500 text-base">
                 Start playing to earn badges!
               </p>
             </div>
           </div>
         </div>
       ) : (
-        <div
-          className="dark:bg-[var(--midnight-theorem)] bg-[var(--chalk-dust)] rounded-lg p-4"
-          data-cy="achievements-list"
-        >
+        <div className="">
           <div
-            className="flex gap-4 justify-center"
+            className="grid grid-cols-3 gap-0 border border-gray-500 rounded-xl overflow-hidden"
             data-cy="achievement-progress"
           >
             {displayAchievements.map((achievement, index) => (
-              <AchievementBadge
-                key={achievement.id || index} // ✅ Use achievement.id instead of achievement_id
-                achievement={achievement}
-                unlocked={achievement.unlocked}
-                size="small"
-                data-cy={`achievement-badge-${achievement.id || index}`}
-              />
+              <div
+                className={`flex flex-col items-center py-6${
+                  index < 2 ? ' border-r border-gray-500' : ''
+                }`}
+                key={achievement.id || index}
+              >
+                <AchievementBadge
+                  achievement={achievement}
+                  unlocked={achievement.unlocked}
+                  size="large"
+                  data-cy={`achievement-badge-${achievement.id || index}`}
+                />
+              </div>
             ))}
             {hasMoreAchievements && (
               <Link
                 href="/achievements"
-                className="flex items-center"
+                className="flex flex-col items-center py-6"
                 data-cy="more-achievements"
-              >
-                <div className="w-16 h-20 flex items-center justify-center border-2 border-dashed border-gray-500 rounded-lg">
-                  <span className="text-gray-400 text-xs">
-                    +{unlockedAchievements.length - 3}
-                  </span>
-                </div>
-              </Link>
+              ></Link>
             )}
           </div>
         </div>

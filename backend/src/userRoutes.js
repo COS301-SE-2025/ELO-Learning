@@ -43,7 +43,23 @@ router.get('/user/:id', verifyToken, async (req, res) => {
     return res.status(500).json({ error: 'Failed to fetch user' });
   }
 
-  res.status(200).json(data);
+  // Convert snake_case to camelCase for frontend consistency
+  const userData = {
+    id: data.id,
+    name: data.name,
+    surname: data.surname,
+    username: data.username,
+    email: data.email,
+    currentLevel: data.currentLevel,
+    joinDate: data.joinDate,
+    xp: data.xp,
+    avatar: data.avatar,
+    elo_rating: data.elo_rating,
+    rank: data.rank,
+    baseLineTest: data.base_line_test, // Convert snake_case to camelCase
+  };
+
+  res.status(200).json(userData);
 });
 
 // Debug endpoint for progress tracking (no auth required)
@@ -77,23 +93,6 @@ router.get('/users/:id/debug', async (req, res) => {
     console.error('Debug endpoint error:', error);
     res.status(500).json({ error: 'Debug endpoint failed' });
   }
-});
-
-router.get('/users/rank/:rank', async (req, res) => {
-  const { rank } = req.params;
-  // Fetch users by rank from Supabase
-  const { data, error } = await supabase
-    .from('Users')
-    .select('id,username,xp,avatar,elo_rating,rank')
-    .eq('rank', rank);
-  if (error) {
-    console.error('Error fetching users by rank:', error.message);
-    return res.status(500).json({ error: 'Failed to fetch users by rank' });
-  }
-  if (data.length === 0) {
-    return res.status(404).json({ error: 'No users found with that rank' });
-  }
-  res.status(200).json(data);
 });
 
 router.get('/users/rank/:rank', async (req, res) => {
@@ -309,7 +308,7 @@ router.post('/register', async (req, res) => {
         currentLevel: safeCurrentLevel,
         joinDate: safeJoinDate,
         xp: safeXP,
-        base_line_test: startBase,
+        base_line_test: startBase, // Use snake_case for database
         avatar: DEFAULT_AVATAR,
         elo_rating: eloRating,
         rank: defaultRank,

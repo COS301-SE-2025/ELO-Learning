@@ -28,28 +28,24 @@ export default function MathInputAlternative({
   };
 
   const insertSymbol = (symbol) => {
-    if (keyboard.isMobile && keyboard.isCustomKeyboardActive) {
-      // For mobile with custom keyboard
-      const input = inputRef.current;
-      if (!input) return;
+    const input = inputRef.current;
+    if (!input) return;
 
-      const selection = window.getSelection();
+    const selection = window.getSelection();
+    if (selection.rangeCount === 0) {
+      // No selection, append to end
+      input.textContent += symbol;
+    } else {
+      // Insert at current cursor position
       const range = selection.getRangeAt(0);
-
-      // Insert text at cursor position
       range.deleteContents();
       range.insertNode(document.createTextNode(symbol));
-
-      // Move cursor after inserted text
-      range.setStartAfter(range.endContainer);
-      range.collapse(true);
-      selection.removeAllRanges();
-      selection.addRange(range);
-
-      // Update state
-      const newValue = input.textContent;
-      handleInputChange(newValue);
+      range.collapse(false); // Move cursor after inserted text
     }
+
+    // Single state update
+    setInputValue(input.textContent);
+    setStudentAnswer(input.textContent);
   };
 
   return (

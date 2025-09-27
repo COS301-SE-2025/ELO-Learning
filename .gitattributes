@@ -1,1 +1,1 @@
-echo "* text=auto eol=lf" > .gitattributes
+* text=auto eol=lf

@@ -4,6 +4,45 @@
  */
 
 /**
+ * Preserve cursor position during DOM modifications
+ * @param {HTMLElement} element - The contentEditable element
+ * @param {Function} callback - Function to execute while preserving cursor
+ */
+export const preserveCursorPosition = (element, callback) => {
+  if (!element) return;
+
+  const selection = window.getSelection();
+  let savedRange = null;
+
+  // Save current cursor position
+  if (selection.rangeCount > 0) {
+    savedRange = selection.getRangeAt(0).cloneRange();
+  }
+
+  // Execute the callback
+  callback();
+
+  // Restore cursor position after a brief delay
+  setTimeout(() => {
+    if (savedRange && selection) {
+      try {
+        selection.removeAllRanges();
+        selection.addRange(savedRange);
+      } catch (e) {
+        // Fallback: position at end
+        const range = document.createRange();
+        if (element.firstChild) {
+          range.setStart(element.firstChild, element.textContent.length);
+          range.collapse(true);
+          selection.removeAllRanges();
+          selection.addRange(range);
+        }
+      }
+    }
+  }, 10);
+};
+
+/**
  * Get current cursor position in contentEditable element
  * @param {HTMLElement} element - ContentEditable element
  * @returns {number} Cursor position

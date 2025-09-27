@@ -1,0 +1,20 @@
+config:
+  target: 'http://localhost:3000'
+  phases:
+    - duration: 60
+      arrivalRate: 10
+scenarios:
+  - name: Get All Users
+    flow:
+      - get:
+          url: '/users'
+  - name: Get User By ID
+    flow:
+      - get:
+          url: '/user/1'
+          headers:
+            Authorization: 'Bearer <your_token_here>'
+  - name: Debug User Info
+    flow:
+      - get:
+          url: '/users/1/debug'

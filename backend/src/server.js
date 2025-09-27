@@ -17,7 +17,7 @@ import express from 'express';
 
 import { createServer } from 'http';
 import { Server } from 'socket.io';
-
+import classroomWars from './classroomWars.js';
 import achievementRoutes from './achievementRoutes.js';
 import openaiRoutes from './openaiRoutes.js';
 import answerRoutes from './answerRoutes.js';
@@ -86,7 +86,7 @@ app.use('/', oauthRoutes);
 app.use('/', baselineRoutes);
 app.use('/', analysisRoutes);
 app.use('/notifications', pushNotificationRoutes);
-
+app.use('/', classroomWars);
 // Simple health check route
 app.get('/', (req, res) => {
   res.send('API is running successfully!');
@@ -106,6 +106,15 @@ const io = new Server(server, {
     credentials: true,
   },
 });
+
+// Attach io and supabase to app for use in classroomWars.js
+import { createClient } from '@supabase/supabase-js';
+const supabase = createClient(
+  process.env.SUPABASE_URL,
+  process.env.SUPABASE_KEY,
+);
+app.set('io', io);
+app.set('supabase', supabase);
 
 io.on('connection', (socket) => {
   console.log('New client connected:', socket.id);

@@ -24,7 +24,7 @@ The platform encourages growth through competitive, skill-based challenges—suc
 
 _Note: The application is fully deployed and ready for use during Demo 4._
 
-<h1 align="center"> Documentation and Resources </h1>
+## Documentation and Resources
 
 <div align="center" >
 
@@ -43,7 +43,7 @@ _Note: The application is fully deployed and ready for use during Demo 4._
 | [Project Board](https://github.com/orgs/COS301-SE-2025/projects/120)                                                                        | Team organisation and progress tracking          |
 | [Previous Documentation Iterations](https://drive.google.com/drive/folders/1H4omJ2xESlP8_STEu7QdVYtMf1rgsZ-S?usp=sharing)                   | See how our documentation has progressed         |
 
- <h1 align="center"> Demo Resources </h1>
+## Demo Resources
 
 <div align="center" >
 

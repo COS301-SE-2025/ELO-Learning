@@ -1,10 +1,9 @@
 'use client';
+import { approveOpenAIQuestion, generateOpenAIQuestion } from '@/services/api';
 import { useSession } from 'next-auth/react';
-import { useState } from 'react';
-import { generateOpenAIQuestion, approveOpenAIQuestion } from '@/services/api';
-import LeaderboardTable from '../../ui/leaderboard-table';
-import Header from '../../ui/header';
 import Link from 'next/link';
+import { useState } from 'react';
+import Header from '../../ui/header';
 
 export default function AdminDashboard() {
   const { data: session, status } = useSession();
@@ -64,8 +63,8 @@ export default function AdminDashboard() {
   };
 
   return (
-    <div className="flex flex-col h-full w-full">
-      <div className="flex items-center justify-center p-4">
+    <div className="flex flex-col h-full w-full ">
+      <div className="flex items-center justify-center p-4 mt-10">
         <h1 className="text-2xl font-bold text-center">ADMIN DASHBOARD</h1>
       </div>
       <div className="flex flex-col flex-1 p-4 gap-4">
@@ -77,13 +76,13 @@ export default function AdminDashboard() {
                 return (
                   <div
                     key={key}
-                    className="flex flex-col border border-[#696969] rounded-lg bg-[#18162a] p-4"
+                    className="flex flex-col border border-[var(--color-foreground)] rounded-lg p-4"
                   >
                     <label className="font-semibold mb-1">Answer Choices</label>
                     {value.map((choice, idx) => (
                       <div key={idx} className="flex items-center gap-4 mb-3">
                         <input
-                          className="flex-1 bg-[#23213a] border border-gray-500 text-white px-3 py-2 rounded text-base"
+                          className="flex-1 border border-gray-500 px-3 py-2 rounded text-base"
                           style={{ minWidth: '200px' }}
                           value={
                             typeof choice === 'string' ? choice : choice.text
@@ -136,12 +135,13 @@ export default function AdminDashboard() {
               return (
                 <div
                   key={key}
-                  className="flex flex-col border border-[#696969] rounded-lg bg-[#18162a] p-4"
+                  className="flex flex-col border border-[var(--color-foreground)] rounded-lg p-4"
                 >
                   <label className="font-semibold mb-1 capitalize">{key}</label>
                   <input
-                    className="w-full bg-transparent border-none focus:ring-0 text-white placeholder-gray-400"
-                    value={value}
+                    className="w-full bg-transparent border border-gray-500 focus:ring-0 text-[var(--color-foreground)] placeholder-gray-400"
+                    style={{ border: '1px solid #696969', borderRadius: '5px' }}
+                    value={value ?? ''}
                     onChange={(e) => {
                       setFull({ ...full, [key]: e.target.value });
                     }}
@@ -151,23 +151,39 @@ export default function AdminDashboard() {
             })}
           </div>
         ) : (
-          <div className="w-full text-center text-gray-400">
+          <div className="w-full text-center text-[var(--color-foreground)]/90">
             No question generated yet.
           </div>
         )}
       </div>
       <div className="flex flex-col md:flex-row items-center justify-between p-4 gap-4">
+        {full ? (
+          <button
+            className="main-button"
+            onClick={() => {
+              setFull(null);
+              setQuestion('');
+              setAnswer('');
+              setApproved(false);
+              setError(null);
+            }}
+            disabled={loading}
+          >
+            Cancel
+          </button>
+        ) : (
+          <button
+            className="main-button"
+            onClick={handleGenerate}
+            disabled={loading}
+          >
+            {loading ? 'Generating...' : 'Generate'}
+          </button>
+        )}
         <button
-          className="main-button"
-          onClick={handleGenerate}
-          disabled={loading}
-        >
-          {loading ? 'Generating...' : 'Generate'}
-        </button>
-        <button
-          className="secondary-button"
+          className={`secondary-button${!full ? ' disabled_button' : ''}`}
           onClick={handleApprove}
-          disabled={loading || !full}
+          disabled={!full || loading}
         >
           {loading ? 'Approving...' : approved ? 'Approved!' : 'Approve & Save'}
         </button>

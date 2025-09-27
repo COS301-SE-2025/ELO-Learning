@@ -4,6 +4,14 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+.secondary-button.disabled_button,
+.secondary-button:disabled {
+  background-color: var(--grey);
+  color: var(--disabled-text);
+  border: var(--disabled-button-stroke) 1px solid;
+  box-shadow: 2px 2px 0px 0px var(--disabled-button-stroke);
+  cursor: not-allowed;
+}
 /* Ensure input-field class has border styling */
 .input-field {
   border: 0.5px solid #696969; /* matches border-gray-300 */

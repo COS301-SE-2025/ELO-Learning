@@ -1,25 +1,36 @@
 'use client';
 import ClickableAvatar from '@/app/ui/profile/clickable-avatar';
-import { fetchUserStreakInfo } from '@/services/api';
+import {
+  fetchInstitutionLeaderboard,
+  fetchLocationLeaderboards,
+  fetchUserById,
+  fetchUserStreakInfo,
+} from '@/services/api';
 import { initializeAchievementTracking } from '@/utils/gameplayAchievementHandler';
 import { Cog } from 'lucide-react';
 import { useSession } from 'next-auth/react';
+// ...existing code...
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import { useAvatar } from '../context/avatar-context';
 import { avatarColors, gradients } from '../ui/avatar/avatar-colors';
+import CommunityLeaderboardPreview from '../ui/community/community-leaderboard-preview';
 import Achievements from '../ui/profile/achievements';
 import BaselineTestOption from '../ui/profile/baseline-test-option';
-import MatchStats from '../ui/profile/match-stats';
+import MatchStatsPreview from '../ui/profile/match-stats-preview';
 import UserInfo from '../ui/profile/user-info';
 import UsernameBlock from '../ui/profile/username-block';
-import { fetchUserById } from '@/services/api';
 
 export default function Profile() {
   const { data: session, status, update: updateSession } = useSession();
   const { avatar } = useAvatar();
   const [streakData, setStreakData] = useState(null);
   const [refreshKey, setRefreshKey] = useState(0);
+  // Community leaderboard preview state
+  const [institutionLeaderboard, setInstitutionLeaderboard] = useState([]);
+  const [institutionName, setInstitutionName] = useState('');
+  const [locationLeaderboards, setLocationLeaderboards] = useState({});
+  const [leaderboardLoading, setLeaderboardLoading] = useState(true);
 
   // Listen for ELO updates
   useEffect(() => {
@@ -104,9 +115,41 @@ export default function Profile() {
         }
       }
     }
-
     loadStreakData();
-  }, [session?.user?.id, status, refreshKey]); // Add refreshKey to re-fetch when ELO updates
+  }, [session?.user?.id, status, refreshKey]);
+
+  // Fetch community leaderboards for preview
+  useEffect(() => {
+    async function loadLeaderboards() {
+      if (status !== 'authenticated' || !session?.user?.id) {
+        setInstitutionLeaderboard([]);
+        setInstitutionName('');
+        setLocationLeaderboards({});
+        setLeaderboardLoading(false);
+        return;
+      }
+      setLeaderboardLoading(true);
+      try {
+        const [institutionData, locationData] = await Promise.all([
+          fetchInstitutionLeaderboard(session.user.id, session.token),
+          fetchLocationLeaderboards(session.user.id, session.token),
+        ]);
+        setInstitutionLeaderboard(
+          Array.isArray(institutionData.leaderboard)
+            ? institutionData.leaderboard
+            : [],
+        );
+        setInstitutionName(institutionData.institution || '');
+        setLocationLeaderboards(locationData || {});
+      } catch (err) {
+        setInstitutionLeaderboard([]);
+        setInstitutionName('');
+        setLocationLeaderboards({});
+      }
+      setLeaderboardLoading(false);
+    }
+    loadLeaderboards();
+  }, [status, session?.user?.id, session?.token]);
 
   if (status === 'loading') return <div>Loading...</div>;
   if (status === 'unauthenticated')
@@ -187,8 +230,17 @@ export default function Profile() {
             ranking={user.rank || 'Unranked'}
             streak={streakData?.current_streak || 0}
           />
-          <MatchStats />
+          {/* Statistics preview block */}
+          <MatchStatsPreview />
           <Achievements />
+
+          {/* Community Leaderboard Preview */}
+          <CommunityLeaderboardPreview
+            institutionLeaderboard={institutionLeaderboard}
+            institutionName={institutionName}
+            locationLeaderboards={locationLeaderboards}
+            loading={leaderboardLoading}
+          />
         </div>
       </div>
     </div>

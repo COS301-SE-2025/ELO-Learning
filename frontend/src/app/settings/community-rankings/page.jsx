@@ -1,15 +1,15 @@
 'use client';
 
-import { useSession } from 'next-auth/react';
-import { useEffect, useState } from 'react';
+import Back from '@/app/ui/back';
 import {
   fetchCommunityLeaderboard,
-  fetchLocationLeaderboards,
   fetchInstitutionLeaderboard,
+  fetchLocationLeaderboards,
 } from '@/services/api';
-import LeaderboardTable from '../../ui/leaderboard-table';
-import Back from '@/app/ui/back';
+import { useSession } from 'next-auth/react';
 import Link from 'next/link';
+import { useEffect, useState } from 'react';
+import LeaderboardTable from '../../ui/leaderboard-table';
 
 export default function CommunityRankingsPage() {
   const { data: session, status } = useSession();
@@ -83,7 +83,7 @@ export default function CommunityRankingsPage() {
     <div className="flex flex-col gap-8 p-4 md:p-8">
       {/* Back header */}
       <div>
-        <Back pagename="Community Rankings" />
+        <Back pagename="Community" />
       </div>
       {loading ? (
         <div>Loading leaderboards...</div>
@@ -133,15 +133,39 @@ export default function CommunityRankingsPage() {
                   lb && lb.length > 0 ? (
                     <div key={loc} className="mb-4">
                       <h3 className="text-lg font-medium mb-1 text-center">
-                        {Array.isArray(loc)
-                          ? loc.length === 1
-                            ? loc[0]
-                            : loc.join(', ')
-                          : typeof loc === 'string' &&
-                              loc.startsWith('["') &&
-                              loc.endsWith('"]')
-                            ? JSON.parse(loc)[0]
-                            : loc}
+                        {(() => {
+                          let locName = loc;
+                          if (typeof locName === 'string') {
+                            let parsed = null;
+                            try {
+                              parsed = JSON.parse(locName);
+                            } catch {
+                              // Use regex to extract all quoted words, fallback to showing as is
+                              const regex = /"([^"]+)"|'([^']+)'/g;
+                              let matches = [];
+                              let m;
+                              while ((m = regex.exec(locName)) !== null) {
+                                matches.push(m[1] || m[2]);
+                              }
+                              if (matches.length > 0) {
+                                parsed = matches;
+                              } else {
+                                // fallback: remove brackets and quotes
+                                parsed = [
+                                  locName.replace(/[[\]"']/g, '').trim(),
+                                ];
+                              }
+                            }
+                            if (Array.isArray(parsed)) {
+                              locName = parsed.join(', ');
+                            } else if (parsed) {
+                              locName = String(parsed);
+                            }
+                          } else if (Array.isArray(locName)) {
+                            locName = locName.join(', ');
+                          }
+                          return locName;
+                        })()}
                       </h3>
                       <LeaderboardTable
                         users={[...lb].sort(

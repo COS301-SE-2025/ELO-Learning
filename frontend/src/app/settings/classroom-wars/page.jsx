@@ -1,15 +1,21 @@
 'use client';
-import { useState, useEffect } from 'react';
-import classroomWarsSocket from '@/utils/classroomWarsSocket';
 import {
   createClassroomWarRoom,
-  joinClassroomWarRoom,
-  startClassroomWarGame,
-  getClassroomWarRoom,
-  listClassroomWarRooms,
-  submitClassroomWarAnswer,
   endClassroomWarGame,
+  getClassroomWarRoom,
+  joinClassroomWarRoom,
+  listClassroomWarRooms,
+  startClassroomWarGame,
+  submitClassroomWarAnswer,
 } from '@/services/api';
+import classroomWarsSocket from '@/utils/classroomWarsSocket';
+import axios from 'axios';
+import { useEffect, useState } from 'react';
+import Back from '../../ui/back';
+import AnswerInput from '../../ui/classroom-wars/answer-input';
+import QuestionDisplay from '../../ui/classroom-wars/question-display';
+import RoomStats from '../../ui/classroom-wars/room-stats';
+import SimpleLeaderboard from '../../ui/classroom-wars/simple-leaderboard';
 
 export default function ClassroomWarsPage() {
   const [roomName, setRoomName] = useState('');
@@ -26,6 +32,17 @@ export default function ClassroomWarsPage() {
   const [showLeaderboard, setShowLeaderboard] = useState(false);
   const [leaderboard, setLeaderboard] = useState([]);
   const [questions, setQuestions] = useState([]);
+
+  // Delete room handler
+  const handleDeleteRoom = async (name) => {
+    try {
+      await axios.delete(`/classroom-wars/room/${name}`);
+      fetchRooms();
+      setError('');
+    } catch (err) {
+      setError(err.response?.data?.error || 'Failed to delete room');
+    }
+  };
 
   // Debug info: log relevant state changes to console
   useEffect(() => {
@@ -216,189 +233,150 @@ export default function ClassroomWarsPage() {
 
   // Render UI
   return (
-    <div className="p-6">
-      <h2 className="text-2xl font-bold mb-4">Classroom Wars</h2>
-      <div className="mb-4 flex flex-col gap-2">
-        <input
-          type="text"
-          placeholder="Your User ID"
-          value={userId}
-          onChange={(e) => setUserId(e.target.value)}
-          className="border p-2 mb-2"
-        />
-        <input
-          type="text"
-          placeholder="Room Name"
-          value={roomName}
-          onChange={(e) => setRoomName(e.target.value)}
-          className="border p-2 mb-2"
-        />
-        <div className="flex gap-2">
-          <button
-            onClick={handleCreateRoom}
-            className="main-button px-2 py-1 rounded text-sm"
-          >
-            Create Room
-          </button>
-          <button
-            onClick={fetchRooms}
-            className="secondary-button px-2 py-1 rounded text-sm"
-          >
-            Refresh
-          </button>
-        </div>
+    <div className="relative">
+      {/* Floating Back button at the top */}
+      <div className="fixed top-0 left-0 w-full z-50 bg-[var(--background)]">
+        <Back pagename="Classroom Wars" />
       </div>
-      <div className="mb-4">
-        <h3 className="font-semibold">Open Rooms:</h3>
-        <ul>
-          {rooms.map((room) => (
-            <li key={room.name} className="mb-2">
-              <span className="mr-2">
-                {room.name} ({room.players.length} players)
-              </span>
-              <button
-                onClick={() => handleJoinRoom(room.name)}
-                className="bg-purple-600 text-white px-2 py-1 rounded mr-2"
-              >
-                Join
-              </button>
-              <button
-                onClick={() => handleGetRoomInfo(room.name)}
-                className="bg-gray-600 text-white px-2 py-1 rounded"
-              >
-                Info
-              </button>
-            </li>
-          ))}
-        </ul>
-      </div>
-      {currentRoom && !currentRoom.started && (
-        <div className="mb-4 border p-4 rounded">
-          <h4 className="font-bold">Room: {currentRoom.name}</h4>
-          <div>Creator: {currentRoom.creatorId}</div>
-          <div>Players: {players.join(', ')}</div>
-          <div>Status: {currentRoom.started ? 'Started' : 'Waiting'}</div>
-          {isCreator && !currentRoom.started && (
-            <button
-              onClick={async () => {
-                setError('');
-                setGameStarted(false);
-                if (!userId || !players.includes(userId)) {
-                  setError(
-                    'Enter your User ID and join the room before starting the game.',
-                  );
-                  return;
-                }
-                try {
-                  await handleStartGame();
-                } catch (err) {
-                  setError('Failed to start game');
-                }
-              }}
-              className="main-button w-full sm:w-auto px-4 py-2 rounded mt-2 text-base sm:text-lg"
-              disabled={!userId || !players.includes(userId)}
-            >
-              Start Game
-            </button>
-          )}
-        </div>
-      )}
-      {/* Game UI */}
-      {gameStarted && gameState && !showLeaderboard && questions.length > 0 && (
-        <div className="flex flex-col border border-[#696969] rounded-lg bg-[#18162a] p-4">
-          <h4 className="font-bold mb-2 text-white">Question Battle</h4>
-          <div className="mb-2 text-white">
-            Lives: {gameState.playerStates[userId]?.lives ?? 0}
+      <div className="pt-20">
+        {/* Only show game UI when started, else show lobby/room UI */}
+        {gameStarted &&
+        gameState &&
+        !showLeaderboard &&
+        questions.length > 0 ? (
+          <div className="flex flex-col min-h-[70vh] justify-between rounded-lg p-6">
+            <RoomStats
+              lives={gameState.playerStates[userId]?.lives ?? 0}
+              xp={gameState.playerStates[userId]?.xp ?? 0}
+              accuracy={gameState.playerStates[userId]?.accuracy ?? 0}
+              questionIdx={questionIdx}
+              totalQuestions={questions.length}
+            />
+            <QuestionDisplay
+              questionText={questions[questionIdx]?.questionText}
+            />
+            <AnswerInput
+              answer={answer}
+              setAnswer={setAnswer}
+              onSubmit={handleSubmitAnswer}
+              disabled={gameState.playerStates[userId]?.finished}
+            />
+            {error && (
+              <div className="text-red-600 font-bold mt-4">{error}</div>
+            )}
           </div>
-          <div className="mb-2 text-white">
-            XP: {gameState.playerStates[userId]?.xp ?? 0}
-          </div>
-          <div className="mb-2 text-white">
-            Accuracy:{' '}
-            {((gameState.playerStates[userId]?.accuracy ?? 0) * 100).toFixed(1)}
-            %
-          </div>
-          <div className="mb-2 text-white">
-            Question {questionIdx + 1} of {questions.length}
-          </div>
-          <div className="mb-2 font-semibold text-white">
-            {questions[questionIdx]?.questionText || 'No question'}
-          </div>
-          <input
-            type="text"
-            placeholder="Your Answer"
-            value={answer}
-            onChange={(e) => setAnswer(e.target.value)}
-            className="w-full bg-transparent border-none focus:ring-0 text-white placeholder-gray-400 mb-2"
-            disabled={gameState.playerStates[userId]?.finished}
-          />
-          <button
-            onClick={() => {
-              console.log('Submit button clicked');
-              handleSubmitAnswer();
-            }}
-            className="main-button bg-blue-600 text-white px-4 py-2 rounded"
-            disabled={
-              !gameStarted ||
-              !currentRoom?.name ||
-              gameState.playerStates[userId]?.finished ||
-              !answer
-            }
-          >
-            Submit Answer
-          </button>
-        </div>
-      )}
-      {/* Leaderboard UI */}
-      {showLeaderboard && (
-        <div className="mb-4 border p-4 rounded bg-gradient-to-br from-blue-100 to-purple-200 shadow-lg">
-          <h4 className="font-bold mb-4 text-xl text-purple-900">
-            🏆 Final Leaderboard
-          </h4>
-          <table className="w-full border rounded overflow-hidden">
-            <thead className="bg-gradient-to-r from-blue-600 to-purple-600">
-              <tr>
-                <th className="border px-3 py-2 text-white">Rank</th>
-                <th className="border px-3 py-2 text-white">Player</th>
-                <th className="border px-3 py-2 text-white">XP</th>
-                <th className="border px-3 py-2 text-white">Accuracy</th>
-                <th className="border px-3 py-2 text-white">Answered</th>
-                <th className="border px-3 py-2 text-white">Correct</th>
-              </tr>
-            </thead>
-            <tbody>
-              {leaderboard.map((entry, idx) => (
-                <tr
-                  key={entry.userId}
-                  className={
-                    idx === 0
-                      ? 'bg-blue-300 font-bold text-blue-900'
-                      : idx === 1
-                        ? 'bg-purple-200 font-semibold text-purple-900'
-                        : idx === 2
-                          ? 'bg-blue-100 text-blue-900'
-                          : 'bg-white'
-                  }
+        ) : (
+          <>
+            <div className="mb-4 flex flex-col gap-2 p-6">
+              <label className="font-semibold">Enter username:</label>
+              <input
+                type="text"
+                placeholder="Your User ID"
+                value={userId}
+                onChange={(e) => setUserId(e.target.value)}
+                className="border p-2 mb-2"
+                style={{ border: '1px solid #696969', borderRadius: '5px' }}
+              />
+              <label className="font-semibold">Enter the room name:</label>
+              <input
+                type="text"
+                placeholder="Room Name"
+                value={roomName}
+                onChange={(e) => setRoomName(e.target.value)}
+                className="border p-2 mb-2"
+                style={{ border: '1px solid #696969', borderRadius: '5px' }}
+              />
+              <div className="flex gap-2 justify-center">
+                <button
+                  onClick={handleCreateRoom}
+                  className="signup-button px-2 py-1 rounded text-sm"
                 >
-                  <td className="border px-3 py-2 text-center">{idx + 1}</td>
-                  <td className="border px-3 py-2">{entry.userId}</td>
-                  <td className="border px-3 py-2 text-center">{entry.xp}</td>
-                  <td className="border px-3 py-2 text-center">
-                    {(entry.accuracy * 100).toFixed(1)}%
-                  </td>
-                  <td className="border px-3 py-2 text-center">
-                    {entry.answered}
-                  </td>
-                  <td className="border px-3 py-2 text-center">
-                    {entry.correct}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      )}
-      {error && <div className="text-red-600 font-bold">{error}</div>}
+                  Create Room
+                </button>
+                <button
+                  onClick={fetchRooms}
+                  className="signup-button-secondary px-2 py-1 rounded text-sm"
+                >
+                  Refresh
+                </button>
+              </div>
+            </div>
+            <div className="mb-4 p-6">
+              <h3 className="font-semibold">Open Rooms:</h3>
+              <ul>
+                {rooms.map((room) => (
+                  <li
+                    key={room.name}
+                    className="mb-2 border-b border-[#696969] py-5"
+                  >
+                    <div className="mr-2">
+                      {room.name} ({room.players.length} players)
+                    </div>
+                    <button
+                      onClick={() => handleJoinRoom(room.name)}
+                      className="signup-button m-2"
+                    >
+                      Join
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            </div>
+            <div className="p-6">
+              <p className="text-xl text-center font-bold mb-5">
+                Room Information
+              </p>
+            </div>
+            {currentRoom && !currentRoom.started && (
+              <div className="mb-4 p-6">
+                <h4 className="font-bold">Room: {currentRoom.name}</h4>
+                <div>Creator: {currentRoom.creatorId}</div>
+                <div>Players: {players.join(', ')}</div>
+                <div>Status: {currentRoom.started ? 'Started' : 'Waiting'}</div>
+                <div className="break_small"></div>
+                {isCreator && !currentRoom.started && (
+                  <div className="flex justify-center">
+                    <button
+                      onClick={async () => {
+                        setError('');
+                        setGameStarted(false);
+                        if (!userId || !players.includes(userId)) {
+                          setError(
+                            'Enter your User ID and join the room before starting the game.',
+                          );
+                          return;
+                        }
+                        try {
+                          await handleStartGame();
+                        } catch (err) {
+                          setError('Failed to start game');
+                        }
+                      }}
+                      className="signup-button w-full mx-auto sm:w-auto px-4 py-2 rounded text-base sm:text-lg"
+                      disabled={!userId || !players.includes(userId)}
+                    >
+                      Start Game
+                    </button>
+                  </div>
+                )}
+              </div>
+            )}
+            {/* Leaderboard UI */}
+            {showLeaderboard && (
+              <div className="mb-4">
+                <SimpleLeaderboard
+                  users={leaderboard.map((entry) => ({
+                    id: entry.userId,
+                    username: entry.userId,
+                    xp: entry.xp,
+                  }))}
+                />
+              </div>
+            )}
+            {error && <div className="text-red-600 font-bold">{error}</div>}
+          </>
+        )}
+      </div>
     </div>
   );
 }

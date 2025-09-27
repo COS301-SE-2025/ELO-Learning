@@ -1,13 +1,14 @@
 'use client';
 import Back from '@/app/ui/back';
+import { X } from 'lucide-react';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import {
   fetchCommunityData,
+  removeAcceptedFriend,
   sendFriendRequest,
   updateCommunityData,
-  removeAcceptedFriend,
 } from '../../../services/api';
 
 // Color scheme and button classes from login-landing
@@ -18,7 +19,7 @@ const inputClass =
   'input-field flex-1 px-3 py-2 rounded-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-elo-primary text-base md:text-lg';
 const btnClass =
   'main-button-landing px-4 py-2 rounded-lg text-white bg-elo-primary hover:bg-elo-primary-dark transition w-full md:w-auto';
-const removeBtnClass = 'text-red-500 hover:text-red-700 text-sm md:text-base';
+const removeBtnClass = ' hover:text-red-700 text-sm md:text-base';
 const pageBgClass =
   'min-h-screen flex flex-col items-center justify-center px-4 md:px-10 bg-elo-bg';
 const containerClass = 'w-full max-w-xl space-y-6';
@@ -218,8 +219,8 @@ export default function CommunitySettingsPage() {
       <div>
         <Back pagename="My Community" />
       </div>
-      <div className="flex flex-col justify-center my-4 mx-7">
-        <div>
+      <div className="flex flex-col justify-center my-4 mx-7 md:px-40 ">
+        <div className="mb-20 md:mb-50">
           {/* Friends Section */}
           <div className={cardClass}>
             <h3 className={headingClass}>Friends</h3>
@@ -233,7 +234,7 @@ export default function CommunitySettingsPage() {
               />
               <button
                 type="button"
-                className="secondary-button flex-1 px-2 py-1 text-xs md:text-xs w-auto min-w-[40px] md:min-w-[60px] md:px-3 md:py-1"
+                className="community-button flex-1"
                 onClick={handleAddFriend}
               >
                 Add
@@ -245,6 +246,13 @@ export default function CommunitySettingsPage() {
                   key={idx}
                   className="flex items-center gap-2 text-base md:text-lg"
                 >
+                  <button
+                    type="button"
+                    style={{ minWidth: '', padding: '' }}
+                    onClick={() => handleRemoveFriend(f.email)}
+                  >
+                    <X />
+                  </button>
                   {f.email}
                   <span
                     className={
@@ -256,15 +264,7 @@ export default function CommunitySettingsPage() {
                     {f.status === 'pending' ? 'Pending' : 'Accepted'}
                   </span>
                   {f.status === 'accepted' && (
-                    <div className="main-button-landing px-2 py-1 rounded-lg text-white bg-elo-primary hover:bg-elo-primary-dark transition w-fit text-xs font-semibold flex items-center justify-center">
-                      <button
-                        type="button"
-                        style={{ minWidth: '60px', padding: '2px 8px' }}
-                        onClick={() => handleRemoveFriend(f.email)}
-                      >
-                        Remove
-                      </button>
-                    </div>
+                    <div className="px-2 py-1 rounded-lg text-white bg-elo-primary hover:bg-elo-primary-dark transition w-fit text-xs font-semibold flex items-center justify-center"></div>
                   )}
                 </li>
               ))}
@@ -294,7 +294,7 @@ export default function CommunitySettingsPage() {
               />
               <button
                 type="button"
-                className="secondary-button flex-1 px-2 py-1 text-xs md:text-xs w-auto min-w-[40px] md:min-w-[60px] md:px-3 md:py-1"
+                className="community-button flex-1"
                 onClick={handleAddLocation}
               >
                 Add
@@ -307,14 +307,14 @@ export default function CommunitySettingsPage() {
                     key={idx}
                     className="flex items-center gap-2 text-base md:text-lg"
                   >
-                    {loc}
                     <button
                       type="button"
                       className={removeBtnClass}
                       onClick={() => handleRemoveLocation(loc)}
                     >
-                      Remove
+                      <X />
                     </button>
+                    {loc}
                   </li>
                 ))
               ) : (
@@ -326,17 +326,18 @@ export default function CommunitySettingsPage() {
         {error && <p className="text-red-500 mt-2">{error}</p>}
         {/* Save Changes button fixed at bottom like QuestionFooter */}
 
-        <div className="flex align-center fixed bottom-0 left-0 w-full z-10 px-4 py-4">
-          <div className="flex flex-col justify-center md:m-auto max-w-2xl mx-auto w-full">
-            <button
-              type="button"
-              className="main-button w-full md:m-auto"
-              onClick={handleSave}
-              data-cy="save-changes"
-            >
-              Save Changes
-            </button>
-          </div>
+        <div className="flex fixed bottom-0 left-0 w-full z-10 px-4 py-4 bg-[var(--color-background)] justify-center">
+          <button
+            type="button"
+            className={`signup-button max-w-md w-full mx-auto ${
+              error ? 'disabled_button' : ''
+            }`}
+            onClick={handleSave}
+            data-cy="save-changes"
+            disabled={!!error}
+          >
+            Save Changes
+          </button>
         </div>
       </div>
     </div>

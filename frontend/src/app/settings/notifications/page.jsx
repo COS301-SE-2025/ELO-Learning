@@ -188,7 +188,7 @@ export default function NotificationsPage() {
       </div>
 
       {/* Pending Friend Requests Section */}
-      <div className="m-4 p-6 flex flex-col items-center bg-[var(--chalk-dust)] dark:bg-[var(--midnight-theorem)]">
+      <div className="m-4 p-6 flex flex-col items-center border border-[#696969] rounded-md">
         <h2 className="text-xl font-bold mb-2">Friend Requests</h2>
         {pendingError && (
           <p

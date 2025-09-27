@@ -82,10 +82,6 @@ export default function Page() {
           </div>
         </div>
       </div>
-      <div className="flex flex-col items-center justify-center gap-4 mb-10 md:gap-2 md:w-[50%] md:m-auto">
-        <button className="main-button uppercase">Save Changes</button>
-        <button className="secondary-button uppercase">Discard Changes</button>
-      </div>
     </div>
   );
 }

@@ -295,13 +295,38 @@ textarea:focus-visible {
   transition: 0.3s ease-out;
 }
 
+.community-button {
+  background-color: transparent;
+  color: var(--font-color);
+  font-size: 16px;
+  width: 500px;
+  padding: 1.1%;
+  margin: 1.5% 0%;
+  border: var(--vector-violet) 1px solid;
+  box-shadow: 2px 2px 0px 0px var(--vector-violet);
+  border-radius: 5px;
+  font-weight: 800;
+  letter-spacing: 3px;
+  transition: 0.3s ease-out;
+}
+
 .secondary-button:hover {
   background-color: transparent;
   box-shadow: 2px 2px 0px 0px var(--blueprint-blue);
   border: var(--blueprint-blue) 1px solid;
 }
 
+.community-button:hover {
+  background-color: transparent;
+  box-shadow: 2px 2px 0px 0px var(--blueprint-blue);
+  border: var(--blueprint-blue) 1px solid;
+}
+
 .secondary-button:active {
+  transform: translateY(5px);
+}
+
+.community-button:active {
   transform: translateY(5px);
 }
 
@@ -396,6 +421,13 @@ textarea:focus-visible {
   }
 
   .signup-button {
+    width: 90vw;
+    padding: 2.5%;
+    margin: 0% 0%;
+    letter-spacing: 1px;
+  }
+
+  .community-button {
     width: 90vw;
     padding: 2.5%;
     margin: 0% 0%;

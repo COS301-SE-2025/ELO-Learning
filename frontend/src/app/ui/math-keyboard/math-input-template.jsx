@@ -297,26 +297,26 @@ export default function MathInputTemplate({
     setTimeout(() => showCursorIndicator(input), 50);
   };
 
-const insertSymbol = (symbol) => {
-  const input = inputRef.current;
-  if (!input) return;
+  const insertSymbol = (symbol) => {
+    const input = inputRef.current;
+    if (!input) return;
 
-  const selection = window.getSelection();
-  if (selection.rangeCount === 0) {
-    // No selection, append to end
-    input.textContent += symbol;
-  } else {
-    // Insert at current cursor position
-    const range = selection.getRangeAt(0);
-    range.deleteContents();
-    range.insertNode(document.createTextNode(symbol));
-    range.collapse(false); // Move cursor after inserted text
-  }
-  
-  // Single state update
-  setInputValue(input.textContent);
-  setStudentAnswer(input.textContent);
-};
+    const selection = window.getSelection();
+    if (selection.rangeCount === 0) {
+      // No selection, append to end
+      input.textContent += symbol;
+    } else {
+      // Insert at current cursor position
+      const range = selection.getRangeAt(0);
+      range.deleteContents();
+      range.insertNode(document.createTextNode(symbol));
+      range.collapse(false); // Move cursor after inserted text
+    }
+
+    // Single state update
+    setInputValue(input.textContent);
+    setStudentAnswer(input.textContent);
+  };
 
   const clearInput = () => {
     const input = inputRef.current;
@@ -331,119 +331,131 @@ const insertSymbol = (symbol) => {
   };
 
   const setCursorPositionInDOM = (input, position) => {
-  if (!input) return;
+    if (!input) return;
 
-  const selection = window.getSelection();
-  const range = document.createRange();
-
-  if (input.textContent.length === 0) {
-    range.setStart(input, 0);
-  } else if (input.firstChild && input.firstChild.nodeType === Node.TEXT_NODE) {
-    const safeOffset = Math.min(position, input.firstChild.textContent.length);
-    range.setStart(input.firstChild, safeOffset);
-  } else {
-    range.setStart(input, 0);
-  }
-
-  range.collapse(true);
-  selection.removeAllRanges();
-  selection.addRange(range);
-};
-
-const backspace = () => {
-  const input = inputRef.current;
-  if (!input) return;
-
-  // Set flag to prevent cursor reset by useEffect hooks
-  setIsBackspacing(true);
-  
-  input.focus();
-  
-  setTimeout(() => {
     const selection = window.getSelection();
-    if (selection.rangeCount === 0) {
-      setIsBackspacing(false);
-      return;
-    }
-    
-    const range = selection.getRangeAt(0);
-    
-    if (!range.collapsed) {
-      // Text is selected - delete the selection
-      range.deleteContents();
-      
-      // Update state after DOM operation
-      const newText = getTextContent(input);
-      setInputValue(newText);
-      setStudentAnswer(newText);
-      setCursorPosition(getCursorPosition(input));
+    const range = document.createRange();
+
+    if (input.textContent.length === 0) {
+      range.setStart(input, 0);
+    } else if (
+      input.firstChild &&
+      input.firstChild.nodeType === Node.TEXT_NODE
+    ) {
+      const safeOffset = Math.min(
+        position,
+        input.firstChild.textContent.length,
+      );
+      range.setStart(input.firstChild, safeOffset);
     } else {
-      try {
-        const cursorPos = getCursorPosition(input);
-        const textContent = getTextContent(input) || '';
-        
-        if (textContent.length === 0 || cursorPos === 0) {
-          setIsBackspacing(false);
-          return;
-        }
-        
-        // Delete character before cursor
-        const newText = textContent.slice(0, cursorPos - 1) + textContent.slice(cursorPos);
-        const newCursorPos = Math.max(0, cursorPos - 1);
-        
-        // Update DOM content directly
-        input.textContent = newText;
-        
-        // Set cursor position in DOM immediately
-        if (input.firstChild && input.firstChild.nodeType === Node.TEXT_NODE) {
-          const newRange = document.createRange();
-          const textNode = input.firstChild;
-          const safeOffset = Math.min(newCursorPos, textNode.textContent.length);
-          
-          newRange.setStart(textNode, safeOffset);
-          newRange.collapse(true);
-          
-          selection.removeAllRanges();
-          selection.addRange(newRange);
-        } else if (newText === '') {
-          // Handle empty content case
-          const newRange = document.createRange();
-          newRange.setStart(input, 0);
-          newRange.collapse(true);
-          selection.removeAllRanges();
-          selection.addRange(newRange);
-        }
-        
-        // CRITICAL: Update state in a way that prevents useEffect interference
-        // Use a batch update to prevent multiple useEffect triggers
-        setTimeout(() => {
-          setCursorPosition(newCursorPos);
-          setInputValue(newText);
-          setStudentAnswer(newText);
-          
-          // Clear flag after state updates are complete
-          setTimeout(() => setIsBackspacing(false), 10);
-        }, 0);
-        
-        return; // Exit early to prevent the second setTimeout below
-        
-      } catch (error) {
-        console.error('Backspace error:', error);
-        // Fallback: simple end deletion
-        const textContent = input.textContent || '';
-        if (textContent.length > 0) {
-          const newText = textContent.slice(0, -1);
+      range.setStart(input, 0);
+    }
+
+    range.collapse(true);
+    selection.removeAllRanges();
+    selection.addRange(range);
+  };
+
+  const backspace = () => {
+    const input = inputRef.current;
+    if (!input) return;
+
+    // Set flag to prevent cursor reset by useEffect hooks
+    setIsBackspacing(true);
+
+    input.focus();
+
+    setTimeout(() => {
+      const selection = window.getSelection();
+      if (selection.rangeCount === 0) {
+        setIsBackspacing(false);
+        return;
+      }
+
+      const range = selection.getRangeAt(0);
+
+      if (!range.collapsed) {
+        // Text is selected - delete the selection
+        range.deleteContents();
+
+        // Update state after DOM operation
+        const newText = getTextContent(input);
+        setInputValue(newText);
+        setStudentAnswer(newText);
+        setCursorPosition(getCursorPosition(input));
+      } else {
+        try {
+          const cursorPos = getCursorPosition(input);
+          const textContent = getTextContent(input) || '';
+
+          if (textContent.length === 0 || cursorPos === 0) {
+            setIsBackspacing(false);
+            return;
+          }
+
+          // Delete character before cursor
+          const newText =
+            textContent.slice(0, cursorPos - 1) + textContent.slice(cursorPos);
+          const newCursorPos = Math.max(0, cursorPos - 1);
+
+          // Update DOM content directly
           input.textContent = newText;
-          setInputValue(newText);
-          setStudentAnswer(newText);
+
+          // Set cursor position in DOM immediately
+          if (
+            input.firstChild &&
+            input.firstChild.nodeType === Node.TEXT_NODE
+          ) {
+            const newRange = document.createRange();
+            const textNode = input.firstChild;
+            const safeOffset = Math.min(
+              newCursorPos,
+              textNode.textContent.length,
+            );
+
+            newRange.setStart(textNode, safeOffset);
+            newRange.collapse(true);
+
+            selection.removeAllRanges();
+            selection.addRange(newRange);
+          } else if (newText === '') {
+            // Handle empty content case
+            const newRange = document.createRange();
+            newRange.setStart(input, 0);
+            newRange.collapse(true);
+            selection.removeAllRanges();
+            selection.addRange(newRange);
+          }
+
+          // CRITICAL: Update state in a way that prevents useEffect interference
+          // Use a batch update to prevent multiple useEffect triggers
+          setTimeout(() => {
+            setCursorPosition(newCursorPos);
+            setInputValue(newText);
+            setStudentAnswer(newText);
+
+            // Clear flag after state updates are complete
+            setTimeout(() => setIsBackspacing(false), 10);
+          }, 0);
+
+          return; // Exit early to prevent the second setTimeout below
+        } catch (error) {
+          console.error('Backspace error:', error);
+          // Fallback: simple end deletion
+          const textContent = input.textContent || '';
+          if (textContent.length > 0) {
+            const newText = textContent.slice(0, -1);
+            input.textContent = newText;
+            setInputValue(newText);
+            setStudentAnswer(newText);
+          }
         }
       }
-    }
-    
-    // Clear flag after a short delay (only reached for selected text deletion)
-    setTimeout(() => setIsBackspacing(false), 50);
-  }, 10);
-};
+
+      // Clear flag after a short delay (only reached for selected text deletion)
+      setTimeout(() => setIsBackspacing(false), 50);
+    }, 10);
+  };
 
   return (
     <div
@@ -487,100 +499,110 @@ const backspace = () => {
             // Show cursor indicator on focus
             setTimeout(() => showCursorIndicator(e.target), 100);
           }}
-onPointerDown={(e) => {
-  if (keyboard.isIOS && keyboard.shouldUseCustomKeyboard) {
-    e.preventDefault();
-    e.stopPropagation();
-    
-    const target = e.currentTarget;
-    
-    // Get click coordinates relative to the text content area
-    const rect = target.getBoundingClientRect();
-    const clickX = e.clientX;
-    const clickY = e.clientY;
-    
-    // Ensure input is focused first
-    target.focus();
-    
-    // Get the range at the click position
-    let range = null;
-    if (document.caretRangeFromPoint) {
-      range = document.caretRangeFromPoint(clickX, clickY);
-    } else if (document.caretPositionFromPoint) {
-      const caretPos = document.caretPositionFromPoint(clickX, clickY);
-      if (caretPos) {
-        range = document.createRange();
-        range.setStart(caretPos.offsetNode, caretPos.offset);
-        range.collapse(true);
-      }
-    }
-    
-    if (range) {
-      const selection = window.getSelection();
-      selection.removeAllRanges();
-      selection.addRange(range);
-      
-      // CRITICAL: Update state AFTER DOM positioning to prevent reset
-      setTimeout(() => {
-        const finalPos = getCursorPosition(target);
-        setCursorPosition(finalPos);
-        showCursorIndicator(target);
-      }, 10);
-    }
-    
-    return false;
-  }
+          onPointerDown={(e) => {
+            if (keyboard.isIOS && keyboard.shouldUseCustomKeyboard) {
+              e.preventDefault();
+              e.stopPropagation();
 
-    // ADD: Android handling (same as iOS approach)
-  if (keyboard.isAndroid && keyboard.shouldUseCustomKeyboard && keyboard.isCustomKeyboardActive) {
-    e.preventDefault();
-    e.stopPropagation();
-    
-    const target = e.currentTarget;
-    const rect = target.getBoundingClientRect();
-    const clickX = e.clientX;
-    const clickY = e.clientY;
-    
-    target.focus();
-    
-    // Same cursor positioning logic as iOS
-    let range = null;
-    if (document.caretRangeFromPoint) {
-      range = document.caretRangeFromPoint(clickX, clickY);
-    } else if (document.caretPositionFromPoint) {
-      const caretPos = document.caretPositionFromPoint(clickX, clickY);
-      if (caretPos) {
-        range = document.createRange();
-        range.setStart(caretPos.offsetNode, caretPos.offset);
-        range.collapse(true);
-      }
-    }
-    
-    if (range) {
-      const selection = window.getSelection();
-      selection.removeAllRanges();
-      selection.addRange(range);
-      
-      setTimeout(() => {
-        const finalPos = getCursorPosition(target);
-        setCursorPosition(finalPos);
-        showCursorIndicator(target);
-      }, 10);
-    }
-    
-    return false;
-  }
+              const target = e.currentTarget;
 
-  // ADD: Desktop/other devices (mouse/trackpad support)
-  else if (!keyboard.isIOS && !keyboard.isAndroid) {
-    // Let browser handle cursor positioning naturally for desktop
-    setTimeout(() => {
-      const newPos = getCursorPosition(e.target);
-      setCursorPosition(newPos);
-      showCursorIndicator(e.target);
-    }, 10);
-  }
-}}
+              // Get click coordinates relative to the text content area
+              const rect = target.getBoundingClientRect();
+              const clickX = e.clientX;
+              const clickY = e.clientY;
+
+              // Ensure input is focused first
+              target.focus();
+
+              // Get the range at the click position
+              let range = null;
+              if (document.caretRangeFromPoint) {
+                range = document.caretRangeFromPoint(clickX, clickY);
+              } else if (document.caretPositionFromPoint) {
+                const caretPos = document.caretPositionFromPoint(
+                  clickX,
+                  clickY,
+                );
+                if (caretPos) {
+                  range = document.createRange();
+                  range.setStart(caretPos.offsetNode, caretPos.offset);
+                  range.collapse(true);
+                }
+              }
+
+              if (range) {
+                const selection = window.getSelection();
+                selection.removeAllRanges();
+                selection.addRange(range);
+
+                // CRITICAL: Update state AFTER DOM positioning to prevent reset
+                setTimeout(() => {
+                  const finalPos = getCursorPosition(target);
+                  setCursorPosition(finalPos);
+                  showCursorIndicator(target);
+                }, 10);
+              }
+
+              return false;
+            }
+
+            // ADD: Android handling (same as iOS approach)
+            if (
+              keyboard.isAndroid &&
+              keyboard.shouldUseCustomKeyboard &&
+              keyboard.isCustomKeyboardActive
+            ) {
+              e.preventDefault();
+              e.stopPropagation();
+
+              const target = e.currentTarget;
+              const rect = target.getBoundingClientRect();
+              const clickX = e.clientX;
+              const clickY = e.clientY;
+
+              target.focus();
+
+              // Same cursor positioning logic as iOS
+              let range = null;
+              if (document.caretRangeFromPoint) {
+                range = document.caretRangeFromPoint(clickX, clickY);
+              } else if (document.caretPositionFromPoint) {
+                const caretPos = document.caretPositionFromPoint(
+                  clickX,
+                  clickY,
+                );
+                if (caretPos) {
+                  range = document.createRange();
+                  range.setStart(caretPos.offsetNode, caretPos.offset);
+                  range.collapse(true);
+                }
+              }
+
+              if (range) {
+                const selection = window.getSelection();
+                selection.removeAllRanges();
+                selection.addRange(range);
+
+                setTimeout(() => {
+                  const finalPos = getCursorPosition(target);
+                  setCursorPosition(finalPos);
+                  showCursorIndicator(target);
+                }, 10);
+              }
+
+              return false;
+            }
+
+            // ADD: Desktop/other devices (mouse/trackpad support)
+            else if (!keyboard.isIOS && !keyboard.isAndroid) {
+              // Let browser handle cursor positioning naturally for desktop
+              setTimeout(() => {
+                const newPos = getCursorPosition(e.target);
+                setCursorPosition(newPos);
+                showCursorIndicator(e.target);
+              }, 10);
+            }
+          }}
           className={`math-input w-full p-4 text-lg border rounded-lg min-h-[80px] font-mono focus:outline-none focus:ring-2 whitespace-pre-wrap break-words text-white bg-background ${
             !localIsValidExpression
               ? 'border-red-500 focus:border-red-600 focus:ring-red-200'

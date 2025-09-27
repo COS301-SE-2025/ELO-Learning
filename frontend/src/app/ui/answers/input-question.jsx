@@ -281,7 +281,6 @@ export default function MathInputTemplate({
     return () => clearTimeout(timeoutId);
   }, [inputValue, cursorPosition, setIsValidExpression]);
 
-
   // Reset error message when typing
   useEffect(() => {
     if (inputValue.trim()) {
@@ -354,26 +353,26 @@ export default function MathInputTemplate({
     }, 100);
   };
 
-const insertSymbol = (symbol) => {
-  const input = inputRef.current;
-  if (!input) return;
+  const insertSymbol = (symbol) => {
+    const input = inputRef.current;
+    if (!input) return;
 
-  const selection = window.getSelection();
-  if (selection.rangeCount === 0) {
-    // No selection, append to end
-    input.textContent += symbol;
-  } else {
-    // Insert at current cursor position
-    const range = selection.getRangeAt(0);
-    range.deleteContents();
-    range.insertNode(document.createTextNode(symbol));
-    range.collapse(false); // Move cursor after inserted text
-  }
-  
-  // Single state update
-  setInputValue(input.textContent);
-  setStudentAnswer(input.textContent);
-};
+    const selection = window.getSelection();
+    if (selection.rangeCount === 0) {
+      // No selection, append to end
+      input.textContent += symbol;
+    } else {
+      // Insert at current cursor position
+      const range = selection.getRangeAt(0);
+      range.deleteContents();
+      range.insertNode(document.createTextNode(symbol));
+      range.collapse(false); // Move cursor after inserted text
+    }
+
+    // Single state update
+    setInputValue(input.textContent);
+    setStudentAnswer(input.textContent);
+  };
 
   const handleSuggestionClick = (suggestion) => {
     const currentWord = getCurrentWord(inputValue, cursorPosition);
@@ -406,63 +405,63 @@ const insertSymbol = (symbol) => {
     input.focus();
   };
 
-const backspace = () => {
-  const input = inputRef.current;
-  if (!input) return;
+  const backspace = () => {
+    const input = inputRef.current;
+    if (!input) return;
 
-  const selection = window.getSelection();
-  if (selection.rangeCount === 0) return;
+    const selection = window.getSelection();
+    if (selection.rangeCount === 0) return;
 
-  const range = selection.getRangeAt(0);
-  
-  if (!range.collapsed) {
-    // Delete selected text
-    range.deleteContents();
-  } else {
-    // Delete one character before cursor using string manipulation
-    const currentText = getTextContent(input) || '';
-    const cursorPos = getCursorPosition(input);
-    
-    if (cursorPos === 0 || currentText.length === 0) return;
-    
-    // Delete character at position cursorPos - 1
-    const newText = currentText.slice(0, cursorPos - 1) + currentText.slice(cursorPos);
-    const newCursorPos = cursorPos - 1;
-    
-    // Update DOM directly
-    input.textContent = newText;
-    
-    // Set cursor position
-    if (newText.length === 0) {
-      const newRange = document.createRange();
-      newRange.setStart(input, 0);
-      newRange.collapse(true);
-      selection.removeAllRanges();
-      selection.addRange(newRange);
-    } else if (input.firstChild) {
-      const newRange = document.createRange();
-      const textNode = input.firstChild;
-      const safeOffset = Math.min(newCursorPos, textNode.textContent.length);
-      newRange.setStart(textNode, safeOffset);
-      newRange.collapse(true);
-      selection.removeAllRanges();
-      selection.addRange(newRange);
+    const range = selection.getRangeAt(0);
+
+    if (!range.collapsed) {
+      // Delete selected text
+      range.deleteContents();
+    } else {
+      // Delete one character before cursor using string manipulation
+      const currentText = getTextContent(input) || '';
+      const cursorPos = getCursorPosition(input);
+
+      if (cursorPos === 0 || currentText.length === 0) return;
+
+      // Delete character at position cursorPos - 1
+      const newText =
+        currentText.slice(0, cursorPos - 1) + currentText.slice(cursorPos);
+      const newCursorPos = cursorPos - 1;
+
+      // Update DOM directly
+      input.textContent = newText;
+
+      // Set cursor position
+      if (newText.length === 0) {
+        const newRange = document.createRange();
+        newRange.setStart(input, 0);
+        newRange.collapse(true);
+        selection.removeAllRanges();
+        selection.addRange(newRange);
+      } else if (input.firstChild) {
+        const newRange = document.createRange();
+        const textNode = input.firstChild;
+        const safeOffset = Math.min(newCursorPos, textNode.textContent.length);
+        newRange.setStart(textNode, safeOffset);
+        newRange.collapse(true);
+        selection.removeAllRanges();
+        selection.addRange(newRange);
+      }
+
+      // Update React state after DOM is set
+      setInputValue(newText);
+      setStudentAnswer(newText);
+      setCursorPosition(newCursorPos);
+      return;
     }
-    
-    // Update React state after DOM is set
-    setInputValue(newText);
-    setStudentAnswer(newText);
-    setCursorPosition(newCursorPos);
-    return;
-  }
-  
-  // For selected text deletion, update state
-  const newValue = getTextContent(input);
-  setInputValue(newValue);
-  setStudentAnswer(newValue);
-  setCursorPosition(getCursorPosition(input));
-};
 
+    // For selected text deletion, update state
+    const newValue = getTextContent(input);
+    setInputValue(newValue);
+    setStudentAnswer(newValue);
+    setCursorPosition(getCursorPosition(input));
+  };
 
   const handleKeyDown = (e) => {
     // Handle special keys
@@ -508,120 +507,130 @@ const backspace = () => {
           data-enable-grammarly={false}
           onInput={handleInputChange}
           onSelect={handleCursorPosition}
-onFocus={(e) => {
-  if (keyboard.shouldUseCustomKeyboard) {
-    if (keyboard.isIOS) {
-      e.preventDefault();
-      
-      // Don't reset cursor position - just activate keyboard
-      setTimeout(() => {
-        e.target.setAttribute('contenteditable', 'false');
-        e.target.setAttribute('inputmode', 'none');
-        keyboard.activateCustomKeyboard();
-      }, 50);
-    } else if (keyboard.isAndroid) {
-      handleAndroidFocus(e, () => {
-        keyboard.activateCustomKeyboard();
-      });
-    } else {
-      keyboard.activateCustomKeyboard();
-    }
-  }
-}}
-onPointerDown={(e) => {
-  if (keyboard.isIOS && keyboard.shouldUseCustomKeyboard) {
-    e.preventDefault();
-    e.stopPropagation();
-    
-    const target = e.currentTarget;
-    
-    // Get click coordinates relative to the text content area
-    const rect = target.getBoundingClientRect();
-    const clickX = e.clientX;
-    const clickY = e.clientY;
-    
-    // Ensure input is focused first
-    target.focus();
-    
-    // Get the range at the click position
-    let range = null;
-    if (document.caretRangeFromPoint) {
-      range = document.caretRangeFromPoint(clickX, clickY);
-    } else if (document.caretPositionFromPoint) {
-      const caretPos = document.caretPositionFromPoint(clickX, clickY);
-      if (caretPos) {
-        range = document.createRange();
-        range.setStart(caretPos.offsetNode, caretPos.offset);
-        range.collapse(true);
-      }
-    }
-    
-    if (range) {
-      const selection = window.getSelection();
-      selection.removeAllRanges();
-      selection.addRange(range);
-      
-      // CRITICAL: Update state AFTER DOM positioning to prevent reset
-      setTimeout(() => {
-        const finalPos = getCursorPosition(target);
-        setCursorPosition(finalPos);
-        showCursorIndicator(target);
-      }, 10);
-    }
-    
-    return false;
-  }
+          onFocus={(e) => {
+            if (keyboard.shouldUseCustomKeyboard) {
+              if (keyboard.isIOS) {
+                e.preventDefault();
 
-    // ADD: Android handling (same as iOS approach)
-  if (keyboard.isAndroid && keyboard.shouldUseCustomKeyboard && keyboard.isCustomKeyboardActive) {
-    e.preventDefault();
-    e.stopPropagation();
-    
-    const target = e.currentTarget;
-    const rect = target.getBoundingClientRect();
-    const clickX = e.clientX;
-    const clickY = e.clientY;
-    
-    target.focus();
-    
-    // Same cursor positioning logic as iOS
-    let range = null;
-    if (document.caretRangeFromPoint) {
-      range = document.caretRangeFromPoint(clickX, clickY);
-    } else if (document.caretPositionFromPoint) {
-      const caretPos = document.caretPositionFromPoint(clickX, clickY);
-      if (caretPos) {
-        range = document.createRange();
-        range.setStart(caretPos.offsetNode, caretPos.offset);
-        range.collapse(true);
-      }
-    }
-    
-    if (range) {
-      const selection = window.getSelection();
-      selection.removeAllRanges();
-      selection.addRange(range);
-      
-      setTimeout(() => {
-        const finalPos = getCursorPosition(target);
-        setCursorPosition(finalPos);
-        showCursorIndicator(target);
-      }, 10);
-    }
-    
-    return false;
-  }
+                // Don't reset cursor position - just activate keyboard
+                setTimeout(() => {
+                  e.target.setAttribute('contenteditable', 'false');
+                  e.target.setAttribute('inputmode', 'none');
+                  keyboard.activateCustomKeyboard();
+                }, 50);
+              } else if (keyboard.isAndroid) {
+                handleAndroidFocus(e, () => {
+                  keyboard.activateCustomKeyboard();
+                });
+              } else {
+                keyboard.activateCustomKeyboard();
+              }
+            }
+          }}
+          onPointerDown={(e) => {
+            if (keyboard.isIOS && keyboard.shouldUseCustomKeyboard) {
+              e.preventDefault();
+              e.stopPropagation();
 
-  // ADD: Desktop/other devices (mouse/trackpad support)
-  else if (!keyboard.isIOS && !keyboard.isAndroid) {
-    // Let browser handle cursor positioning naturally for desktop
-    setTimeout(() => {
-      const newPos = getCursorPosition(e.target);
-      setCursorPosition(newPos);
-      showCursorIndicator(e.target);
-    }, 10);
-  }
-}}
+              const target = e.currentTarget;
+
+              // Get click coordinates relative to the text content area
+              const rect = target.getBoundingClientRect();
+              const clickX = e.clientX;
+              const clickY = e.clientY;
+
+              // Ensure input is focused first
+              target.focus();
+
+              // Get the range at the click position
+              let range = null;
+              if (document.caretRangeFromPoint) {
+                range = document.caretRangeFromPoint(clickX, clickY);
+              } else if (document.caretPositionFromPoint) {
+                const caretPos = document.caretPositionFromPoint(
+                  clickX,
+                  clickY,
+                );
+                if (caretPos) {
+                  range = document.createRange();
+                  range.setStart(caretPos.offsetNode, caretPos.offset);
+                  range.collapse(true);
+                }
+              }
+
+              if (range) {
+                const selection = window.getSelection();
+                selection.removeAllRanges();
+                selection.addRange(range);
+
+                // CRITICAL: Update state AFTER DOM positioning to prevent reset
+                setTimeout(() => {
+                  const finalPos = getCursorPosition(target);
+                  setCursorPosition(finalPos);
+                  showCursorIndicator(target);
+                }, 10);
+              }
+
+              return false;
+            }
+
+            // ADD: Android handling (same as iOS approach)
+            if (
+              keyboard.isAndroid &&
+              keyboard.shouldUseCustomKeyboard &&
+              keyboard.isCustomKeyboardActive
+            ) {
+              e.preventDefault();
+              e.stopPropagation();
+
+              const target = e.currentTarget;
+              const rect = target.getBoundingClientRect();
+              const clickX = e.clientX;
+              const clickY = e.clientY;
+
+              target.focus();
+
+              // Same cursor positioning logic as iOS
+              let range = null;
+              if (document.caretRangeFromPoint) {
+                range = document.caretRangeFromPoint(clickX, clickY);
+              } else if (document.caretPositionFromPoint) {
+                const caretPos = document.caretPositionFromPoint(
+                  clickX,
+                  clickY,
+                );
+                if (caretPos) {
+                  range = document.createRange();
+                  range.setStart(caretPos.offsetNode, caretPos.offset);
+                  range.collapse(true);
+                }
+              }
+
+              if (range) {
+                const selection = window.getSelection();
+                selection.removeAllRanges();
+                selection.addRange(range);
+
+                setTimeout(() => {
+                  const finalPos = getCursorPosition(target);
+                  setCursorPosition(finalPos);
+                  showCursorIndicator(target);
+                }, 10);
+              }
+
+              return false;
+            }
+
+            // ADD: Desktop/other devices (mouse/trackpad support)
+            else if (!keyboard.isIOS && !keyboard.isAndroid) {
+              // Let browser handle cursor positioning naturally for desktop
+              setTimeout(() => {
+                const newPos = getCursorPosition(e.target);
+                setCursorPosition(newPos);
+                showCursorIndicator(e.target);
+              }, 10);
+            }
+          }}
           onKeyDown={handleKeyDown}
           className={`math-input w-full p-4 text-lg border rounded-lg min-h-[80px] font-mono focus:outline-none focus:ring-2 whitespace-pre-wrap break-words text-[var(--color-foreground)] bg-background ${
             !localIsValidExpression
@@ -651,7 +660,7 @@ onPointerDown={(e) => {
                 userSelect: 'text',
                 caretColor: '#4D5DED',
                 //...(keyboard.isIOS && {
-                  // iOS-specific additional prevention
+                // iOS-specific additional prevention
                 //  WebkitUserModify: 'read-only',
                 //}),
               }),
@@ -722,16 +731,16 @@ onPointerDown={(e) => {
           </button>
         </div>
 
-{/* Edit Controls */}
-<div className="flex gap-2">
-  <button
-    onClick={backspace}
-    className="px-4 py-2 bg-[#7D32CE] text-white rounded-lg hover:bg-[#4D5DED] hover:text-white transition-colors"
-    title="Backspace"
-  >
-    ⌫
-  </button>
-</div>
+        {/* Edit Controls */}
+        <div className="flex gap-2">
+          <button
+            onClick={backspace}
+            className="px-4 py-2 bg-[#7D32CE] text-white rounded-lg hover:bg-[#4D5DED] hover:text-white transition-colors"
+            title="Backspace"
+          >
+            ⌫
+          </button>
+        </div>
       </div>
 
       {/* History panel */}

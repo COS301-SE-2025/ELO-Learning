@@ -9,7 +9,7 @@ import {
   shouldUseCustomKeyboard,
   shouldUseNativeKeyboard,
 } from '@/utils/platformDetection';
-import { preserveCursorPosition } from '@/utils/contentEditableHelpers'; 
+import { preserveCursorPosition } from '@/utils/contentEditableHelpers';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 export const useKeyboardManager = (
@@ -111,11 +111,11 @@ export const useKeyboardManager = (
         }, 150);
       } else if (behavior.isIOS) {
         // IMPROVED: Don't blur - just prevent keyboard while preserving cursor
-        
+
         // Set input mode immediately to prevent keyboard
         input.setAttribute('inputmode', 'none');
         input.setAttribute('contenteditable', 'false');
-        
+
         // Use cursor preservation for additional iOS prevention
         preserveCursorPosition(input, () => {
           // Additional iOS prevention without breaking cursor
@@ -123,12 +123,16 @@ export const useKeyboardManager = (
           input.setAttribute('autocorrect', 'off');
           input.setAttribute('autocapitalize', 'off');
           input.setAttribute('spellcheck', 'false');
-          
+
           // Only set the touch prevention styles (removed user-select none)
           input.style.setProperty('-webkit-touch-callout', 'none', 'important');
-          input.style.setProperty('-webkit-tap-highlight-color', 'transparent', 'important');
+          input.style.setProperty(
+            '-webkit-tap-highlight-color',
+            'transparent',
+            'important',
+          );
         });
-        
+
         console.log('iOS keyboard prevented with cursor preservation');
       } else {
         // Generic mobile or desktop

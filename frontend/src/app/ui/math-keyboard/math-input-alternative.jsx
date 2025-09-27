@@ -27,26 +27,26 @@ export default function MathInputAlternative({
     setStudentAnswer(value);
   };
 
-const insertSymbol = (symbol) => {
-  const input = inputRef.current;
-  if (!input) return;
+  const insertSymbol = (symbol) => {
+    const input = inputRef.current;
+    if (!input) return;
 
-  const selection = window.getSelection();
-  if (selection.rangeCount === 0) {
-    // No selection, append to end
-    input.textContent += symbol;
-  } else {
-    // Insert at current cursor position
-    const range = selection.getRangeAt(0);
-    range.deleteContents();
-    range.insertNode(document.createTextNode(symbol));
-    range.collapse(false); // Move cursor after inserted text
-  }
-  
-  // Single state update
-  setInputValue(input.textContent);
-  setStudentAnswer(input.textContent);
-};
+    const selection = window.getSelection();
+    if (selection.rangeCount === 0) {
+      // No selection, append to end
+      input.textContent += symbol;
+    } else {
+      // Insert at current cursor position
+      const range = selection.getRangeAt(0);
+      range.deleteContents();
+      range.insertNode(document.createTextNode(symbol));
+      range.collapse(false); // Move cursor after inserted text
+    }
+
+    // Single state update
+    setInputValue(input.textContent);
+    setStudentAnswer(input.textContent);
+  };
 
   return (
     <div className="w-full space-y-6">

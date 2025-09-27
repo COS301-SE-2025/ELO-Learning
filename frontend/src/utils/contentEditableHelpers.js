@@ -10,18 +10,18 @@
  */
 export const preserveCursorPosition = (element, callback) => {
   if (!element) return;
-  
+
   const selection = window.getSelection();
   let savedRange = null;
-  
+
   // Save current cursor position
   if (selection.rangeCount > 0) {
     savedRange = selection.getRangeAt(0).cloneRange();
   }
-  
+
   // Execute the callback
   callback();
-  
+
   // Restore cursor position after a brief delay
   setTimeout(() => {
     if (savedRange && selection) {
@@ -477,4 +477,3 @@ export const focusAtEnd = (element, showIndicator = false) => {
   const textLength = getTextContent(element).length;
   setCursorPosition(element, textLength, showIndicator);
 };
-

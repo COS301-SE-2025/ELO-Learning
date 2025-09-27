@@ -3,8 +3,14 @@ import ProgressBar from '@/app/ui/progress-bar';
 import { X } from 'lucide-react';
 import Link from 'next/link';
 import { useEffect } from 'react';
+import { useSocket } from '@/socket';
 
-export default function QuestionHeader({ currentStep, totalSteps, numLives }) {
+export default function QuestionHeader({
+  currentStep,
+  totalSteps,
+  numLives,
+  multiplayerData,
+}) {
   // Initialize game session when component mounts (game starts)
   useEffect(() => {
     // Generate unique game session ID when game starts
@@ -30,6 +36,12 @@ export default function QuestionHeader({ currentStep, totalSteps, numLives }) {
       sessionStorage.removeItem('submittedOnce');
       sessionStorage.removeItem('calculatingXP');
     }
+
+    // Only emit quit if in multiplayer
+    if (socket && gameId) {
+      socket.emit('playerQuit', gameId);
+    }
+
     console.log('🚪 Game ended - cleaned up session data');
   };
   return (

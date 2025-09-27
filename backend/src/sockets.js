@@ -58,6 +58,34 @@ const findMatchForPlayer = (player) => {
   return null; // No match yet
 };
 
+const playerQuit = (io, socket, gameId, matchMap, queue) => {
+  console.log(`🚪 Player ${socket.id} quit game ${gameId}`);
+
+  const gameData = matchMap.get(gameId);
+  if (!gameData) {
+    console.log(`No game data found for game ${gameId}`);
+    return;
+  }
+
+  // Remove quitting player
+  gameData.players = gameData.players.filter((id) => id !== socket.id);
+
+  // Notify remaining player(s)
+  gameData.players.forEach((otherId) => {
+    io.to(otherId).emit('gameError', {
+      error: 'Your opponent has quit the match. Returning to dashboard...',
+      reason: 'opponent_quit',
+    });
+  });
+
+  // Clean up
+  matchMap.delete(gameId);
+
+  // Also remove from queue just in case
+  const idx = queue.findIndex((p) => p.socket && p.socket.id === socket.id);
+  if (idx !== -1) queue.splice(idx, 1);
+};
+
 // Add startGame helper so setInterval can use it (accepts player wrapper objects)
 const startGame = (playerWrapper, opponentWrapper) => {
   try {
@@ -621,7 +649,7 @@ export default (io, socket) => {
   };
 
   //end the match still to come
-
+  /*
   socket.on('disconnecting', () => {
     // For each room the socket is in (except its own id), check if it should be closed
     console.log(`Socket ${socket.id} is disconnecting, cleaning up rooms...`);
@@ -645,6 +673,16 @@ export default (io, socket) => {
       }
     }
   });
+*/
+
+  socket.on('disconnecting', () => {
+    console.log(`Socket ${socket.id} disconnecting...`);
+    for (const roomId of socket.rooms) {
+      if (roomId !== socket.id && matchMap.has(roomId)) {
+        playerQuit(io, socket, roomId, matchMap, queue);
+      }
+    }
+  });
 
   socket.on('leaveRoom', (roomId) => {
     console.log(`Socket ${socket.id} is leaving room: ${roomId}`);
@@ -661,6 +699,10 @@ export default (io, socket) => {
         matchMap.set(roomId, gameData);
       }
     }
+  });
+
+  socket.on('playerQuit', (gameId) => {
+    playerQuit(io, socket, gameId, matchMap, queue);
   });
 
   socket.on('queue', (data) => queueForGame(data?.userData));

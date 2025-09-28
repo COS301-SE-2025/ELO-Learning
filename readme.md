@@ -187,7 +187,7 @@ _Note: The application is fully deployed and ready for use during Demo 4._
     </table>
 </div>
 
-< align="center">
+<div align="center">
 
 ## ✉️ Contact
 

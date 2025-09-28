@@ -378,65 +378,68 @@ export default function MathInputTemplate({
     }, 100);
   };
 
-const insertSymbol = (symbol) => {
-  const input = inputRef.current;
-  if (!input || isProcessingInsert) return;
+  const insertSymbol = (symbol) => {
+    const input = inputRef.current;
+    if (!input || isProcessingInsert) return;
 
-  setIsProcessingInsert(true);
+    setIsProcessingInsert(true);
 
-  try {
-    // Ensure input is focused
-    input.focus();
+    try {
+      // Ensure input is focused
+      input.focus();
 
-    // Get FRESH cursor position and text content
-    const currentText = input.textContent || '';
-    const selection = window.getSelection();
-    let cursorPos = 0;
+      // Get FRESH cursor position and text content
+      const currentText = input.textContent || '';
+      const selection = window.getSelection();
+      let cursorPos = 0;
 
-    if (selection.rangeCount > 0) {
-      const range = selection.getRangeAt(0);
-      if (input.firstChild) {
-        cursorPos = range.startOffset;
+      if (selection.rangeCount > 0) {
+        const range = selection.getRangeAt(0);
+        if (input.firstChild) {
+          cursorPos = range.startOffset;
+        }
+      } else {
+        // No selection, place at end
+        cursorPos = currentText.length;
       }
-    } else {
-      // No selection, place at end
-      cursorPos = currentText.length;
+
+      // Ensure cursor position is valid
+      cursorPos = Math.max(0, Math.min(cursorPos, currentText.length));
+
+      // Create new text with symbol inserted at cursor position
+      const newText =
+        currentText.slice(0, cursorPos) + symbol + currentText.slice(cursorPos);
+      const newCursorPos = cursorPos + symbol.length;
+
+      // Update DOM directly
+      input.textContent = newText;
+
+      // Set new cursor position
+      if (input.firstChild) {
+        const range = document.createRange();
+        const newSelection = window.getSelection();
+        const safeOffset = Math.min(
+          newCursorPos,
+          input.firstChild.textContent.length,
+        );
+
+        range.setStart(input.firstChild, safeOffset);
+        range.collapse(true);
+        newSelection.removeAllRanges();
+        newSelection.addRange(range);
+      }
+
+      // Update React state
+      setInputValue(newText);
+      setStudentAnswer(newText);
+      setCursorPosition(newCursorPos);
+    } finally {
+      // Clear the processing flag after a short delay
+      setTimeout(() => {
+        setIsProcessingInsert(false);
+      }, 150);
     }
-
-    // Ensure cursor position is valid
-    cursorPos = Math.max(0, Math.min(cursorPos, currentText.length));
-
-    // Create new text with symbol inserted at cursor position
-    const newText = currentText.slice(0, cursorPos) + symbol + currentText.slice(cursorPos);
-    const newCursorPos = cursorPos + symbol.length;
-
-    // Update DOM directly
-    input.textContent = newText;
-
-    // Set new cursor position
-    if (input.firstChild) {
-      const range = document.createRange();
-      const newSelection = window.getSelection();
-      const safeOffset = Math.min(newCursorPos, input.firstChild.textContent.length);
-      
-      range.setStart(input.firstChild, safeOffset);
-      range.collapse(true);
-      newSelection.removeAllRanges();
-      newSelection.addRange(range);
-    }
-
-    // Update React state
-    setInputValue(newText);
-    setStudentAnswer(newText);
-    setCursorPosition(newCursorPos);
-
-  } finally {
-    // Clear the processing flag after a short delay
-    setTimeout(() => {
-      setIsProcessingInsert(false);
-    }, 150);
-  }
-};
+  };
 
   const handleSuggestionClick = (suggestion) => {
     const currentWord = getCurrentWord(inputValue, cursorPosition);

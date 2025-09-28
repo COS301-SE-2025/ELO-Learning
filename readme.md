@@ -28,22 +28,22 @@ _Note: The application is fully deployed and ready for use during Demo 4._
 
 ## Documentation and Resources
 
-| Resource                                                                                                         | Description                                                   |
-| ---------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------- |
-| [Software Requirements Specification](docs/DEMO%204/Architectural-Requirements.pdf)                              | Complete project requirements and specifications              |
-| [User Manual](docs/DEMO%204/User-Manual.pdf)                                                                     | Complete guide for end users                                  |
-| [Technical Installation Manual](docs/DEMO%204/Technical-Installation-Manual.pdf)                                 | Instructions for system setup and deployment                  |
-| [Coding Standards](docs/DEMO%204/Coding-Standards.pdf)                                                           | Development conventions and best practices                    |
-| [Testing Policy Document](docs/DEMO%204/Security-Policy.pdf) | Testing procedures and automated testing strategies           |
-| [Quality Requirements](docs/DEMO%204/Requirements-Document.pdf)                                                  | Non-functional requirements                                   |
-| [Sprint Documentation](docs/DEMO%204/Sprint%20Planning.pdf)                                                      | Project management from Demo 2 to Demo 4                      |
-| [ELO Algorithm Documentation](docs/DEMO%204/ELO-Algorithm.pdf)                                                   | Description of ELO Algorithm                                  |
-| [ELO Algorithm Sequence Diagram](docs/DEMO%204/ELO%20Algorithm%20Sequence%20Diagrams.pdf)                        | System interaction flows and component communication patterns |
-| [Architecture Diagram](docs/DEMO%204/ELO%20Learning%20Architecture%20Diagram.pdf)                                | Diagram of system overview                                    |
-| [Class Diagram](docs/DEMO%204/ELO%20Learning%20Domain%20Model.pdf)                                               | Visual representation of ELO Learning                         |
-| [Deployment Diagram](docs/DEMO%204/Deployment-Model-ELO-Learning.pdf)                                            | Deployment Diagram                                            |
-| [Project Board](https://github.com/orgs/COS301-SE-2025/projects/120)                                             | Team organisation and progress tracking                       |
-| [Previous Documentation Iterations](docs/)                                                                       | See how our documentation has progressed                      |
+| Resource                                                                                  | Description                                                   |
+| ----------------------------------------------------------------------------------------- | ------------------------------------------------------------- |
+| [Software Requirements Specification](docs/DEMO%204/Architectural-Requirements.pdf)       | Complete project requirements and specifications              |
+| [User Manual](docs/DEMO%204/User-Manual.pdf)                                              | Complete guide for end users                                  |
+| [Technical Installation Manual](docs/DEMO%204/Technical-Installation-Manual.pdf)          | Instructions for system setup and deployment                  |
+| [Coding Standards](docs/DEMO%204/Coding-Standards.pdf)                                    | Development conventions and best practices                    |
+| [Testing Policy Document](docs/DEMO%204/Security-Policy.pdf)                              | Testing procedures and automated testing strategies           |
+| [Quality Requirements](docs/DEMO%204/Requirements-Document.pdf)                           | Non-functional requirements                                   |
+| [Sprint Documentation](docs/DEMO%204/Sprint%20Planning.pdf)                               | Project management from Demo 2 to Demo 4                      |
+| [ELO Algorithm Documentation](docs/DEMO%204/ELO-Algorithm.pdf)                            | Description of ELO Algorithm                                  |
+| [ELO Algorithm Sequence Diagram](docs/DEMO%204/ELO%20Algorithm%20Sequence%20Diagrams.pdf) | System interaction flows and component communication patterns |
+| [Architecture Diagram](docs/DEMO%204/ELO%20Learning%20Architecture%20Diagram.pdf)         | Diagram of system overview                                    |
+| [Class Diagram](docs/DEMO%204/ELO%20Learning%20Domain%20Model.pdf)                        | Visual representation of ELO Learning                         |
+| [Deployment Diagram](docs/DEMO%204/Deployment-Model-ELO-Learning.pdf)                     | Deployment Diagram                                            |
+| [Project Board](https://github.com/orgs/COS301-SE-2025/projects/120)                      | Team organisation and progress tracking                       |
+| [Previous Documentation Iterations](docs/)                                                | See how our documentation has progressed                      |
 
 ## Demo Resources
 

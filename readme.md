@@ -30,9 +30,9 @@ _Note: The application is fully deployed and ready for use during Demo 4._
 
 | Resource                                                                                                         | Description                                                   |
 | ---------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------- |
-| [Software Requirements Specification](../ELO-Learning/docs/DEMO%204/Requirements-Document.pdf)                   | Complete project requirements and specifications              |
-| [User Manual](../ELO-Learning/docs/DEMO%204/User-Manual.pdf)                                                     | Complete guide for end users                                  |
-| [Technical Installation Manual](../ELO-Learning/docs/DEMO%204/Technical-Installation-Manual.pdf)                 | Instructions for system setup and deployment                  |
+| [Software Requirements Specification](docs/DEMO%204/Architectural-Requirements.pdf)                   | Complete project requirements and specifications              |
+| [User Manual](docs/DEMO%204/User-Manual.pdf)                                                     | Complete guide for end users                                  |
+| [Technical Installation Manual](docs/DEMO%204/Technical-Installation-Manual.pdf)                 | Instructions for system setup and deployment                  |
 | [Coding Standards](../ELO-Learning/docs/DEMO%204/Coding-Standards.pdf)                                           | Development conventions and best practices                    |
 | [Testing Policy Document](https://drive.google.com/file/d/1ej3eurY4W6VFi7GLRBxFbi3qc6opm3RE/view?usp=drive_link) | Testing procedures and automated testing strategies           |
 | [Quality Requirements](../ELO-Learning/docs/DEMO%204/Architectural-Requirements.pdf)                             | Non-functional requirements                                   |

@@ -127,6 +127,23 @@ export default function MathInputTemplate({
     }
   }, [isHydrated]);
 
+  // Clear preview when studentAnswer is reset (new question)
+useEffect(() => {
+  if (!studentAnswer || studentAnswer === '') {
+    setInputValue('');
+    setLocalIsValidExpression(true);
+    setValidationMessage('');
+    setShowErrorMessage(false);
+    setCursorPosition(0);
+    
+    // Clear the input DOM content
+    const input = inputRef.current;
+    if (input) {
+      setTextContent(input, '', false);
+    }
+  }
+}, [studentAnswer]);
+
   // Advanced math symbol categories
   const mathCategories = {
     numbers: {
@@ -360,45 +377,49 @@ export default function MathInputTemplate({
     }, 100);
   };
 
-  const insertSymbol = (symbol) => {
-    const input = inputRef.current;
-    if (!input) return;
+const insertSymbol = (symbol) => {
+  const input = inputRef.current;
+  if (!input) return;
 
-    // Ensure input is focused first
-    input.focus();
+  // Ensure input is focused and has proper cursor position
+  input.focus();
 
+  // Get current text and cursor position
+  const currentText = getTextContent(input) || '';
+  const currentCursor = getCursorPosition(input);
+
+  // If cursor position is invalid, set it to the end
+  const safeCursorPos = currentCursor >= 0 && currentCursor <= currentText.length 
+    ? currentCursor 
+    : currentText.length;
+
+  // Insert symbol at cursor position
+  const newText = currentText.slice(0, safeCursorPos) + symbol + currentText.slice(safeCursorPos);
+  const newCursorPos = safeCursorPos + symbol.length;
+
+  // Update DOM using helper function
+  setTextContent(input, newText, false);
+
+  // Set cursor position after the inserted symbol
+  setTimeout(() => {
+    const range = document.createRange();
     const selection = window.getSelection();
-
-    // If no selection exists, create one at the end
-    if (selection.rangeCount === 0) {
-      const range = document.createRange();
-      if (input.firstChild) {
-        range.setStart(input.firstChild, input.firstChild.textContent.length);
-      } else {
-        range.setStart(input, 0);
-      }
+    
+    if (input.firstChild && input.firstChild.nodeType === Node.TEXT_NODE) {
+      const safeOffset = Math.min(newCursorPos, input.firstChild.textContent.length);
+      range.setStart(input.firstChild, safeOffset);
       range.collapse(true);
+      selection.removeAllRanges();
       selection.addRange(range);
     }
+    
+    setCursorPosition(newCursorPos);
+  }, 0);
 
-    // Insert at current cursor position
-    const range = selection.getRangeAt(0);
-    range.deleteContents();
-    const textNode = document.createTextNode(symbol);
-    range.insertNode(textNode);
-    range.setStartAfter(textNode);
-    range.collapse(true);
-
-    // Update selection
-    selection.removeAllRanges();
-    selection.addRange(range);
-
-    // Update state
-    const newValue = getTextContent(input);
-    setInputValue(newValue);
-    setStudentAnswer(newValue);
-    setCursorPosition(getCursorPosition(input));
-  };
+  // Update React state
+  setInputValue(newText);
+  setStudentAnswer(newText);
+};
 
   const handleSuggestionClick = (suggestion) => {
     const currentWord = getCurrentWord(inputValue, cursorPosition);
@@ -981,15 +1002,17 @@ export default function MathInputTemplate({
         </div>
       )}
 
-      {/* Live LaTeX Preview */}
-      {inputValue.trim() && localIsValidExpression && (
-        <div className="p-4 border border-[#696969] rounded-lg">
-          <div className="text-sm mb-2 font-medium">Preview:</div>
-          <div className="text-xl">
-            <InlineMath math={convertToLatex(inputValue)} />
-          </div>
-        </div>
-      )}
+{/* Live LaTeX Preview */}
+{inputValue.trim() && localIsValidExpression && (
+  <div className="p-4 border border-[#696969] rounded-lg">
+    <div className="text-sm mb-2 font-medium">Preview:</div>
+    <div className="text-xl overflow-x-auto overflow-y-hidden max-w-full">
+      <div className="whitespace-nowrap min-w-0">
+        <InlineMath math={convertToLatex(inputValue)} />
+      </div>
+    </div>
+  </div>
+)}
 
       {/* Helper Text */}
       <div

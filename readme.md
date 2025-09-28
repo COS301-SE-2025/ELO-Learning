@@ -34,7 +34,7 @@ _Note: The application is fully deployed and ready for use during Demo 4._
 | [User Manual](docs/DEMO%204/User-Manual.pdf)                                                                     | Complete guide for end users                                  |
 | [Technical Installation Manual](docs/DEMO%204/Technical-Installation-Manual.pdf)                                 | Instructions for system setup and deployment                  |
 | [Coding Standards](docs/DEMO%204/Coding-Standards.pdf)                                                           | Development conventions and best practices                    |
-| [Testing Policy Document](https://drive.google.com/file/d/1ej3eurY4W6VFi7GLRBxFbi3qc6opm3RE/view?usp=drive_link) | Testing procedures and automated testing strategies           |
+| [Testing Policy Document](docs/DEMO%204/Security-Policy.pdf) | Testing procedures and automated testing strategies           |
 | [Quality Requirements](docs/DEMO%204/Requirements-Document.pdf)                                                  | Non-functional requirements                                   |
 | [Sprint Documentation](docs/DEMO%204/Sprint%20Planning.pdf)                                                      | Project management from Demo 2 to Demo 4                      |
 | [ELO Algorithm Documentation](docs/DEMO%204/ELO-Algorithm.pdf)                                                   | Description of ELO Algorithm                                  |

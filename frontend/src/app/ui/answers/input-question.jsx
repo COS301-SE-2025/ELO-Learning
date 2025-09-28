@@ -63,6 +63,7 @@ export default function MathInputTemplate({
   const [showHelper, setShowHelper] = useState(false);
   const [isHydrated, setIsHydrated] = useState(false);
   const [isUppercase, setIsUppercase] = useState(false);
+  const [isProcessingInsert, setIsProcessingInsert] = useState(false);
 
   const inputRef = useRef(null);
 
@@ -102,6 +103,47 @@ export default function MathInputTemplate({
     keyboard.shouldUseCustomKeyboard,
     keyboard.isCustomKeyboardActive,
   ]);
+
+  // Auto-focus and set cursor to end when component mounts
+  useEffect(() => {
+    const input = inputRef.current;
+    if (input && isHydrated) {
+      // Set focus and cursor to end
+      input.focus();
+
+      // Ensure cursor is at the end
+      const range = document.createRange();
+      const selection = window.getSelection();
+
+      if (input.firstChild) {
+        range.setStart(input.firstChild, input.firstChild.textContent.length);
+      } else {
+        range.setStart(input, 0);
+      }
+      range.collapse(true);
+      selection.removeAllRanges();
+      selection.addRange(range);
+
+      setCursorPosition(input.textContent.length);
+    }
+  }, [isHydrated]);
+
+  // Clear preview when studentAnswer is reset (new question)
+  useEffect(() => {
+    if (!studentAnswer || studentAnswer === '') {
+      setInputValue('');
+      setLocalIsValidExpression(true);
+      setValidationMessage('');
+      setShowErrorMessage(false);
+      setCursorPosition(0);
+
+      // Clear the input DOM content
+      const input = inputRef.current;
+      if (input) {
+        setTextContent(input, '', false);
+      }
+    }
+  }, [studentAnswer]);
 
   // Advanced math symbol categories
   const mathCategories = {
@@ -338,23 +380,65 @@ export default function MathInputTemplate({
 
   const insertSymbol = (symbol) => {
     const input = inputRef.current;
-    if (!input) return;
+    if (!input || isProcessingInsert) return;
 
-    const selection = window.getSelection();
-    if (selection.rangeCount === 0) {
-      // No selection, append to end
-      input.textContent += symbol;
-    } else {
-      // Insert at current cursor position
-      const range = selection.getRangeAt(0);
-      range.deleteContents();
-      range.insertNode(document.createTextNode(symbol));
-      range.collapse(false); // Move cursor after inserted text
+    setIsProcessingInsert(true);
+
+    try {
+      // Ensure input is focused
+      input.focus();
+
+      // Get FRESH cursor position and text content
+      const currentText = input.textContent || '';
+      const selection = window.getSelection();
+      let cursorPos = 0;
+
+      if (selection.rangeCount > 0) {
+        const range = selection.getRangeAt(0);
+        if (input.firstChild) {
+          cursorPos = range.startOffset;
+        }
+      } else {
+        // No selection, place at end
+        cursorPos = currentText.length;
+      }
+
+      // Ensure cursor position is valid
+      cursorPos = Math.max(0, Math.min(cursorPos, currentText.length));
+
+      // Create new text with symbol inserted at cursor position
+      const newText =
+        currentText.slice(0, cursorPos) + symbol + currentText.slice(cursorPos);
+      const newCursorPos = cursorPos + symbol.length;
+
+      // Update DOM directly
+      input.textContent = newText;
+
+      // Set new cursor position
+      if (input.firstChild) {
+        const range = document.createRange();
+        const newSelection = window.getSelection();
+        const safeOffset = Math.min(
+          newCursorPos,
+          input.firstChild.textContent.length,
+        );
+
+        range.setStart(input.firstChild, safeOffset);
+        range.collapse(true);
+        newSelection.removeAllRanges();
+        newSelection.addRange(range);
+      }
+
+      // Update React state
+      setInputValue(newText);
+      setStudentAnswer(newText);
+      setCursorPosition(newCursorPos);
+    } finally {
+      // Clear the processing flag after a short delay
+      setTimeout(() => {
+        setIsProcessingInsert(false);
+      }, 150);
     }
-
-    // Single state update
-    setInputValue(input.textContent);
-    setStudentAnswer(input.textContent);
   };
 
   const handleSuggestionClick = (suggestion) => {
@@ -392,58 +476,57 @@ export default function MathInputTemplate({
     const input = inputRef.current;
     if (!input) return;
 
+    // Ensure input is focused
+    input.focus();
+
+    const currentText = getTextContent(input) || '';
+    if (currentText.length === 0) return;
+
     const selection = window.getSelection();
-    if (selection.rangeCount === 0) return;
+    let newText;
+    let newCursorPos;
 
-    const range = selection.getRangeAt(0);
-
-    if (!range.collapsed) {
+    if (selection.rangeCount > 0 && !selection.getRangeAt(0).collapsed) {
       // Delete selected text
+      const range = selection.getRangeAt(0);
       range.deleteContents();
+      newText = getTextContent(input);
+      newCursorPos = getCursorPosition(input);
     } else {
-      // Delete one character before cursor using string manipulation
-      const currentText = getTextContent(input) || '';
+      // Delete one character before cursor
       const cursorPos = getCursorPosition(input);
+      if (cursorPos === 0) return;
 
-      if (cursorPos === 0 || currentText.length === 0) return;
-
-      // Delete character at position cursorPos - 1
-      const newText =
+      newText =
         currentText.slice(0, cursorPos - 1) + currentText.slice(cursorPos);
-      const newCursorPos = cursorPos - 1;
+      newCursorPos = cursorPos - 1;
 
-      // Update DOM directly
-      input.textContent = newText;
+      // Update DOM content
+      setTextContent(input, newText, false);
 
       // Set cursor position
+      const range = document.createRange();
+      const selection = window.getSelection();
+
       if (newText.length === 0) {
-        const newRange = document.createRange();
-        newRange.setStart(input, 0);
-        newRange.collapse(true);
-        selection.removeAllRanges();
-        selection.addRange(newRange);
+        range.setStart(input, 0);
       } else if (input.firstChild) {
-        const newRange = document.createRange();
-        const textNode = input.firstChild;
-        const safeOffset = Math.min(newCursorPos, textNode.textContent.length);
-        newRange.setStart(textNode, safeOffset);
-        newRange.collapse(true);
-        selection.removeAllRanges();
-        selection.addRange(newRange);
+        const safeOffset = Math.min(
+          newCursorPos,
+          input.firstChild.textContent.length,
+        );
+        range.setStart(input.firstChild, safeOffset);
       }
 
-      // Update React state after DOM is set
-      setInputValue(newText);
-      setStudentAnswer(newText);
-      setCursorPosition(newCursorPos);
-      return;
+      range.collapse(true);
+      selection.removeAllRanges();
+      selection.addRange(range);
     }
 
-    // For selected text deletion, update state
-    const newValue = getTextContent(input);
-    setInputValue(newValue);
-    setStudentAnswer(newValue);
-    setCursorPosition(getCursorPosition(input));
+    // Update React state
+    setInputValue(newText);
+    setStudentAnswer(newText);
+    setCursorPosition(newCursorPos);
   };
 
   const handleKeyDown = (e) => {
@@ -943,8 +1026,10 @@ export default function MathInputTemplate({
       {inputValue.trim() && localIsValidExpression && (
         <div className="p-4 border border-[#696969] rounded-lg">
           <div className="text-sm mb-2 font-medium">Preview:</div>
-          <div className="text-xl">
-            <InlineMath math={convertToLatex(inputValue)} />
+          <div className="text-xl overflow-x-auto overflow-y-hidden max-w-full">
+            <div className="whitespace-nowrap min-w-0">
+              <InlineMath math={convertToLatex(inputValue)} />
+            </div>
           </div>
         </div>
       )}

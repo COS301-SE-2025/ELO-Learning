@@ -3,6 +3,8 @@
     <img src="https://drive.usercontent.google.com/download?id=1zazGq71UACnS8KEjIlrJ34Ms2zmbrmqC" width="300"/>
 </div>
 
+<div align="center">
+
 [![Issue Tracking](https://img.shields.io/badge/Issue_Tracking-GitHub_Issues-yellow)](https://github.com/COS301-SE-2025/ELO-Learning/issues)
 [![Build Status](https://img.shields.io/badge/Build_Status-GitHub_Actions-brightgreen)](https://github.com/COS301-SE-2025/ELO-Learning/actions/workflows/linter.yml)
 ![Uptime Robot status](https://img.shields.io/uptimerobot/status/m797015486-75c486778a8f87b141372bd7)
@@ -24,208 +26,33 @@ The platform encourages growth through competitive, skill-based challenges—suc
 
 _Note: The application is fully deployed and ready for use during Demo 4._
 
-## 🎥 Demo Videos
+## Documentation and Resources
 
-<details>
-  <summary>
-    Demo 1 Presentation Video (May 28, 2025)
-  </summary>
-  <a href="https://drive.google.com/file/d/1e2E4Jgxe9Kg_B71Dpo1kF9NmZOw2nZKu/view?usp=sharing">Watch Demo 1 Video</a>
-</details>
-<details>
-  <summary>
-    Demo 2 Presentation Video (June 27, 2025)
-  </summary>
-  <a href="https://drive.google.com/file/d/1h8D7pI16n6AEnDAZ44I-xgcbYiTjGWAs/view?usp=sharing">Watch Demo 2 Video</a>
-</details>
-<details>
-  <summary>
-    Demo 3 Presentation Video (August 20, 2025)
-  </summary>
-  <a href="https://drive.google.com/file/d/1DwynL0g0CKzLbp2S27Q--R37b1FxexyD/view?usp=drive_link">Watch Demo 3 Video</a>
-</details>
-</details>
-<details>
-  <summary>
-    Demo 4 Presentation Video (September 29, 2025)
-  </summary>
-  <a href="PLACEHOLDER_DEMO_4_VIDEO_LINK">Watch Demo 4 Video</a>
-</details>
+| Resource                                                                                  | Description                                                   |
+| ----------------------------------------------------------------------------------------- | ------------------------------------------------------------- |
+| [Software Requirements Specification](docs/DEMO%204/Architectural-Requirements.pdf)       | Complete project requirements and specifications              |
+| [User Manual](docs/DEMO%204/User-Manual.pdf)                                              | Complete guide for end users                                  |
+| [Technical Installation Manual](docs/DEMO%204/Technical-Installation-Manual.pdf)          | Instructions for system setup and deployment                  |
+| [Coding Standards](docs/DEMO%204/Coding-Standards.pdf)                                    | Development conventions and best practices                    |
+| [Testing Policy Document](docs/DEMO%204/Security-Policy.pdf)                              | Testing procedures and automated testing strategies           |
+| [Quality Requirements](docs/DEMO%204/Requirements-Document.pdf)                           | Non-functional requirements                                   |
+| [Sprint Documentation](docs/DEMO%204/Sprint%20Planning.pdf)                               | Project management from Demo 2 to Demo 4                      |
+| [ELO Algorithm Documentation](docs/DEMO%204/ELO-Algorithm.pdf)                            | Description of ELO Algorithm                                  |
+| [ELO Algorithm Sequence Diagram](docs/DEMO%204/ELO%20Algorithm%20Sequence%20Diagrams.pdf) | System interaction flows and component communication patterns |
+| [Architecture Diagram](docs/DEMO%204/ELO%20Learning%20Architecture%20Diagram.pdf)         | Diagram of system overview                                    |
+| [Class Diagram](docs/DEMO%204/ELO%20Learning%20Domain%20Model.pdf)                        | Visual representation of ELO Learning                         |
+| [Deployment Diagram](docs/DEMO%204/Deployment-Model-ELO-Learning.pdf)                     | Deployment Diagram                                            |
+| [Project Board](https://github.com/orgs/COS301-SE-2025/projects/120)                      | Team organisation and progress tracking                       |
+| [Previous Documentation Iterations](docs/)                                                | See how our documentation has progressed                      |
 
-## 📁 Documentation
+## Demo Resources
 
-### DEMO 1 Documentation (May 28, 2025)
-
-<details>
-  <summary>
-    Services Requirement Specification (SRS) v1
-  </summary>
-  <a href="https://docs.google.com/document/d/1mucPjnS9raDPziTZLBBJaGlGvEBkxai2qoeAnJ0Ysa4/edit?usp=sharing">Services Requirement Specification (SRS) v1</a>
-</details>
-<details>
-  <summary>
-    Domain Model v1
-  </summary>
-  <a href="https://drive.google.com/file/d/1F8aDnzwpgg69GMHLet1e-gUtFcX8yFjo/view?usp=drive_link">Domain Model v1</a>
-</details>
-<details>
-  <summary>
-    Use Case Diagrams v1
-  </summary>
-    | <a href="https://drive.google.com/file/d/1_e4iI2zL_l6zaKoQeHNQ1t2FYm1D3MNm/view?usp=sharing">Practice</a> |
-    <a href="https://drive.google.com/file/d/12vq5eqNXVcbZB3QwOQgsBJQvF-L1z5Im/view?usp=sharing">Memorandum</a> |
-    <a href="https://drive.google.com/file/d/12vq5eqNXVcbZB3QwOQgsBJQvF-L1z5Im/view?usp=sharing">Leaderboard</a> |
-</details>
-<details>
-  <summary>
-    Architectural Requirements v1
-  </summary>
-  <a href="https://docs.google.com/document/d/1izYvZk-W59HGZy5bak7VuHOUFCfJNT3f/edit?usp=sharing&ouid=111519098189217056979&rtpof=true&sd=true">Architectural Requirements v1</a>
-</details>
-<details>
-  <summary>
-    Service Contracts v1
-  </summary>
-  <a href="https://docs.google.com/document/d/1VrDDmFJkHTyw__CENO48pkmnlwMOj7_4/edit?usp=drive_link&ouid=109634070400094344641&rtpof=true&sd=true">Service Contracts v1</a>
-</details>
-
-### DEMO 2 Documentation (June 27, 2025)
-
-<details>
-  <summary>
-    Services Requirement Specification (SRS) v2
-  </summary>
-  <a href="https://docs.google.com/document/d/1YwP50FDEFd87CN88d_aszxSXY386VK3t/edit?usp=drive_link&ouid=109634070400094344641&rtpof=true&sd=true">Services Requirement Specification (SRS) v2</a>
-</details>
-<details>
-  <summary>
-    Domain Model v2
-  </summary>
-  <a href="https://drive.google.com/file/d/1F8aDnzwpgg69GMHLet1e-gUtFcX8yFjo/view?usp=drive_link">Domain Model v2</a>
-</details>
-<details>
-  <summary>
-    Use Case Diagrams v2
-  </summary>
-    | <a href="https://drive.google.com/file/d/12vq5eqNXVcbZB3QwOQgsBJQvF-L1z5Im/view?usp=sharing">Math Keyboard</a> |
-    <a href="https://drive.google.com/file/d/17W-wW4N08pu6yigME1U5rJHu1VaM5AYe/view?usp=sharing">Single Player</a> |
-    <a href="https://drive.google.com/file/d/1G8FFKYUyhS-_iPGuu0Po7MkZPzBbBZkC/view?usp=sharing">Multiplayer</a> |
-</details>
-<details>
-  <summary>
-    Architectural Requirements v2
-  </summary>
-  <a href="https://docs.google.com/document/d/1QqYa0kwkN3fPhvyjZu5W3-cpX-PQKAzK/edit?usp=sharing&ouid=111519098189217056979&rtpof=true&sd=true">Architectural Requirements v2</a>
-</details>
-
-<details>
-  <summary>
-    Testing Documentation
-  </summary>
-  <a href="https://docs.google.com/document/d/1YdhTuejO4JdwaaNWz-BV63t_mzgbSKEl/edit?usp=sharing&ouid=111519098189217056979&rtpof=true&sd=true">Postman Tests</a>
-</details>
-
-### DEMO 3 Documentation (August 20, 2025)
-
-<details>
-  <summary>
-    Services Requirement Specification (SRS) v3
-  </summary>
-  <a href="https://drive.google.com/file/d/1c5F-KYrRMSUwsCPAiUqHn013Deheb74-/view?usp=drive_link">Services Requirement Specification (SRS) v3</a>
-</details>
-<details>
-  <summary>
-    Domain Model v3
-  </summary>
-  <a href="https://drive.google.com/file/d/1UN_ElLcKhIiTUD3fG3aZFk1QCv1tjdLh/view?usp=drive_link">Domain Model v3</a>
-</details>
-<details>
-  <summary>
-    Architectural Diagram & Design
-  </summary>
-  <a href="https://drive.google.com/file/d/1JctiEwfif_VWGe_UBfRNc39oanhuT6fD/view?usp=drive_link">Architectural Diagram</a>
-</details>
-<details>
-  <summary>
-    Deployment Model
-  </summary>
-  <a href="https://drive.google.com/file/d/1oLRaxopLhq9ap94Oy85Rsp4OsniRE_n5/view?usp=drive_link">Deployment Model</a>
-</details>
-<details>
-  <summary>
-    Deployment Model Description
-  </summary>
-  <a href="https://drive.google.com/file/d/1MGzxs_QGBO0yfGINoaznTBGPKl1QSjkK/view?usp=drive_link">Deployment Model Documentation</a>
-</details>
-<details>
-  <summary>
-    ELO Algorithm Flow
-  </summary>
-  <a href="https://drive.google.com/file/d/1OBBBIIVbYEvQXRA5Ht7IbjGjyRRJZcgS/view?usp=drive_link">ELO Algorithm Sequence Diagram</a>
-</details>
-<details>
-  <summary>
-    ELO Algorithm Description
-  </summary>
-  <a href="https://drive.google.com/file/d/1TUewtkVmtlPbTx_lH5kH7kevhPm_RCNf/view?usp=drive_link">ELO Algorithm Documentation</a>
-</details>
-<details>
-  <summary>
-    Service Contracts v3
-  </summary>
-  <a href="https://drive.google.com/file/d/1HDaeXbcBt_FJsHkkG7IgzxgyEFPFJRQ1/view?usp=drive_link">Service Contracts v3</a>
-</details>
-<details>
-  <summary>
-    Quality Requirements v3
-  </summary>
-  <a href="https://drive.google.com/file/d/1F2Soa-TseOHp0zTvh16d9d96hoQlGImW/view?usp=drive_link">Quality Requirements v3</a>
-</details>
-<details>
-  <summary>
-    Testing Documentation v3
-  </summary>
-  <a href="https://drive.google.com/file/d/1PddWCG-7KAXiI27Cv_axrp_4m_zq7moa/view?usp=drive_link">Testing Documentation v3</a>
-</details>
-
-## 🤝 Shared Documentation
-
-<details>
-  <summary>
-    Demo 2 Sprint Planning
-  </summary>
-  <a href="https://drive.google.com/file/d/11aN03ohE0Ib9bMRrQ7Xc-9tar-GBTYc7/view?usp=drive_link">Demo 2 Sprint Planning</a>
-</details>
-<details>
-  <summary>
-    Demo 3 Sprint Planning
-  </summary>
-  <a href="https://drive.google.com/file/d/1Lp7TMgBfsIIFsU3eSuWhZH23DeOr8Ypo/view?usp=drive_link">Demo 3 Sprint Planning</a>
-</details>
-<details>
-  <summary>
-    Coding Standards
-  </summary>
-  <a href="https://drive.google.com/file/d/11W_o9bVQl1MoiHN3gq5NChPXf0ac8vSJ/view?usp=drive_link">Coding Standards</a>
-</details>
-<details>
-  <summary>
-    User Manual
-  </summary>
-  <a href="https://drive.google.com/file/d/1_ukigKbH-mRQ3RIWRLJBoKM6OxOwE7HE/view?usp=drive_link">User Manual</a>
-</details>
-<details>
-  <summary>
-    Technical Installation Manual
-  </summary>
-  <a href="https://drive.google.com/file/d/1LWd8ysOxiqDRQpEMF5OuIIIFP7c_HeRC/view?usp=drive_link">Technical Installation Manual</a>
-</details>
-<details>
-    <summary>
-        ELO Learning Project Board
-    </summary>
-    <a href="https://github.com/orgs/COS301-SE-2025/projects/120">Project Board</a>
-</details>
+| Demo   | Video                                                                                                 | Slides                                                                                                                                                                         |
+| ------ | ----------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Demo 1 | [Demo 1 Video](https://drive.google.com/file/d/1e2E4Jgxe9Kg_B71Dpo1kF9NmZOw2nZKu/view?usp=drive_link) | [Demo 1 Slides](https://www.canva.com/design/DAGoo9K8790/2R-M321YjC0ZFsuUi0iVuA/edit?utm_content=DAGoo9K8790&utm_campaign=designshare&utm_medium=link2&utm_source=sharebutton) |
+| Demo 2 | [Demo 2 Video](https://drive.google.com/file/d/1h8D7pI16n6AEnDAZ44I-xgcbYiTjGWAs/view?usp=drive_link) | [Demo 2 Slides](https://www.canva.com/design/DAGrAtPZc84/D6iylYVmubSv3udRGTYdtw/edit?utm_content=DAGrAtPZc84&utm_campaign=designshare&utm_medium=link2&utm_source=sharebutton) |
+| Demo 3 | [Demo 3 Video](https://drive.google.com/file/d/1DwynL0g0CKzLbp2S27Q--R37b1FxexyD/view?usp=drive_link) | [Demo 3 Slides](https://www.canva.com/design/DAGwI28zgfw/wC5KJmt6Rxto-9B4sA3v0g/edit?utm_content=DAGwI28zgfw&utm_campaign=designshare&utm_medium=link2&utm_source=sharebutton) |
+| Demo 4 | [Demo 4 Video](https://drive.google.com/file/d/1C2vY_NennMutf-jkJs6DNPC5brmIp6ci/view?usp=sharing)    | [Demo 4 Slides](https://www.canva.com/design/DAGz0CLbQ_g/zmopZssGtdGKBwKJQ0yLiA/edit)                                                                                          |
 
 ## 👾 Tech Stack
 
@@ -246,6 +73,8 @@ _Note: The application is fully deployed and ready for use during Demo 4._
 [![My Skills](https://skillicons.dev/icons?i=github,githubactions,yarn,npm,docker)](https://skillicons.dev)
 
 ## 👥 Meet team Zero Day
+
+</div>
 
 <div>
     <table style="width: 100%; border-collapse: collapse;">
@@ -360,17 +189,17 @@ _Note: The application is fully deployed and ready for use during Demo 4._
     </table>
 </div>
 
+<div align="center">
+
 ## ✉️ Contact
 
-<div align="center">
-    <h3>zeroday0d4y@gmail.com</h3>
+<h3>zeroday0d4y@gmail.com</h3>
     <img src="https://drive.usercontent.google.com/download?id=1Py1pypOH4mMxOnsg2kw2PCKg340RuPTJ" width="300px"/>
-</div>
+
 <div height="500px"></div>
 
 ## ♟️ Partner
 
-<div align="center">
-    <p>In collaboration with <a href="https://proking.solutions/">Proking Solutions</a></p>
+<p>In collaboration with <a href="https://proking.solutions/">Proking Solutions</a></p>
     <img src="https://drive.usercontent.google.com/download?id=1usb25gGHfheUws5oPzCXmuTKMUe-GAAQ"  width="300px"/>
 </div>

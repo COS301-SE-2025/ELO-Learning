@@ -128,21 +128,21 @@ export default function MathInputTemplate({
   }, [isHydrated]);
 
   // Clear preview when studentAnswer is reset (new question)
-useEffect(() => {
-  if (!studentAnswer || studentAnswer === '') {
-    setInputValue('');
-    setLocalIsValidExpression(true);
-    setValidationMessage('');
-    setShowErrorMessage(false);
-    setCursorPosition(0);
-    
-    // Clear the input DOM content
-    const input = inputRef.current;
-    if (input) {
-      setTextContent(input, '', false);
+  useEffect(() => {
+    if (!studentAnswer || studentAnswer === '') {
+      setInputValue('');
+      setLocalIsValidExpression(true);
+      setValidationMessage('');
+      setShowErrorMessage(false);
+      setCursorPosition(0);
+
+      // Clear the input DOM content
+      const input = inputRef.current;
+      if (input) {
+        setTextContent(input, '', false);
+      }
     }
-  }
-}, [studentAnswer]);
+  }, [studentAnswer]);
 
   // Advanced math symbol categories
   const mathCategories = {
@@ -377,49 +377,56 @@ useEffect(() => {
     }, 100);
   };
 
-const insertSymbol = (symbol) => {
-  const input = inputRef.current;
-  if (!input) return;
+  const insertSymbol = (symbol) => {
+    const input = inputRef.current;
+    if (!input) return;
 
-  // Ensure input is focused and has proper cursor position
-  input.focus();
+    // Ensure input is focused and has proper cursor position
+    input.focus();
 
-  // Get current text and cursor position
-  const currentText = getTextContent(input) || '';
-  const currentCursor = getCursorPosition(input);
+    // Get current text and cursor position
+    const currentText = getTextContent(input) || '';
+    const currentCursor = getCursorPosition(input);
 
-  // If cursor position is invalid, set it to the end
-  const safeCursorPos = currentCursor >= 0 && currentCursor <= currentText.length 
-    ? currentCursor 
-    : currentText.length;
+    // If cursor position is invalid, set it to the end
+    const safeCursorPos =
+      currentCursor >= 0 && currentCursor <= currentText.length
+        ? currentCursor
+        : currentText.length;
 
-  // Insert symbol at cursor position
-  const newText = currentText.slice(0, safeCursorPos) + symbol + currentText.slice(safeCursorPos);
-  const newCursorPos = safeCursorPos + symbol.length;
+    // Insert symbol at cursor position
+    const newText =
+      currentText.slice(0, safeCursorPos) +
+      symbol +
+      currentText.slice(safeCursorPos);
+    const newCursorPos = safeCursorPos + symbol.length;
 
-  // Update DOM using helper function
-  setTextContent(input, newText, false);
+    // Update DOM using helper function
+    setTextContent(input, newText, false);
 
-  // Set cursor position after the inserted symbol
-  setTimeout(() => {
-    const range = document.createRange();
-    const selection = window.getSelection();
-    
-    if (input.firstChild && input.firstChild.nodeType === Node.TEXT_NODE) {
-      const safeOffset = Math.min(newCursorPos, input.firstChild.textContent.length);
-      range.setStart(input.firstChild, safeOffset);
-      range.collapse(true);
-      selection.removeAllRanges();
-      selection.addRange(range);
-    }
-    
-    setCursorPosition(newCursorPos);
-  }, 0);
+    // Set cursor position after the inserted symbol
+    setTimeout(() => {
+      const range = document.createRange();
+      const selection = window.getSelection();
 
-  // Update React state
-  setInputValue(newText);
-  setStudentAnswer(newText);
-};
+      if (input.firstChild && input.firstChild.nodeType === Node.TEXT_NODE) {
+        const safeOffset = Math.min(
+          newCursorPos,
+          input.firstChild.textContent.length,
+        );
+        range.setStart(input.firstChild, safeOffset);
+        range.collapse(true);
+        selection.removeAllRanges();
+        selection.addRange(range);
+      }
+
+      setCursorPosition(newCursorPos);
+    }, 0);
+
+    // Update React state
+    setInputValue(newText);
+    setStudentAnswer(newText);
+  };
 
   const handleSuggestionClick = (suggestion) => {
     const currentWord = getCurrentWord(inputValue, cursorPosition);
@@ -1002,17 +1009,17 @@ const insertSymbol = (symbol) => {
         </div>
       )}
 
-{/* Live LaTeX Preview */}
-{inputValue.trim() && localIsValidExpression && (
-  <div className="p-4 border border-[#696969] rounded-lg">
-    <div className="text-sm mb-2 font-medium">Preview:</div>
-    <div className="text-xl overflow-x-auto overflow-y-hidden max-w-full">
-      <div className="whitespace-nowrap min-w-0">
-        <InlineMath math={convertToLatex(inputValue)} />
-      </div>
-    </div>
-  </div>
-)}
+      {/* Live LaTeX Preview */}
+      {inputValue.trim() && localIsValidExpression && (
+        <div className="p-4 border border-[#696969] rounded-lg">
+          <div className="text-sm mb-2 font-medium">Preview:</div>
+          <div className="text-xl overflow-x-auto overflow-y-hidden max-w-full">
+            <div className="whitespace-nowrap min-w-0">
+              <InlineMath math={convertToLatex(inputValue)} />
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Helper Text */}
       <div

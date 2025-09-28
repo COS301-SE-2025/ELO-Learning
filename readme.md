@@ -194,7 +194,6 @@ _Note: The application is fully deployed and ready for use during Demo 4._
 <h3>zeroday0d4y@gmail.com</h3>
     <img src="https://drive.usercontent.google.com/download?id=1Py1pypOH4mMxOnsg2kw2PCKg340RuPTJ" width="300px"/>
 
-
 <div height="500px"></div>
 
 ## ♟️ Partner
@@ -202,5 +201,3 @@ _Note: The application is fully deployed and ready for use during Demo 4._
 <p>In collaboration with <a href="https://proking.solutions/">Proking Solutions</a></p>
     <img src="https://drive.usercontent.google.com/download?id=1usb25gGHfheUws5oPzCXmuTKMUe-GAAQ"  width="300px"/>
 </div>
-
-

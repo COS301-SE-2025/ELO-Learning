@@ -103,6 +103,30 @@ export default function MathInputTemplate({
     keyboard.isCustomKeyboardActive,
   ]);
 
+  // Auto-focus and set cursor to end when component mounts
+useEffect(() => {
+  const input = inputRef.current;
+  if (input && isHydrated) {
+    // Set focus and cursor to end
+    input.focus();
+    
+    // Ensure cursor is at the end
+    const range = document.createRange();
+    const selection = window.getSelection();
+    
+    if (input.firstChild) {
+      range.setStart(input.firstChild, input.firstChild.textContent.length);
+    } else {
+      range.setStart(input, 0);
+    }
+    range.collapse(true);
+    selection.removeAllRanges();
+    selection.addRange(range);
+    
+    setCursorPosition(input.textContent.length);
+  }
+}, [isHydrated]);
+
   // Advanced math symbol categories
   const mathCategories = {
     numbers: {
@@ -336,26 +360,45 @@ export default function MathInputTemplate({
     }, 100);
   };
 
-  const insertSymbol = (symbol) => {
-    const input = inputRef.current;
-    if (!input) return;
+const insertSymbol = (symbol) => {
+  const input = inputRef.current;
+  if (!input) return;
 
-    const selection = window.getSelection();
-    if (selection.rangeCount === 0) {
-      // No selection, append to end
-      input.textContent += symbol;
+  // Ensure input is focused first
+  input.focus();
+
+  const selection = window.getSelection();
+  
+  // If no selection exists, create one at the end
+  if (selection.rangeCount === 0) {
+    const range = document.createRange();
+    if (input.firstChild) {
+      range.setStart(input.firstChild, input.firstChild.textContent.length);
     } else {
-      // Insert at current cursor position
-      const range = selection.getRangeAt(0);
-      range.deleteContents();
-      range.insertNode(document.createTextNode(symbol));
-      range.collapse(false); // Move cursor after inserted text
+      range.setStart(input, 0);
     }
+    range.collapse(true);
+    selection.addRange(range);
+  }
 
-    // Single state update
-    setInputValue(input.textContent);
-    setStudentAnswer(input.textContent);
-  };
+  // Insert at current cursor position
+  const range = selection.getRangeAt(0);
+  range.deleteContents();
+  const textNode = document.createTextNode(symbol);
+  range.insertNode(textNode);
+  range.setStartAfter(textNode);
+  range.collapse(true);
+  
+  // Update selection
+  selection.removeAllRanges();
+  selection.addRange(range);
+
+  // Update state
+  const newValue = getTextContent(input);
+  setInputValue(newValue);
+  setStudentAnswer(newValue);
+  setCursorPosition(getCursorPosition(input));
+};
 
   const handleSuggestionClick = (suggestion) => {
     const currentWord = getCurrentWord(inputValue, cursorPosition);
@@ -388,63 +431,58 @@ export default function MathInputTemplate({
     input.focus();
   };
 
-  const backspace = () => {
-    const input = inputRef.current;
-    if (!input) return;
+const backspace = () => {
+  const input = inputRef.current;
+  if (!input) return;
 
-    const selection = window.getSelection();
-    if (selection.rangeCount === 0) return;
+  // Ensure input is focused
+  input.focus();
 
+  const currentText = getTextContent(input) || '';
+  if (currentText.length === 0) return;
+
+  const selection = window.getSelection();
+  let newText;
+  let newCursorPos;
+
+  if (selection.rangeCount > 0 && !selection.getRangeAt(0).collapsed) {
+    // Delete selected text
     const range = selection.getRangeAt(0);
+    range.deleteContents();
+    newText = getTextContent(input);
+    newCursorPos = getCursorPosition(input);
+  } else {
+    // Delete one character before cursor
+    const cursorPos = getCursorPosition(input);
+    if (cursorPos === 0) return;
 
-    if (!range.collapsed) {
-      // Delete selected text
-      range.deleteContents();
-    } else {
-      // Delete one character before cursor using string manipulation
-      const currentText = getTextContent(input) || '';
-      const cursorPos = getCursorPosition(input);
+    newText = currentText.slice(0, cursorPos - 1) + currentText.slice(cursorPos);
+    newCursorPos = cursorPos - 1;
 
-      if (cursorPos === 0 || currentText.length === 0) return;
+    // Update DOM content
+    setTextContent(input, newText, false);
 
-      // Delete character at position cursorPos - 1
-      const newText =
-        currentText.slice(0, cursorPos - 1) + currentText.slice(cursorPos);
-      const newCursorPos = cursorPos - 1;
-
-      // Update DOM directly
-      input.textContent = newText;
-
-      // Set cursor position
-      if (newText.length === 0) {
-        const newRange = document.createRange();
-        newRange.setStart(input, 0);
-        newRange.collapse(true);
-        selection.removeAllRanges();
-        selection.addRange(newRange);
-      } else if (input.firstChild) {
-        const newRange = document.createRange();
-        const textNode = input.firstChild;
-        const safeOffset = Math.min(newCursorPos, textNode.textContent.length);
-        newRange.setStart(textNode, safeOffset);
-        newRange.collapse(true);
-        selection.removeAllRanges();
-        selection.addRange(newRange);
-      }
-
-      // Update React state after DOM is set
-      setInputValue(newText);
-      setStudentAnswer(newText);
-      setCursorPosition(newCursorPos);
-      return;
+    // Set cursor position
+    const range = document.createRange();
+    const selection = window.getSelection();
+    
+    if (newText.length === 0) {
+      range.setStart(input, 0);
+    } else if (input.firstChild) {
+      const safeOffset = Math.min(newCursorPos, input.firstChild.textContent.length);
+      range.setStart(input.firstChild, safeOffset);
     }
+    
+    range.collapse(true);
+    selection.removeAllRanges();
+    selection.addRange(range);
+  }
 
-    // For selected text deletion, update state
-    const newValue = getTextContent(input);
-    setInputValue(newValue);
-    setStudentAnswer(newValue);
-    setCursorPosition(getCursorPosition(input));
-  };
+  // Update React state
+  setInputValue(newText);
+  setStudentAnswer(newText);
+  setCursorPosition(newCursorPos);
+};
 
   const handleKeyDown = (e) => {
     // Handle special keys

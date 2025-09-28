@@ -26,6 +26,12 @@ The platform encourages growth through competitive, skill-based challenges—suc
 
 _Note: The application is fully deployed and ready for use during Demo 4._
 
+## 🚀 Live Application
+
+**Access ELO Learning:** [https://elo-learning.co.za]
+
+_Note: The application is fully deployed and ready for use during Demo 4._
+
 ## Documentation and Resources
 
 | Resource                                                                                                         | Description                                                   |

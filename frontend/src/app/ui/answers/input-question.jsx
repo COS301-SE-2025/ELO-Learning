@@ -11,8 +11,6 @@ import {
   clearContent,
   getCursorPosition,
   getTextContent,
-  insertTextAtCursor,
-  moveCursor,
   removeCursorIndicator,
   setTextContent,
   showCursorIndicator,
@@ -21,12 +19,26 @@ import {
   getMathValidationMessage,
   isValidMathExpression,
 } from '@/utils/frontendMathValidator';
+import { convertToLatex } from '@/utils/latexConverter';
 import { getPlatformClasses } from '@/utils/platformDetection';
 import { QUESTION_TYPES } from '@/utils/questionTypeDetection';
 import 'katex/dist/katex.min.css';
 import { ChevronDown, ChevronUp } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import { InlineMath } from 'react-katex';
+
+// Auto-completion suggestions
+const autoCompletions = [
+  { trigger: 'sin', completion: 'sin()', description: 'Sine function' },
+  { trigger: 'cos', completion: 'cos()', description: 'Cosine function' },
+  { trigger: 'tan', completion: 'tan()', description: 'Tangent function' },
+  { trigger: 'log', completion: 'log()', description: 'Logarithm' },
+  { trigger: 'ln', completion: 'ln()', description: 'Natural log' },
+  { trigger: 'sqrt', completion: 'sqrt()', description: 'Square root' },
+  { trigger: 'abs', completion: 'abs()', description: 'Absolute value' },
+  { trigger: 'pi', completion: 'π', description: 'Pi constant' },
+  { trigger: 'inf', completion: '∞', description: 'Infinity' },
+];
 
 export default function MathInputTemplate({
   correctAnswer,
@@ -50,6 +62,8 @@ export default function MathInputTemplate({
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [showHelper, setShowHelper] = useState(false);
   const [isHydrated, setIsHydrated] = useState(false);
+  const [isUppercase, setIsUppercase] = useState(false);
+  const [isProcessingInsert, setIsProcessingInsert] = useState(false);
 
   const inputRef = useRef(null);
 
@@ -66,7 +80,7 @@ export default function MathInputTemplate({
       setTextContent(input, initialValue, true, true);
       setCursorPosition(initialValue.length);
     }
-  }, []); // Run only once on mount
+  }, [studentAnswer]); // Run only once on mount
 
   // Initialize keyboard manager for Math Input questions
   const keyboard = useKeyboardManager(QUESTION_TYPES.MATH_INPUT);
@@ -89,6 +103,47 @@ export default function MathInputTemplate({
     keyboard.shouldUseCustomKeyboard,
     keyboard.isCustomKeyboardActive,
   ]);
+
+  // Auto-focus and set cursor to end when component mounts
+  useEffect(() => {
+    const input = inputRef.current;
+    if (input && isHydrated) {
+      // Set focus and cursor to end
+      input.focus();
+
+      // Ensure cursor is at the end
+      const range = document.createRange();
+      const selection = window.getSelection();
+
+      if (input.firstChild) {
+        range.setStart(input.firstChild, input.firstChild.textContent.length);
+      } else {
+        range.setStart(input, 0);
+      }
+      range.collapse(true);
+      selection.removeAllRanges();
+      selection.addRange(range);
+
+      setCursorPosition(input.textContent.length);
+    }
+  }, [isHydrated]);
+
+  // Clear preview when studentAnswer is reset (new question)
+  useEffect(() => {
+    if (!studentAnswer || studentAnswer === '') {
+      setInputValue('');
+      setLocalIsValidExpression(true);
+      setValidationMessage('');
+      setShowErrorMessage(false);
+      setCursorPosition(0);
+
+      // Clear the input DOM content
+      const input = inputRef.current;
+      if (input) {
+        setTextContent(input, '', false);
+      }
+    }
+  }, [studentAnswer]);
 
   // Advanced math symbol categories
   const mathCategories = {
@@ -181,54 +236,22 @@ export default function MathInputTemplate({
         { symbol: 'infinity', label: '∞', description: 'Infinity' },
         { symbol: 'i', label: 'i', description: 'Imaginary unit' },
         { symbol: 'phi', label: 'φ', description: 'Golden ratio' },
-        { symbol: '±', label: '±', description: 'Plus or minus' },
-      ],
-    },
-    advanced: {
-      label: 'Advanced',
-      icon: '∫',
-      symbols: [
-        { symbol: 'derivative(', label: '∂/∂x', description: 'Derivative' },
-        { symbol: 'integral(', label: '∫', description: 'Integral' },
-        { symbol: 'sum(', label: 'Σ', description: 'Summation' },
-        { symbol: 'prod(', label: '∏', description: 'Product' },
-        { symbol: 'limit(', label: 'lim', description: 'Limit' },
-        { symbol: 'matrix(', label: '[]', description: 'Matrix' },
-        { symbol: '∈', label: '∈', description: 'Element of' },
-        { symbol: '∅', label: '∅', description: 'Empty set' },
-        { symbol: '∀', label: '∀', description: 'For all' },
-      ],
-    },
-    templates: {
-      label: 'Templates',
-      icon: '📐',
-      symbols: [
-        { symbol: 'frac{}{', label: 'a/b', description: 'Fraction template' },
-        { symbol: '^{}', label: 'xⁿ', description: 'Exponent template' },
-        { symbol: '_{', label: 'x₍ₙ₎', description: 'Subscript template' },
-        { symbol: 'sqrt{}', label: '√x', description: 'Square root template' },
-        { symbol: 'cbrt{}', label: '∛x', description: 'Cube root template' },
-        {
-          symbol: 'binom{}{',
-          label: '(n k)',
-          description: 'Binomial coefficient',
-        },
+        { symbol: 'theta', label: 'θ', description: 'Theta angle' },
+        { symbol: 'alpha', label: 'α', description: 'Alpha' },
+        { symbol: 'beta', label: 'β', description: 'Beta' },
       ],
     },
   };
 
-  // Auto-completion suggestions
-  const autoCompletions = [
-    { trigger: 'sin', completion: 'sin()', description: 'Sine function' },
-    { trigger: 'cos', completion: 'cos()', description: 'Cosine function' },
-    { trigger: 'tan', completion: 'tan()', description: 'Tangent function' },
-    { trigger: 'log', completion: 'log()', description: 'Logarithm' },
-    { trigger: 'ln', completion: 'ln()', description: 'Natural log' },
-    { trigger: 'sqrt', completion: 'sqrt()', description: 'Square root' },
-    { trigger: 'abs', completion: 'abs()', description: 'Absolute value' },
-    { trigger: 'pi', completion: 'π', description: 'Pi constant' },
-    { trigger: 'inf', completion: '∞', description: 'Infinity' },
-  ];
+  // Generate dynamic alphabet symbols based on case
+  const alphabetSymbols = mathCategories.alphabet.symbols.map((symbol) => ({
+    ...symbol,
+    symbol: isUppercase ? symbol.symbol.toUpperCase() : symbol.symbol,
+    label: isUppercase ? symbol.label.toUpperCase() : symbol.label,
+    description: `Variable ${
+      isUppercase ? symbol.symbol.toUpperCase() : symbol.symbol
+    }`,
+  }));
 
   // Real-time expression validation
   useEffect(() => {
@@ -283,60 +306,6 @@ export default function MathInputTemplate({
     return () => clearTimeout(timeoutId);
   }, [inputValue, cursorPosition, setIsValidExpression]);
 
-  // Sync with parent studentAnswer prop - SIMPLIFIED to prevent race conditions
-  useEffect(() => {
-    // Normalize studentAnswer (handle null/undefined as empty string)
-    const normalizedStudentAnswer = studentAnswer || '';
-
-    // Always sync when studentAnswer prop changes
-    setInputValue(normalizedStudentAnswer);
-
-    // Clear all related state when resetting to empty
-    if (normalizedStudentAnswer === '') {
-      setInputHistory([]);
-      setShowHistory(false);
-      setShowSuggestions(false);
-      setSuggestions([]);
-      setValidationMessage('');
-      setShowErrorMessage(false);
-      setLocalIsValidExpression(true);
-    }
-
-    // Update DOM content
-    const input = inputRef.current;
-    if (input) {
-      setTextContent(input, normalizedStudentAnswer, true, true);
-
-      // Set cursor position to end of content
-      setCursorPosition(normalizedStudentAnswer.length);
-
-      // Update DOM cursor position
-      setTimeout(() => {
-        if (normalizedStudentAnswer === '') {
-          // For empty content, position cursor at start
-          const range = document.createRange();
-          const selection = window.getSelection();
-          range.setStart(input, 0);
-          range.collapse(true);
-          selection.removeAllRanges();
-          selection.addRange(range);
-        } else if (input.firstChild) {
-          // For non-empty content, position cursor at end
-          const range = document.createRange();
-          const selection = window.getSelection();
-          const textLength = normalizedStudentAnswer.length;
-          range.setStart(
-            input.firstChild,
-            Math.min(textLength, input.firstChild.textContent.length),
-          );
-          range.collapse(true);
-          selection.removeAllRanges();
-          selection.addRange(range);
-        }
-      }, 10);
-    }
-  }, [studentAnswer]); // Only depend on studentAnswer prop
-
   // Reset error message when typing
   useEffect(() => {
     if (inputValue.trim()) {
@@ -345,37 +314,6 @@ export default function MathInputTemplate({
   }, [inputValue]);
 
   // Sync DOM content with inputValue state (without React children interference)
-  useEffect(() => {
-    const input = inputRef.current;
-    if (input && getTextContent(input) !== inputValue) {
-      setTextContent(input, inputValue, true, true);
-
-      // Set cursor position to end for better UX
-      setTimeout(() => {
-        if (inputValue === '') {
-          // For empty content, position cursor at start
-          const range = document.createRange();
-          const selection = window.getSelection();
-          range.setStart(input, 0);
-          range.collapse(true);
-          selection.removeAllRanges();
-          selection.addRange(range);
-        } else if (input.firstChild) {
-          // For non-empty content, position cursor at end
-          const range = document.createRange();
-          const selection = window.getSelection();
-          const textLength = inputValue.length;
-          range.setStart(
-            input.firstChild,
-            Math.min(textLength, input.firstChild.textContent.length),
-          );
-          range.collapse(true);
-          selection.removeAllRanges();
-          selection.addRange(range);
-        }
-      }, 10);
-    }
-  }, [inputValue]); // Only run when inputValue changes
 
   // Quick validation against correct answer - using your new answerValidator
   useEffect(() => {
@@ -440,45 +378,67 @@ export default function MathInputTemplate({
     }, 100);
   };
 
-  const insertTextAtCursorContentEditable = (text) => {
+  const insertSymbol = (symbol) => {
     const input = inputRef.current;
-    if (!input) return;
+    if (!input || isProcessingInsert) return;
 
-    // Use improved helper function
-    insertTextAtCursor(input, text);
+    setIsProcessingInsert(true);
 
-    // Update local state
-    const newValue = getTextContent(input);
-    setInputValue(newValue);
-    setStudentAnswer(newValue);
-  };
+    try {
+      // Ensure input is focused
+      input.focus();
 
-  const insertSymbol = (symbol, shouldMoveCursor = true) => {
-    const input = inputRef.current;
-    if (!input) return;
+      // Get FRESH cursor position and text content
+      const currentText = input.textContent || '';
+      const selection = window.getSelection();
+      let cursorPos = 0;
 
-    // Prevent rapid clicking issues by debouncing
-    if (input.dataset.inserting === 'true') return;
-    input.dataset.inserting = 'true';
+      if (selection.rangeCount > 0) {
+        const range = selection.getRangeAt(0);
+        if (input.firstChild) {
+          cursorPos = range.startOffset;
+        }
+      } else {
+        // No selection, place at end
+        cursorPos = currentText.length;
+      }
 
-    // Use contentEditable text insertion with improved helper and echo prevention
-    insertTextAtCursor(input, symbol, true);
+      // Ensure cursor position is valid
+      cursorPos = Math.max(0, Math.min(cursorPos, currentText.length));
 
-    // Update local state without triggering additional events
-    const newValue = getTextContent(input);
-    setInputValue(newValue);
-    setStudentAnswer(newValue);
+      // Create new text with symbol inserted at cursor position
+      const newText =
+        currentText.slice(0, cursorPos) + symbol + currentText.slice(cursorPos);
+      const newCursorPos = cursorPos + symbol.length;
 
-    // Add to history
-    if (!inputHistory.includes(symbol)) {
-      setInputHistory((prev) => [symbol, ...prev.slice(0, 9)]);
+      // Update DOM directly
+      input.textContent = newText;
+
+      // Set new cursor position
+      if (input.firstChild) {
+        const range = document.createRange();
+        const newSelection = window.getSelection();
+        const safeOffset = Math.min(
+          newCursorPos,
+          input.firstChild.textContent.length,
+        );
+
+        range.setStart(input.firstChild, safeOffset);
+        range.collapse(true);
+        newSelection.removeAllRanges();
+        newSelection.addRange(range);
+      }
+
+      // Update React state
+      setInputValue(newText);
+      setStudentAnswer(newText);
+      setCursorPosition(newCursorPos);
+    } finally {
+      // Clear the processing flag after a short delay
+      setTimeout(() => {
+        setIsProcessingInsert(false);
+      }, 150);
     }
-
-    // Show cursor indicator at new position
-    setTimeout(() => {
-      showCursorIndicator(input);
-      input.dataset.inserting = 'false';
-    }, 50);
   };
 
   const handleSuggestionClick = (suggestion) => {
@@ -516,77 +476,57 @@ export default function MathInputTemplate({
     const input = inputRef.current;
     if (!input) return;
 
-    // Get current text and selection
-    const text = input.textContent || '';
+    // Ensure input is focused
+    input.focus();
+
+    const currentText = getTextContent(input) || '';
+    if (currentText.length === 0) return;
+
     const selection = window.getSelection();
+    let newText;
+    let newCursorPos;
 
-    if (selection.rangeCount === 0) return;
+    if (selection.rangeCount > 0 && !selection.getRangeAt(0).collapsed) {
+      // Delete selected text
+      const range = selection.getRangeAt(0);
+      range.deleteContents();
+      newText = getTextContent(input);
+      newCursorPos = getCursorPosition(input);
+    } else {
+      // Delete one character before cursor
+      const cursorPos = getCursorPosition(input);
+      if (cursorPos === 0) return;
 
-    const range = selection.getRangeAt(0);
-    const cursorPos = getCursorPosition(input);
+      newText =
+        currentText.slice(0, cursorPos - 1) + currentText.slice(cursorPos);
+      newCursorPos = cursorPos - 1;
 
-    if (cursorPos > 0) {
-      // Remove one character before cursor
-      const newText = text.slice(0, cursorPos - 1) + text.slice(cursorPos);
+      // Update DOM content
+      setTextContent(input, newText, false);
 
-      // Update content
-      input.textContent = newText;
-      setInputValue(newText);
-      setStudentAnswer(newText);
+      // Set cursor position
+      const range = document.createRange();
+      const selection = window.getSelection();
 
-      // Set cursor position manually
-      setTimeout(() => {
-        const newRange = document.createRange();
-        const textNode = input.firstChild;
+      if (newText.length === 0) {
+        range.setStart(input, 0);
+      } else if (input.firstChild) {
+        const safeOffset = Math.min(
+          newCursorPos,
+          input.firstChild.textContent.length,
+        );
+        range.setStart(input.firstChild, safeOffset);
+      }
 
-        if (textNode && textNode.nodeType === Node.TEXT_NODE) {
-          const newPos = Math.max(0, cursorPos - 1);
-          newRange.setStart(
-            textNode,
-            Math.min(newPos, textNode.textContent.length),
-          );
-          newRange.collapse(true);
-          selection.removeAllRanges();
-          selection.addRange(newRange);
-        } else if (newText.length === 0) {
-          // Empty content, create text node and set cursor
-          const emptyTextNode = document.createTextNode('');
-          input.appendChild(emptyTextNode);
-          newRange.setStart(emptyTextNode, 0);
-          newRange.collapse(true);
-          selection.removeAllRanges();
-          selection.addRange(newRange);
-        }
-
-        // Show cursor indicator
-        showCursorIndicator(input);
-      }, 10);
+      range.collapse(true);
+      selection.removeAllRanges();
+      selection.addRange(range);
     }
-  };
 
-  // Cursor navigation functions with visual feedback
-  const moveCursorLeft = () => {
-    const input = inputRef.current;
-    if (!input) return;
-    moveCursor(input, 'left', true);
-
-    // Show cursor indicator for visual feedback
-    setTimeout(() => {
-      showCursorIndicator(input);
-      setTimeout(() => removeCursorIndicator(input), 1500);
-    }, 50);
-  };
-
-  const moveCursorRight = () => {
-    const input = inputRef.current;
-    if (!input) return;
-    moveCursor(input, 'right', true);
-
-    // Show cursor indicator for visual feedback
-    setTimeout(() => {
-      showCursorIndicator(input);
-      setTimeout(() => removeCursorIndicator(input), 1500);
-    }, 50);
+    // Update React state
+    setInputValue(newText);
+    setStudentAnswer(newText);
+    setCursorPosition(newCursorPos);
   };
 
   const handleKeyDown = (e) => {
@@ -635,21 +575,16 @@ export default function MathInputTemplate({
           onSelect={handleCursorPosition}
           onFocus={(e) => {
             if (keyboard.shouldUseCustomKeyboard) {
-              // iOS-specific: More aggressive focus handling
               if (keyboard.isIOS) {
-                // Immediately blur to prevent keyboard, then handle custom keyboard
-                e.target.blur();
+                e.preventDefault();
 
+                // Don't reset cursor position - just activate keyboard
                 setTimeout(() => {
-                  // Re-focus without triggering keyboard
-                  e.target.focus();
+                  e.target.setAttribute('contenteditable', 'false');
+                  e.target.setAttribute('inputmode', 'none');
                   keyboard.activateCustomKeyboard();
-
-                  // Show visual feedback
-                  showCursorIndicator(e.target);
-                }, 10);
+                }, 50);
               } else if (keyboard.isAndroid) {
-                // Use Android-specific focus handling
                 handleAndroidFocus(e, () => {
                   keyboard.activateCustomKeyboard();
                 });
@@ -657,81 +592,109 @@ export default function MathInputTemplate({
                 keyboard.activateCustomKeyboard();
               }
             }
-
-            // Position cursor at end when focused (better UX)
-            setTimeout(() => {
-              const input = e.target;
-              const textLength = getTextContent(input).length;
-
-              // Always position at end on focus for better UX
-              const range = document.createRange();
-              const selection = window.getSelection();
-
-              if (input.firstChild && textLength > 0) {
-                range.setStart(
-                  input.firstChild,
-                  Math.min(textLength, input.firstChild.textContent.length),
-                );
-              } else if (textLength === 0) {
-                // Empty input - position at start
-                range.setStart(input, 0);
-              } else {
-                // Fallback
-                range.setStart(input, 0);
-              }
-              range.collapse(true);
-
-              selection.removeAllRanges();
-              selection.addRange(range);
-
-              setCursorPosition(textLength);
-
-              // Show cursor indicator on focus
-              showCursorIndicator(input);
-            }, 200); // Longer delay to ensure focus is complete
-          }}
-          onBlur={() => {
-            // Remove cursor indicator on blur
-            const input = inputRef.current;
-            if (input) removeCursorIndicator(input);
           }}
           onPointerDown={(e) => {
-            // iOS-specific: Prevent clicks from triggering keyboard
             if (keyboard.isIOS && keyboard.shouldUseCustomKeyboard) {
               e.preventDefault();
               e.stopPropagation();
 
-              // Ensure the input stays focused but doesn't trigger keyboard
-              if (!e.currentTarget.matches(':focus')) {
-                e.currentTarget.focus();
+              const target = e.currentTarget;
+
+              // Get click coordinates relative to the text content area
+              const rect = target.getBoundingClientRect();
+              const clickX = e.clientX;
+              const clickY = e.clientY;
+
+              // Ensure input is focused first
+              target.focus();
+
+              // Get the range at the click position
+              let range = null;
+              if (document.caretRangeFromPoint) {
+                range = document.caretRangeFromPoint(clickX, clickY);
+              } else if (document.caretPositionFromPoint) {
+                const caretPos = document.caretPositionFromPoint(
+                  clickX,
+                  clickY,
+                );
+                if (caretPos) {
+                  range = document.createRange();
+                  range.setStart(caretPos.offsetNode, caretPos.offset);
+                  range.collapse(true);
+                }
               }
 
-              // Show visual feedback that click was registered
-              setTimeout(() => {
-                showCursorIndicator(e.currentTarget);
-                setTimeout(() => removeCursorIndicator(e.currentTarget), 2000);
-              }, 50);
+              if (range) {
+                const selection = window.getSelection();
+                selection.removeAllRanges();
+                selection.addRange(range);
+
+                // CRITICAL: Update state AFTER DOM positioning to prevent reset
+                setTimeout(() => {
+                  const finalPos = getCursorPosition(target);
+                  setCursorPosition(finalPos);
+                  showCursorIndicator(target);
+                }, 10);
+              }
 
               return false;
             }
 
-            // Less aggressive prevention for Android Chrome
+            // ADD: Android handling (same as iOS approach)
             if (
               keyboard.isAndroid &&
               keyboard.shouldUseCustomKeyboard &&
               keyboard.isCustomKeyboardActive
             ) {
-              // Only prevent if contentEditable is false and not clicking buttons
-              if (
-                e.currentTarget.getAttribute('contenteditable') === 'false' &&
-                !e.target.closest('.h-12, button, [role="button"]')
-              ) {
-                e.preventDefault();
+              e.preventDefault();
+              e.stopPropagation();
+
+              const target = e.currentTarget;
+              const rect = target.getBoundingClientRect();
+              const clickX = e.clientX;
+              const clickY = e.clientY;
+
+              target.focus();
+
+              // Same cursor positioning logic as iOS
+              let range = null;
+              if (document.caretRangeFromPoint) {
+                range = document.caretRangeFromPoint(clickX, clickY);
+              } else if (document.caretPositionFromPoint) {
+                const caretPos = document.caretPositionFromPoint(
+                  clickX,
+                  clickY,
+                );
+                if (caretPos) {
+                  range = document.createRange();
+                  range.setStart(caretPos.offsetNode, caretPos.offset);
+                  range.collapse(true);
+                }
               }
-              // Ensure focus is maintained
-              if (!e.currentTarget.matches(':focus')) {
-                e.currentTarget.focus();
+
+              if (range) {
+                const selection = window.getSelection();
+                selection.removeAllRanges();
+                selection.addRange(range);
+
+                setTimeout(() => {
+                  const finalPos = getCursorPosition(target);
+                  setCursorPosition(finalPos);
+                  showCursorIndicator(target);
+                }, 10);
               }
+
+              return false;
+            }
+
+            // ADD: Desktop/other devices (mouse/trackpad support)
+            else if (!keyboard.isIOS && !keyboard.isAndroid) {
+              // Let browser handle cursor positioning naturally for desktop
+              setTimeout(() => {
+                const newPos = getCursorPosition(e.target);
+                setCursorPosition(newPos);
+                showCursorIndicator(e.target);
+              }, 10);
             }
           }}
           onKeyDown={handleKeyDown}
@@ -762,10 +725,10 @@ export default function MathInputTemplate({
                 WebkitUserSelect: 'text',
                 userSelect: 'text',
                 caretColor: '#4D5DED',
-                ...(keyboard.isIOS && {
-                  // iOS-specific additional prevention
-                  WebkitUserModify: 'read-only',
-                }),
+                //...(keyboard.isIOS && {
+                // iOS-specific additional prevention
+                //  WebkitUserModify: 'read-only',
+                //}),
               }),
             cursor: 'text',
             pointerEvents: 'auto',
@@ -834,22 +797,8 @@ export default function MathInputTemplate({
           </button>
         </div>
 
-        {/* Cursor Navigation and Edit Controls */}
+        {/* Edit Controls */}
         <div className="flex gap-2">
-          <button
-            onClick={moveCursorLeft}
-            className="px-3 py-2 bg-[#7D32CE] text-white rounded-lg hover:bg-[#4D5DED] hover:text-white transition-colors"
-            title="Move cursor left"
-          >
-            ←
-          </button>
-          <button
-            onClick={moveCursorRight}
-            className="px-3 py-2 bg-[#7D32CE] text-white rounded-lg hover:bg-[#4D5DED] hover:text-white transition-colors"
-            title="Move cursor right"
-          >
-            →
-          </button>
           <button
             onClick={backspace}
             className="px-4 py-2 bg-[#7D32CE] text-white rounded-lg hover:bg-[#4D5DED] hover:text-white transition-colors"
@@ -884,41 +833,90 @@ export default function MathInputTemplate({
           {/* Tab headers */}
           <div className="flex bg-[#7D32CE]">
             {Object.entries(mathCategories).map(([key, category]) => (
-              <button
-                key={key}
-                onClick={() => setActiveTab(key)}
-                className={`flex-1 px-3 py-3 text-sm font-medium transition-colors flex items-center justify-center gap-2 ${
-                  activeTab === key
-                    ? 'bg-[#FF6E99] text-white'
-                    : ' hover:bg-[#4D5DED] hover:text-white'
-                }`}
-              >
-                <span className="text-lg">{category.icon}</span>
-                <span className="hidden sm:inline">{category.label}</span>
-              </button>
+              <div key={key} className="flex flex-1">
+                <button
+                  onClick={() => setActiveTab(key)}
+                  className={`flex-1 px-3 py-3 text-sm font-medium transition-colors flex items-center justify-center gap-2 ${
+                    activeTab === key
+                      ? 'bg-[#FF6E99] text-white'
+                      : ' hover:bg-[#4D5DED] hover:text-white'
+                  }`}
+                >
+                  <span className="text-lg">{category.icon}</span>
+                  <span className="hidden sm:inline">{category.label}</span>
+                </button>
+              </div>
             ))}
           </div>
 
           {/* Symbol grid */}
           <div className="p-4">
-            <div
-              className={`grid gap-3 ${
-                activeTab === 'numbers' || activeTab === 'alphabet'
-                  ? 'grid-cols-5'
-                  : 'grid-cols-3 sm:grid-cols-4 md:grid-cols-5'
-              }`}
-            >
-              {mathCategories[activeTab].symbols.map((item, index) => (
-                <button
-                  key={index}
-                  onClick={() => insertSymbol(item.symbol)}
-                  title={item.description}
-                  className="h-12 w-full bg-white text-black rounded-md hover:bg-[#4D5DED] hover:text-white active:bg-[#FF6E99] transition-colors text-lg font-bold flex items-center justify-center"
-                >
-                  {item.label}
-                </button>
-              ))}
-            </div>
+            {activeTab === 'alphabet' ? (
+              <div className="space-y-3">
+                {/* First 25 letters in 5x5 grid */}
+                <div className="grid grid-cols-5 gap-3">
+                  {alphabetSymbols.slice(0, 25).map((item, index) => (
+                    <button
+                      key={`mobile-${item.symbol}-${isUppercase}`}
+                      onClick={() => insertSymbol(item.symbol)}
+                      title={item.description}
+                      className="h-12 w-full bg-white text-black rounded-md hover:bg-[#4D5DED] hover:text-white active:bg-[#FF6E99] transition-colors text-lg font-bold flex items-center justify-center"
+                    >
+                      {item.label}
+                    </button>
+                  ))}
+                </div>
+
+                {/* Last row: Z + empty spaces + toggle button */}
+                <div className="grid grid-cols-5 gap-3">
+                  <button
+                    onClick={() => insertSymbol(alphabetSymbols[25].symbol)}
+                    title={alphabetSymbols[25].description}
+                    className="h-12 w-full bg-white text-black rounded-md hover:bg-[#4D5DED] hover:text-white active:bg-[#FF6E99] transition-colors text-lg font-bold flex items-center justify-center"
+                  >
+                    {alphabetSymbols[25].label}
+                  </button>
+                  <div></div>
+                  <div></div>
+                  <div></div>
+
+                  {/* Toggle button in bottom-right corner */}
+                  <button
+                    onClick={() => setIsUppercase(!isUppercase)}
+                    className="h-12 w-full bg-[#FF6E99] hover:bg-[#4D5DED] text-white transition-colors flex items-center justify-center rounded-md"
+                  >
+                    <div className="flex flex-col items-center">
+                      <span className="text-lg leading-none">
+                        {isUppercase ? '↓' : '↑'}
+                      </span>
+                      <span className="text-xs leading-none">
+                        {isUppercase ? 'abc' : 'ABC'}
+                      </span>
+                    </div>
+                  </button>
+                </div>
+              </div>
+            ) : (
+              // Regular grid for other tabs
+              <div
+                className={`grid gap-3 ${
+                  activeTab === 'numbers'
+                    ? 'grid-cols-5'
+                    : 'grid-cols-3 sm:grid-cols-4 md:grid-cols-5'
+                }`}
+              >
+                {mathCategories[activeTab].symbols.map((item, index) => (
+                  <button
+                    key={`mobile-${index}`}
+                    onClick={() => insertSymbol(item.symbol)}
+                    title={item.description}
+                    className="h-12 w-full bg-white text-black rounded-md hover:bg-[#4D5DED] hover:text-white active:bg-[#FF6E99] transition-colors text-lg font-bold flex items-center justify-center"
+                  >
+                    {item.label}
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
         </div>
       )}
@@ -926,7 +924,7 @@ export default function MathInputTemplate({
       {/* Tabbed Symbol Categories - Always show on desktop or when not using custom keyboard */}
       {!keyboard.shouldUseCustomKeyboard && (
         <div className="w-full bg-[#421E68] rounded-lg overflow-hidden">
-          {/* Tab headers */}
+          {/* Tab headers - Clean, no toggle button here */}
           <div className="flex bg-[#7D32CE]">
             {Object.entries(mathCategories).map(([key, category]) => (
               <button
@@ -946,24 +944,80 @@ export default function MathInputTemplate({
 
           {/* Symbol grid */}
           <div className="p-4">
-            <div
-              className={`grid gap-3 ${
-                activeTab === 'numbers' || activeTab === 'alphabet'
-                  ? 'grid-cols-5'
-                  : 'grid-cols-3 sm:grid-cols-4 md:grid-cols-5'
-              }`}
-            >
-              {mathCategories[activeTab].symbols.map((item, index) => (
-                <button
-                  key={index}
-                  onClick={() => insertSymbol(item.symbol)}
-                  title={item.description}
-                  className="h-12 w-full bg-white text-black rounded-md hover:bg-[#4D5DED] hover:text-white active:bg-[#FF6E99] transition-colors text-lg font-bold flex items-center justify-center"
-                >
-                  {item.label}
-                </button>
-              ))}
-            </div>
+            {activeTab === 'alphabet' ? (
+              <div className="space-y-3">
+                {/* First 25 letters in 5x5 grid */}
+                <div className="grid grid-cols-5 gap-3">
+                  {alphabetSymbols.slice(0, 25).map((item, index) => (
+                    <button
+                      key={`${item.symbol}-${isUppercase}`}
+                      onClick={() => insertSymbol(item.symbol)}
+                      title={item.description}
+                      className="h-12 w-full bg-white text-black rounded-md hover:bg-[#4D5DED] hover:text-white active:bg-[#FF6E99] transition-colors text-lg font-bold flex items-center justify-center"
+                    >
+                      {item.label}
+                    </button>
+                  ))}
+                </div>
+
+                {/* Last row: Z + empty spaces + toggle button */}
+                <div className="grid grid-cols-5 gap-3">
+                  <button
+                    onClick={() => insertSymbol(alphabetSymbols[25].symbol)}
+                    title={alphabetSymbols[25].description}
+                    className="h-12 w-full bg-white text-black rounded-md hover:bg-[#4D5DED] hover:text-white active:bg-[#FF6E99] transition-colors text-lg font-bold flex items-center justify-center"
+                  >
+                    {alphabetSymbols[25].label}
+                  </button>
+                  <div></div>
+                  <div></div>
+                  <div></div>
+
+                  {/* Toggle button in bottom-right corner */}
+                  <button
+                    onClick={() => setIsUppercase(!isUppercase)}
+                    className="h-12 w-full bg-[#FF6E99] hover:bg-[#4D5DED] text-white transition-colors flex items-center justify-center rounded-md"
+                    title={`Switch to ${
+                      isUppercase ? 'lowercase' : 'uppercase'
+                    }`}
+                  >
+                    <div className="flex flex-col items-center">
+                      <span className="text-lg leading-none">
+                        {isUppercase ? '↓' : '↑'}
+                      </span>
+                      <span className="text-xs leading-none">
+                        {isUppercase ? 'abc' : 'ABC'}
+                      </span>
+                    </div>
+                  </button>
+                </div>
+
+                {/* Current mode indicator */}
+                <div className="text-center text-sm text-white">
+                  Current mode: {isUppercase ? 'UPPERCASE' : 'lowercase'}
+                </div>
+              </div>
+            ) : (
+              // Regular grid for other tabs
+              <div
+                className={`grid gap-3 ${
+                  activeTab === 'numbers'
+                    ? 'grid-cols-5'
+                    : 'grid-cols-3 sm:grid-cols-4 md:grid-cols-5'
+                }`}
+              >
+                {mathCategories[activeTab].symbols.map((item, index) => (
+                  <button
+                    key={index}
+                    onClick={() => insertSymbol(item.symbol)}
+                    title={item.description}
+                    className="h-12 w-full bg-white text-black rounded-md hover:bg-[#4D5DED] hover:text-white active:bg-[#FF6E99] transition-colors text-lg font-bold flex items-center justify-center"
+                  >
+                    {item.label}
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
         </div>
       )}
@@ -972,8 +1026,10 @@ export default function MathInputTemplate({
       {inputValue.trim() && localIsValidExpression && (
         <div className="p-4 border border-[#696969] rounded-lg">
           <div className="text-sm mb-2 font-medium">Preview:</div>
-          <div className="text-xl">
-            <InlineMath math={inputValue} />
+          <div className="text-xl overflow-x-auto overflow-y-hidden max-w-full">
+            <div className="whitespace-nowrap min-w-0">
+              <InlineMath math={convertToLatex(inputValue)} />
+            </div>
           </div>
         </div>
       )}

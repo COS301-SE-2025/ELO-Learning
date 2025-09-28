@@ -4,8 +4,9 @@
   "type": "module",
   "main": "src/server.js",
   "scripts": {
-    "start": "node src/server.js",
-    "dev": "node src/server.js",
+    "start": "node --no-deprecation src/server.js",
+    "dev": "node --no-deprecation src/server.js",
+    "trace": "node --trace-deprecation src/server.js",
     "test": "cross-env NODE_OPTIONS=--experimental-vm-modules jest",
     "lint": "eslint .",
     "snyk-test": "snyk test",
@@ -21,13 +22,14 @@
     "bcrypt": "^6.0.0",
     "cors": "^2.8.5",
     "debug": "^4.4.1",
-    "dotenv": "^16.5.0",
+    "dotenv": "^16.6.1",
     "express": "^5.1.0",
     "express-rate-limit": "^8.1.0",
     "firebase": "^12.3.0",
-    "firebase-admin": "^13.4.0",
+    "firebase-admin": "^13.5.0",
     "jsonwebtoken": "^9.0.2",
     "mathjs": "^13.2.3",
+    "openai": "^5.23.0",
     "socket.io": "^4.8.1",
     "supabase": "^2.34.3",
     "uuid": "^11.1.0"
@@ -44,7 +46,7 @@
     "jest": "^29.7.0",
     "snyk": "^1.1298.3",
     "supertest": "^7.1.1",
-    "tsx": "^3.14.0",
+    "tsx": "^4.20.5",
     "typescript": "^5.8.3"
   }
 }

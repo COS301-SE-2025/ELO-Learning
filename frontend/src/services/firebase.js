@@ -12,20 +12,39 @@ const firebaseConfig = {
   appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
 };
 
-// Initialize Firebase
-const app = initializeApp(firebaseConfig);
+// Check if Firebase config is properly set
+const isFirebaseConfigured =
+  firebaseConfig.projectId && firebaseConfig.apiKey && firebaseConfig.appId;
+
+// Initialize Firebase only if properly configured
+let app = null;
+if (isFirebaseConfigured) {
+  try {
+    app = initializeApp(firebaseConfig);
+  } catch (error) {
+    console.warn('Firebase initialization failed:', error);
+  }
+} else {
+  console.warn('Firebase not configured - push notifications will not work');
+}
 
 // Initialize Firebase Cloud Messaging and get a reference to the service
 let messaging = null;
-if (typeof window !== 'undefined') {
-  messaging = getMessaging(app);
+if (typeof window !== 'undefined' && app && isFirebaseConfigured) {
+  try {
+    messaging = getMessaging(app);
+  } catch (error) {
+    console.warn('Firebase messaging initialization failed:', error);
+  }
 }
 
 // Function to request notification permission and get FCM token
 export const requestNotificationPermission = async () => {
   try {
     if (!messaging) {
-      console.warn('Firebase messaging not available (likely SSR)');
+      console.warn(
+        'Firebase messaging not available - either Firebase is not configured or running in SSR',
+      );
       return null;
     }
 

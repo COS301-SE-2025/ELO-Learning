@@ -11,7 +11,7 @@ export default function Back({ pagename }) {
   };
 
   return (
-    <div className="flex flex-row items-center justify-between m-5">
+    <div className="flex flex-row items-center justify-between m-5 bg-[var(--background)]">
       <button
         onClick={handleBack}
         className="cursor-pointer hover:opacity-70 transition-opacity"

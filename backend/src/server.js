@@ -71,8 +71,8 @@ app.get('/health', (req, res) => {
   });
 });
 
-// Apply rate limiting to all requests
-app.use(limiter);
+// // Apply rate limiting to all requests
+// app.use(limiter);
 
 // Routes
 app.use('/', userRoutes);

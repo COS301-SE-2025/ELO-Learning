@@ -21,24 +21,33 @@ The platform encourages growth through competitive, skill-based challenges—suc
 
 ## 📚 Documentation & Resources
 
-**[Complete Documentation Hub →](docs/readme.md)**
-
-Comprehensive documentation including:
-
-📋 Software Requirements & Architecture • 📖 User Manual & Installation Guide • 💻 Coding Standards & Testing Policy • 🏗️ System Diagrams & Algorithm Documentation • 📅 Sprint Planning & Project Management
+**[Complete Documentation Hub →](docs/readme.md)** — Software Requirements, User Manual, Installation Guide, Coding Standards, Testing Policy, System Diagrams, Algorithm Documentation & Sprint Planning
 
 ## 🎥 Demo Resources
 
-**[View All Demos & Presentations →](demos/readme.md)**
-
-**Latest Demo 4 (Final):**
-[Demo 4 Video](https://drive.google.com/file/d/1C2vY_NennMutf-jkJs6DNPC5brmIp6ci/view?usp=sharing) | [Demo 4 Slides](https://www.canva.com/design/DAGz0CLbQ_g/zmopZssGtdGKBwKJQ0yLiA/edit)
+**[View All Demos & Presentations →](demos/readme.md)** — Demo videos and presentation slides from all project milestones
 
 ## 📋 Project Management
 
-[Project Board](https://github.com/orgs/COS301-SE-2025/projects/120) - Team organization and progress tracking
+**[Project Board →](https://github.com/orgs/COS301-SE-2025/projects/120)** — Team organization and progress tracking
 
-## 👥 Meet Team Zero Day
+## 👥 Team Zero Day
+
+**RM Brancon** (Business Analyst & Test Engineer) • **NF Mofati** (Services & DevOps Engineer) • **TM Mokwena** (Architect & Test Engineer) • **S Steyn** (Project Manager, UI Engineer & Designer) • **NG Tonga** (Data Engineer & Architect)
+
+**[Team Profiles & Contact Info →](docs/TEAM.md)**
+
+## ✉️ Contact
+
+**Email:** zeroday0d4y@gmail.com
+
+## ♟️ Partner
+
+In collaboration with **[Proking Solutions](https://proking.solutions/)**
+
+<img src="https://drive.usercontent.google.com/download?id=1usb25gGHfheUws5oPzCXmuTKMUe-GAAQ" width="300px"/>
+
+</div>
 
 </div>
 

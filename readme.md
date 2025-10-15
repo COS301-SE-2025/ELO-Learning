@@ -24,6 +24,7 @@ The platform encourages growth through competitive, skill-based challenges—suc
 **[Complete Documentation Hub →](docs/README.md)**
 
 Comprehensive documentation including:
+
 - Software Requirements & Architecture
 - User Manual & Installation Guide
 - Coding Standards & Testing Policy
@@ -34,7 +35,7 @@ Comprehensive documentation including:
 
 **[View All Demos & Presentations →](demos/README.md)**
 
-**Latest Demo 4 (Final):**  
+**Latest Demo 4 (Final):**
 [Demo 4 Video](https://drive.google.com/file/d/1C2vY_NennMutf-jkJs6DNPC5brmIp6ci/view?usp=sharing) | [Demo 4 Slides](https://www.canva.com/design/DAGz0CLbQ_g/zmopZssGtdGKBwKJQ0yLiA/edit)
 
 ## 📋 Project Management
@@ -154,7 +155,7 @@ Comprehensive documentation including:
 
 ## ✉️ Contact
 
-**Email:** zeroday0d4y@gmail.com
+**Email:** <zeroday0d4y@gmail.com>
 
 ## ♟️ Partner
 

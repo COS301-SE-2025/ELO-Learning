@@ -5,6 +5,7 @@ Meet the talented individuals behind ELO Learning.
 ---
 
 ## RM (Rene) Brancon
+
 **Role:** Business Analyst & Test Engineer
 
 <img src="https://drive.usercontent.google.com/download?id=14trGyA_GNdHA36T-yoSg_Ianw4H0e9l_" width="150">
@@ -17,6 +18,7 @@ Detail-oriented full-stack developer passionate about AI and cybersecurity. Brin
 ---
 
 ## NF (Nigel) Mofati
+
 **Role:** Services Engineer & DevOps Engineer
 
 <img src="https://drive.usercontent.google.com/download?id=1CePa51kdvYnBW7AZQxLU8yizqgTkFYu-" width="150">
@@ -29,6 +31,7 @@ Experienced in digital marketing and B2B software with expertise in secure, high
 ---
 
 ## TM (Tukelo) Mokwena
+
 **Role:** Architect & Test Engineer
 
 <img src="https://drive.usercontent.google.com/download?id=1U6gmGbgkZKEXS-4erkPCsHQqmvqxoAQm" width="150">
@@ -41,6 +44,7 @@ Computer Science student with passion for cybersecurity and game development. Ba
 ---
 
 ## S (Saskia) Steyn
+
 **Role:** Project Manager, UI Engineer & Designer
 
 <img src="https://drive.usercontent.google.com/download?id=1gVaSDowIS0rH0ev11NmCJ9aXlaZ4e492" width="150">
@@ -53,6 +57,7 @@ Blends creativity, communication, and tech as project manager. Published writer 
 ---
 
 ## NG (Ntokozo) Tonga
+
 **Role:** Data Engineer & Architect
 
 <img src="https://drive.usercontent.google.com/download?id=11fdU2RYdRiOZO7lqRh8sUOC7OuFKHX3z" width="150">

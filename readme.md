@@ -39,7 +39,7 @@ The platform encourages growth through competitive, skill-based challenges—suc
 
 ## ✉️ Contact
 
-**Email:** zeroday0d4y@gmail.com
+**Email:** <zeroday0d4y@gmail.com>
 
 ## ♟️ Partner
 

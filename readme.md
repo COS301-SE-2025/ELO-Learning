@@ -25,11 +25,7 @@ The platform encourages growth through competitive, skill-based challenges—suc
 
 Comprehensive documentation including:
 
-- Software Requirements & Architecture
-- User Manual & Installation Guide
-- Coding Standards & Testing Policy
-- System Diagrams & Algorithm Documentation
-- Sprint Planning & Project Management
+📋 Software Requirements & Architecture • 📖 User Manual & Installation Guide • 💻 Coding Standards & Testing Policy • 🏗️ System Diagrams & Algorithm Documentation • 📅 Sprint Planning & Project Management
 
 ## 🎥 Demo Resources
 

@@ -33,7 +33,7 @@ Comprehensive documentation including:
 
 ## 🎥 Demo Resources
 
-**[View All Demos & Presentations →](demo/readme.md)**
+**[View All Demos & Presentations →](demos/readme.md)**
 
 **Latest Demo 4 (Final):**
 [Demo 4 Video](https://drive.google.com/file/d/1C2vY_NennMutf-jkJs6DNPC5brmIp6ci/view?usp=sharing) | [Demo 4 Slides](https://www.canva.com/design/DAGz0CLbQ_g/zmopZssGtdGKBwKJQ0yLiA/edit)

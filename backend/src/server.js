@@ -41,7 +41,7 @@ dotenv.config();
 const app = express();
 const PORT = process.env.PORT || 3000;
 const limiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
+  windowMs: 1 * 60 * 1000, // 1 minute
   max: 100, // limit each IP to 100 requests per windowMs
   skip: (req) => req.path.startsWith('/users/') && req.path.endsWith('/streak'),
 });
@@ -70,6 +70,9 @@ app.get('/health', (req, res) => {
     timestamp: new Date().toISOString(),
   });
 });
+
+// // Apply rate limiting to all requests
+// app.use(limiter);
 
 // Routes
 app.use('/', userRoutes);

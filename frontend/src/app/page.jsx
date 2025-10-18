@@ -111,8 +111,8 @@ export default function Home() {
               />
               <h1 className="logo-text text-[#BD86F8]">ELO Learning</h1>
               <p className="text-center max-w-md">
-                Transform the way you engage with math practice through gamified,
-                adaptive learning experiences.
+                Transform the way you engage with math practice through
+                gamified, adaptive learning experiences.
               </p>
               <div className="flex flex-col gap-4 w-full max-w-md">
                 <Link href="/login-landing/signup">
@@ -144,8 +144,8 @@ export default function Home() {
               <div className="text-center max-w-2xl">
                 <p>
                   ELO Learning isn't your average math app. We use the same
-                  algorithm that ranks chess grandmasters to help you master math:
-                  at your level, in your style.
+                  algorithm that ranks chess grandmasters to help you master
+                  math: at your level, in your style.
                 </p>
                 <p className="mt-4">
                   Whether you're brushing up, powering ahead, or just in it for
@@ -168,7 +168,9 @@ export default function Home() {
           {/* Game Modes Section */}
           <section className="snap-section">
             <div className="flex flex-col items-center justify-center gap-8 max-w-7xl mx-auto px-4">
-              <h2 className="text-3xl font-bold text-center">Choose Your Mode</h2>
+              <h2 className="text-3xl font-bold text-center">
+                Choose Your Mode
+              </h2>
               <div className="grid md:grid-cols-3 gap-6 w-full">
                 <div className="feature-card backdrop-blur-md bg-[var(--vector-violet-light)] bg-opacity-90">
                   <div className="flex items-center justify-center mb-4">
@@ -188,10 +190,12 @@ export default function Home() {
                       </svg>
                     </div>
                   </div>
-                  <h3 className="text-xl text-center font-bold mb-4">Matches</h3>
+                  <h3 className="text-xl text-center font-bold mb-4">
+                    Matches
+                  </h3>
                   <p className="text-center">
-                    Go 1v1 with someone at your level. Win, rank up, repeat. Math
-                    has never been so savage.
+                    Go 1v1 with someone at your level. Win, rank up, repeat.
+                    Math has never been so savage.
                   </p>
                 </div>
                 <div className="feature-card backdrop-blur-md bg-[var(--radical-rose)] bg-opacity-90">
@@ -260,8 +264,8 @@ export default function Home() {
                   level up. Struggle a bit? We adjust.
                 </p>
                 <p className="mt-4">
-                  It's not about being the best; it's about getting better, every
-                  session.
+                  It's not about being the best; it's about getting better,
+                  every session.
                 </p>
               </div>
               <div className="mt-8">
@@ -310,7 +314,8 @@ export default function Home() {
               </h2>
               <div className="text-center max-w-2xl">
                 <p>
-                  Because learning should feel like levelling up; not zoning out!
+                  Because learning should feel like levelling up; not zoning
+                  out!
                 </p>
               </div>
               <div className="mt-8">

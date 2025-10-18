@@ -29,6 +29,7 @@
     "firebase-admin": "^13.5.0",
     "jsonwebtoken": "^9.0.2",
     "mathjs": "^13.2.3",
+    "nodemailer": "^7.0.7",
     "openai": "^5.23.0",
     "socket.io": "^4.8.1",
     "supabase": "^2.34.3",

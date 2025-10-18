@@ -19,6 +19,7 @@
   "dependencies": {
     "@paralleldrive/cuid2": "^2.2.2",
     "@supabase/supabase-js": "^2.49.7",
+    "nodemailer": "^6.9.3",
     "bcrypt": "^6.0.0",
     "cors": "^2.8.5",
     "debug": "^4.4.1",

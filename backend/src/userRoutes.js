@@ -3,6 +3,7 @@ import bcrypt from 'bcrypt';
 import express from 'express';
 import jwt from 'jsonwebtoken';
 import { supabase } from '../database/supabaseClient.js';
+import { sendResetEmail } from './mailService.js';
 import { verifyToken } from './middleware/auth.js';
 
 const router = express.Router();
@@ -367,7 +368,9 @@ router.post('/login', async (req, res) => {
       'id,name,surname,username,email,password,currentLevel,joinDate,xp,avatar,elo_rating,rank,base_line_test,daily_streak',
     )
     .eq('email', email)
-    .single();
+    // limit to 1 row to guard against duplicate emails in DB and avoid .single() failures
+    .limit(1)
+    .maybeSingle();
 
   if (fetchError || !user) {
     console.error('Error fetching user:', fetchError?.message);
@@ -417,12 +420,13 @@ router.post('/forgot-password', async (req, res) => {
   }
 
   try {
-    // Check if user exists
+    // Check if user exists. Limit to 1 row to avoid errors if duplicates exist
     const { data: user, error: fetchError } = await supabase
       .from('Users')
       .select('id, email, name')
       .eq('email', email)
-      .single();
+      .limit(1)
+      .maybeSingle();
 
     if (fetchError || !user) {
       // For security, don't reveal if email exists or not
@@ -462,13 +466,28 @@ router.post('/forgot-password', async (req, res) => {
       // Continue anyway - token is still valid via JWT
     }
 
-    // TODO: Send email with reset link
-    // const resetLink = `${process.env.FRONTEND_URL}/login-landing/reset-password?token=${resetToken}`;
-    // await sendPasswordResetEmail(user.email, user.name, resetLink);
+    // Send email with reset link using the configured FRONTEND_URL
+    // Default to the frontend dev server port used by this repo (Next dev on 8080)
+    const frontendBase = process.env.FRONTEND_URL || 'http://localhost:8080';
+    const resetLink = `${frontendBase.replace(
+      /\/$/,
+      '',
+    )}/login-landing/reset-password?token=${encodeURIComponent(resetToken)}`;
+
+    try {
+      const mailResult = await sendResetEmail(user.email, user.name, resetLink);
+      if (!mailResult.ok) {
+        console.error(
+          'Failed to send reset email:',
+          mailResult.error || mailResult,
+        );
+      }
+    } catch (mailErr) {
+      console.error('Error while sending reset email:', mailErr);
+    }
 
     console.log(`Password reset requested for: ${email}`);
     console.log(`Reset token: ${resetToken}`); // Remove in production
-
     res.status(200).json({
       message:
         'If an account with that email exists, a reset link has been sent.',

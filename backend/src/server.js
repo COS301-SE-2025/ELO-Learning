@@ -46,7 +46,9 @@ const limiter = rateLimit({
   skip: (req) => req.path.startsWith('/users/') && req.path.endsWith('/streak'),
 });
 
-// Use the frontend URL from env or fallback to localhost:8080 for dev
+// Determine frontend origin for CORS and reset links. Prefer a server-side
+// FRONTEND_URL (set this in production), fallback to NEXT_PUBLIC_FRONTEND_URL
+// (if provided) or localhost dev port.
 const FRONTEND_URL =
   process.env.NEXT_PUBLIC_FRONTEND_URL || 'http://localhost:8080';
 

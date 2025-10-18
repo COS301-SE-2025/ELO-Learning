@@ -33,8 +33,8 @@ The platform encourages growth through competitive, skill-based challenges—suc
 | Demo 1      | [Demo 1 Video](https://drive.google.com/file/d/1e2E4Jgxe9Kg_B71Dpo1kF9NmZOw2nZKu/view?usp=drive_link) | [Demo 1 Slides](https://www.canva.com/design/DAGoo9K8790/2R-M321YjC0ZFsuUi0iVuA/edit?utm_content=DAGoo9K8790&utm_campaign=designshare&utm_medium=link2&utm_source=sharebutton) |
 | Demo 2      | [Demo 2 Video](https://drive.google.com/file/d/1h8D7pI16n6AEnDAZ44I-xgcbYiTjGWAs/view?usp=drive_link) | [Demo 2 Slides](https://www.canva.com/design/DAGrAtPZc84/D6iylYVmubSv3udRGTYdtw/edit?utm_content=DAGrAtPZc84&utm_campaign=designshare&utm_medium=link2&utm_source=sharebutton) |
 | Demo 3      | [Demo 3 Video](https://drive.google.com/file/d/1DwynL0g0CKzLbp2S27Q--R37b1FxexyD/view?usp=drive_link) | [Demo 3 Slides](https://www.canva.com/design/DAGwI28zgfw/wC5KJmt6Rxto-9B4sA3v0g/edit?utm_content=DAGwI28zgfw&utm_campaign=designshare&utm_medium=link2&utm_source=sharebutton) |
-| Demo 4      | [Demo 4 Video](https://drive.google.com/file/d/1C2vY_NennMutf-jkJs6DNPC5brmIp6ci/view?usp=sharing)    | [Demo 4 Slides](https://www.canva.com/design/DAGz0CLbQ_g/zmopZssGtdGKBwKJQ0yLiA/edit)                                                                                          |
-| Project Day | [Video](https://drive.google.com/file/d/1C2vY_NennMutf-jkJs6DNPC5brmIp6ci/view?usp=sharing)           | [Slides](https://www.canva.com/design/DAGz0CLbQ_g/zmopZssGtdGKBwKJQ0yLiA/edit)                                                                                                 |
+| Demo 4      | [Demo 4 Video](https://drive.google.com/file/d/1C2vY_NennMutf-jkJs6DNPC5brmIp6ci/view?usp=sharing)    | [Demo 4 Slides](https://www.canva.com/design/DAGz0CLbQ_g/zmopZssGtdGKBwKJQ0yLiA/edit?utm_content=DAGz0CLbQ_g&utm_campaign=designshare&utm_medium=link2&utm_source=sharebutton) |
+| Project Day | [Video](https://drive.google.com/file/d/1C2vY_NennMutf-jkJs6DNPC5brmIp6ci/view?usp=sharing)           | [Slides](https://www.canva.com/design/DAGz0CLbQ_g/zmopZssGtdGKBwKJQ0yLiA/edit?utm_content=DAGz0CLbQ_g&utm_campaign=designshare&utm_medium=link2&utm_source=sharebutton)        |
 
 </div>
 

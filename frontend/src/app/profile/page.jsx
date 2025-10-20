@@ -9,12 +9,12 @@ import {
 import { initializeAchievementTracking } from '@/utils/gameplayAchievementHandler';
 import { Cog } from 'lucide-react';
 import { useSession } from 'next-auth/react';
-// ...existing code...
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import { useAvatar } from '../context/avatar-context';
 import { avatarColors, gradients } from '../ui/avatar/avatar-colors';
 import CommunityLeaderboardPreview from '../ui/community/community-leaderboard-preview';
+import LoadingScreen from '../ui/loading';
 import Achievements from '../ui/profile/achievements';
 import BaselineTestOption from '../ui/profile/baseline-test-option';
 import MatchStatsPreview from '../ui/profile/match-stats-preview';
@@ -151,10 +151,11 @@ export default function Profile() {
     loadLeaderboards();
   }, [status, session?.user?.id, session?.token]);
 
-  if (status === 'loading') return <div>Loading...</div>;
+  if (status === 'loading')
+    return <LoadingScreen message="Loading profile..." />;
   if (status === 'unauthenticated')
-    return <div>Please sign in to view your profile.</div>;
-  if (!session?.user) return <div>No user data available.</div>;
+    return <LoadingScreen message="Please sign in to view your profile" />;
+  if (!session?.user) return <LoadingScreen message="No user data available" />;
 
   const user = session.user;
 

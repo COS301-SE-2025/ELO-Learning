@@ -151,8 +151,21 @@ export default function Page() {
           <p className="p-3">Sign in with Google</p>
         </div>
         <p className="disclaimer pt-5">
-          Your data isn't shared with any third parties. View our terms and
-          privacy policy here.
+          Your data isn't shared with any third parties.{' '}
+          <Link
+            href="/terms-of-service"
+            className="text-[#BD86F8] hover:underline"
+          >
+            View our terms
+          </Link>{' '}
+          and{' '}
+          <Link
+            href="/privacy-policy"
+            className="text-[#BD86F8] hover:underline"
+          >
+            privacy policy
+          </Link>{' '}
+          here.
         </p>
       </div>
     </div>

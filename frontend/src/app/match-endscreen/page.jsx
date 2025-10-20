@@ -6,6 +6,7 @@ import Image from 'next/image';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Suspense, useState } from 'react';
 import EndELOChange from '../ui/end-screen-ui/end-screen-elo-change';
+import LoadingScreen from '../ui/loading';
 
 function MatchEndScreenContent() {
   const searchParams = useSearchParams();
@@ -125,7 +126,7 @@ function MatchEndScreenContent() {
 
 export default function Page() {
   return (
-    <Suspense fallback={<div>Loading...</div>}>
+    <Suspense fallback={<LoadingScreen message="Loading match results..." />}>
       <MatchEndScreenContent />
     </Suspense>
   );

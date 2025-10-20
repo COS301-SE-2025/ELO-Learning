@@ -5,10 +5,20 @@ export default function LandingFooter() {
   return (
     <div className=" bg-[#1D1A34] px-3 py-8 w-full md:p-10">
       <div className="flex flex-row gap-2 justify-between">
-        <div>
-          <p>Privacy Policy</p>
-          <p>Terms of Service</p>
-          <p>Help</p>
+        <div className="space-y-2">
+          <Link href="/privacy-policy">
+            <p className="hover:text-[#BD86F8] transition-colors">
+              Privacy Policy
+            </p>
+          </Link>
+          <Link href="/terms-of-service">
+            <p className="hover:text-[#BD86F8] transition-colors">
+              Terms of Service
+            </p>
+          </Link>
+          <Link href="/help">
+            <p className="hover:text-[#BD86F8] transition-colors">Help</p>
+          </Link>
         </div>
         <div>
           <Image

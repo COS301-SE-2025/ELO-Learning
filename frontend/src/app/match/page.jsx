@@ -127,6 +127,9 @@ export default function Page() {
 
   return (
     <div className="flex flex-col items-center gap-15">
+      <h1 className="md:text-5xl text-3xl text-center font-bold uppercase px-5">
+        Multiplayer mode
+      </h1>
       <div>
         <h2 className="text-2xl font-bold">Ready to start a match?</h2>
       </div>

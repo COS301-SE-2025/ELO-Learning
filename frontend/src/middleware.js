@@ -4,12 +4,20 @@ export function middleware(request) {
   // Only run auth check on protected routes (not public assets or auth pages)
   const { pathname } = request.nextUrl;
 
-  // Skip middleware for static files, API routes, and auth pages
+  // Public routes that should be accessible without authentication
+  const publicRoutes = [
+    '/_next',
+    '/api',
+    '/login-landing',
+    '/',
+    '/help',
+    '/privacy-policy',
+    '/terms-of-service',
+  ];
+
+  // Skip middleware for public routes and static files
   if (
-    pathname.startsWith('/_next') ||
-    pathname.startsWith('/api') ||
-    pathname.startsWith('/login-landing') ||
-    pathname === '/' ||
+    publicRoutes.some((route) => pathname.startsWith(route)) ||
     pathname.includes('.')
   ) {
     return NextResponse.next();
@@ -78,15 +86,9 @@ export function middleware(request) {
 }
 
 export const config = {
-  // Only match specific protected routes to reduce middleware overhead
+  // Match all routes except public ones
   matcher: [
-    '/dashboard/:path*',
-    '/profile/:path*',
-    '/settings/:path*',
-    '/game/:path*',
-    '/multiplayer/:path*',
-    '/practice/:path*',
-    '/leaderboard/:path*',
-    '/end-screen/:path*',
+    // Match all paths
+    '/((?!api|_next|login-landing|help|privacy-policy|terms-of-service|static|.*\\..*).*)',
   ],
 };

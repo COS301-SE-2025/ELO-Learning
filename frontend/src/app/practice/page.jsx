@@ -7,8 +7,8 @@ export default async function Page() {
   const topics = await fetchAllTopics();
   return (
     <div>
-      <h1 className="text-3xl text-center py-10 md:py-5 mt-10 md:mt-0">
-        Practice some maths!
+      <h1 className="text-3xl md:text-5xl font-bold uppercase text-center py-10 md:py-5 mt-10 md:mt-0">
+        Practice mode
       </h1>
       <div className="w-full">
         <SubCategories subcategories={topics} />

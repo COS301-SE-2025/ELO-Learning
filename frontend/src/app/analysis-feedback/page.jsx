@@ -14,7 +14,8 @@ import BestTopicsChart from '../ui/analytics/best-topics-chart';
 import MotivationTips from '../ui/analytics/motivation-tips';
 import TopicDepthTable from '../ui/analytics/topic-depth-table';
 import WorstTopicsChart from '../ui/analytics/worst-topics-chart';
-import Back from '../ui/back'; // added import
+import Back from '../ui/back';
+import LoadingScreen from '../ui/loading';
 
 // Helper: normalize / format incoming accuracy items
 function normalizeAndSortAccuracy(raw) {
@@ -107,7 +108,9 @@ export default function AnalysisFeedbackPage() {
       setError(null);
 
       // Wait until auth status resolves
-      if (status === 'loading') return;
+      if (status === 'loading') {
+        return <LoadingScreen message="Loading your statistics..." />;
+      }
 
       try {
         if (status !== 'authenticated' || !session?.user?.id) {

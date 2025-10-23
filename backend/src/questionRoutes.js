@@ -188,7 +188,7 @@ const validateMatchQuestionLegacy = (studentAnswer, correctAnswer) => {
 // Enhanced submission route with proper match question handling
 router.post('/question/:id/submit', async (req, res) => {
   const { id } = req.params;
-  const { studentAnswer, userId, questionType } = req.body;
+  const { studentAnswer, userId, questionType, gameMode } = req.body;
 
   try {
     // Fetch question data
@@ -260,7 +260,7 @@ router.post('/question/:id/submit', async (req, res) => {
     let updatedUser = null;
     let xpAwarded = 0;
 
-    if (isCorrect && userId) {
+    if (isCorrect && userId && gameMode === 'practice') {
       const { data: currentUser, error: userError } = await supabase
         .from('Users')
         .select('xp')
